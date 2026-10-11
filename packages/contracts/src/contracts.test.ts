@@ -4,6 +4,7 @@ import { canCreateRole, CreateUserBody } from './account';
 import { UpdateHomeCategoryBody, UpdateHomeContentBody, UpdateHomePopularBody } from './site-content';
 import { BAR_GALLERY_MAX, BarMediaBody, MenuBody, MenuItemImageBody } from './bar';
 import { PUBLIC_BUCKETS, UploadBucket } from './storage';
+import { CommunityCommentBody, CommunityFeedQuery, CommunityReportBody, CommunityThreadBody, MyCommunityFeedQuery, SaveCommunityDraftBody } from './community';
 
 describe('booking', () => {
   const base = {
@@ -120,6 +121,41 @@ describe('bar media', () => {
   });
 });
 
+describe('community', () => {
+  const id = '96e5917b-2acc-5f7f-b4ca-fc9a3b00f07d';
+  it('thread: trims, needs a category and a 3+ char title', () => {
+    expect(CommunityThreadBody.parse({ category: 'qa', title: '  ร้านไหนดี  ' })).toEqual({ category: 'qa', title: 'ร้านไหนดี', body: '', media: [] });
+    expect(CommunityThreadBody.safeParse({ category: 'qa', title: 'ab' }).success).toBe(false);
+    expect(CommunityThreadBody.safeParse({ category: 'Bad Slug', title: 'ร้านไหนดี' }).success).toBe(false);
+  });
+  it('feed query: coerces paging from the query string · scope is required for /me', () => {
+    expect(CommunityFeedQuery.parse({ limit: '10', offset: '20' })).toMatchObject({ sort: 'latest', limit: 10, offset: 20 });
+    expect(CommunityFeedQuery.safeParse({ sort: 'hot' }).success).toBe(false);
+    expect(MyCommunityFeedQuery.safeParse({}).success).toBe(false);
+    expect(MyCommunityFeedQuery.parse({ scope: 'pinned' }).scope).toBe('pinned');
+  });
+  it('draft: NEW has no thread · REPLY / EDIT need one · empty fields are fine', () => {
+    expect(SaveCommunityDraftBody.safeParse({ kind: 'NEW', payload: { title: '' } }).success).toBe(true);
+    expect(SaveCommunityDraftBody.safeParse({ kind: 'NEW', thread_id: id, payload: {} }).success).toBe(false);
+    expect(SaveCommunityDraftBody.safeParse({ kind: 'REPLY', payload: { body: 'กำลังพิมพ์' } }).success).toBe(false);
+    expect(SaveCommunityDraftBody.safeParse({ kind: 'EDIT', thread_id: id, payload: { title: 'x'.repeat(121) } }).success).toBe(false);
+  });
+  it('media: up to 6 files · a comment needs text or a file', () => {
+    const img = { path: 'u1/a.jpg', kind: 'IMAGE' as const };
+    expect(CommunityThreadBody.parse({ category: 'qa', title: 'ร้านไหนดี' }).media).toEqual([]);
+    expect(CommunityThreadBody.safeParse({ category: 'qa', title: 'ร้านไหนดี', media: Array(7).fill(img) }).success).toBe(false);
+    expect(CommunityThreadBody.safeParse({ category: 'qa', title: 'ร้านไหนดี', media: [{ ...img, path: '../x.jpg' }] }).success).toBe(false);
+    expect(CommunityCommentBody.safeParse({ body: '  ' }).success).toBe(false);
+    expect(CommunityCommentBody.safeParse({ body: '', media: [img] }).success).toBe(true);
+    expect(CommunityCommentBody.safeParse({ media: [{ path: 'u1/v.mp4', kind: 'VIDEO', duration_sec: 75 }] }).success).toBe(false);
+  });
+  it('report: exactly one target', () => {
+    expect(CommunityReportBody.safeParse({ thread_id: id, reason: 'SPAM' }).success).toBe(true);
+    expect(CommunityReportBody.safeParse({ reason: 'SPAM' }).success).toBe(false);
+    expect(CommunityReportBody.safeParse({ thread_id: id, comment_id: id, reason: 'SPAM' }).success).toBe(false);
+  });
+});
+
 describe('errors', () => {
   it('every domain contributes and nothing collides silently', () => {
     expect(ERROR_MESSAGES.ZONE_FULL).toContain('เต็ม');
@@ -130,6 +166,7 @@ describe('errors', () => {
     expect(ERROR_MESSAGES.INVALID_BAR_MEDIA).toContain('รูป');
     expect(ERROR_MESSAGES.INVALID_MENU_IMAGE).toBeTruthy();
     expect(ERROR_MESSAGES.INVALID_MENU_ITEM).toBeTruthy();
+    expect(ERROR_MESSAGES.COMMUNITY_PIN_LIMIT).toContain('3');
     expect(Object.keys(ERROR_MESSAGES).length).toBeGreaterThan(70);
   });
 

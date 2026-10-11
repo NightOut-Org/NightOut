@@ -144,6 +144,7 @@ Motion ใช้ [Motion](https://motion.dev) (`motion/react`) ดูราย�
 > รายละเอียดเต็มและสถานะเทียบโค้ด: [`docs/REQUIREMENTS.md`](docs/REQUIREMENTS.md) (sync จาก Google Doc Nightout_2.day)
 
 - **Phase 1 — Legal-Proof MVP (เดือน 1–3 · Soft Launch ม.ค. 2027):** ค้นหาตามงบ, จองโต๊ะ + มัดจำ (Beam Escrow), E-Ticket QR, รีวิว, แผนที่, ร้านโปรด, ชุมชน · ฝั่งร้าน: ผังโต๊ะ real-time, สแกนเช็กอิน, Auto-Release · Backoffice: อนุมัติร้าน + ตรวจหมุดตำแหน่ง, Safety + Inspector, ชุมชน (ไม่มีการตรวจสลิป — จ่ายผ่าน Beam)
+  - ชุมชนในโค้ดตอนนี้: กระทู้ · ความเห็น · ปักหมุดส่วนตัว · ฉบับร่างเก็บที่ backend · แนบรูป/วิดีโอ · Backoffice จัดการรายงาน · ถัดไป: กระทู้มาแรงบนหน้าแรก · แท็บกระทู้บนหน้าร้าน
 - **Phase 2 — Payment Automation & Monetization (เดือน 4–6):** จ่ายอัตโนมัติผ่าน Beam, หัก GP 5–7%, Fast-Track, ขยายโซนที่ 2
 - **Phase 3 — Retention & Ads (เดือน 7–9):** แต้มเช็กอินตรงเวลา, แนะนำร้านตามสไตล์, Sponsored Search, CRM
 - **Phase 4+:** Data API, เรียกรถกลับบ้าน, AI พยากรณ์ความแน่น, Wallet

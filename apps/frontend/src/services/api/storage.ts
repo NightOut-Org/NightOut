@@ -91,6 +91,17 @@ export async function uploadReviewMedia(userId: string, reviewId: string, media:
   return out;
 }
 
+/**
+ * รูป/วิดีโอแนบกระทู้/ความเห็น — อัปโหลดทันทีที่เลือก (ร่างเก็บ path ไว้ เปิดจากเครื่องไหนก็เห็น) · community-media/<user_id>/<ไฟล์>
+ * poster = ภาพปกวิดีโอ (ถ้ามี) · path ไปบันทึกพร้อมกระทู้/ความเห็น/ร่าง แล้ว DB ตรวจว่ามีไฟล์จริง
+ */
+export async function uploadCommunityMedia(userId: string, file: Blob, poster?: Blob) {
+  const name = `${userId}/${crypto.randomUUID()}`;
+  const path = await upload('community-media', `${name}.${ext(file)}`, file);
+  const thumb_path = poster ? await upload('community-media', `${name}-poster.${ext(poster)}`, poster) : null;
+  return { path, thumb_path };
+}
+
 /** URL ชั่วคราวของไฟล์ส่วนตัว (เช่นสลิปของฉัน) */
 export async function signedUrl(bucket: UploadBucket, path: string, seconds = 600) {
   try {

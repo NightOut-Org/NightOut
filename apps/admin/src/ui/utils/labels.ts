@@ -94,6 +94,21 @@ export const REPORT_REASON: Record<string, string> = {
   OTHER: 'อื่น ๆ',
 };
 
+export const COMMUNITY_STATUS: Record<Db.CommunityStatus, TagLabel> = {
+  PUBLISHED: { text: 'แสดงอยู่', color: 'green' },
+  HIDDEN: { text: 'ซ่อน', color: 'gold' },
+  REMOVED: { text: 'ลบแล้ว', color: 'red' },
+  DELETED: { text: 'เจ้าของลบ', color: 'default' },
+};
+
+export const COMMUNITY_REPORT_REASON: Record<Db.CommunityReportRow['reason'], string> = {
+  SPAM: 'สแปม',
+  ADVERTISING: 'โฆษณาแฝง',
+  OFFENSIVE: 'ไม่สุภาพ',
+  PRIVACY: 'มีข้อมูลส่วนตัว',
+  OTHER: 'อื่น ๆ',
+};
+
 export const AUDIT_ACTION: Record<string, string> = {
   'bar.status': 'เปลี่ยนสถานะร้าน',
   'bar.editor_pick': "Editor's Pick (ยกเลิกแล้ว)", // ฟีเจอร์ถูกลบ 2026-10-08 — เก็บไว้ให้ log เก่าอ่านออก
@@ -105,6 +120,17 @@ export const AUDIT_ACTION: Record<string, string> = {
   'review.hide': 'ซ่อนรีวิว',
   'review.remove': 'ลบรีวิว',
   'review.restore': 'แสดงรีวิวอีกครั้ง',
+  'community.thread.create': 'ตั้งกระทู้',
+  'community.thread.update': 'แก้กระทู้',
+  'community.thread.delete': 'เจ้าของลบกระทู้',
+  'community.thread.keep': 'เก็บกระทู้ไว้',
+  'community.thread.hide': 'ซ่อนกระทู้',
+  'community.thread.remove': 'ลบกระทู้',
+  'community.thread.restore': 'แสดงกระทู้อีกครั้ง',
+  'community.comment.keep': 'เก็บความเห็นไว้',
+  'community.comment.hide': 'ซ่อนความเห็น',
+  'community.comment.remove': 'ลบความเห็น',
+  'community.comment.restore': 'แสดงความเห็นอีกครั้ง',
   'promotion.approve': 'เปิดโปรโมท',
   'promotion.reject': 'โปรโมทไม่ผ่าน',
   'user.role': 'เปลี่ยนสิทธิ์ผู้ใช้',

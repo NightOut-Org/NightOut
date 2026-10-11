@@ -51,7 +51,7 @@ export const HOLDING_STATUSES: readonly BookingStatus[] = [
   'CHECKED_IN',
 ];
 
-/** สถานะที่รีวิวได้ = มัดจำผ่านแล้ว ไม่ต้องรอเช็กอิน (ตรงกับ app_add_review ใน migration …20261011000100) */
+/** สถานะที่รีวิวได้ = มัดจำผ่านแล้ว ไม่ต้องรอเช็กอิน (ตรงกับ app_add_review ใน migration …20261011000200) */
 export const REVIEWABLE_BOOKING_STATUSES: readonly BookingStatus[] = [
   'CONFIRMED',
   'CHECKED_IN',

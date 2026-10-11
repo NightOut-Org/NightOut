@@ -1,5 +1,11 @@
 # CHANGELOG — @nightout/types
 
+## 2026-10-11 — ชุมชน: แนบรูป/วิดีโอในกระทู้และความเห็น
+- `database.ts`: `CommunityMediaRow` + `media` ใน `AdminCommunityThread` / `AdminCommunityComment` (migration `20261011000100_community_media`)
+
+## 2026-10-10 — ชุมชน: ปักหมุดส่วนตัว + ฉบับร่างเก็บที่ backend
+- `database.ts`: `CommunityStatus` · `CommunityReportRow` · `AdminCommunityThread` · `AdminCommunityComment` (view ใหม่ใน migration `20261010000100_community_threads` — ยังไม่ได้รัน `db:types` เพราะยังไม่ได้ `db:push`)
+
 ## 2026-10-09 — รูปร้าน
 - `database.ts`: `MyBarDetail.media` · `AdminBarMedia` (view `admin_bar_media` · migration `20261009000100`)
 - `database.generated.ts`: รัน `db:types` หลัง push migration `20261009000100` (ฟังก์ชัน/view รูปร้านใหม่)

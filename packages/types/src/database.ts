@@ -463,6 +463,61 @@ export interface AdminBarMedia {
   updated_at: ISODateTime;
 }
 
+/** สถานะกระทู้/ความเห็นชุมชน (migration 20261010000100) · DELETED = เจ้าของลบ (ไม่ขึ้นใน view แอดมิน) */
+export type CommunityStatus = 'PUBLISHED' | 'HIDDEN' | 'REMOVED' | 'DELETED';
+/** ไฟล์แนบ (migration 20261011000100) — path ใน bucket community-media (private · Backoffice ขอ signed URL เอง) */
+export interface CommunityMediaRow {
+  id: UUID;
+  kind: 'IMAGE' | 'VIDEO';
+  path: string;
+  thumb_path: string | null;
+  duration_sec: number | null;
+}
+export interface CommunityReportRow {
+  reason: 'SPAM' | 'OFFENSIVE' | 'ADVERTISING' | 'PRIVACY' | 'OTHER';
+  detail: string | null;
+  status: 'OPEN' | 'RESOLVED';
+  created_at: ISODateTime;
+}
+
+/** admin_community_threads (migration 20261010000100) — กระทู้ทุกสถานะยกเว้นที่เจ้าของลบ · Backoffice "ชุมชน" */
+export interface AdminCommunityThread {
+  id: UUID;
+  title: string;
+  body: string;
+  category: string;
+  category_name: string;
+  status: CommunityStatus;
+  author_id: UUID;
+  author_name: string | null;
+  bar: { id: UUID; slug: string; name: string } | null;
+  reply_count: number;
+  like_count: number;
+  view_count: number;
+  created_at: ISODateTime;
+  edited_at: ISODateTime | null;
+  open_report_count: number;
+  reports: CommunityReportRow[];
+  media: CommunityMediaRow[];
+}
+
+/** admin_community_comments (migration 20261010000100) — ความเห็นทุกสถานะยกเว้นที่เจ้าของลบ */
+export interface AdminCommunityComment {
+  id: UUID;
+  thread_id: UUID;
+  thread_title: string;
+  parent_id: UUID | null;
+  body: string;
+  status: CommunityStatus;
+  author_id: UUID;
+  author_name: string | null;
+  like_count: number;
+  created_at: ISODateTime;
+  open_report_count: number;
+  reports: CommunityReportRow[];
+  media: CommunityMediaRow[];
+}
+
 // ---------------------------------------------------------------------
 // กฎธุรกิจที่ต้องตรงกับ DB
 // ---------------------------------------------------------------------
