@@ -1,5 +1,14 @@
 # CHANGELOG — @nightout/contracts
 
+## 2026-10-11 — ชุมชน: แนบรูป/วิดีโอในกระทู้และความเห็น
+- `community.ts`: `CommunityMediaItem` + `COMMUNITY_MEDIA_LIMITS` (6 ไฟล์ · รูป 15MB · วิดีโอ 60MB / 60 วิ) · `media` ใน `CommunityThreadBody` / `CommunityCommentBody` (ความเห็นต้องมีข้อความหรือไฟล์) / `CommunityDraftPayload` · response `CommunityMedia` (`url` / `thumb_url`) ใน `CommunityThreadDetail` + `CommunityComment` · error `INVALID_COMMUNITY_MEDIA`
+- `storage.ts`: `community-media` อยู่ใน `UPLOAD_BUCKETS` · เทสต์ใน `contracts.test.ts`
+
+## 2026-10-10 — ชุมชน: ปักหมุดส่วนตัว + ฉบับร่างเก็บที่ backend
+- `community.ts` ใหม่: body/query ของฟีด (`CommunityFeedQuery` · `MyCommunityFeedQuery` scope mine/saved/pinned), กระทู้ (`CommunityThreadBody`), ความเห็น, ถูกใจ/บันทึก/ปักหมุด (`CommunityToggleBody`), รายงาน, ฉบับร่าง (`SaveCommunityDraftBody` · `CommunityDraftPayload` · `DeleteCommunityDraftQuery`), แอดมิน (`ModerateCommunityBody`) + type ของ response + ค่าคงที่ `COMMUNITY_PIN_MAX` = 3 · `COMMUNITY_DRAFT_TTL_DAYS` = 7
+- `COMMUNITY_ERRORS` (รวมใน `ERROR_MESSAGES`) เช่น `COMMUNITY_PIN_LIMIT` · `THREAD_NOT_FOUND` · `INVALID_COMMUNITY_DRAFT` · `ADMIN_VIEWS` + `admin_community_threads` / `admin_community_comments`
+- เทสต์ใน `contracts.test.ts`
+
 ## 2026-10-09 — รูปร้าน + รูปเมนู
 - `bar.ts`: `BarMediaBody` (`paths` ไม่ซ้ำ ≤ `BAR_GALLERY_MAX` = 10 · `cover_path` ต้องอยู่ใน paths) + `BarMediaResult` · `MenuItemImageBody` + `MenuItemImageResult` · `MenuBody.items[].image_path` (nullish) · error ใหม่ `INVALID_BAR_MEDIA` · `INVALID_MENU_IMAGE` · `MENU_ITEM_NOT_FOUND` · `INVALID_MENU_ITEM` (DB โยนอยู่แล้วแต่ยังไม่มีข้อความไทย)
 - `storage.ts`: `bar-media` อยู่ใน `UPLOAD_BUCKETS` และ `PUBLIC_BUCKETS` · `backoffice.ts`: `ADMIN_VIEWS` + `admin_bar_media`

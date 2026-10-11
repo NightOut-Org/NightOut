@@ -25,6 +25,8 @@ export interface AdminViewRows {
   admin_home_categories: Db.AdminHomeCategory;
   admin_home_popular: Db.AdminHomePopular;
   admin_bar_media: Db.AdminBarMedia;
+  admin_community_threads: Db.AdminCommunityThread;
+  admin_community_comments: Db.AdminCommunityComment;
 }
 
 /** ตัวกรองแบบง่าย: [คอลัมน์, ค่า] = eq · [คอลัมน์, ค่า[]] = in */

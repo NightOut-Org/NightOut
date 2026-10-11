@@ -12,6 +12,7 @@ import { MerchantsPage } from '@/modules/merchants/page';
 import { PromotionsPage } from '@/modules/promotions/page';
 import { RankingPage } from '@/modules/ranking/page';
 import { ReviewsPage } from '@/modules/reviews/page';
+import { CommunityPage } from '@/modules/community/page';
 import { SafetyPage } from '@/modules/safety/page';
 import { SettingsPage } from '@/modules/settings/page';
 import { TeamPage } from '@/modules/team/page';
@@ -38,6 +39,7 @@ export const router = createBrowserRouter([
       { path: 'bookings', element: <BookingsPage /> },
       { path: 'deposits', element: <DepositsPage /> },
       { path: 'reviews', element: <ReviewsPage /> },
+      { path: 'community', element: <CommunityPage /> },
       { path: 'billing', element: <BillingPage /> },
       { path: 'audit-logs', element: <AuditLogsPage /> },
       { path: 'settings', element: <SettingsPage /> },

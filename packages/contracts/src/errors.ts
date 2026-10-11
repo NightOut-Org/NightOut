@@ -3,6 +3,7 @@ import { BAR_ERRORS } from './bar';
 import { BAR_TEAM_ERRORS } from './bar-team';
 import { BOOKING_ERRORS } from './booking';
 import { COMMON_ERRORS } from './common';
+import { COMMUNITY_ERRORS } from './community';
 import { DEPOSIT_ERRORS } from './deposit';
 import { PROMOTION_ERRORS } from './promotion';
 import { REVIEW_ERRORS } from './review';
@@ -19,6 +20,7 @@ export const ERROR_MESSAGES: Readonly<Record<string, string>> = {
   ...BOOKING_ERRORS,
   ...DEPOSIT_ERRORS,
   ...REVIEW_ERRORS,
+  ...COMMUNITY_ERRORS,
   ...BAR_ERRORS,
   ...BAR_TEAM_ERRORS,
   ...ACCOUNT_ERRORS,

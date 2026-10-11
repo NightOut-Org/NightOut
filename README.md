@@ -145,6 +145,7 @@ Motion ใช้ [Motion](https://motion.dev) (`motion/react`) ดูราย�
   - 1A: ฝั่งลูกค้า
   - 1B: ฝั่งร้าน (Merchant)
   - 1C: Admin Backoffice
+  - ชุมชน (Community): กระทู้ · ความเห็น · ปักหมุดส่วนตัว · ฉบับร่างเก็บที่ backend · Backoffice จัดการรายงาน (เพิ่ม 2026-10-10) · แนบรูป/วิดีโอ (2026-10-11) · ถัดไป: กระทู้มาแรงบนหน้าแรก · แท็บกระทู้บนหน้าร้าน
 - **Phase 2 — AI & Growth**
   - AI Recommendation และ Chatbot
   - Campaign tracking

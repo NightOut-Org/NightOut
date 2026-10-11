@@ -23,12 +23,14 @@ export function MainLayout() {
   // - darkTop: ส่วนบนของหน้ามืดเสมอทุกธีม (ภาพ/วิดีโอกลางคืน) → navbar ใสตัวหนังสือขาวได้
   //   ไม่ใส่ = navbar ใช้สีตามธีม (เช่น /ranking ธีมสว่างพื้นขาว ถ้าใช้ตัวขาวจะมองไม่เห็น)
   const handles = useMatches().map(
-    (m) => (m.handle ?? {}) as { fullBleed?: boolean; hideFooter?: boolean; darkTop?: boolean; merchantShell?: boolean },
+    (m) => (m.handle ?? {}) as { fullBleed?: boolean; hideFooter?: boolean; darkTop?: boolean; merchantShell?: boolean; hideBottomNav?: boolean },
   );
   const fullBleed = handles.some((h) => h.fullBleed);
   const hideFooter = handles.some((h) => h.hideFooter);
   // หน้าร้าน (/merchant/*): มือถือ/แท็บเล็ตใช้แถบบน + แท็บล่างของ MerchantLayout แทน navbar ของเว็บ
   const merchantShell = handles.some((h) => h.merchantShell);
+  // หน้าที่มีแถบล่างของตัวเอง (ช่องตอบกระทู้ / ปุ่มโพสต์) — มือถือไม่แสดงเมนูล่าง
+  const hideBottomNav = handles.some((h) => h.hideBottomNav);
   const bleed = isHome || fullBleed;
   const darkTop = isHome || handles.some((h) => h.darkTop);
   const isShop = user?.role === 'MERCHANT' || user?.role === 'STAFF';
@@ -61,7 +63,7 @@ export function MainLayout() {
 
       {!hideFooter && <SiteFooter />}
 
-      {!merchantShell && <BottomIsland items={[...baseNav, { to: '/profile', label: 'โปรไฟล์', icon: User }]} />}
+      {!merchantShell && !hideBottomNav && <BottomIsland items={[...baseNav, { to: '/profile', label: 'โปรไฟล์', icon: User }]} />}
     </Layout>
   );
 }

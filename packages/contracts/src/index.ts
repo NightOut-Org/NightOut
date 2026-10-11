@@ -8,6 +8,7 @@ export * from './common';
 export * from './booking';
 export * from './deposit';
 export * from './review';
+export * from './community';
 export * from './bar';
 export * from './bar-team';
 export * from './account';
