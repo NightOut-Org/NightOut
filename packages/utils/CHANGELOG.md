@@ -1,5 +1,9 @@
 # CHANGELOG — @nightout/utils
 
+## 2026-10-11 — รีวิวได้เมื่อมัดจำผ่าน (ไม่ต้องเช็กอิน)
+- เพิ่ม `REVIEWABLE_BOOKING_STATUSES` + `isReviewableStatus()` (CONFIRMED/CHECKED_IN/COMPLETED/NO_SHOW) ใช้ร่วมหน้าเว็บ + mock ให้ตรงกับ DB + เทสต์
+- ไฟล์: `src/booking-status.ts`, `src/utils.test.ts`
+
 ## 2026-10-09 — storage public URL
 - `storage.ts` (ใหม่): `storagePublicUrl(supabaseUrl, bucket, path)` ใช้ร่วม backend + หน้าเว็บ · `barMediaPath(barId, folder, ext)` path รูปร้าน `<bar_id>/gallery|menu/<uuid>.<ext>` + type `BarMediaFolder` · `galleryCoverPath` (หา path ปกจาก `cover_image_url`) · `coverFirst` (เรียงปกขึ้นก่อน) — ใช้ร่วมหน้าข้อมูลร้าน + Backoffice
 - เทสต์ใน `utils.test.ts`

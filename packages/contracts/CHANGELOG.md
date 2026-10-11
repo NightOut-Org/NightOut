@@ -1,5 +1,9 @@
 # CHANGELOG — @nightout/contracts
 
+## 2026-10-11 — รีวิวได้เมื่อมัดจำผ่าน (ไม่ต้องเช็กอิน)
+- `REVIEW_ERRORS`: `REVIEW_REQUIRES_CHECKIN` → `REVIEW_REQUIRES_BOOKING` ("รีวิวได้หลังจองและมัดจำผ่านแล้วเท่านั้น")
+- ไฟล์: `src/review.ts`
+
 ## 2026-10-09 — รูปร้าน + รูปเมนู
 - `bar.ts`: `BarMediaBody` (`paths` ไม่ซ้ำ ≤ `BAR_GALLERY_MAX` = 10 · `cover_path` ต้องอยู่ใน paths) + `BarMediaResult` · `MenuItemImageBody` + `MenuItemImageResult` · `MenuBody.items[].image_path` (nullish) · error ใหม่ `INVALID_BAR_MEDIA` · `INVALID_MENU_IMAGE` · `MENU_ITEM_NOT_FOUND` · `INVALID_MENU_ITEM` (DB โยนอยู่แล้วแต่ยังไม่มีข้อความไทย)
 - `storage.ts`: `bar-media` อยู่ใน `UPLOAD_BUCKETS` และ `PUBLIC_BUCKETS` · `backoffice.ts`: `ADMIN_VIEWS` + `admin_bar_media`

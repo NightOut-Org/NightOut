@@ -9,6 +9,7 @@ import {
   toThaiE164,
   estimatePrice,
   isNewBar,
+  isReviewableStatus,
   isTerminalStatus,
   nextStatuses,
   scoreToStars,
@@ -33,6 +34,12 @@ describe('booking state machine', () => {
   it('terminal statuses have no exits', () => {
     expect(isTerminalStatus('COMPLETED')).toBe(true);
     expect(nextStatuses('NO_SHOW', 'SYSTEM')).toEqual([]);
+  });
+  it('allows reviews once the deposit is confirmed, without check-in', () => {
+    expect(isReviewableStatus('CONFIRMED')).toBe(true);
+    expect(isReviewableStatus('NO_SHOW')).toBe(true);
+    expect(isReviewableStatus('DEPOSIT_SUBMITTED')).toBe(false);
+    expect(isReviewableStatus('CANCELLED_BY_CUSTOMER')).toBe(false);
   });
 });
 

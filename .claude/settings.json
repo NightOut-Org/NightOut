@@ -19,6 +19,19 @@
       "mcp__ccd_pr__set_auto_merge"
     ]
   },
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|clear",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node -e \"console.log('NightOut: ก่อนเริ่มงานแรกของ session ให้รัน skill sync-requirements เอง (เทียบ revisionId ของ Google Doc Nightout_2.day กับ docs/requirements/nightout-2-day.md) แล้วอ่าน docs/REQUIREMENTS.md — ไม่ต้องรอผู้ใช้สั่ง')\""
+          }
+        ]
+      }
+    ]
+  },
   "enabledPlugins": {
     "system-design-skills@anthropic-plugin-directory": true
   }

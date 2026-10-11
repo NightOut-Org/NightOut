@@ -51,6 +51,18 @@ export const HOLDING_STATUSES: readonly BookingStatus[] = [
   'CHECKED_IN',
 ];
 
+/** สถานะที่รีวิวได้ = มัดจำผ่านแล้ว ไม่ต้องรอเช็กอิน (ตรงกับ app_add_review ใน migration …20261011000100) */
+export const REVIEWABLE_BOOKING_STATUSES: readonly BookingStatus[] = [
+  'CONFIRMED',
+  'CHECKED_IN',
+  'COMPLETED',
+  'NO_SHOW',
+];
+
+export function isReviewableStatus(status: BookingStatus): boolean {
+  return REVIEWABLE_BOOKING_STATUSES.includes(status);
+}
+
 export function isTerminalStatus(status: BookingStatus): boolean {
   return BOOKING_TRANSITIONS[status].length === 0;
 }

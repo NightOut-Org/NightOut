@@ -7,8 +7,9 @@ import { ReviewMediaPicker } from '@/ui/components/reviewMediaPicker';
 import { PageHeader } from '@/ui/components/pageHeader';
 import { useDemo } from '@/hooks/useDemo';
 import { NotFoundResult } from '@/ui/components/notFoundResult';
+import { isReviewableStatus } from '@nightout/utils';
 
-/** /reviews/new?booking=:id — รีวิวได้เฉพาะ booking ที่เช็กอินแล้ว (1 booking = 1 รีวิว) */
+/** /reviews/new?booking=:id — รีวิวได้เมื่อ booking มัดจำผ่านแล้ว ไม่ต้องเช็กอิน (1 booking = 1 รีวิว) */
 export function ReviewNewPage() {
   useDemo();
   const [params] = useSearchParams();
@@ -19,8 +20,8 @@ export function ReviewNewPage() {
   const b = getBooking(params.get('booking') ?? '');
   const bar = b ? getBar(b.barId) : null;
   if (!b || !bar) return <NotFoundResult title="ไม่พบการจอง" kind="booking" />;
-  if (!['CHECKED_IN', 'COMPLETED'].includes(b.status))
-    return <Result status="warning" title="รีวิวได้หลังเช็กอินที่ร้านแล้วเท่านั้น" />;
+  if (!isReviewableStatus(b.status))
+    return <Result status="warning" title="รีวิวได้หลังจองและมัดจำผ่านแล้วเท่านั้น" />;
   if (b.reviewed) return <Result status="success" title="คุณรีวิวการจองนี้แล้ว ขอบคุณครับ" />;
 
   return (

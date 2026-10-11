@@ -11,6 +11,7 @@ import { useDemo } from '@/hooks/useDemo';
 import { BOOKING_STATUS, dateTime } from '@/ui/utils/format';
 import { useNow } from '@/hooks/useNow';
 import { NotFoundResult } from '@/ui/components/notFoundResult';
+import { isReviewableStatus } from '@nightout/utils';
 
 function useCountdown(target: Date) {
   const now = useNow(1000);
@@ -98,7 +99,7 @@ export function BookingDetailPage() {
                 <Button type="primary">จ่ายมัดจำ</Button>
               </Link>
             )}
-            {['CHECKED_IN', 'COMPLETED'].includes(b.status) && !b.reviewed && (
+            {isReviewableStatus(b.status) && !b.reviewed && (
               <Link to={`/reviews/new?booking=${b.id}`}>
                 <Button type="primary">เขียนรีวิว</Button>
               </Link>

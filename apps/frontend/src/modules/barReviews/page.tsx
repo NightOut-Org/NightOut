@@ -11,7 +11,7 @@ import { NotFoundResult } from '@/ui/components/notFoundResult';
 
 /**
  * /bars/:slug/reviews — รีวิวทั้งหมดของร้าน
- * กรอง "มีรูป/วิดีโอ" · ปุ่มเขียนรีวิว (แนบรูป/วิดีโอได้) โผล่เมื่อผู้ใช้มีการจองที่เช็กอินแล้วแต่ยังไม่รีวิว
+ * กรอง "มีรูป/วิดีโอ" · ปุ่มเขียนรีวิว (แนบรูป/วิดีโอได้) โผล่เมื่อผู้ใช้มีการจองที่มัดจำผ่านแล้วแต่ยังไม่รีวิว
  */
 export function BarReviewsPage() {
   useDemo();
@@ -54,7 +54,7 @@ export function BarReviewsPage() {
             </Button>
           </Link>
         ) : (
-          <span className="text-xs text-muted">รีวิวได้หลังจองและเช็กอินที่ร้านแล้ว</span>
+          <span className="text-xs text-muted">รีวิวได้หลังจองและมัดจำผ่านแล้ว</span>
         )}
       </div>
       {reviews.length ? (

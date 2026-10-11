@@ -18,7 +18,7 @@ export class ReviewMeController {
   @Post('bookings/:id/review')
   @ApiDoc({
     summary: 'เขียนรีวิวร้าน',
-    description: 'รีวิวได้เฉพาะการจองที่เช็กอินแล้วและยังไม่เคยรีวิว · แนบรูป/วิดีโอได้สูงสุด 6 ไฟล์ (อัปโหลดเข้า bucket `review-media` เองก่อน แล้วส่ง path)',
+    description: 'รีวิวได้เมื่อการจองมัดจำผ่านแล้ว (CONFIRMED / CHECKED_IN / COMPLETED / NO_SHOW · ไม่ต้องเช็กอิน) และยังไม่เคยรีวิว — rpc `app_add_review` · แนบรูป/วิดีโอได้สูงสุด 6 ไฟล์ (อัปโหลดเข้า bucket `review-media` เองก่อน แล้วส่ง path)',
     returns: '`id` รหัสรีวิว · `bar_id` ร้านที่รีวิว',
     status: 201,
   })
