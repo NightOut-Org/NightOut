@@ -31,6 +31,12 @@
       "skillPath": "skills/ask-sonner/SKILL.md",
       "computedHash": "0168a6a129ba0a3561ccbda3a3d8d0dc0af1d556f373e315e9479e3364420dd3"
     },
+    "brag-slim": {
+      "source": "latent-spaces/brag",
+      "sourceType": "github",
+      "skillPath": "skills/brag-slim/SKILL.md",
+      "computedHash": "6daf1c7708b9a6d61d2ada5af35a3d60d3eae5b6a70a8cda36a071d2c1eae119"
+    },
     "emil-design-eng": {
       "source": "emilkowalski/skills",
       "sourceType": "github",
@@ -72,6 +78,12 @@
       "sourceType": "github",
       "skillPath": "skills/review-animations/SKILL.md",
       "computedHash": "8c2befeb28bb484bf2de7b2fc228774857e266d32a65d76895e78651a536d8cf"
+    },
+    "system-design": {
+      "source": "anthropics/knowledge-work-plugins",
+      "sourceType": "github",
+      "skillPath": "engineering/skills/system-design/SKILL.md",
+      "computedHash": "9b334dd1bc654fda2ed014680e1910f33fcb4b0daa6fee2b91ef50156f401b81"
     },
     "write-swift": {
       "source": "emilkowalski/skills",
