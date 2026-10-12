@@ -147,7 +147,7 @@ export function BarMediaPage() {
           },
         ]}
       />
-      <BarMediaDrawer bar={open} onClose={() => select(null)} />
+      <BarMediaDrawer bar={open} onClose={() => select(null)} onSaved={refetch} />
     </PageContainer>
   );
 }

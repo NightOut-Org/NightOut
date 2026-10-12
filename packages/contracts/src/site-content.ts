@@ -26,7 +26,7 @@ const internalLink = z
   .regex(/^\/(?!\/)\S*$/, 'ต้องเป็นลิงก์ในเว็บที่ขึ้นต้นด้วย / เช่น /search?category=PUB_BAR');
 const line = (max: number) => z.string().trim().min(1).max(max);
 
-/** PATCH /admin/home-content — ส่งเฉพาะ field ที่แก้ */
+/** Hero + หัวข้อ section (ส่วน `content` ของ PUT /admin/home-page) — ส่งเฉพาะ field ที่แก้ */
 export const UpdateHomeContentBody = z
   .object({
     hero_title_lead: line(20).describe('คำหน้าหัวข้อ Hero เช่น "คืนนี้ไป"'),
@@ -43,7 +43,7 @@ export const UpdateHomeContentBody = z
   .partial();
 export type UpdateHomeContentBody = z.infer<typeof UpdateHomeContentBody>;
 
-/** PATCH /admin/home-categories/:slot — ส่งเฉพาะ field ที่แก้ */
+/** การ์ดหมวด 1 ช่อง (ส่วน `categories[]` ของ PUT /admin/home-page คู่กับ `slot`) — ส่งเฉพาะ field ที่แก้ */
 export const UpdateHomeCategoryBody = z
   .object({
     title: line(30).describe('ชื่อหมวดบนการ์ด'),
@@ -58,7 +58,7 @@ export type UpdateHomeCategoryBody = z.infer<typeof UpdateHomeCategoryBody>;
 /** จำนวนร้านในกริดร้านยอดนิยมของหน้าแรก (= จำนวนที่แอดมินปักได้สูงสุด) */
 export const HOME_POPULAR_MAX = 8;
 
-/** PUT /admin/home-popular — แทนที่ทั้งรายการตามลำดับ · [] = ไม่ปัก (หน้าแรกเรียงตามคะแนนรีวิวทั้งหมด) */
+/** ร้านยอดนิยม (ส่วน `popular` ของ PUT /admin/home-page) — แทนที่ทั้งรายการตามลำดับ · [] = ไม่ปัก (หน้าแรกเรียงตามคะแนนรีวิวทั้งหมด) */
 export const UpdateHomePopularBody = z.object({
   bar_ids: z
     .array(z.string().uuid())
@@ -68,9 +68,24 @@ export const UpdateHomePopularBody = z.object({
 });
 export type UpdateHomePopularBody = z.infer<typeof UpdateHomePopularBody>;
 
-/** ผลของ PUT /admin/home-popular */
-export interface UpdateHomePopularResult {
-  bar_ids: string[];
+/** PUT /admin/home-page — หน้า /home-content บันทึกครั้งเดียว: ส่งเฉพาะส่วนที่แก้ (อย่างน้อย 1 ส่วน) */
+export const SaveHomePageBody = z
+  .object({
+    content: UpdateHomeContentBody.optional().describe('Hero + หัวข้อ section (ไม่ส่ง = ไม่แตะ)'),
+    categories: z
+      .array(UpdateHomeCategoryBody.extend({ slot: HomeCategorySlot }))
+      .max(HOME_CATEGORY_SLOTS.length)
+      .refine((c) => new Set(c.map((x) => x.slot)).size === c.length, 'การ์ดซ้ำกัน')
+      .optional()
+      .describe('เฉพาะการ์ดที่แก้'),
+    popular: UpdateHomePopularBody.optional().describe('ร้านยอดนิยมทั้งรายการ (ไม่ส่ง = ไม่แตะ)'),
+  })
+  .refine((b) => b.content !== undefined || !!b.categories?.length || b.popular !== undefined, 'ไม่มีอะไรให้บันทึก');
+export type SaveHomePageBody = z.infer<typeof SaveHomePageBody>;
+export interface SaveHomePageResult {
+  content_updated: boolean;
+  categories_updated: number;
+  popular_updated: boolean;
 }
 
 export interface HomeContent {
@@ -107,6 +122,7 @@ export interface PublicHomeResult {
 }
 
 export const SITE_CONTENT_ERRORS = {
+  INVALID_HOME_PAGE: 'ไม่มีอะไรให้บันทึก หรือข้อมูลไม่ถูกต้อง — รีเฟรชหน้าแล้วลองใหม่',
   HOME_CATEGORY_NOT_FOUND: 'ไม่พบการ์ดหมวดนี้ — รีเฟรชหน้าแล้วลองใหม่',
   INVALID_HOME_POPULAR: 'เลือกร้านยอดนิยมได้ไม่เกิน 8 ร้าน และห้ามซ้ำ',
   HOME_POPULAR_BAR_NOT_FOUND: 'มีร้านที่ไม่พบหรือยังไม่อนุมัติ — รีเฟรชหน้าแล้วเลือกใหม่',

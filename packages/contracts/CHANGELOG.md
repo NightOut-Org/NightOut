@@ -1,5 +1,23 @@
 # CHANGELOG — @nightout/contracts
 
+## 2026-10-12 — body บันทึกหน้าแรก + ตั้งค่าร้านครั้งเดียว
+- `site-content.ts`: `SaveHomePageBody` (`content?` + `categories?` (การ์ด + `slot` ไม่ซ้ำ) + `popular?` อย่างน้อย 1) + result · error `INVALID_HOME_PAGE` · ลบ `UpdateHomePopularResult`
+- `bar.ts`: `SettingsPageBody` (`booking?` + `payout?` อย่างน้อย 1) + result · error `INVALID_SETTINGS_PAGE`
+- เทสต์ใน `contracts.test.ts`
+
+## 2026-10-12 — body บันทึกหน้าโปรโมชันครั้งเดียว
+- `bar.ts`: `PromotionsPageBody` (`items?` + `fees?` อย่างน้อย 1) + `PromotionsPageResult` (PUT …/promotions-page) · `BarPromotionsBody` / `FeesBody` เดิมคงไว้ · error `INVALID_PROMOTIONS_PAGE` · เทสต์ใน `contracts.test.ts`
+
+## 2026-10-12 — body บันทึกชั้นบัญชี + Safety ครั้งเดียว
+- `account.ts`: `SetUsersRoleBody` (`changes: [{id, role}]` ไม่ซ้ำคน) + result · error `INVALID_ROLE_CHANGES` · ลบ `SetUserRoleBody`
+- `bar.ts`: `SaveSafetyBody` (`items` แต่ละข้อมีค่าและ/หรือหลักฐาน · key ไม่ซ้ำ) + result · error `INVALID_SAFETY_ITEMS` · ลบ `SafetyBody` / `EvidenceBody`
+- เทสต์ใน `contracts.test.ts`
+
+## 2026-10-12 — body สำหรับบันทึกทั้งหน้าครั้งเดียว
+- `bar.ts`: `SetBarsStatusBody` (ระงับต้องมีเหตุผล · ไม่ซ้ำร้าน) · `AdminBarMediaBody` (`gallery?` + `menu_images?` อย่างน้อย 1) · `DiscardBarMediaBody` · `BarStoreBody` (`info?` + `media?` อย่างน้อย 1) + result · error `INVALID_BAR_STORE` / `INVALID_BAR_STATUS_CHANGES` / `BAR_NOT_TOGGLEABLE` · ลบ `MenuItemImageBody`
+- `site-team.ts`: `SaveTeamPageBody` (`order?` + `active?`) + result · error `INVALID_TEAM_PAGE` · ลบ `ReorderTeamBody`
+- เทสต์ใน `contracts.test.ts`
+
 ## 2026-10-11 — รีวิวได้เมื่อมัดจำผ่าน (ไม่ต้องเช็กอิน)
 - `REVIEW_ERRORS`: `REVIEW_REQUIRES_CHECKIN` → `REVIEW_REQUIRES_BOOKING` ("รีวิวได้หลังจองและมัดจำผ่านแล้วเท่านั้น")
 - ไฟล์: `src/review.ts`

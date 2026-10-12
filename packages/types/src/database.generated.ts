@@ -7891,6 +7891,17 @@ export type Database = {
         }
         Returns: Json
       }
+      admin_save_bar_media: {
+        Args: {
+          p_actor: string
+          p_bar: string
+          p_cover_path: string
+          p_cover_url: string
+          p_menu: Json
+          p_paths: string[]
+        }
+        Returns: Json
+      }
       admin_save_home_category: {
         Args: { p: Json; p_actor: string; p_slot: string }
         Returns: Json
@@ -7899,12 +7910,25 @@ export type Database = {
         Args: { p: Json; p_actor: string }
         Returns: Json
       }
+      admin_save_home_page: {
+        Args: {
+          p_actor: string
+          p_categories: Json
+          p_content: Json
+          p_popular: string[]
+        }
+        Returns: Json
+      }
       admin_save_home_popular: {
         Args: { p_actor: string; p_bar_ids: string[] }
         Returns: Json
       }
       admin_save_team_member: {
         Args: { p: Json; p_actor: string; p_id: string }
+        Returns: Json
+      }
+      admin_save_team_page: {
+        Args: { p_active: Json; p_actor: string; p_ids: string[] }
         Returns: Json
       }
       admin_set_bar_media: {
@@ -7926,6 +7950,10 @@ export type Database = {
         }
         Returns: Json
       }
+      admin_set_bars_status: {
+        Args: { p_actor: string; p_changes: Json }
+        Returns: Json
+      }
       admin_set_menu_item_image: {
         Args: { p_actor: string; p_item: string; p_path: string }
         Returns: Json
@@ -7936,6 +7964,10 @@ export type Database = {
           p_role: Database["public"]["Enums"]["user_role"]
           p_user: string
         }
+        Returns: Json
+      }
+      admin_set_users_role: {
+        Args: { p_actor: string; p_changes: Json }
         Returns: Json
       }
       admin_settle_deposit: {
@@ -8203,6 +8235,34 @@ export type Database = {
       }
       app_respond_invite: {
         Args: { p_accept: boolean; p_actor: string; p_bar: string }
+        Returns: Json
+      }
+      app_save_bar_store: {
+        Args: {
+          p_actor: string
+          p_bar: string
+          p_cover_path: string
+          p_cover_url: string
+          p_info: Json
+          p_paths: string[]
+        }
+        Returns: Json
+      }
+      app_save_promotions_page: {
+        Args: { p_actor: string; p_bar: string; p_fees: Json; p_items: Json }
+        Returns: Json
+      }
+      app_save_safety: {
+        Args: { p_actor: string; p_bar: string; p_items: Json }
+        Returns: Json
+      }
+      app_save_settings_page: {
+        Args: {
+          p_actor: string
+          p_bar: string
+          p_payout: Json
+          p_settings: Json
+        }
         Returns: Json
       }
       app_set_bar_media: {

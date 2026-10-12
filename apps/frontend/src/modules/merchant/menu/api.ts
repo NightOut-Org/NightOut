@@ -6,7 +6,7 @@ import { compressImage } from '@/ui/utils/media';
 
 /** API ของหน้าเมนู · backend: domains/bar */
 
-/** PUT /merchant/bars/:barId/menu — แทนทั้งเมนู (image_path ส่งทุกรายการ: null = ไม่มีรูป · รูปที่ถูกแทน/ลบ backend ลบไฟล์ให้) */
+/** PUT /merchant/bars/:barId/menu — แทนทั้งเมนู บันทึกทั้งหน้าครั้งเดียว (image_path ส่งทุกรายการ: null = ไม่มีรูป · รูปที่ถูกแทน/ลบ backend ลบไฟล์ให้) */
 export async function setMenu(barId: string, menu: MenuItem[]) {
   const body: C.MenuBody = {
     items: menu.map((m) => ({

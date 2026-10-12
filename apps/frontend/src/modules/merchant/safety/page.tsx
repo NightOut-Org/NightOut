@@ -20,8 +20,10 @@ import { SAFETY_LABELS, type SafetyValue } from '@/services/data';
 
 type SafetyKey = keyof typeof SAFETY_LABELS;
 import { useMerchantBar } from '@/hooks/useMerchantBar';
+import { useUnsavedGuard } from '@/hooks/useUnsavedGuard';
 import { Ring, Tile } from '@/ui/components/merchantUi';
-import { setSafety, uploadSafetyProof } from './api';
+import { saveSafety } from './api';
+import { useSafetyDraft } from './utils/useSafetyDraft';
 
 const ICON: Record<SafetyKey, ReactNode> = {
   SECURITY: <UserFocus />,
@@ -41,35 +43,62 @@ const OPTIONS: { value: SafetyValue; label: string; on: string }[] = [
   { value: 'UNKNOWN', label: 'ไม่ระบุ', on: 'bg-border text-text' },
 ];
 
-/** /merchant/safety — Safety Score (ซ้าย) + checklist มี/ไม่มี/ไม่ระบุ + แนบหลักฐาน (ขวา) */
+/**
+ * /merchant/safety — Safety Score (ซ้าย) + checklist มี/ไม่มี/ไม่ระบุ + แนบหลักฐาน (ขวา)
+ * แก้ทั้งหน้าในเครื่องก่อน (คะแนนคิดจากค่าที่แก้) แล้วกดบันทึกครั้งเดียว: อัปโหลดหลักฐาน → PUT /merchant/bars/:barId/safety
+ */
 export function MerchantSafetyPage() {
   const bar = useMerchantBar();
   const { message } = App.useApp();
-  const [busy, setBusy] = useState<string | null>(null);
+  const draft = useSafetyDraft(bar);
+  const [progress, setProgress] = useState<string | null>(null);
+  const saving = progress !== null;
+  const { confirmDiscard } = useUnsavedGuard(draft.count > 0);
   const total = bar.safety.length;
-  const yes = bar.safety.filter((s) => s.value === 'YES').length;
-  const no = bar.safety.filter((s) => s.value === 'NO').length;
-  const verified = bar.safety.filter((s) => s.source === 'ADMIN_VERIFIED' && s.value === 'YES').length;
+  const yes = bar.safety.filter((s) => draft.valueOf(s) === 'YES').length;
+  const no = bar.safety.filter((s) => draft.valueOf(s) === 'NO').length;
+  // เปลี่ยนค่า = กลับเป็นร้านแจ้งเอง (ไม่นับว่ายืนยันแล้ว)
+  const verified = bar.safety.filter((s) => s.source === 'ADMIN_VERIFIED' && s.value === 'YES' && !draft.valueChanged(s)).length;
 
-  const change = async (key: SafetyKey, value: SafetyValue) => {
-    setBusy(key);
+  const save = async () => {
+    setProgress('กำลังบันทึก…');
     try {
-      await setSafety(bar.id, key, value);
-      message.success(value === 'YES' ? 'บันทึกแล้ว · แนบหลักฐานให้ทีม NightOut ยืนยันได้' : 'บันทึกแล้ว');
+      let body;
+      try {
+        body = await draft.upload((done, n) => setProgress(done < n ? `กำลังอัปโหลด ${done + 1}/${n}` : 'กำลังบันทึก…'));
+      } catch (e) {
+        // หลักฐานที่อัปโหลดสำเร็จแล้วอยู่ใน draft — กดบันทึกใหม่ไม่อัปโหลดซ้ำ
+        void message.error(`อัปโหลดหลักฐานไม่สำเร็จ — ${(e as Error).message}`);
+        return;
+      }
+      const r = await saveSafety(bar.id, body);
+      draft.reset();
+      void message.success(r.evidence_added ? 'บันทึกแล้ว · ส่งหลักฐานให้ทีม NightOut ตรวจแล้ว' : 'บันทึกแล้ว');
     } catch (e) {
-      message.error((e as Error).message);
+      void message.error((e as Error).message);
     } finally {
-      setBusy(null);
+      setProgress(null);
     }
   };
 
+  const saveButton = (cls: string, label: string) => (
+    <button
+      type="button"
+      disabled={saving || !draft.count}
+      onClick={() => void save()}
+      className={`merchant-pill disabled:opacity-60 ${cls}`}
+    >
+      {saving ? progress : label}
+    </button>
+  );
+
   /** บรรทัดใต้ชื่อ: ยืนยันแล้ว (เขียว) · ร้านแจ้ง รอตรวจ (เหลือง) · ยังไม่มีข้อมูล */
   const evidence = (s: (typeof bar.safety)[number]) =>
-    s.value === 'YES'
-      ? s.source === 'ADMIN_VERIFIED'
+    draft.valueOf(s) === 'YES'
+      ? s.source === 'ADMIN_VERIFIED' && !draft.valueChanged(s)
         ? { text: 'ยืนยันแล้วโดย NightOut', cls: 'text-(--crowd-available)' }
         : { text: 'ร้านแจ้ง · แนบหลักฐานให้ทีมตรวจ', cls: 'text-(--crowd-almost-full)' }
-      : s.value === 'NO'
+      : draft.valueOf(s) === 'NO'
         ? { text: 'ลูกค้าเห็นว่า "ไม่มี"', cls: 'text-muted' }
         : { text: 'ยังไม่มีข้อมูล', cls: 'text-muted' };
 
@@ -84,11 +113,31 @@ export function MerchantSafetyPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div>
-        <h1 className="text-[17px] font-bold lg:font-display lg:text-[30px]">ความปลอดภัย</h1>
-        <p className="mt-1 hidden text-sm text-muted lg:block">
-          ลูกค้าเห็นทุกข้อ · มีผลต่อดาวของร้าน · ทีม NightOut ยืนยันจากหลักฐาน
-        </p>
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <h1 className="text-[17px] font-bold lg:font-display lg:text-[30px]">ความปลอดภัย</h1>
+          <p className="mt-1 hidden text-sm text-muted lg:block">
+            ลูกค้าเห็นทุกข้อ · มีผลต่อดาวของร้าน · ทีม NightOut ยืนยันจากหลักฐาน · แก้ได้หลายข้อแล้วกดบันทึกครั้งเดียว
+          </p>
+        </div>
+        <div className="flex items-center gap-1 lg:gap-3">
+          {draft.count > 0 && !saving && (
+            <>
+              <span className="hidden text-sm text-gold-text lg:inline" role="status">
+                ยังไม่บันทึก {draft.count} ข้อ
+              </span>
+              <button
+                type="button"
+                onClick={() => confirmDiscard(draft.reset)}
+                className="merchant-pill px-2 py-1 text-sm text-muted lg:h-10 lg:rounded-xl lg:border lg:border-border lg:px-[18px]"
+              >
+                คืนค่า
+              </button>
+            </>
+          )}
+          {saveButton('hidden h-10 items-center rounded-xl bg-gold px-[18px] text-sm font-semibold text-on-gold lg:inline-flex', 'บันทึกการเปลี่ยนแปลง')}
+          {saveButton('px-2 py-1 text-sm font-semibold text-gold-text lg:hidden', 'บันทึก')}
+        </div>
       </div>
 
       <div className="grid min-w-0 gap-4 lg:grid-cols-[300px_minmax(0,1fr)]">
@@ -136,6 +185,8 @@ export function MerchantSafetyPage() {
         <ul className="m-0 flex list-none flex-col gap-2.5 p-0 lg:gap-0 lg:overflow-hidden lg:rounded-[20px] lg:border lg:border-border lg:bg-card">
           {bar.safety.map((s) => {
             const ev = evidence(s);
+            const value = draft.valueOf(s);
+            const file = draft.fileOf(s);
             return (
               <li
                 key={s.key}
@@ -145,23 +196,28 @@ export function MerchantSafetyPage() {
                 <span className="flex min-w-0 flex-1 flex-col text-sm">
                   <b className="font-medium">{SAFETY_LABELS[s.key]}</b>
                   <span className={`text-[11px] lg:text-xs ${ev.cls}`}>{ev.text}</span>
+                  {(draft.valueChanged(s) || file) && (
+                    <span className="text-[11px] text-gold-text lg:text-xs">
+                      ยังไม่บันทึก{file ? ` · หลักฐาน ${file}` : ''}
+                    </span>
+                  )}
                 </span>
-                <span className="text-[22px] lg:hidden">{statusIcon(s.value)}</span>
+                <span className="text-[22px] lg:hidden">{statusIcon(value)}</span>
                 <div
                   role="radiogroup"
                   aria-label={SAFETY_LABELS[s.key]}
                   className="flex flex-1 gap-0.5 rounded-[10px] border border-border bg-surface p-[3px] text-xs lg:flex-none"
                 >
                   {OPTIONS.map((o) => {
-                    const on = s.value === o.value;
+                    const on = value === o.value;
                     return (
                       <button
                         key={o.value}
                         type="button"
                         role="radio"
                         aria-checked={on}
-                        disabled={busy === s.key}
-                        onClick={() => !on && void change(s.key, o.value)}
+                        disabled={saving}
+                        onClick={() => !on && draft.setValue(s, o.value)}
                         className={`merchant-pill min-h-9 flex-1 rounded-[7px] px-2.5 lg:min-h-0 lg:py-1 ${on ? o.on : 'text-muted'}`}
                       >
                         {o.label}
@@ -172,20 +228,17 @@ export function MerchantSafetyPage() {
                 <Upload
                   accept="image/*,application/pdf"
                   showUploadList={false}
-                  beforeUpload={(file) => {
-                    if (file.size > 10 * 1024 * 1024) {
-                      message.error('ไฟล์ใหญ่เกิน 10MB');
-                      return Upload.LIST_IGNORE;
-                    }
-                    void uploadSafetyProof(bar.id, s.key, file)
-                      .then(() => message.success('ส่งหลักฐานแล้ว ทีม NightOut จะตรวจให้'))
-                      .catch((e: Error) => message.error(e.message));
-                    return false;
+                  disabled={saving}
+                  beforeUpload={(f) => {
+                    if (f.size > 10 * 1024 * 1024) void message.error('ไฟล์ใหญ่เกิน 10MB');
+                    else draft.setFile(s, f);
+                    return Upload.LIST_IGNORE;
                   }}
                 >
                   <button
                     type="button"
-                    className="merchant-pill inline-flex h-9 items-center gap-1.5 rounded-[10px] border border-border px-3 text-[13px] text-muted hover:text-text lg:h-8"
+                    disabled={saving}
+                    className="merchant-pill inline-flex h-9 items-center gap-1.5 rounded-[10px] border border-border px-3 text-[13px] text-muted hover:text-text disabled:opacity-60 lg:h-8"
                   >
                     <Paperclip /> หลักฐาน
                   </button>

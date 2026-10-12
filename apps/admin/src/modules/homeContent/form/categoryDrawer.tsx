@@ -1,69 +1,34 @@
 import { Camera } from '@phosphor-icons/react';
-import type { UpdateHomeCategoryBody } from '@nightout/contracts';
 import type { Db } from '@nightout/types';
 import { App, Button, Drawer, Form, Input, Typography, Upload } from 'antd';
-import { useEffect, useState } from 'react';
-import { useAdminAction } from '@/services/adminData';
+import { useEffect, useMemo, useState } from 'react';
 import { webSrc } from '@/ui/utils/image';
 import { SLOT_LABELS } from '../utils/slots';
-import { checkImage, IMAGE_ACCEPT, uploadSiteImage } from '../utils/media';
-import { homeCategoryAction } from '../api';
+import { checkImage, IMAGE_ACCEPT } from '../utils/media';
+import type { CategoryValues } from '../utils/useHomePageDraft';
 
-type Values = Pick<Db.AdminHomeCategory, 'title' | 'hint' | 'link_to' | 'image_url' | 'badge'>;
+interface Current {
+  values: CategoryValues;
+  /** ภาพที่แสดงอยู่ (blob: = ภาพใหม่ที่ยังไม่อัปโหลด) */
+  image: string;
+}
 
-/** แก้การ์ดหมวด 1 ช่อง (PATCH /admin/home-categories/:slot) — ตำแหน่งบนกริดตายตัว แก้ได้เฉพาะเนื้อหา */
-export function CategoryDrawer({ category, onClose }: { category: Db.AdminHomeCategory | null; onClose: () => void }) {
-  const { message } = App.useApp();
-  const [form] = Form.useForm<Values>();
-  const act = useAdminAction();
-  const [uploading, setUploading] = useState(false);
-  const image = Form.useWatch('image_url', form);
-
-  useEffect(() => {
-    if (!category) return;
-    form.resetFields();
-    form.setFieldsValue(category);
-  }, [category, form]);
-
-  const pick = async (file: File) => {
-    const err = checkImage(file);
-    if (err) return void message.error(err);
-    setUploading(true);
-    try {
-      form.setFieldValue('image_url', await uploadSiteImage(file, 'category'));
-    } catch (e) {
-      void message.error(`อัปโหลดรูปไม่สำเร็จ: ${(e as Error).message}`);
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  const save = async () => {
-    if (!category) return;
-    let v: Values;
-    try {
-      v = await form.validateFields();
-    } catch {
-      return;
-    }
-    const body: UpdateHomeCategoryBody = {
-      title: v.title.trim(),
-      hint: v.hint?.trim() ?? '',
-      link_to: v.link_to.trim(),
-      image_url: v.image_url,
-      badge: v.badge?.trim() || null,
-    };
-    try {
-      await act.mutateAsync({
-        ...homeCategoryAction(category.slot, body),
-        success: `บันทึกการ์ด${body.title}แล้ว`,
-      });
-      onClose();
-    } catch {
-      // useAdminAction แจ้งเหตุผลแล้ว — เปิดฟอร์มค้างไว้ให้แก้ต่อ
-    }
-  };
-
+/**
+ * แก้การ์ดหมวด 1 ช่อง — ตำแหน่งบนกริดตายตัว แก้ได้เฉพาะเนื้อหา
+ * กด "ตกลง" = เข้า draft ของหน้า (บันทึกจริงด้วยปุ่มบันทึกของหน้า) · ภาพใหม่อัปโหลดตอนบันทึก
+ */
+export function CategoryDrawer({
+  category,
+  current,
+  onApply,
+  onClose,
+}: {
+  category: Db.AdminHomeCategory | null;
+  /** ค่าที่แสดงอยู่ (draft ก่อน) */
+  current: Current | null;
+  onApply: (values: CategoryValues, file?: File) => void;
+  onClose: () => void;
+}) {
   return (
     <Drawer
       open={!!category}
@@ -71,23 +36,53 @@ export function CategoryDrawer({ category, onClose }: { category: Db.AdminHomeCa
       size={480}
       destroyOnHidden
       title={category ? `แก้การ์ด · ${SLOT_LABELS[category.slot] ?? category.slot}` : ''}
-      footer={
-        <div className="flex justify-end gap-2">
-          <Button onClick={onClose}>ยกเลิก</Button>
-          <Button type="primary" loading={act.isPending} disabled={uploading} onClick={() => void save()}>
-            บันทึก
-          </Button>
-        </div>
-      }
     >
-      <Form<Values> form={form} layout="vertical" disabled={act.isPending}>
+      {/* key = ช่อง → เปิดการ์ดใหม่ ฟอร์ม/ภาพที่เลือกเริ่มจากค่าปัจจุบันของการ์ดนั้นเสมอ */}
+      {category && current && (
+        <CategoryEditor key={category.slot} current={current} onApply={onApply} onClose={onClose} />
+      )}
+    </Drawer>
+  );
+}
+
+function CategoryEditor({
+  current,
+  onApply,
+  onClose,
+}: {
+  current: Current;
+  onApply: (values: CategoryValues, file?: File) => void;
+  onClose: () => void;
+}) {
+  const { message } = App.useApp();
+  const [form] = Form.useForm<CategoryValues>();
+  const [file, setFile] = useState<File | null>(null);
+  const filePreview = useMemo(() => (file ? URL.createObjectURL(file) : null), [file]);
+  useEffect(() => () => void (filePreview && URL.revokeObjectURL(filePreview)), [filePreview]);
+  const image =
+    filePreview ?? (current.image.startsWith('blob:') ? current.image : webSrc(current.image));
+
+  const apply = async () => {
+    let v: CategoryValues;
+    try {
+      v = await form.validateFields();
+    } catch {
+      return;
+    }
+    onApply(v, file ?? undefined);
+    onClose();
+  };
+
+  return (
+    <>
+      <Form<CategoryValues> form={form} layout="vertical" initialValues={current.values}>
         <Form.Item name="image_url" hidden rules={[{ required: true, message: 'ต้องมีภาพ' }]}>
           <Input />
         </Form.Item>
         <div className="mb-6">
           <div
             className="mb-2 aspect-[16/10] w-full rounded-lg bg-[#14121c] bg-cover bg-center"
-            style={image ? { backgroundImage: `url("${webSrc(image)}")` } : undefined}
+            style={{ backgroundImage: `url("${image}")` }}
             role="img"
             aria-label="ภาพพื้นการ์ด"
           />
@@ -95,20 +90,25 @@ export function CategoryDrawer({ category, onClose }: { category: Db.AdminHomeCa
             accept={IMAGE_ACCEPT}
             showUploadList={false}
             beforeUpload={(f) => {
-              void pick(f);
-              return false;
+              const err = checkImage(f);
+              if (err) void message.error(err);
+              else setFile(f);
+              return Upload.LIST_IGNORE;
             }}
           >
-            <Button icon={<Camera size={16} />} loading={uploading}>
-              เปลี่ยนภาพ
-            </Button>
+            <Button icon={<Camera size={16} />}>เปลี่ยนภาพ</Button>
           </Upload>
           <Typography.Text type="secondary" className="mt-1 block text-xs">
             ภาพคน/บรรยากาศร้าน โทนมืด ตัวหนังสือสีขาวอยู่มุมล่างซ้าย · ระบบย่อเป็น 1280px ให้เอง
+            (อัปโหลดตอนกดบันทึก)
           </Typography.Text>
         </div>
 
-        <Form.Item name="title" label="ชื่อหมวด" rules={[{ required: true, whitespace: true, message: 'กรอกชื่อหมวด' }]}>
+        <Form.Item
+          name="title"
+          label="ชื่อหมวด"
+          rules={[{ required: true, whitespace: true, message: 'กรอกชื่อหมวด' }]}
+        >
           <Input maxLength={30} />
         </Form.Item>
         <Form.Item name="hint" label="คำอธิบายสั้น">
@@ -125,10 +125,16 @@ export function CategoryDrawer({ category, onClose }: { category: Db.AdminHomeCa
         >
           <Input maxLength={300} />
         </Form.Item>
-        <Form.Item name="badge" label="ป้ายเหนือชื่อ" extra="เว้นว่าง = ไม่มีป้าย" className="!mb-0">
+        <Form.Item name="badge" label="ป้ายเหนือชื่อ" extra="เว้นว่าง = ไม่มีป้าย">
           <Input maxLength={30} placeholder="เช่น อันดับประจำสัปดาห์" allowClear />
         </Form.Item>
       </Form>
-    </Drawer>
+      <div className="sticky bottom-0 -mx-6 -mb-6 flex justify-end gap-2 border-t border-black/5 bg-(--ant-color-bg-elevated) px-6 py-3 dark:border-white/10">
+        <Button onClick={onClose}>ยกเลิก</Button>
+        <Button type="primary" onClick={() => void apply()}>
+          ตกลง
+        </Button>
+      </div>
+    </>
   );
 }

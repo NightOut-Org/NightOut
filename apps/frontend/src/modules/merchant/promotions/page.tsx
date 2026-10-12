@@ -5,9 +5,11 @@ import dayjs from 'dayjs';
 import { useState } from 'react';
 import { barBookings, type BarPromotion } from '@/services/data';
 import { useMerchantBar } from '@/hooks/useMerchantBar';
+import { useUnsavedGuard } from '@/hooks/useUnsavedGuard';
 import { Tile } from '@/ui/components/merchantUi';
 import { baht } from '@/ui/utils/format';
-import { setBarPromotions, setFees } from './api';
+import { savePromotionsPage, toPromotionItems } from './api';
+import { usePromotionsDraft } from './utils/usePromotionsDraft';
 
 const DAYS = ['อา.', 'จ.', 'อ.', 'พ.', 'พฤ.', 'ศ.', 'ส.'];
 const DAY_SHORT = ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'];
@@ -31,6 +33,7 @@ function daysLabel(days?: number[]) {
 /**
  * /merchant/promotions — โปรที่ลูกค้าเลือกได้ตอนจองโต๊ะ (การ์ดละโปร) + ค่าธรรมเนียมที่ใช้ประเมินราคา + ข้อกำหนด
  * เช่น "โปรเบียร์ก่อน 2 ทุ่ม" = ต้องเช็กอินก่อน 20:00 · เลือกวันได้ · เปิด/ปิดได้
+ * สร้าง/ลบ/เปิด-ปิดโปร และค่าธรรมเนียม แก้ในหน้าก่อน แล้วกดบันทึกครั้งเดียว (PUT /merchant/bars/:barId/promotions)
  */
 export function MerchantPromotionsPage() {
   const bar = useMerchantBar();
@@ -39,31 +42,56 @@ export function MerchantPromotionsPage() {
   const [form] = Form.useForm<PromoForm>();
   const [feeForm] = Form.useForm<typeof bar.fees>();
   const fees = (Form.useWatch([], feeForm) as typeof bar.fees | undefined) ?? bar.fees;
+  const promos = usePromotionsDraft(bar.promotions);
+  const [feesDirty, setFeesDirty] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [savingFees, setSavingFees] = useState(false);
   const [since] = useState(() => Date.now() - 30 * DAY_MS);
+  const count = promos.count + (feesDirty ? 1 : 0);
+  const { confirmDiscard } = useUnsavedGuard(count > 0);
 
-  const save = async (list: BarPromotion[]) => {
+  const reset = () => {
+    promos.reset();
+    feeForm.resetFields();
+    setFeesDirty(false);
+  };
+
+  const save = async () => {
+    let feeValues: typeof bar.fees | undefined;
+    if (feesDirty) {
+      try {
+        feeValues = await feeForm.validateFields();
+      } catch {
+        return; // ฟอร์มแสดงช่องที่ผิดให้แล้ว
+      }
+    }
     setSaving(true);
     try {
-      const pending = await setBarPromotions(bar.id, list);
-      message.success(pending ? 'บันทึกแล้ว — โปรที่เพิ่ม/แก้ข้อความ รอทีม NightOut ตรวจถ้อยคำก่อนแสดง' : 'บันทึกแล้ว');
-      return true;
+      const r = await savePromotionsPage(bar.id, {
+        ...(promos.count ? { items: toPromotionItems(promos.list) } : {}),
+        ...(feeValues
+          ? { fees: { service_charge: feeValues.serviceChargeRate ?? 0, vat: feeValues.vatRate ?? 0, other: feeValues.otherFees ?? 0 } }
+          : {}),
+      });
+      promos.reset();
+      setFeesDirty(false);
+      void message.success(r.pending ? 'บันทึกแล้ว — โปรที่เพิ่ม/แก้ข้อความ รอทีม NightOut ตรวจถ้อยคำก่อนแสดง' : 'บันทึกแล้ว');
     } catch (e) {
-      message.error((e as Error).message);
-      return false;
+      void message.error((e as Error).message);
     } finally {
       setSaving(false);
     }
   };
-  const remove = (p: BarPromotion) =>
-    modal.confirm({
-      title: `ลบ "${p.title}"?`,
-      okText: 'ลบ',
-      okButtonProps: { danger: true },
-      cancelText: 'ยกเลิก',
-      onOk: () => save(bar.promotions.filter((x) => x.id !== p.id)),
-    });
+
+  const saveButton = (cls: string, label: string) => (
+    <button
+      type="button"
+      disabled={saving || !count}
+      onClick={() => void save()}
+      className={`merchant-pill disabled:opacity-60 ${cls}`}
+    >
+      {saving ? 'กำลังบันทึก…' : label}
+    </button>
+  );
 
   // ใช้แล้วกี่ครั้งใน 30 วัน (นับการจองที่เลือกโปรนี้ ไม่รวมที่ถูกปฏิเสธ/ยกเลิก)
   const used = new Map<string, number>();
@@ -84,7 +112,9 @@ export function MerchantPromotionsPage() {
       <span className="rounded-full border border-(--crowd-full)/40 px-2 text-[11px] text-(--crowd-full)">ไม่ผ่านการตรวจ</span>
     ) : null;
 
-  const promoCard = (p: BarPromotion) => (
+  const promoCard = (p: BarPromotion) => {
+    const state = promos.stateOf(p);
+    return (
     <div
       key={p.id}
       className={`flex min-w-0 flex-col gap-2.5 rounded-[20px] border p-[18px] lg:p-5 ${
@@ -99,16 +129,35 @@ export function MerchantPromotionsPage() {
             {p.active ? 'เปิดอยู่' : 'ปิดอยู่'}
           </span>
           {moderation(p)}
+          {state && (
+            <span className="rounded-full bg-gold/15 px-2 text-[11px] text-gold-text">
+              {state === 'new' ? 'ใหม่ · ยังไม่บันทึก' : 'ยังไม่บันทึก'}
+            </span>
+          )}
         </span>
         <span className="flex items-center gap-1">
-          <button type="button" aria-label={`ลบ ${p.title}`} onClick={() => remove(p)} className="grid size-8 place-items-center rounded-lg text-muted hover:text-(--crowd-full)">
+          <button
+            type="button"
+            aria-label={`ลบ ${p.title}`}
+            disabled={saving}
+            onClick={() =>
+              modal.confirm({
+                title: `ลบ "${p.title}"?`,
+                okText: 'ลบ',
+                okButtonProps: { danger: true },
+                cancelText: 'ยกเลิก',
+                onOk: () => promos.remove(p.id),
+              })
+            }
+            className="grid size-8 place-items-center rounded-lg text-muted hover:text-(--crowd-full) disabled:opacity-50"
+          >
             <Trash />
           </button>
           <Switch
             checked={p.active}
-            loading={saving}
+            disabled={saving}
             aria-label={`เปิดใช้ ${p.title}`}
-            onChange={(v) => void save(bar.promotions.map((x) => (x.id === p.id ? { ...x, active: v } : x)))}
+            onChange={(v) => promos.setActive(p.id, v)}
           />
         </span>
       </span>
@@ -129,7 +178,8 @@ export function MerchantPromotionsPage() {
       </div>
       <span className="hidden text-xs text-muted lg:block">ใช้แล้ว {used.get(p.id) ?? 0} ครั้งใน 30 วัน</span>
     </div>
-  );
+    );
+  };
 
   return (
     <div className="flex flex-col gap-4">
@@ -140,54 +190,58 @@ export function MerchantPromotionsPage() {
             ลูกค้าเลือกได้ 1 โปรตอนจองโต๊ะ · ระบบเช็กเวลา/วันให้อัตโนมัติ · ใช้กับอาหาร ค่าเข้า หรือบริการเท่านั้น
           </p>
         </div>
-        <button
-          type="button"
-          onClick={() => setOpen(true)}
-          className="merchant-pill hidden h-10 items-center gap-2 rounded-xl bg-gold px-[18px] text-sm font-semibold text-on-gold lg:inline-flex"
-        >
-          <Plus /> สร้างโปร
-        </button>
-        <button type="button" aria-label="สร้างโปร" onClick={() => setOpen(true)} className="grid size-10 place-items-center text-xl text-gold lg:hidden">
-          <Plus />
-        </button>
+        <div className="flex items-center gap-1 lg:gap-3">
+          {count > 0 && !saving && (
+            <>
+              <span className="hidden text-sm text-gold-text lg:inline" role="status">
+                ยังไม่บันทึก {count} รายการ
+              </span>
+              <button
+                type="button"
+                onClick={() => confirmDiscard(reset)}
+                className="merchant-pill px-2 py-1 text-sm text-muted lg:h-10 lg:rounded-xl lg:border lg:border-border lg:px-[18px]"
+              >
+                คืนค่า
+              </button>
+            </>
+          )}
+          <button
+            type="button"
+            disabled={saving}
+            onClick={() => setOpen(true)}
+            className="merchant-pill hidden h-10 items-center gap-2 rounded-xl bg-gold px-[18px] text-sm font-semibold text-on-gold disabled:opacity-60 lg:inline-flex"
+          >
+            <Plus /> สร้างโปร
+          </button>
+          {saveButton('hidden h-10 items-center rounded-xl bg-gold px-[18px] text-sm font-semibold text-on-gold lg:inline-flex', 'บันทึกการเปลี่ยนแปลง')}
+          <button
+            type="button"
+            aria-label="สร้างโปร"
+            disabled={saving}
+            onClick={() => setOpen(true)}
+            className="grid size-10 place-items-center text-xl text-gold disabled:opacity-60 lg:hidden"
+          >
+            <Plus />
+          </button>
+          {saveButton('px-2 py-1 text-sm font-semibold text-gold-text lg:hidden', 'บันทึก')}
+        </div>
       </div>
 
-      {bar.promotions.length === 0 ? (
+      {promos.list.length === 0 ? (
         <Tile>
           <Empty description="ยังไม่มีโปรโมชัน — สร้างโปรแรกให้ลูกค้าเลือกตอนจองได้เลย" />
         </Tile>
       ) : (
-        <div className="grid gap-2.5 lg:grid-cols-3 lg:gap-4">{bar.promotions.map(promoCard)}</div>
+        <div className="grid gap-2.5 lg:grid-cols-3 lg:gap-4">{promos.list.map(promoCard)}</div>
       )}
 
       <div className="grid gap-2.5 lg:grid-cols-3 lg:gap-4">
         <Tile className="flex flex-col gap-3.5 lg:col-span-2">
           <span className="flex items-center justify-between gap-3">
             <b className="text-[15px] font-semibold">ค่าธรรมเนียมที่ใช้ประเมินราคา</b>
-            <button
-              type="button"
-              disabled={savingFees}
-              onClick={() => feeForm.submit()}
-              className="merchant-pill h-9 rounded-xl border border-border px-3.5 text-sm disabled:opacity-60"
-            >
-              {savingFees ? 'กำลังบันทึก…' : 'บันทึกค่าธรรมเนียม'}
-            </button>
+            {feesDirty && <span className="text-xs text-gold-text">ยังไม่บันทึก</span>}
           </span>
-          <Form
-            form={feeForm}
-            initialValues={bar.fees}
-            onFinish={async (v) => {
-              setSavingFees(true);
-              try {
-                await setFees(bar.id, v);
-                message.success('บันทึกค่าธรรมเนียมแล้ว');
-              } catch (e) {
-                message.error((e as Error).message);
-              } finally {
-                setSavingFees(false);
-              }
-            }}
-          >
+          <Form form={feeForm} initialValues={bar.fees} disabled={saving} onValuesChange={() => setFeesDirty(true)}>
             <div className="grid gap-3 sm:grid-cols-3">
               {(
                 [
@@ -232,14 +286,13 @@ export function MerchantPromotionsPage() {
         cancelText="ยกเลิก"
         onCancel={() => setOpen(false)}
         onOk={() => form.submit()}
-        confirmLoading={saving}
         destroyOnHidden
       >
         <Form<PromoForm>
           form={form}
           layout="vertical"
           initialValues={{ days: [] }}
-          onFinish={async (v) => {
+          onFinish={(v) => {
             const p: BarPromotion = {
               id: `new-${Date.now().toString(36)}`,
               title: v.title.trim(),
@@ -248,10 +301,10 @@ export function MerchantPromotionsPage() {
               days: v.days?.length ? v.days : undefined,
               active: true,
             };
-            if (await save([...bar.promotions, p])) {
-              form.resetFields();
-              setOpen(false);
-            }
+            // เพิ่มเข้า draft — บันทึกพร้อมการแก้อื่นด้วยปุ่มบันทึกของหน้า
+            promos.add(p);
+            form.resetFields();
+            setOpen(false);
           }}
         >
           <Form.Item name="title" label="ชื่อโปร" rules={[{ required: true, max: 60 }]}>

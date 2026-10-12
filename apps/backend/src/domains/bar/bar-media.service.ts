@@ -32,6 +32,34 @@ export class BarMediaService {
     return this.cleanup(r);
   }
 
+  /** rpc app_save_bar_store — ข้อมูลร้าน และ/หรือ แกลเลอรี ในธุรกรรมเดียว */
+  async saveStore(actor: string, bar: string, b: C.BarStoreBody): Promise<C.BarStoreResult> {
+    return this.cleanup(
+      await this.db.rpc<WithRemoved<C.BarStoreResult>>('app_save_bar_store', {
+        p_actor: actor,
+        p_bar: bar,
+        p_info: b.info ?? null,
+        ...this.galleryArgs(b.media),
+      }),
+    );
+  }
+
+  /** rpc admin_save_bar_media — แกลเลอรี และ/หรือ รูปเมนูที่เปลี่ยน ในธุรกรรมเดียว */
+  async saveAdmin(
+    actor: string,
+    bar: string,
+    b: C.AdminBarMediaBody,
+  ): Promise<C.AdminBarMediaResult> {
+    return this.cleanup(
+      await this.db.rpc<WithRemoved<C.AdminBarMediaResult>>('admin_save_bar_media', {
+        p_actor: actor,
+        p_bar: bar,
+        ...this.galleryArgs(b.gallery),
+        p_menu: b.menu_images ?? null,
+      }),
+    );
+  }
+
   /** rpc app_set_menu — เมนูทั้งชุด (รูปที่ถูกแทน/ลบ → ลบไฟล์) */
   async setMenu(
     actor: string,
@@ -47,19 +75,22 @@ export class BarMediaService {
     );
   }
 
-  /** rpc admin_set_menu_item_image */
-  async setMenuItemImage(
-    actor: string,
-    item: string,
-    b: C.MenuItemImageBody,
-  ): Promise<C.MenuItemImageResult> {
-    return this.cleanup(
-      await this.db.rpc<WithRemoved<C.MenuItemImageResult>>('admin_set_menu_item_image', {
-        p_actor: actor,
-        p_item: item,
-        p_path: b.path,
-      }),
-    );
+  /** ลบไฟล์ที่เพิ่งอัปโหลดแต่บันทึกไม่สำเร็จ — เฉพาะไฟล์ในโฟลเดอร์ของร้านนี้ที่ไม่มีแถวไหนอ้าง (bar_media_unused) */
+  async discard(bar: string, paths: string[]): Promise<{ removed: number }> {
+    const own = paths.filter((p) => p.startsWith(`${bar}/gallery/`) || p.startsWith(`${bar}/menu/`));
+    if (!own.length) return { removed: 0 };
+    const unused = await this.db.rpc<string[]>('bar_media_unused', { p_bar: bar, p_paths: own });
+    await this.db.removeObjects(BUCKET, unused);
+    return { removed: unused.length };
+  }
+
+  /** แกลเลอรีเป็นพารามิเตอร์ rpc (ไม่ส่ง = ไม่แตะ) — URL ปกสร้างที่นี่เพราะ DB ไม่รู้โดเมน Storage */
+  private galleryArgs(g: C.BarMediaBody | undefined) {
+    return {
+      p_paths: g ? g.paths : null,
+      p_cover_path: g?.cover_path ?? null,
+      p_cover_url: g?.cover_path ? this.db.publicUrl(BUCKET, g.cover_path) : null,
+    };
   }
 
   private async cleanup<T extends object>(r: WithRemoved<T>): Promise<T> {

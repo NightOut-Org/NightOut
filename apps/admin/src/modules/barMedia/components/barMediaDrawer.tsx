@@ -8,33 +8,92 @@ import {
 } from '@phosphor-icons/react';
 import { BAR_GALLERY_MAX } from '@nightout/contracts';
 import type { Db } from '@nightout/types';
-import { App, Button, Drawer, Empty, Image, Popconfirm, Spin, Typography, Upload } from 'antd';
+import { App, Button, Drawer, Empty, Image, Popconfirm, Space, Spin, Tag, Typography, Upload } from 'antd';
 import { useState, type ReactNode } from 'react';
+import { useUnsavedGuard } from '@/hooks/useUnsavedGuard';
 import { useAdminAction } from '@/services/adminData';
+import { SaveBar } from '@/ui/components/SaveBar';
 import { StatusTag } from '@/ui/components/StatusTag';
 import { webSrc } from '@/ui/utils/image';
 import { BAR_STATUS } from '@/ui/utils/labels';
-import { barMediaAction, menuItemImageAction, uploadBarImage } from '../api';
-import { coverFirst } from '@nightout/utils';
-import { IMAGE_ACCEPT, checkImage, coverPathOf, mediaUrl } from '../utils/media';
+import { barMediaAction, discardBarMedia } from '../api';
+import { IMAGE_ACCEPT, checkImage } from '../utils/media';
+import { useBarMediaDraft } from '../utils/useBarMediaDraft';
+
+type Draft = ReturnType<typeof useBarMediaDraft>;
 
 /**
- * จัดการรูปของร้านเดียว — ปก + แกลเลอรี (สูงสุด 10) และรูปเมนูทีละรายการ
- * ทุกการกระทำบันทึกทันที (audit log + แจ้งทีมร้าน) · ไฟล์ที่เอาออก backend ลบจาก Storage ให้
+ * จัดการรูปของร้านเดียว — ปก + แกลเลอรี (สูงสุด 10) และรูปเมนูรายรายการ
+ * แก้ในหน้าก่อน (พรีวิวจากเครื่อง) แล้วกดบันทึกครั้งเดียว: อัปโหลดไฟล์ใหม่ → PUT /admin/bars/:id/media (audit log + แจ้งทีมร้าน 1 ครั้ง)
+ * บันทึกพลาดหลังอัปโหลด = ลบไฟล์ที่เพิ่งอัปโหลด (POST /admin/bars/:id/media/discard)
+ * ไฟล์ที่เอาออก backend ลบจาก Storage ให้ · ปิด Drawer ตอนยังไม่บันทึก = ถามก่อน
  */
 export function BarMediaDrawer({
   bar,
   onClose,
+  onSaved,
 }: {
   bar: Db.AdminBarMedia | null;
   onClose: () => void;
+  /** โหลดรายการใหม่หลังบันทึก (รอให้เสร็จก่อนล้าง draft จะได้ไม่เห็นรูปเดิมแวบ) */
+  onSaved: () => Promise<unknown>;
 }) {
+  const { message } = App.useApp();
+  const act = useAdminAction();
+  const draft = useBarMediaDraft(bar);
+  const [progress, setProgress] = useState<string | null>(null);
+  const saving = progress !== null || act.isPending;
+  const { confirmDiscard } = useUnsavedGuard(draft.count > 0);
+
+  const save = async () => {
+    if (!bar) return;
+    setProgress('กำลังบันทึก…');
+    const uploaded: string[] = [];
+    // อัปโหลดแล้วแต่บันทึกไม่สำเร็จ → ลบไฟล์ที่เพิ่งอัปโหลด (draft ยังเก็บไฟล์ในเครื่อง กดบันทึกใหม่ได้)
+    const discard = () => uploaded.length && discardBarMedia(bar.id, uploaded).catch(() => undefined);
+    try {
+      let body;
+      try {
+        body = await draft.upload(
+          (done, total) => setProgress(done < total ? `กำลังอัปโหลด ${done + 1}/${total}` : 'กำลังบันทึก…'),
+          uploaded,
+        );
+      } catch (e) {
+        void message.error(`อัปโหลดรูปไม่สำเร็จ — ${(e as Error).message}`);
+        await discard();
+        return;
+      }
+      try {
+        await act.mutateAsync({
+          ...barMediaAction(bar.id, body),
+          success: `บันทึกรูปของ ${bar.name} แล้ว`,
+        });
+      } catch {
+        // useAdminAction แจ้งเหตุผลแล้ว
+        await discard();
+        return;
+      }
+      await onSaved();
+      draft.reset();
+    } finally {
+      setProgress(null);
+    }
+  };
+
+  const close = () =>
+    confirmDiscard(() => {
+      draft.reset();
+      onClose();
+    });
+
   return (
     <Drawer
       open={!!bar}
-      onClose={onClose}
+      onClose={() => !saving && close()}
       size={720}
       destroyOnHidden
+      maskClosable={!saving}
+      keyboard={!saving}
       title={
         bar && (
           <span className="flex flex-wrap items-center gap-2">
@@ -45,73 +104,58 @@ export function BarMediaDrawer({
       }
       extra={
         bar && (
-          <Button
-            href={webSrc(`/bars/${bar.slug}`)}
-            target="_blank"
-            rel="noreferrer"
-            icon={<ArrowSquareOut size={16} />}
-          >
-            ดูหน้าร้าน
-          </Button>
+          <Space wrap>
+            <Button
+              href={webSrc(`/bars/${bar.slug}`)}
+              target="_blank"
+              rel="noreferrer"
+              icon={<ArrowSquareOut size={16} />}
+            >
+              ดูหน้าร้าน
+            </Button>
+            <SaveBar
+              count={draft.count}
+              saving={saving}
+              progress={progress}
+              onSave={() => void save()}
+              onReset={() => confirmDiscard(draft.reset)}
+            />
+          </Space>
         )
       }
     >
       {bar && (
-        <div className="space-y-8">
-          <Gallery bar={bar} />
-          <MenuPhotos bar={bar} />
-        </div>
+        <Spin spinning={saving} description={progress ?? undefined}>
+          <div className="space-y-8">
+            <Gallery bar={bar} draft={draft} disabled={saving} />
+            <MenuPhotos bar={bar} draft={draft} disabled={saving} />
+          </div>
+        </Spin>
       )}
     </Drawer>
   );
 }
 
-function Gallery({ bar }: { bar: Db.AdminBarMedia }) {
+function Gallery({
+  bar,
+  draft,
+  disabled,
+}: {
+  bar: Db.AdminBarMedia;
+  draft: Draft;
+  disabled: boolean;
+}) {
   const { message } = App.useApp();
-  const act = useAdminAction();
-  const [uploading, setUploading] = useState<string | null>(null);
-  const cover = coverPathOf(bar);
-  const paths = coverFirst(
-    bar.media.map((m) => m.storage_path),
-    cover,
-  );
-  const room = BAR_GALLERY_MAX - paths.length;
-  const busy = act.isPending || uploading !== null;
+  const { items, coverKey, room } = draft;
 
-  const save = async (next: string[], nextCover: string | null, success: string) => {
-    try {
-      await act.mutateAsync({
-        ...barMediaAction(bar.id, { paths: coverFirst(next, nextCover), cover_path: nextCover }),
-        success,
-      });
-    } catch {
-      // useAdminAction แจ้งเหตุผลแล้ว
-    }
-  };
-
-  const add = async (files: File[]) => {
+  const add = (files: File[]) => {
     files.map(checkImage).forEach((m) => m && void message.error(m));
     let ok = files.filter((f) => !checkImage(f));
     if (ok.length > room) {
       void message.warning(`เพิ่มได้อีก ${room} รูป — ใช้ ${room} รูปแรกที่เลือก`);
       ok = ok.slice(0, room);
     }
-    const added: string[] = [];
-    for (const [i, f] of ok.entries()) {
-      setUploading(`กำลังอัปโหลด ${i + 1}/${ok.length}`);
-      try {
-        added.push(await uploadBarImage(bar.id, 'gallery', f));
-      } catch (e) {
-        void message.error(`${f.name}: อัปโหลดไม่สำเร็จ — ${(e as Error).message}`);
-      }
-    }
-    setUploading(null);
-    if (added.length)
-      await save(
-        [...paths, ...added],
-        cover ?? added[0] ?? null,
-        `เพิ่มรูปแล้ว ${added.length} รูป`,
-      );
+    if (ok.length) draft.addPhotos(ok);
   };
 
   const uploader = (children: ReactNode) => (
@@ -119,10 +163,11 @@ function Gallery({ bar }: { bar: Db.AdminBarMedia }) {
       accept={IMAGE_ACCEPT}
       multiple
       showUploadList={false}
-      disabled={busy}
+      disabled={disabled}
       className="block size-full [&_.ant-upload]:block [&_.ant-upload]:size-full"
       beforeUpload={(file, list) => {
-        if (file === list[list.length - 1]) void add(list);
+        // antd เรียกทีละไฟล์ — รวบทั้งชุดตอนไฟล์สุดท้าย
+        if (file === list[list.length - 1]) add(list);
         return Upload.LIST_IGNORE;
       }}
     >
@@ -137,125 +182,110 @@ function Gallery({ bar }: { bar: Db.AdminBarMedia }) {
           ปก + แกลเลอรี
         </Typography.Title>
         <span className="text-xs tabular-nums opacity-70">
-          {paths.length}/{BAR_GALLERY_MAX} รูป
+          {items.length}/{BAR_GALLERY_MAX} รูป
         </span>
       </div>
-      <Spin spinning={busy} description={uploading ?? undefined}>
-        <Image.PreviewGroup>
-          <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-            {paths.map((p, i) => {
-              const isCover = p === cover;
-              return (
-                <li
-                  key={p}
-                  className={`relative overflow-hidden rounded-lg border ${isCover ? 'col-span-2 border-(--gold) sm:row-span-2' : 'border-black/10 dark:border-white/10'}`}
-                >
-                  <Image
-                    src={mediaUrl(p)}
-                    alt={isCover ? `รูปปก ${bar.name}` : `รูปร้าน ${bar.name} ที่ ${i + 1}`}
-                    rootClassName="!block size-full"
-                    className={`!block w-full object-cover ${isCover ? 'aspect-[16/10] sm:!h-full sm:aspect-auto' : 'aspect-[4/3]'}`}
-                  />
+      <Image.PreviewGroup>
+        <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+          {items.map((g, i) => {
+            const isCover = g.key === coverKey;
+            return (
+              <li
+                key={g.key}
+                className={`relative overflow-hidden rounded-lg border ${isCover ? 'col-span-2 border-(--gold) sm:row-span-2' : 'border-black/10 dark:border-white/10'}`}
+              >
+                <Image
+                  src={g.url}
+                  alt={isCover ? `รูปปก ${bar.name}` : `รูปร้าน ${bar.name} ที่ ${i + 1}`}
+                  rootClassName="!block size-full"
+                  className={`!block w-full object-cover ${isCover ? 'aspect-[16/10] sm:!h-full sm:aspect-auto' : 'aspect-[4/3]'}`}
+                />
+                <span className="pointer-events-none absolute left-2 top-2 flex gap-1">
                   {isCover && (
-                    <span className="pointer-events-none absolute left-2 top-2 inline-flex items-center gap-1 rounded-full bg-black/65 px-2 py-0.5 text-xs text-(--gold)">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-black/65 px-2 py-0.5 text-xs text-(--gold)">
                       <Star weight="fill" size={12} aria-hidden /> รูปปก
                     </span>
                   )}
-                  <div className="absolute inset-x-0 bottom-0 flex justify-end gap-1.5 bg-linear-to-t from-black/70 to-transparent p-2 pt-6">
-                    {!isCover && (
-                      <Button
-                        size="small"
-                        icon={<Star size={14} />}
-                        disabled={busy}
-                        onClick={() => void save(paths, p, 'ตั้งเป็นรูปปกแล้ว')}
-                      >
-                        ตั้งเป็นปก
-                      </Button>
-                    )}
-                    <Popconfirm
-                      title="ลบรูปนี้ออกจากร้าน?"
-                      description={
-                        isCover && paths.length > 1
-                          ? 'รูปถัดไปจะเป็นรูปปกแทน · ทีมร้านได้รับแจ้งเตือน'
-                          : 'ทีมร้านได้รับแจ้งเตือน'
-                      }
-                      okText="ลบ"
-                      cancelText="ยกเลิก"
-                      okButtonProps={{ danger: true }}
-                      onConfirm={() => {
-                        const next = paths.filter((x) => x !== p);
-                        return save(next, isCover ? (next[0] ?? null) : cover, 'ลบรูปแล้ว');
-                      }}
+                  {draft.isNew(g) && (
+                    <Tag color="warning" className="!m-0">
+                      ใหม่ · ยังไม่บันทึก
+                    </Tag>
+                  )}
+                </span>
+                <div className="absolute inset-x-0 bottom-0 flex justify-end gap-1.5 bg-linear-to-t from-black/70 to-transparent p-2 pt-6">
+                  {!isCover && (
+                    <Button
+                      size="small"
+                      icon={<Star size={14} />}
+                      disabled={disabled}
+                      onClick={() => draft.setCover(g.key)}
                     >
-                      <Button
-                        size="small"
-                        danger
-                        icon={<Trash size={14} />}
-                        disabled={busy}
-                        aria-label="ลบรูป"
-                      />
-                    </Popconfirm>
-                  </div>
-                </li>
-              );
-            })}
-            {room > 0 && (
-              <li
-                className={
-                  paths.length
-                    ? 'aspect-[4/3]'
-                    : 'col-span-2 aspect-[16/10] sm:col-span-3 sm:aspect-[3/1]'
-                }
-              >
-                {uploader(
-                  <span className="flex size-full cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-black/20 text-sm opacity-80 transition-opacity hover:opacity-100 dark:border-white/20">
-                    <Plus size={22} aria-hidden />
-                    {paths.length ? 'เพิ่มรูป' : 'ร้านยังไม่มีรูป — อัปโหลดแทนร้าน (รูปแรกเป็นปก)'}
-                    <span className="text-xs opacity-70">เหลือ {room} รูป</span>
-                  </span>,
-                )}
+                      ตั้งเป็นปก
+                    </Button>
+                  )}
+                  <Popconfirm
+                    title="ลบรูปนี้ออกจากร้าน?"
+                    description={
+                      isCover && items.length > 1
+                        ? 'รูปถัดไปจะเป็นรูปปกแทน · ทีมร้านได้รับแจ้งเตือน'
+                        : 'ทีมร้านได้รับแจ้งเตือน'
+                    }
+                    okText="ลบ"
+                    cancelText="ยกเลิก"
+                    okButtonProps={{ danger: true }}
+                    disabled={disabled}
+                    onConfirm={() => draft.removePhoto(g.key)}
+                  >
+                    <Button
+                      size="small"
+                      danger
+                      icon={<Trash size={14} />}
+                      disabled={disabled}
+                      aria-label="ลบรูป"
+                    />
+                  </Popconfirm>
+                </div>
               </li>
-            )}
-          </ul>
-        </Image.PreviewGroup>
-      </Spin>
+            );
+          })}
+          {room > 0 && (
+            <li
+              className={
+                items.length
+                  ? 'aspect-[4/3]'
+                  : 'col-span-2 aspect-[16/10] sm:col-span-3 sm:aspect-[3/1]'
+              }
+            >
+              {uploader(
+                <span className="flex size-full cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-black/20 text-sm opacity-80 transition-opacity hover:opacity-100 dark:border-white/20">
+                  <Plus size={22} aria-hidden />
+                  {items.length ? 'เพิ่มรูป' : 'ร้านยังไม่มีรูป — อัปโหลดแทนร้าน (รูปแรกเป็นปก)'}
+                  <span className="text-xs opacity-70">เหลือ {room} รูป</span>
+                </span>,
+              )}
+            </li>
+          )}
+        </ul>
+      </Image.PreviewGroup>
       <Typography.Text type="secondary" className="mt-2 block text-xs">
-        ปกใช้บนการ์ดร้าน แผนที่ และหัวหน้าร้าน · JPG/PNG/WebP ไม่เกิน 15MB (ย่อเป็น 1920px ให้เอง)
+        ปกใช้บนการ์ดร้าน แผนที่ และหัวหน้าร้าน · JPG/PNG/WebP ไม่เกิน 15MB (ย่อเป็น 1920px ให้เอง) ·
+        อัปโหลดและแจ้งทีมร้านตอนกดบันทึก
       </Typography.Text>
     </section>
   );
 }
 
-function MenuPhotos({ bar }: { bar: Db.AdminBarMedia }) {
+function MenuPhotos({
+  bar,
+  draft,
+  disabled,
+}: {
+  bar: Db.AdminBarMedia;
+  draft: Draft;
+  disabled: boolean;
+}) {
   const { message } = App.useApp();
-  const act = useAdminAction();
-  const [uploadingId, setUploadingId] = useState<string | null>(null);
-  const busy = act.isPending || uploadingId !== null;
-
-  const set = async (item: Db.AdminBarMedia['menu'][number], path: string | null) => {
-    try {
-      await act.mutateAsync({
-        ...menuItemImageAction(item.id, { path }),
-        success: path ? `บันทึกรูป ${item.name} แล้ว` : `ลบรูป ${item.name} แล้ว`,
-      });
-    } catch {
-      // useAdminAction แจ้งเหตุผลแล้ว
-    }
-  };
-
-  const pick = async (item: Db.AdminBarMedia['menu'][number], file: File) => {
-    const err = checkImage(file);
-    if (err) return void message.error(err);
-    setUploadingId(item.id);
-    try {
-      const path = await uploadBarImage(bar.id, 'menu', file);
-      setUploadingId(null);
-      await set(item, path);
-    } catch (e) {
-      setUploadingId(null);
-      void message.error(`อัปโหลดไม่สำเร็จ: ${(e as Error).message}`);
-    }
-  };
+  const withImage = bar.menu.filter((m) => draft.menuOf(m).url).length;
 
   return (
     <section>
@@ -264,7 +294,7 @@ function MenuPhotos({ bar }: { bar: Db.AdminBarMedia }) {
           รูปเมนู
         </Typography.Title>
         <span className="text-xs tabular-nums opacity-70">
-          มีรูป {bar.menu_image_count}/{bar.menu.length} รายการ
+          มีรูป {withImage}/{bar.menu.length} รายการ
         </span>
       </div>
       {bar.menu.length === 0 ? (
@@ -275,12 +305,13 @@ function MenuPhotos({ bar }: { bar: Db.AdminBarMedia }) {
       ) : (
         <Image.PreviewGroup>
           <ul className="divide-y divide-black/5 dark:divide-white/10">
-            {bar.menu.map((m) => (
-              <li key={m.id} className="flex items-center gap-3 py-2">
-                <Spin spinning={uploadingId === m.id} size="small">
-                  {m.image_path ? (
+            {bar.menu.map((m) => {
+              const { url, changed } = draft.menuOf(m);
+              return (
+                <li key={m.id} className="flex items-center gap-3 py-2">
+                  {url ? (
                     <Image
-                      src={mediaUrl(m.image_path)}
+                      src={url}
                       alt={m.name}
                       width={48}
                       height={48}
@@ -294,44 +325,54 @@ function MenuPhotos({ bar }: { bar: Db.AdminBarMedia }) {
                       <ImageSquare size={20} />
                     </span>
                   )}
-                </Spin>
-                <div className="min-w-0 flex-1">
-                  <div className="truncate">{m.name}</div>
-                  <div className="text-xs opacity-60">{m.category ?? '-'}</div>
-                </div>
-                <Upload
-                  accept={IMAGE_ACCEPT}
-                  showUploadList={false}
-                  disabled={busy}
-                  beforeUpload={(f) => {
-                    void pick(m, f);
-                    return Upload.LIST_IGNORE;
-                  }}
-                >
-                  <Button size="small" icon={<UploadSimple size={14} />} disabled={busy}>
-                    {m.image_path ? 'เปลี่ยน' : 'เพิ่มรูป'}
-                  </Button>
-                </Upload>
-                {m.image_path && (
-                  <Popconfirm
-                    title={`ลบรูป ${m.name}?`}
-                    description="ทีมร้านได้รับแจ้งเตือน"
-                    okText="ลบ"
-                    cancelText="ยกเลิก"
-                    okButtonProps={{ danger: true }}
-                    onConfirm={() => set(m, null)}
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="truncate">{m.name}</span>
+                      {changed && (
+                        <Tag color="warning" className="!m-0 shrink-0">
+                          {url ? 'รูปใหม่ · ยังไม่บันทึก' : 'จะลบรูป · ยังไม่บันทึก'}
+                        </Tag>
+                      )}
+                    </div>
+                    <div className="text-xs opacity-60">{m.category ?? '-'}</div>
+                  </div>
+                  <Upload
+                    accept={IMAGE_ACCEPT}
+                    showUploadList={false}
+                    disabled={disabled}
+                    beforeUpload={(f) => {
+                      const err = checkImage(f);
+                      if (err) void message.error(err);
+                      else draft.setMenuPhoto(m, f);
+                      return Upload.LIST_IGNORE;
+                    }}
                   >
-                    <Button
-                      size="small"
-                      danger
-                      icon={<Trash size={14} />}
-                      disabled={busy}
-                      aria-label={`ลบรูป ${m.name}`}
-                    />
-                  </Popconfirm>
-                )}
-              </li>
-            ))}
+                    <Button size="small" icon={<UploadSimple size={14} />} disabled={disabled}>
+                      {url ? 'เปลี่ยน' : 'เพิ่มรูป'}
+                    </Button>
+                  </Upload>
+                  {url && (
+                    <Popconfirm
+                      title={`ลบรูป ${m.name}?`}
+                      description="ทีมร้านได้รับแจ้งเตือน"
+                      okText="ลบ"
+                      cancelText="ยกเลิก"
+                      okButtonProps={{ danger: true }}
+                      disabled={disabled}
+                      onConfirm={() => draft.removeMenuPhoto(m)}
+                    >
+                      <Button
+                        size="small"
+                        danger
+                        icon={<Trash size={14} />}
+                        disabled={disabled}
+                        aria-label={`ลบรูป ${m.name}`}
+                      />
+                    </Popconfirm>
+                  )}
+                </li>
+              );
+            })}
           </ul>
         </Image.PreviewGroup>
       )}

@@ -1,45 +1,37 @@
 import { BAR_GALLERY_MAX } from '@nightout/contracts';
-import { coverFirst, galleryCoverPath } from '@nightout/utils';
 import { ImageSquare, Plus } from '@phosphor-icons/react';
-import { App, Popconfirm, Spin, Upload } from 'antd';
+import { App, Popconfirm, Upload } from 'antd';
 import { useState, type ReactNode } from 'react';
 import type { Bar } from '@/services/data';
 import { PHOTO_ACCEPT, checkPhoto } from '@/ui/utils/media';
-import { setBarMedia, uploadGalleryPhoto } from '../api';
+import type { useGalleryDraft } from '../utils/useGalleryDraft';
 
 /**
  * รูปร้าน — ภาพใหญ่ + แถบฟิล์ม 10 ช่อง: แตะรูปในแถบเพื่อดูเป็นภาพใหญ่ แล้วกด "ตั้งเป็นปก" / "ลบ" บนภาพ
- * ช่องว่างในแถบเป็นลายแรเงา แตะเพื่อเพิ่มรูป · บันทึกทันทีที่อัปโหลด/ลบ/ตั้งปก (ไม่ต้องกดบันทึกของฟอร์ม)
+ * ช่องว่างในแถบเป็นลายแรเงา แตะเพื่อเพิ่มรูป · แก้ใน draft ของหน้า (useGalleryDraft) — อัปโหลด + บันทึกตอนกดบันทึกของหน้า
  */
-export function BarPhotos({ bar }: { bar: Bar }) {
+export function BarPhotos({
+  bar,
+  gallery,
+  disabled,
+}: {
+  bar: Bar;
+  gallery: ReturnType<typeof useGalleryDraft>;
+  /** ระหว่างบันทึก */
+  disabled: boolean;
+}) {
   const { message } = App.useApp();
-  const [progress, setProgress] = useState<string | null>(null);
   const [picked, setPicked] = useState<string | null>(null);
-  const photos = bar.gallery ?? [];
-  const saved = photos.map((p) => p.path);
-  const cover = galleryCoverPath(bar.coverUrl, saved);
-  const paths = coverFirst(saved, cover);
-  const ordered = paths.map((p) => photos.find((g) => g.path === p)!);
-  const room = BAR_GALLERY_MAX - photos.length;
-  const busy = progress !== null;
-  // เริ่มที่ปก · รูปที่เลือกหายไป (ถูกลบ) → กลับไปที่ปก
-  const selIndex = picked && paths.includes(picked) ? paths.indexOf(picked) : 0;
+  const ordered = gallery.items;
+  const room = gallery.room;
+  const busy = disabled;
+  // เริ่มที่ปก · รูปที่เลือกหายไป (ถูกเอาออก) → กลับไปที่ปก
+  const found = picked ? ordered.findIndex((g) => g.key === picked) : -1;
+  const selIndex = found < 0 ? 0 : found;
   const sel = ordered[selIndex];
   const selIsCover = selIndex === 0;
 
-  const save = async (next: string[], nextCover: string | null, done: string) => {
-    setProgress('กำลังบันทึก…');
-    try {
-      await setBarMedia(bar.id, { paths: coverFirst(next, nextCover), cover_path: nextCover });
-      message.success(done);
-    } catch (e) {
-      message.error((e as Error).message);
-    } finally {
-      setProgress(null);
-    }
-  };
-
-  const add = async (files: File[]) => {
+  const add = (files: File[]) => {
     const bad = files.map(checkPhoto).filter((m): m is string => !!m);
     bad.forEach((m) => void message.error(m));
     let ok = files.filter((f) => !checkPhoto(f));
@@ -47,19 +39,7 @@ export function BarPhotos({ bar }: { bar: Bar }) {
       void message.warning(`เพิ่มได้อีก ${room} รูป — ใช้ ${room} รูปแรกที่เลือก`);
       ok = ok.slice(0, room);
     }
-    if (!ok.length) return;
-    const added: string[] = [];
-    for (const [i, f] of ok.entries()) {
-      setProgress(`กำลังอัปโหลด ${i + 1}/${ok.length}`);
-      try {
-        added.push(await uploadGalleryPhoto(bar.id, f));
-      } catch (e) {
-        void message.error(`${f.name}: ${(e as Error).message}`);
-      }
-    }
-    if (!added.length) return setProgress(null);
-    // ยังไม่มีปก → รูปแรกที่เพิ่มเป็นปก
-    await save([...paths, ...added], cover ?? added[0] ?? null, `เพิ่มรูปแล้ว ${added.length} รูป`);
+    if (ok.length) gallery.add(ok);
   };
 
   const uploader = (children: ReactNode, className = '', label?: string) => (
@@ -71,8 +51,8 @@ export function BarPhotos({ bar }: { bar: Bar }) {
       className={className}
       aria-label={label}
       beforeUpload={(file, list) => {
-        // antd เรียกทีละไฟล์ — รวบทั้งชุดตอนไฟล์สุดท้าย แล้วอัปโหลดเอง
-        if (file === list[list.length - 1]) void add(list);
+        // antd เรียกทีละไฟล์ — รวบทั้งชุดตอนไฟล์สุดท้าย
+        if (file === list[list.length - 1]) add(list);
         return Upload.LIST_IGNORE;
       }}
     >
@@ -80,23 +60,16 @@ export function BarPhotos({ bar }: { bar: Bar }) {
     </Upload>
   );
 
-  const remove = (path: string) => {
-    const next = paths.filter((x) => x !== path);
-    setPicked(null);
-    return save(next, path === cover ? (next[0] ?? null) : cover, 'ลบรูปแล้ว');
-  };
-
   return (
     <div className="flex min-w-0 flex-col gap-3 rounded-[20px] border border-border bg-card p-5">
       <span className="flex justify-between gap-3 text-sm">
         <b className="font-semibold">รูปร้าน</b>
         <span className="text-muted tabular-nums">
-          {photos.length} / {BAR_GALLERY_MAX} · รูปแรกเป็นปก
+          {ordered.length} / {BAR_GALLERY_MAX} · รูปแรกเป็นปก
         </span>
       </span>
 
-      <Spin spinning={busy} description={progress ?? undefined}>
-        <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-3">
           {sel ? (
             <div
               className={`relative aspect-[16/10] overflow-hidden rounded-2xl ${
@@ -114,6 +87,9 @@ export function BarPhotos({ bar }: { bar: Bar }) {
                 {selIsCover && (
                   <span className="rounded-full bg-gold px-2.5 py-0.5 text-xs font-semibold text-on-gold">ปก</span>
                 )}
+                {gallery.isNew(sel) && (
+                  <span className="rounded-full bg-black/60 px-2.5 py-0.5 text-xs text-gold-text">ใหม่ · ยังไม่บันทึก</span>
+                )}
                 <span className="rounded-full bg-black/60 px-2.5 py-0.5 text-xs text-white tabular-nums">
                   {selIndex + 1} / {ordered.length}
                 </span>
@@ -123,7 +99,7 @@ export function BarPhotos({ bar }: { bar: Bar }) {
                   <button
                     type="button"
                     disabled={busy}
-                    onClick={() => void save(paths, sel.path, 'ตั้งเป็นรูปปกแล้ว')}
+                    onClick={() => gallery.setCover(sel.key)}
                     className="merchant-pill inline-flex h-10 items-center rounded-xl bg-gold px-3.5 text-sm font-semibold text-on-gold disabled:opacity-40 sm:h-9"
                   >
                     ตั้งเป็นปก
@@ -136,7 +112,10 @@ export function BarPhotos({ bar }: { bar: Bar }) {
                   cancelText="ยกเลิก"
                   okButtonProps={{ danger: true }}
                   disabled={busy}
-                  onConfirm={() => remove(sel.path)}
+                  onConfirm={() => {
+                    gallery.remove(sel.key);
+                    setPicked(null);
+                  }}
                 >
                   <button
                     type="button"
@@ -184,12 +163,13 @@ export function BarPhotos({ bar }: { bar: Bar }) {
                 );
               const on = i === selIndex;
               return (
-                <li key={p.path} className="aspect-square min-w-0">
+                <li key={p.key} className="aspect-square min-w-0">
                   <button
                     type="button"
                     aria-pressed={on}
                     aria-label={i === 0 ? `รูปปก ${bar.name}` : `รูปร้านที่ ${i + 1}`}
-                    onClick={() => setPicked(p.path)}
+                    disabled={busy}
+                    onClick={() => setPicked(p.key)}
                     className={`merchant-pill relative block size-full overflow-hidden rounded-[10px] bg-surface transition-opacity ${
                       i === 0 ? 'border-2 border-gold' : 'border border-border'
                     } ${on ? 'ring-2 ring-gold ring-offset-2 ring-offset-card' : 'opacity-55 hover:opacity-90'}`}
@@ -200,10 +180,9 @@ export function BarPhotos({ bar }: { bar: Bar }) {
               );
             })}
           </ul>
-        </div>
-      </Spin>
+      </div>
 
-      <p className="text-xs text-muted">JPG, PNG หรือ WebP ไม่เกิน 15MB ต่อรูป · ใช้รูปบรรยากาศจริง ห้ามมีข้อความชวนดื่ม</p>
+      <p className="text-xs text-muted">JPG, PNG หรือ WebP ไม่เกิน 15MB ต่อรูป · ใช้รูปบรรยากาศจริง ห้ามมีข้อความชวนดื่ม · อัปโหลดตอนกดบันทึก</p>
     </div>
   );
 }

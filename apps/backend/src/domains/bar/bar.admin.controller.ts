@@ -7,9 +7,9 @@ import { ApiDoc } from '../../common/api-doc';
 import { ADMIN_FORBIDDEN, Id } from '../../common/params';
 import { SupabaseService } from '../../supabase/supabase.service';
 import { BarMediaService } from './bar-media.service';
-import { ApproveDto, BarMediaDto, MenuItemImageDto, SetBarStatusDto } from './bar.dto';
+import { AdminBarMediaDto, ApproveDto, DiscardBarMediaDto, SetBarStatusDto, SetBarsStatusDto } from './bar.dto';
 
-/** bar · Backoffice — อนุมัติ/ระงับร้าน · รูปร้าน/รูปเมนูแทนร้าน · ยืนยัน Safety · ตรวจถ้อยคำโปรของร้าน (audit log ในธุรกรรมเดียว) */
+/** bar · Backoffice — อนุมัติร้าน · แสดง/ระงับหลายร้าน · รูปร้าน/รูปเมนูแทนร้าน · ยืนยัน Safety · ตรวจถ้อยคำโปรของร้าน (audit log ในธุรกรรมเดียว) */
 @ApiTags('bar')
 @ApiBearerAuth()
 @UseGuards(SupabaseJwtGuard, AdminGuard)
@@ -20,10 +20,22 @@ export class BarAdminController {
     private readonly media: BarMediaService,
   ) {}
 
+  @Patch('bars/status')
+  @ApiDoc({
+    summary: 'แสดง/ระงับร้านหลายร้าน (บันทึกหน้าจัดการร้าน)',
+    description:
+      'หน้า /bars แก้สวิตช์ในหน้าแล้วบันทึกครั้งเดียว · `changes` = เฉพาะร้านที่เปลี่ยน: APPROVED = แสดงบนเว็บ · SUSPENDED = ซ่อน (ต้องมี `reason` ร้านเห็นข้อความนี้) · รับเฉพาะร้านที่แสดง/ระงับอยู่แล้ว (`BAR_NOT_TOGGLEABLE` — ร้านใหม่อนุมัติที่ PATCH /admin/bars/:id/status) · ธุรกรรมเดียว (พลาด 1 ร้าน = ไม่บันทึกเลย) · audit log ต่อร้าน (rpc admin_set_bars_status → admin_set_bar_status)',
+    returns: '`updated` จำนวนร้านที่บันทึก',
+    forbidden: ADMIN_FORBIDDEN,
+  })
+  setStatuses(@CurrentUser() me: AuthUser, @Body() b: SetBarsStatusDto) {
+    return this.db.rpc('admin_set_bars_status', { p_actor: me.id, p_changes: b.changes });
+  }
+
   @Patch('bars/:id/status')
   @ApiDoc({
-    summary: 'อนุมัติ/ระงับร้าน',
-    description: 'เปลี่ยนสถานะร้าน (APPROVED = ขึ้นหน้าเว็บ, REJECTED/SUSPENDED = ซ่อน) พร้อมเหตุผล · บันทึก audit log (rpc admin_set_bar_status)',
+    summary: 'อนุมัติ/ไม่อนุมัติร้าน',
+    description: 'หน้า /merchants (ข้อยกเว้นที่บันทึกทันที) · เปลี่ยนสถานะร้าน (APPROVED = ขึ้นหน้าเว็บ, REJECTED/SUSPENDED = ซ่อน) พร้อมเหตุผล · บันทึก audit log (rpc admin_set_bar_status)',
     returns: '`id` รหัสร้าน · `status` สถานะใหม่',
     forbidden: ADMIN_FORBIDDEN,
   })
@@ -33,26 +45,27 @@ export class BarAdminController {
 
   @Put('bars/:id/media')
   @ApiDoc({
-    summary: 'ตั้งรูปร้านแทนร้าน (ปก + แกลเลอรี)',
+    summary: 'บันทึกรูปร้านแทนร้าน (ปก + แกลเลอรี + รูปเมนู)',
     description:
-      'เหมือน PUT /merchant/bars/:barId/media แต่ทำในนาม NightOut (เช่น ลบรูปไม่เหมาะสม · อัปโหลดรูปที่ร้านส่งมา) · ไฟล์อยู่ bucket bar-media/<bar_id>/gallery/ · บันทึก audit log + แจ้งทีมร้าน (rpc admin_set_bar_media)',
-    returns: '`bar_id` · `count` จำนวนรูป · `cover_image_url` URL รูปปก · `paths` แกลเลอรีที่บันทึก',
+      'Drawer รูปร้านใน /bar-media แก้ในหน้าแล้วบันทึกครั้งเดียว ในนาม NightOut (เช่น ลบรูปไม่เหมาะสม · อัปโหลดรูปที่ร้านส่งมา) · `gallery` = แกลเลอรีทั้งชุด + `cover_path` (ไฟล์ใน bar-media/<bar_id>/gallery/) · `menu_images` = เฉพาะรายการเมนูที่เปลี่ยนรูป (`path` ใน bar-media/<bar_id>/menu/ · null = ลบรูป) · ส่งอย่างน้อย 1 ส่วน · ธุรกรรมเดียว · audit log ต่อรายการ + แจ้งทีมร้าน 1 ครั้ง · ไฟล์ที่ไม่ใช้แล้วถูกลบจาก Storage (rpc admin_save_bar_media)',
+    returns: '`bar_id` · `gallery` = { `bar_id`, `count`, `cover_image_url`, `paths` } หรือ null · `menu_updated` จำนวนรูปเมนูที่เปลี่ยน',
     forbidden: ADMIN_FORBIDDEN,
   })
-  setMedia(@CurrentUser() me: AuthUser, @Id() id: string, @Body() b: BarMediaDto) {
-    return this.media.setGallery('admin_set_bar_media', me.id, id, b);
+  saveMedia(@CurrentUser() me: AuthUser, @Id() id: string, @Body() b: AdminBarMediaDto) {
+    return this.media.saveAdmin(me.id, id, b);
   }
 
-  @Put('menu-items/:id/image')
+  @Post('bars/:id/media/discard')
+  @HttpCode(200)
   @ApiDoc({
-    summary: 'ตั้ง/ลบรูปเมนู 1 รายการแทนร้าน',
+    summary: 'ลบไฟล์รูปที่อัปโหลดแต่บันทึกไม่สำเร็จ',
     description:
-      '`path` = รูปใน bucket bar-media/<bar_id>/menu/ (อัปโหลดเองก่อน) · null = ลบรูป · รูปเดิมถูกลบจาก Storage · บันทึก audit log + แจ้งทีมร้าน (rpc admin_set_menu_item_image)',
-    returns: '`id` รหัสรายการเมนู · `bar_id` · `image_path` รูปปัจจุบัน',
+      'Drawer `/bar-media` เรียกเมื่อ PUT /admin/bars/:id/media พลาดหลังอัปโหลดไฟล์ไปแล้ว · ลบจาก bucket bar-media เฉพาะไฟล์ใน `<bar_id>/gallery/` หรือ `<bar_id>/menu/` ที่ไม่มีแถวไหนอ้าง (rpc bar_media_unused) · ไฟล์ที่ใช้อยู่ไม่ถูกลบ',
+    returns: '`removed` จำนวนไฟล์ที่ลบ',
     forbidden: ADMIN_FORBIDDEN,
   })
-  setMenuItemImage(@CurrentUser() me: AuthUser, @Id() id: string, @Body() b: MenuItemImageDto) {
-    return this.media.setMenuItemImage(me.id, id, b);
+  discardMedia(@Id() id: string, @Body() b: DiscardBarMediaDto) {
+    return this.media.discard(id, b.paths);
   }
 
   @Post('safety/:id/verify')

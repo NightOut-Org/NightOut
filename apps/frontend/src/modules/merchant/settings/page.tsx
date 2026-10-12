@@ -2,14 +2,27 @@ import { Bank, ClockCountdown, MinusCircle, PlusCircle, UserSound, Wallet } from
 import { Alert, App, Form, Input, InputNumber, Segmented, Select } from 'antd';
 import { useState, type ReactNode } from 'react';
 import { useMerchantBar } from '@/hooks/useMerchantBar';
+import { useUnsavedGuard } from '@/hooks/useUnsavedGuard';
 import { Tile } from '@/ui/components/merchantUi';
-import { setPayoutAccount, updateBookingSettings } from './api';
+import { saveSettings } from './api';
 
 const BANKS = ['กสิกรไทย', 'ไทยพาณิชย์', 'กรุงเทพ', 'กรุงไทย', 'กรุงศรี', 'ทหารไทยธนชาต', 'ออมสิน', 'อื่นๆ'];
 const GRACE = [15, 30, 45, 60, 90];
+/** ช่องของบัญชีรับเงิน — นอกนั้นเป็นตั้งค่าการจอง */
+const PAYOUT_FIELDS = ['bankName', 'accountNo', 'accountName'];
 
 /** ปุ่ม − จำนวน + (PR) — control ของ Form.Item */
-function Stepper({ value = 0, onChange, label }: { value?: number; onChange?: (v: number) => void; label: string }) {
+function Stepper({
+  value = 0,
+  onChange,
+  label,
+  disabled,
+}: {
+  value?: number;
+  onChange?: (v: number) => void;
+  label: string;
+  disabled?: boolean;
+}) {
   return (
     <div className="flex items-center justify-between gap-3 rounded-[14px] border border-border bg-surface p-3.5">
       <span className="text-sm">{label}</span>
@@ -17,7 +30,7 @@ function Stepper({ value = 0, onChange, label }: { value?: number; onChange?: (v
         <button
           type="button"
           aria-label={`ลด ${label}`}
-          disabled={value <= 0}
+          disabled={disabled || value <= 0}
           onClick={() => onChange?.(Math.max(0, value - 1))}
           className="text-[22px] text-muted disabled:opacity-40"
         >
@@ -29,7 +42,7 @@ function Stepper({ value = 0, onChange, label }: { value?: number; onChange?: (v
         <button
           type="button"
           aria-label={`เพิ่ม ${label}`}
-          disabled={value >= 99}
+          disabled={disabled || value >= 99}
           onClick={() => onChange?.(Math.min(99, value + 1))}
           className="text-[22px] text-gold disabled:opacity-40"
         >
@@ -52,17 +65,69 @@ function Section({ icon, title, children }: { icon: ReactNode; title: string; ch
   );
 }
 
-/** /merchant/settings — มัดจำ · บัญชีรับเงินจาก NightOut · เช็กอินและยกเลิกอัตโนมัติ · PR (Bento 2×2) */
+/**
+ * /merchant/settings — มัดจำ · บัญชีรับเงินจาก NightOut · เช็กอินและยกเลิกอัตโนมัติ · PR (Bento 2×2)
+ * แก้ทั้งหน้าแล้วกดบันทึกครั้งเดียว: PUT /merchant/bars/:barId/settings (ส่งเฉพาะส่วนที่แก้ · ธุรกรรมเดียว)
+ */
 export function MerchantSettingsPage() {
   const bar = useMerchantBar();
   const { message } = App.useApp();
   const [form] = Form.useForm();
   const [saving, setSaving] = useState(false);
   const [editAccount, setEditAccount] = useState(!bar.payout.accountNo);
+  const [bookingDirty, setBookingDirty] = useState(false);
+  // เลขบัญชีไม่ส่งกลับมาหน้าเว็บ (เข้ารหัสใน DB) — มีเลขบัญชีในฟอร์ม = จะเปลี่ยนบัญชี
+  const accountNo = Form.useWatch('accountNo', form) as string | undefined;
+  const count = (bookingDirty ? 1 : 0) + (accountNo ? 1 : 0);
+  const { confirmDiscard } = useUnsavedGuard(count > 0);
 
-  const saveButton = (cls: string) => (
-    <button type="button" disabled={saving} onClick={() => form.submit()} className={`merchant-pill disabled:opacity-60 ${cls}`}>
-      {saving ? 'กำลังบันทึก…' : 'บันทึก'}
+  const reset = () => {
+    form.resetFields();
+    setBookingDirty(false);
+    setEditAccount(!bar.payout.accountNo);
+  };
+
+  const save = async () => {
+    let v;
+    try {
+      v = await form.validateFields();
+    } catch {
+      return; // ฟอร์มแสดงช่องที่ผิดให้แล้ว
+    }
+    setSaving(true);
+    try {
+      await saveSettings(bar.id, {
+        ...(bookingDirty
+          ? {
+              booking: {
+                deposit_amount: v.amount,
+                deposit_unit: v.unit,
+                deposit_policy: v.policy ?? '',
+                grace_minutes: v.gracePeriodMinutes,
+                pr_male: v.prMale ?? 0,
+                pr_female: v.prFemale ?? 0,
+                pr_lgbtq: v.prLgbtq ?? 0,
+              },
+            }
+          : {}),
+        ...(v.accountNo ? { payout: { bank_code: v.bankName, account_name: v.accountName, account_no: v.accountNo } } : {}),
+      });
+      if (v.accountNo) {
+        form.setFieldValue('accountNo', undefined);
+        setEditAccount(false);
+      }
+      setBookingDirty(false);
+      void message.success('บันทึกแล้ว');
+    } catch (e) {
+      void message.error((e as Error).message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const saveButton = (cls: string, label: string) => (
+    <button type="button" disabled={saving || !count} onClick={() => void save()} className={`merchant-pill disabled:opacity-60 ${cls}`}>
+      {saving ? 'กำลังบันทึก…' : label}
     </button>
   );
 
@@ -73,14 +138,31 @@ export function MerchantSettingsPage() {
           <h1 className="text-[17px] font-bold lg:font-display lg:text-[30px]">ตั้งค่าการจอง</h1>
           <p className="mt-1 hidden text-sm text-muted lg:block">มีผลกับการจองใหม่เท่านั้น · การจองเดิมใช้ค่าตอนจอง</p>
         </div>
-        {saveButton('hidden h-10 items-center rounded-xl bg-gold px-[18px] text-sm font-semibold text-on-gold lg:inline-flex')}
-        {saveButton('px-2 py-1 text-sm font-semibold text-gold-text lg:hidden')}
+        <div className="flex items-center gap-1 lg:gap-3">
+          {count > 0 && !saving && (
+            <>
+              <span className="hidden text-sm text-gold-text lg:inline" role="status">
+                ยังไม่บันทึก {count} ส่วน
+              </span>
+              <button
+                type="button"
+                onClick={() => confirmDiscard(reset)}
+                className="merchant-pill px-2 py-1 text-sm text-muted lg:h-10 lg:rounded-xl lg:border lg:border-border lg:px-[18px]"
+              >
+                คืนค่า
+              </button>
+            </>
+          )}
+          {saveButton('hidden h-10 items-center rounded-xl bg-gold px-[18px] text-sm font-semibold text-on-gold lg:inline-flex', 'บันทึกการเปลี่ยนแปลง')}
+          {saveButton('px-2 py-1 text-sm font-semibold text-gold-text lg:hidden', 'บันทึก')}
+        </div>
       </div>
 
       <Form
         form={form}
         layout="vertical"
         requiredMark={false}
+        disabled={saving}
         initialValues={{
           ...bar.deposit,
           bankName: bar.payout.bankName || undefined,
@@ -90,30 +172,8 @@ export function MerchantSettingsPage() {
           prLgbtq: bar.pr.lgbtq ?? 0,
           gracePeriodMinutes: bar.gracePeriodMinutes,
         }}
-        onFinish={async (v) => {
-          setSaving(true);
-          try {
-            await updateBookingSettings(bar.id, {
-              deposit_amount: v.amount,
-              deposit_unit: v.unit,
-              deposit_policy: v.policy ?? '',
-              grace_minutes: v.gracePeriodMinutes,
-              pr_male: v.prMale ?? 0,
-              pr_female: v.prFemale ?? 0,
-              pr_lgbtq: v.prLgbtq ?? 0,
-            });
-            // เลขบัญชีไม่ส่งกลับมาหน้าเว็บ (เข้ารหัสใน DB) — กรอกใหม่เมื่อต้องการเปลี่ยนเท่านั้น
-            if (v.accountNo) {
-              await setPayoutAccount(bar.id, { bank_code: v.bankName, account_name: v.accountName, account_no: v.accountNo });
-              form.setFieldValue('accountNo', undefined);
-              setEditAccount(false);
-            }
-            message.success('บันทึกแล้ว');
-          } catch (e) {
-            message.error((e as Error).message);
-          } finally {
-            setSaving(false);
-          }
+        onValuesChange={(changed: Record<string, unknown>) => {
+          if (Object.keys(changed).some((k) => !PAYOUT_FIELDS.includes(k))) setBookingDirty(true);
         }}
       >
         <div className="grid gap-3 lg:grid-cols-2 lg:gap-4">
@@ -148,7 +208,15 @@ export function MerchantSettingsPage() {
                   </b>
                   <span className="truncate text-[13px] text-muted">{bar.payout.accountName}</span>
                 </span>
-                <button type="button" onClick={() => setEditAccount((v) => !v)} className="shrink-0 text-sm text-link">
+                <button
+                  type="button"
+                  disabled={saving}
+                  onClick={() => {
+                    if (editAccount) form.resetFields(PAYOUT_FIELDS);
+                    setEditAccount((v) => !v);
+                  }}
+                  className="shrink-0 text-sm text-link disabled:opacity-60"
+                >
                   {editAccount ? 'ยกเลิก' : 'เปลี่ยน'}
                 </button>
               </div>
@@ -197,13 +265,13 @@ export function MerchantSettingsPage() {
           <Section icon={<UserSound />} title="PR">
             <div className="grid gap-3 sm:grid-cols-3">
               <Form.Item name="prMale" noStyle>
-                <Stepper label="PR ชาย" />
+                <Stepper label="PR ชาย" disabled={saving} />
               </Form.Item>
               <Form.Item name="prFemale" noStyle>
-                <Stepper label="PR หญิง" />
+                <Stepper label="PR หญิง" disabled={saving} />
               </Form.Item>
               <Form.Item name="prLgbtq" noStyle>
-                <Stepper label="LGBTQ+" />
+                <Stepper label="LGBTQ+" disabled={saving} />
               </Form.Item>
             </div>
             <span className="text-[13px] text-muted">ลูกค้าเห็นในหน้าร้านและกรองได้ในหน้าค้นหา · ใส่ 0 ทั้งหมดถ้าไม่มี</span>

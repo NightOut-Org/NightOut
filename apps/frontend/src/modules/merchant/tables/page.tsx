@@ -2,13 +2,13 @@ import { Info, Plus } from '@phosphor-icons/react';
 import { App, Empty, Form, Input, InputNumber, Modal, Popconfirm } from 'antd';
 import { useState } from 'react';
 import { Link } from 'react-router';
-import { type Bar } from '@/services/data';
 import { useMerchantBar } from '@/hooks/useMerchantBar';
+import { useUnsavedGuard } from '@/hooks/useUnsavedGuard';
 import { Tile } from '@/ui/components/merchantUi';
 import { baht } from '@/ui/utils/format';
 import { setZones } from './api';
+import { isNewId, useZonesDraft, type Zone } from './utils/useZonesDraft';
 
-type Zone = Bar['zones'][number];
 interface NewZone {
   name: string;
   tables: number;
@@ -18,52 +18,58 @@ interface NewZone {
 
 const hoursLabel = (min: number) => `${(min / 60).toLocaleString('th-TH', { maximumFractionDigits: 1 })} ชม.`;
 
-/** /merchant/tables — การ์ดโซนละใบ: ความจุ · ระยะเวลาจอง · มัดจำ · โต๊ะ (DB กันจองซ้อนเวลาต่อโต๊ะ + นับความจุโซน) */
+/**
+ * /merchant/tables — การ์ดโซนละใบ: ความจุ · ระยะเวลาจอง · มัดจำ · โต๊ะ (DB กันจองซ้อนเวลาต่อโต๊ะ + นับความจุโซน)
+ * เพิ่มโซน / เพิ่ม-ปิดใช้โต๊ะ / แก้ความจุ-เวลาจอง ในหน้าก่อน แล้วกดบันทึกครั้งเดียว (PUT /merchant/bars/:barId/zones)
+ */
 export function MerchantTablesPage() {
   const bar = useMerchantBar();
   const { message } = App.useApp();
   const [saving, setSaving] = useState(false);
   const [open, setOpen] = useState(false);
   const [form] = Form.useForm<NewZone>();
+  const draft = useZonesDraft(bar.zones);
+  const { confirmDiscard } = useUnsavedGuard(draft.count > 0);
 
-  const save = async (zones: Zone[], done: string) => {
+  const save = async () => {
     setSaving(true);
     try {
-      await setZones(bar.id, zones);
-      message.success(done);
-      return true;
+      await setZones(bar.id, draft.zones);
+      draft.reset();
+      void message.success('บันทึกโซนและโต๊ะแล้ว');
     } catch (e) {
-      message.error((e as Error).message);
-      return false;
+      void message.error((e as Error).message);
     } finally {
       setSaving(false);
     }
   };
-  const update = (z: Zone, p: Partial<Zone>, done: string) =>
-    save(bar.zones.map((x) => (x.id === z.id ? { ...x, ...p } : x)), done);
-  const nextName = (z: Zone) => {
-    const prefix = z.tables[0]?.name.replace(/\d+$/, '') || z.name.slice(0, 1).toUpperCase();
-    let n = z.tables.length + 1;
-    while (z.tables.some((t) => t.name === `${prefix}${n}`)) n++;
-    return `${prefix}${n}`;
-  };
-  const addTable = (z: Zone) =>
-    update(z, { tables: [...z.tables, { id: '', name: nextName(z), seats: 4 }], capacityPax: z.capacityPax + 4 }, `เพิ่มโต๊ะใน ${z.name} แล้ว`);
-  const removeTable = (z: Zone, tableId: string) => {
-    const t = z.tables.find((x) => x.id === tableId);
-    return update(
-      z,
-      { tables: z.tables.filter((y) => y.id !== tableId), capacityPax: Math.max(1, z.capacityPax - (t?.seats ?? 0)) },
-      'ปิดใช้โต๊ะแล้ว (การจองเดิมยังอยู่)',
-    );
+
+  const saveButton = (cls: string, label: string) => (
+    <button
+      type="button"
+      disabled={saving || !draft.count}
+      onClick={() => void save()}
+      className={`merchant-pill disabled:opacity-60 ${cls}`}
+    >
+      {saving ? 'กำลังบันทึก…' : label}
+    </button>
+  );
+
+  const zoneTag = (z: Zone) => {
+    const st = draft.zoneState(z);
+    return st ? (
+      <span className="rounded-full bg-gold/15 px-2 py-0.5 text-[11px] font-normal text-gold-text">
+        {st === 'new' ? 'ใหม่ · ยังไม่บันทึก' : 'ยังไม่บันทึก'}
+      </span>
+    ) : null;
   };
 
-  const tableCount = bar.zones.reduce((a, z) => a + z.tables.length, 0);
-  const pax = bar.zones.reduce((a, z) => a + z.capacityPax, 0);
+  const tableCount = draft.zones.reduce((a, z) => a + z.tables.length, 0);
+  const pax = draft.zones.reduce((a, z) => a + z.capacityPax, 0);
   const deposit = bar.deposit.amount > 0 ? `${baht(bar.deposit.amount)}/${bar.deposit.unit === 'PER_PERSON' ? 'คน' : 'โต๊ะ'}` : 'ไม่มี';
 
-  /** ช่องสถิติแก้ได้ในที่ (บันทึกตอนออกจากช่อง) */
-  const statInput = (label: string, value: number, suffix: string, min: number, max: number, step: number, onSave: (v: number) => void) => (
+  /** ช่องสถิติแก้ได้ในที่ (เข้า draft) */
+  const statInput = (label: string, value: number, suffix: string, min: number, max: number, step: number, onChange: (v: number) => void) => (
     <label className="flex min-w-0 flex-col gap-0.5 rounded-xl bg-surface p-2.5">
       <span className="text-[11px] text-muted">{label}</span>
       <InputNumber
@@ -72,14 +78,12 @@ export function MerchantTablesPage() {
         min={min}
         max={max}
         step={step}
-        defaultValue={value}
+        value={value}
+        disabled={saving}
         suffix={<span className="text-xs text-muted">{suffix}</span>}
         className="!w-full !p-0 [&_input]:!p-0 [&_input]:!text-base [&_input]:!font-bold"
         aria-label={label}
-        onBlur={(e) => {
-          const v = Number(e.target.value);
-          if (v && v !== value) onSave(v);
-        }}
+        onChange={(v) => typeof v === 'number' && onChange(v)}
       />
     </label>
   );
@@ -92,12 +96,16 @@ export function MerchantTablesPage() {
       okText="ปิดใช้"
       cancelText="ยกเลิก"
       okButtonProps={{ danger: true }}
-      onConfirm={() => removeTable(z, t.id)}
+      disabled={saving}
+      onConfirm={() => draft.removeTable(z, t.id)}
     >
       <button
         type="button"
+        disabled={saving}
         aria-label={`โต๊ะ ${t.name} ${t.seats} ที่ — กดเพื่อปิดใช้`}
-        className={`merchant-pill flex flex-col items-center justify-center border border-border bg-surface hover:border-(--crowd-full) ${
+        className={`merchant-pill flex flex-col items-center justify-center border bg-surface hover:border-(--crowd-full) disabled:opacity-60 ${
+          isNewId(t.id) ? 'border-dashed border-gold/60' : 'border-border'
+        } ${
           compact ? 'h-11 rounded-[10px] text-xs' : 'h-14 rounded-[14px]'
         }`}
       >
@@ -116,23 +124,48 @@ export function MerchantTablesPage() {
         <div className="min-w-0">
           <h1 className="text-[17px] font-bold lg:font-display lg:text-[30px]">โซน / โต๊ะ</h1>
           <p className="mt-1 text-xs text-muted lg:text-sm">
-            {bar.zones.length} โซน · {tableCount} โต๊ะ · รับได้ {pax} คน
+            {draft.zones.length} โซน · {tableCount} โต๊ะ · รับได้ {pax} คน
             <span className="hidden lg:inline"> · ระบบกันจองซ้อนตามระยะเวลาจอง</span>
           </p>
         </div>
-        <button
-          type="button"
-          onClick={() => setOpen(true)}
-          className="merchant-pill hidden h-10 items-center gap-2 rounded-xl bg-gold px-[18px] text-sm font-semibold text-on-gold lg:inline-flex"
-        >
-          <Plus /> เพิ่มโซน
-        </button>
-        <button type="button" aria-label="เพิ่มโซน" onClick={() => setOpen(true)} className="grid size-10 place-items-center text-xl text-gold lg:hidden">
-          <Plus />
-        </button>
+        <div className="flex items-center gap-1 lg:gap-3">
+          {draft.count > 0 && !saving && (
+            <>
+              <span className="hidden text-sm text-gold-text lg:inline" role="status">
+                ยังไม่บันทึก {draft.count} โซน
+              </span>
+              <button
+                type="button"
+                onClick={() => confirmDiscard(draft.reset)}
+                className="merchant-pill px-2 py-1 text-sm text-muted lg:h-10 lg:rounded-xl lg:border lg:border-border lg:px-[18px]"
+              >
+                คืนค่า
+              </button>
+            </>
+          )}
+          <button
+            type="button"
+            disabled={saving}
+            onClick={() => setOpen(true)}
+            className="merchant-pill hidden h-10 items-center gap-2 rounded-xl bg-gold px-[18px] text-sm font-semibold text-on-gold disabled:opacity-60 lg:inline-flex"
+          >
+            <Plus /> เพิ่มโซน
+          </button>
+          {saveButton('hidden h-10 items-center rounded-xl bg-gold px-[18px] text-sm font-semibold text-on-gold lg:inline-flex', 'บันทึกการเปลี่ยนแปลง')}
+          <button
+            type="button"
+            aria-label="เพิ่มโซน"
+            disabled={saving}
+            onClick={() => setOpen(true)}
+            className="grid size-10 place-items-center text-xl text-gold disabled:opacity-60 lg:hidden"
+          >
+            <Plus />
+          </button>
+          {saveButton('px-2 py-1 text-sm font-semibold text-gold-text lg:hidden', 'บันทึก')}
+        </div>
       </div>
 
-      {bar.zones.length === 0 ? (
+      {draft.zones.length === 0 ? (
         <Tile>
           <Empty description="ยังไม่มีโซน — ต้องมีอย่างน้อย 1 โซนเพื่อรับจอง" />
         </Tile>
@@ -140,14 +173,15 @@ export function MerchantTablesPage() {
         <>
           {/* Desktop */}
           <div className="hidden gap-4 lg:grid lg:grid-cols-3">
-            {bar.zones.map((z) => (
+            {draft.zones.map((z) => (
               <Tile key={z.id} className="flex flex-col gap-3.5">
-                <b className="text-lg font-semibold">{z.name}</b>
+                <span className="flex flex-wrap items-center gap-2">
+                  <b className="text-lg font-semibold">{z.name}</b>
+                  {zoneTag(z)}
+                </span>
                 <div className="grid grid-cols-3 gap-2">
-                  {statInput('ความจุรวม', z.capacityPax, 'คน', 1, 2000, 1, (v) => void update(z, { capacityPax: v }, 'บันทึกความจุแล้ว'))}
-                  {statInput('ระยะเวลาจอง', z.defaultDurationMinutes, 'นาที', 60, 480, 30, (v) =>
-                    void update(z, { defaultDurationMinutes: v }, 'บันทึกเวลาจองแล้ว'),
-                  )}
+                  {statInput('ความจุรวม', z.capacityPax, 'คน', 1, 2000, 1, (v) => draft.setCapacity(z, v))}
+                  {statInput('ระยะเวลาจอง', z.defaultDurationMinutes, 'นาที', 60, 480, 30, (v) => draft.setDuration(z, v))}
                   <span className="flex min-w-0 flex-col gap-0.5 rounded-xl bg-surface p-2.5">
                     <span className="text-[11px] text-muted">มัดจำ</span>
                     <b className="truncate text-base text-gold-text">{deposit}</b>
@@ -164,7 +198,7 @@ export function MerchantTablesPage() {
                 <button
                   type="button"
                   disabled={saving}
-                  onClick={() => void addTable(z)}
+                  onClick={() => draft.addTable(z)}
                   className="merchant-pill mt-auto flex h-10 items-center justify-center gap-1.5 rounded-xl border border-dashed border-muted/60 text-sm text-muted hover:border-gold hover:text-text disabled:opacity-50"
                 >
                   <Plus /> เพิ่มโต๊ะ
@@ -175,10 +209,13 @@ export function MerchantTablesPage() {
 
           {/* มือถือ */}
           <div className="flex flex-col gap-3 lg:hidden">
-            {bar.zones.map((z) => (
+            {draft.zones.map((z) => (
               <Tile key={z.id} className="flex flex-col gap-2.5 !rounded-[18px] !p-3.5">
                 <span className="flex items-center justify-between gap-2">
-                  <b className="text-base font-semibold">{z.name}</b>
+                  <span className="flex min-w-0 flex-wrap items-center gap-1.5">
+                    <b className="text-base font-semibold">{z.name}</b>
+                    {zoneTag(z)}
+                  </span>
                   <span className="text-xs text-muted">
                     {z.tables.length} โต๊ะ · {z.capacityPax} คน · {hoursLabel(z.defaultDurationMinutes)}
                   </span>
@@ -189,7 +226,7 @@ export function MerchantTablesPage() {
                     type="button"
                     aria-label={`เพิ่มโต๊ะใน ${z.name}`}
                     disabled={saving}
-                    onClick={() => void addTable(z)}
+                    onClick={() => draft.addTable(z)}
                     className="grid h-11 place-items-center rounded-[10px] border border-dashed border-muted/60 text-muted"
                   >
                     <Plus />
@@ -216,7 +253,6 @@ export function MerchantTablesPage() {
         title="เพิ่มโซน"
         okText="เพิ่ม"
         cancelText="ยกเลิก"
-        confirmLoading={saving}
         onCancel={() => setOpen(false)}
         onOk={() => form.submit()}
         destroyOnHidden
@@ -225,19 +261,11 @@ export function MerchantTablesPage() {
           form={form}
           layout="vertical"
           initialValues={{ tables: 4, seats: 4, duration: 180 }}
-          onFinish={async (v) => {
-            const prefix = v.name.trim().slice(0, 1).toUpperCase();
-            const zone: Zone = {
-              id: '',
-              name: v.name.trim(),
-              capacityPax: v.tables * v.seats,
-              defaultDurationMinutes: v.duration,
-              tables: Array.from({ length: v.tables }, (_, i) => ({ id: '', name: `${prefix}${i + 1}`, seats: v.seats })),
-            };
-            if (await save([...bar.zones, zone], `เพิ่มโซน ${zone.name} แล้ว`)) {
-              form.resetFields();
-              setOpen(false);
-            }
+          onFinish={(v) => {
+            // เพิ่มเข้า draft — บันทึกพร้อมการแก้อื่นด้วยปุ่มบันทึกของหน้า
+            draft.addZone({ ...v, name: v.name.trim() });
+            form.resetFields();
+            setOpen(false);
           }}
         >
           <Form.Item name="name" label="ชื่อโซน" rules={[{ required: true, max: 60 }]}>

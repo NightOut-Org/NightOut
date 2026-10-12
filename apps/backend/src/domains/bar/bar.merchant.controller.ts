@@ -1,4 +1,4 @@
-import { Body, Controller, HttpCode, Param, Patch, Post, Put, UseGuards } from '@nestjs/common';
+import { Body, Controller, HttpCode, Patch, Post, Put, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '../../auth/current-user.decorator';
 import { SupabaseJwtGuard, type AuthUser } from '../../auth/supabase-jwt.guard';
@@ -6,7 +6,7 @@ import { ApiDoc } from '../../common/api-doc';
 import { BarId, TEAM_FORBIDDEN } from '../../common/params';
 import { SupabaseService } from '../../supabase/supabase.service';
 import { BarMediaService } from './bar-media.service';
-import { BarInfoDto, BarMediaDto, BarPromotionsDto, BookingSettingsDto, CrowdDto, EvidenceDto, FeesDto, MenuDto, PayoutAccountDto, SafetyDto, ZonesDto } from './bar.dto';
+import { BarInfoDto, BarMediaDto, BarPromotionsDto, BarStoreDto, CrowdDto, FeesDto, MenuDto, PromotionsPageDto, SaveSafetyDto, SettingsPageDto, ZonesDto } from './bar.dto';
 import { PayoutCryptoService } from './payout-crypto.service';
 
 /**
@@ -59,6 +59,18 @@ export class BarMerchantController {
     return this.media.setGallery('app_set_bar_media', me.id, bar, b);
   }
 
+  @Put('store')
+  @ApiDoc({
+    summary: 'บันทึกหน้าข้อมูลร้าน (ข้อมูลร้าน + รูปร้าน)',
+    description:
+      'หน้า /merchant/store แก้ในหน้าแล้วบันทึกครั้งเดียว · `info` = ชื่อ คำอธิบาย ที่อยู่ เบอร์โทร ย่าน สไตล์ เวลาเปิด-ปิด ลิงก์โซเชียล (ส่งเฉพาะ field ที่แก้) · `media` = แกลเลอรีทั้งชุดตามลำดับ (สูงสุด 10 รูป · อัปโหลดเข้า bucket bar-media/<bar_id>/gallery/ ก่อนด้วย POST /storage/upload-url แล้วส่ง path) + `cover_path` (ต้องอยู่ในแกลเลอรี · null = ใช้รูปแทน) · ส่งเฉพาะส่วนที่แก้ อย่างน้อย 1 ส่วน · ธุรกรรมเดียว (พลาด = ไม่บันทึกทั้งคู่) · ไฟล์ที่เอาออกถูกลบจาก Storage · เจ้าของ/ผู้จัดการเท่านั้น (rpc app_save_bar_store → app_update_bar_info + app_set_bar_media)',
+    returns: '`bar_id` · `info_updated` · `gallery` = { `bar_id`, `count`, `cover_image_url`, `paths` } หรือ null ถ้าไม่ได้ส่ง media',
+    forbidden: TEAM_FORBIDDEN,
+  })
+  saveStore(@CurrentUser() me: AuthUser, @BarId() bar: string, @Body() b: BarStoreDto) {
+    return this.media.saveStore(me.id, bar, b);
+  }
+
   @Put('menu')
   @ApiDoc({
     summary: 'ตั้งเมนูและราคา',
@@ -93,6 +105,18 @@ export class BarMerchantController {
     return this.db.rpc('app_set_fees', { p_actor: me.id, p_bar: bar, p_service_charge: b.service_charge, p_vat: b.vat, p_other: b.other });
   }
 
+  @Put('promotions-page')
+  @ApiDoc({
+    summary: 'บันทึกหน้าโปรโมชัน (โปร + ค่าธรรมเนียม)',
+    description:
+      'หน้า /merchant/promotions แก้ในหน้าแล้วบันทึกครั้งเดียว · `items` = โปรทั้งชุด แทนที่ทั้งหมด (โปรใหม่/แก้ข้อความต้องรอแอดมินตรวจก่อนแสดง · ห้ามโปรแอลกอฮอล์) · `fees` = Service Charge % / VAT % / ค่าอื่นต่อบิล ใช้คำนวณราคาประเมิน · ส่งเฉพาะส่วนที่แก้ อย่างน้อย 1 ส่วน · ธุรกรรมเดียว · เจ้าของ/ผู้จัดการเท่านั้น (rpc app_save_promotions_page → app_set_bar_promotions + app_set_fees)',
+    returns: '`bar_id` · `count` จำนวนโปร · `pending` จำนวนที่รอตรวจ · `fees_updated`',
+    forbidden: TEAM_FORBIDDEN,
+  })
+  promotionsPage(@CurrentUser() me: AuthUser, @BarId() bar: string, @Body() b: PromotionsPageDto) {
+    return this.db.rpc('app_save_promotions_page', { p_actor: me.id, p_bar: bar, p_items: b.items ?? null, p_fees: b.fees ?? null });
+  }
+
   @Put('zones')
   @ApiDoc({
     summary: 'ตั้งโซนและโต๊ะ',
@@ -104,55 +128,43 @@ export class BarMerchantController {
     return this.db.rpc('app_set_zones', { p_actor: me.id, p_bar: bar, p_zones: b.zones });
   }
 
-  @Put('safety/:key')
+  @Put('safety')
   @ApiDoc({
-    summary: 'ตั้งข้อมูลความปลอดภัย 1 ข้อ',
-    description: 'ร้านตอบ YES/NO/UNKNOWN ของหัวข้อความปลอดภัย (`key` เช่น cctv, security_guard) · ใช้คิดคะแนนความปลอดภัย (rpc app_set_safety)',
-    returns: '`bar_id` · `key` · `value`',
+    summary: 'บันทึกข้อมูลความปลอดภัย (หลายข้อ)',
+    description:
+      'หน้า /merchant/safety แก้ในหน้าแล้วบันทึกครั้งเดียว · `items` = เฉพาะข้อที่เปลี่ยน: `value` YES/NO/UNKNOWN (กลับเป็นร้านแจ้งเอง + คิดคะแนนความปลอดภัยใหม่) และ/หรือ `evidence_path` หลักฐาน (อัปโหลดเข้า bucket bar-verifications/<bar_id>/… ก่อนด้วย POST /storage/upload-url) ให้แอดมินตรวจ · ธุรกรรมเดียว · แจ้งแอดมิน 1 ครั้งถ้ามีหลักฐาน · เจ้าของ/ผู้จัดการเท่านั้น (rpc app_save_safety → app_set_safety)',
+    returns: '`bar_id` · `values_updated` จำนวนข้อที่เปลี่ยนค่า · `evidence_added` จำนวนหลักฐานที่แนบ',
     forbidden: TEAM_FORBIDDEN,
   })
-  safety(@CurrentUser() me: AuthUser, @BarId() bar: string, @Param('key') key: string, @Body() b: SafetyDto) {
-    return this.db.rpc('app_set_safety', { p_actor: me.id, p_bar: bar, p_key: key.toUpperCase(), p_value: b.value });
-  }
-
-  @Put('safety/:key/evidence')
-  @ApiDoc({
-    summary: 'แนบหลักฐานความปลอดภัย',
-    description: 'แนบรูปหลักฐาน (อัปโหลดเข้า bucket bar-verifications เองก่อน แล้วส่ง path) ให้แอดมินตรวจยืนยัน (rpc app_set_safety_evidence)',
-    returns: '`bar_id` · `key` · `evidence_path`',
-    forbidden: TEAM_FORBIDDEN,
-  })
-  safetyEvidence(@CurrentUser() me: AuthUser, @BarId() bar: string, @Param('key') key: string, @Body() b: EvidenceDto) {
-    return this.db.rpc('app_set_safety_evidence', { p_actor: me.id, p_bar: bar, p_key: key.toUpperCase(), p_path: b.path });
-  }
-
-  @Patch('booking-settings')
-  @ApiDoc({
-    summary: 'ตั้งค่าการจอง มัดจำ และ PR',
-    description: 'ยอดมัดจำ (ต่อโต๊ะ/ต่อคน) นโยบายมัดจำ เวลาเก็บโต๊ะ และจำนวน PR ชาย/หญิง/LGBTQ+ ที่แสดงบนการ์ดร้าน (rpc app_update_booking_settings)',
-    returns: '`bar_id`',
-    forbidden: TEAM_FORBIDDEN,
-  })
-  bookingSettings(@CurrentUser() me: AuthUser, @BarId() bar: string, @Body() b: BookingSettingsDto) {
-    return this.db.rpc('app_update_booking_settings', { p_actor: me.id, p_bar: bar, p: b });
+  saveSafety(@CurrentUser() me: AuthUser, @BarId() bar: string, @Body() b: SaveSafetyDto) {
+    return this.db.rpc('app_save_safety', { p_actor: me.id, p_bar: bar, p_items: b.items });
   }
 
   /** เลขบัญชีเข้ารหัสที่นี่ก่อนส่งลง DB — DB/หน้าเว็บเห็นแค่ 4 ตัวท้าย */
-  @Put('payout-account')
+  @Put('settings')
   @ApiDoc({
-    summary: 'ตั้งบัญชีรับเงินของร้าน',
-    description: 'บัญชีที่ NightOut โอนเงินมัดจำให้หลังลูกค้าเช็กอิน · เลขบัญชีถูกเข้ารหัส AES-256-GCM ที่ API ก่อนลง DB (PAYOUT_ENCRYPTION_KEY) · เจ้าของร้านเท่านั้น (rpc app_set_payout_account)',
-    returns: '`id` รหัสบัญชี · `account_no_last4` เลขบัญชี 4 ตัวท้าย',
+    summary: 'บันทึกหน้าตั้งค่าการจอง (ตั้งค่า + บัญชีรับเงิน)',
+    description:
+      'หน้า /merchant/settings แก้ในหน้าแล้วบันทึกครั้งเดียว · ส่งเฉพาะส่วนที่แก้ อย่างน้อย 1 ส่วน · ' +
+      '`booking` = ยอดมัดจำ (ต่อโต๊ะ/ต่อคน) นโยบายมัดจำ เวลาเก็บโต๊ะ และจำนวน PR ชาย/หญิง/LGBTQ+ (ส่งเฉพาะ field ที่แก้ · เจ้าของ/ผู้จัดการ) · ' +
+      '`payout` = บัญชีที่ NightOut โอนเงินมัดจำให้หลังลูกค้าเช็กอิน (เจ้าของเท่านั้น · เลขบัญชีถูกเข้ารหัส AES-256-GCM ที่ API ก่อนลง DB ด้วย PAYOUT_ENCRYPTION_KEY) · ' +
+      'ธุรกรรมเดียว — ผู้จัดการส่ง `payout` = ไม่บันทึกทั้งคู่ (rpc app_save_settings_page → app_update_booking_settings + app_set_payout_account)',
+    returns: '`bar_id` · `settings_updated` · `account_no_last4` 4 ตัวท้ายของบัญชีใหม่ (null ถ้าไม่ได้ส่ง payout)',
     forbidden: TEAM_FORBIDDEN,
   })
-  payoutAccount(@CurrentUser() me: AuthUser, @BarId() bar: string, @Body() b: PayoutAccountDto) {
-    return this.db.rpc('app_set_payout_account', {
+  saveSettings(@CurrentUser() me: AuthUser, @BarId() bar: string, @Body() b: SettingsPageDto) {
+    return this.db.rpc('app_save_settings_page', {
       p_actor: me.id,
       p_bar: bar,
-      p_bank_code: b.bank_code,
-      p_account_name: b.account_name,
-      p_account_no_enc: this.crypto.encrypt(b.account_no),
-      p_last4: b.account_no.slice(-4),
+      p_settings: b.booking ?? null,
+      p_payout: b.payout
+        ? {
+            bank_code: b.payout.bank_code,
+            account_name: b.payout.account_name,
+            account_no_enc: this.crypto.encrypt(b.payout.account_no),
+            last4: b.payout.account_no.slice(-4),
+          }
+        : null,
     });
   }
 }

@@ -6,5 +6,5 @@ import { useAdminView, type AdminActionInput } from '@/services/adminData';
 /** GET /admin/views/admin_bars เรียงตามชื่อ */
 export const useBars = () => useAdminView('admin_bars', { order: { column: 'name', ascending: true } });
 
-/** PATCH /admin/bars/:id/status — แสดง ↔ ระงับ (ส่งให้ useAdminAction().mutate พร้อม success) */
-export const barStatusAction = (barId: string, body: C.SetBarStatusBody): AdminActionInput => ({ method: 'PATCH', path: `bars/${barId}/status`, body });
+/** PATCH /admin/bars/status — บันทึกการแสดง ↔ ระงับ ทุกร้านที่แก้ในหน้า ครั้งเดียว (ส่งให้ useAdminAction().mutate พร้อม success) */
+export const barsStatusAction = (body: C.SetBarsStatusBody): AdminActionInput => ({ method: 'PATCH', path: 'bars/status', body });

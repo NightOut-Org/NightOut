@@ -1,5 +1,11 @@
 # CHANGELOG — team (จัดการทีมงาน /team)
 
+## 2026-10-12 — ลำดับ + แสดงบนเว็บ แก้ก่อน แล้วกดบันทึกครั้งเดียว
+- ลากเรียงลำดับ (Super Admin) และสลับ "แสดงบนเว็บ" แก้แค่ในหน้า (หัวคอลัมน์ "ลำดับ*" / ป้าย "ยังไม่บันทึก") แล้วกด "บันทึก" ที่หัวหน้าครั้งเดียว · "คืนค่า" ทิ้งการแก้ · เพิ่ม/แก้รายคน (Drawer) และลบ ยังบันทึกทันทีเหมือนเดิม
+- ระหว่างบันทึกหรือกำลังลบ ตารางล็อก (ลาก/สวิตช์/แก้/ลบ disabled) · บันทึกพลาด = การแก้ยังอยู่ · ออกจากหน้าตอนยังไม่บันทึก = ถามก่อน
+- endpoint ใหม่ `PATCH /admin/team-members` (`admin_save_team_page` · migration `20261012000200_site_team_save_page`) แทน `PUT /admin/team-members/order` และ PATCH `active` ทีละแถว
+- ไฟล์: `page.tsx` · `utils/useTeamDraft.ts` (ใหม่ แทน `utils/useTeamOrder.ts`) · `api.ts` (`saveTeamPageAction` แทน `reorderTeamAction`)
+
 ## 2026-10-09 — ย้าย API เข้า `api.ts` ของโมดูล (ADR 0007)
 - เพิ่ม `api.ts`: `useTeamMembers` · `createTeamMemberAction` · `updateTeamMemberAction` · `deleteTeamMemberAction` · `reorderTeamAction` — ชื่อ view / path / body ของหน้านี้ย้ายมาอยู่ที่เดียว (เดิมเขียนในหน้าผ่าน `useAdminView('admin_x', …)` / `act.mutate({ method, path, body })`) · body มี type จาก `@nightout/contracts`
 - หน้า / form / modal ของโมดูลเรียกผ่าน `./api` · พฤติกรรมเดิม (query key, ข้อความแจ้งผล, invalidate `['admin']`)

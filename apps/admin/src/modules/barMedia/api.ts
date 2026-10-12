@@ -11,22 +11,16 @@ import { toWebp } from '@/ui/utils/image';
 export const useBarMedia = () =>
   useAdminView('admin_bar_media', { order: { column: 'name', ascending: true } });
 
-/** PUT /admin/bars/:id/media — แกลเลอรีทั้งชุด + รูปปก (ส่งให้ useAdminAction().mutate พร้อม success) */
-export const barMediaAction = (barId: string, body: C.BarMediaBody): AdminActionInput => ({
+/** PUT /admin/bars/:id/media — บันทึก Drawer ครั้งเดียว: แกลเลอรี + ปก และ/หรือ รูปเมนูที่เปลี่ยน (ส่งให้ useAdminAction().mutate พร้อม success) */
+export const barMediaAction = (barId: string, body: C.AdminBarMediaBody): AdminActionInput => ({
   method: 'PUT',
   path: `bars/${barId}/media`,
   body,
 });
 
-/** PUT /admin/menu-items/:id/image — ตั้ง/ลบรูปเมนู 1 รายการ */
-export const menuItemImageAction = (
-  itemId: string,
-  body: C.MenuItemImageBody,
-): AdminActionInput => ({
-  method: 'PUT',
-  path: `menu-items/${itemId}/image`,
-  body,
-});
+/** POST /admin/bars/:id/media/discard — ลบไฟล์ที่เพิ่งอัปโหลดแต่บันทึกไม่สำเร็จ (ไฟล์ที่ใช้อยู่ไม่ถูกลบ) */
+export const discardBarMedia = (barId: string, paths: string[]) =>
+  Rest.post<{ removed: number }>(`/admin/bars/${barId}/media/discard`, { paths } satisfies C.DiscardBarMediaBody);
 
 /** ย่อเป็น webp แล้วอัปโหลดเข้า bar-media/<bar_id>/<folder>/ (policy ให้แอดมิน + MFA เขียนได้) → คืน path */
 export async function uploadBarImage(
