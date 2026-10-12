@@ -140,7 +140,7 @@ export function MerchantLayout() {
   const sheetItems = sheet === 'store' ? GROUPS[0]!.items : MORE_ITEMS;
   const showTabs = !OWN_BOTTOM_BAR.test(pathname);
   const crowdPill = (
-    <span className="inline-flex items-center rounded-full border border-border px-3 py-1">
+    <span className="merchant-glass-pill inline-flex items-center rounded-full border border-border px-3 py-1">
       <CrowdBadge crowd={bar.crowd} updatedAt={bar.crowdUpdatedAt} showTime />
     </span>
   );

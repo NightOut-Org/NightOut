@@ -219,7 +219,7 @@ const routes: RouteObject[] = [
           },
           {
             path: 'merchant/join',
-            handle: { merchantShell: true, hideFooter: true },
+            handle: { merchantShell: true, hideFooter: true, merchantAurora: true },
             lazy: () =>
               import('@/modules/merchant/join/page').then((m) => ({
                 Component: m.MerchantJoinPage,
@@ -227,6 +227,7 @@ const routes: RouteObject[] = [
           },
           {
             path: 'merchant/status',
+            handle: { merchantAurora: true },
             lazy: () =>
               import('@/modules/merchant/status/page').then((m) => ({
                 Component: m.MerchantStatusPage,
@@ -240,8 +241,8 @@ const routes: RouteObject[] = [
               {
                 path: 'merchant',
                 element: <MerchantLayout />,
-                // merchantShell: มือถือใช้แถบบน/แท็บล่างของร้านแทน navbar ของเว็บ
-                handle: { merchantShell: true },
+                // merchantShell: มือถือใช้แถบบน/แท็บล่างของร้านแทน navbar ของเว็บ · merchantAurora: พื้นหลังหน้าร้าน
+                handle: { merchantShell: true, merchantAurora: true },
                 children: [
                   {
                     index: true,

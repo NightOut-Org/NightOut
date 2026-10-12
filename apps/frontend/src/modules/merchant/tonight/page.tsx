@@ -223,7 +223,7 @@ export function TonightPage() {
     <ConfigProvider theme={getAntdTheme('dark')}>
       <div className="dark text-text">
         {/* ---------- Desktop ---------- */}
-        <div className="hidden gap-4 rounded-3xl bg-background lg:grid lg:grid-cols-4 lg:grid-rows-[minmax(220px,auto)_auto]">
+        <div className="hidden gap-4 lg:grid lg:grid-cols-4 lg:grid-rows-[minmax(220px,auto)_auto]">
           <Tile className="col-span-2 flex flex-col gap-3 !p-[22px]">
             <p className="flex items-center gap-2 font-semibold">
               <QrCode size={22} className="text-gold" /> สแกน / กรอกรหัส

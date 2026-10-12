@@ -41,7 +41,7 @@ export function Ring({ pct, size = 72, children }: { pct: number; size?: number;
       }}
     >
       <span
-        className="flex flex-col items-center justify-center rounded-full bg-card text-sm font-semibold"
+        className="merchant-solid flex flex-col items-center justify-center rounded-full bg-card text-sm font-semibold"
         style={{ width: inner, height: inner }}
       >
         {children ?? `${p}%`}
