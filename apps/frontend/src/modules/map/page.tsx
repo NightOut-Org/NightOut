@@ -4,6 +4,7 @@ import {
   Crosshair,
   Faders,
   MagnifyingGlass,
+  MagnifyingGlassIcon,
   Minus,
   NavigationArrow,
   Plus,
@@ -57,10 +58,7 @@ export function MapPage() {
   const [me, setMe] = useState<[number, number] | null>(null);
 
   const bars = listBars(f);
-  const selected = useMemo(
-    () => bars.find((b) => b.id === selectedId) ?? null,
-    [bars, selectedId],
-  );
+  const selected = useMemo(() => bars.find((b) => b.id === selectedId) ?? null, [bars, selectedId]);
   const activeFilters =
     (f.category && f.category !== 'ALL' ? 1 : 0) + (f.hasPR ? 1 : 0) + (f.crowd?.length ?? 0);
 
@@ -139,7 +137,7 @@ export function MapPage() {
                 value={f.q}
                 onChange={(e) => setF({ ...f, q: e.target.value })}
                 placeholder="ชื่อร้าน ย่าน หรือสไตล์"
-                prefix={<MagnifyingGlass />}
+                prefix={<MagnifyingGlassIcon />}
                 suffix={
                   <button type="button" aria-label="ปิดค้นหา" onClick={() => setSearchOpen(false)}>
                     <X />
@@ -316,7 +314,9 @@ export function MapPage() {
           >
             เฉพาะร้านที่มี PR
           </Checkbox>
-          <p className="text-xs text-muted">ขอบหมุด: เขียว = ว่าง · เหลือง = ใกล้เต็ม · แดง = เต็ม</p>
+          <p className="text-xs text-muted">
+            ขอบหมุด: เขียว = ว่าง · เหลือง = ใกล้เต็ม · แดง = เต็ม
+          </p>
         </div>
       </Drawer>
     </div>
