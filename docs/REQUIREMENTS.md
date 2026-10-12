@@ -1,7 +1,7 @@
 # NightOut — Requirements (แหล่งความต้องการหลัก)
 
 > **แหล่งจริง:** Google Doc [Nightout_2.day](https://docs.google.com/document/d/1GQ3ilsu_y_dzTulZS9_UEtNH7ygOLkaM-YkqdFm3UUI/edit) — แก้ requirement ที่นั่นเท่านั้น
-> **snapshot:** revisionId `AHj4eMRg5Q8mHm3NV7d19CZT9mdKC3rQ-NxWAapTOQkFG9Fz8BiQI1lZXBAgVLv9HyzMzRXcyFA-gyvYXzPvN6z4rloQXFmJrn-Lo0XWQoo` · sync 2026-10-11 · ฉบับเต็มทุกแท็บ: [`requirements/nightout-2-day.md`](requirements/nightout-2-day.md)
+> **snapshot:** revisionId `AHj4eMTrsJDYu6DNu-K-7bq1aIk13cTydDvW9I0SNrcqTA-BvXIY64v6gN9OJ9kCJxtmOgNt56n8EPIhrMRS3N-gzyRmYC5zCcCEPvqOhpg` · sync 2026-10-12 · ฉบับเต็มทุกแท็บ: [`requirements/nightout-2-day.md`](requirements/nightout-2-day.md)
 > **อัปเดต:** agent รัน skill `sync-requirements` เองก่อนเริ่มงานแก้โค้ด (`.claude/skills/sync-requirements/SKILL.md`)
 
 **ลำดับความสำคัญเมื่อขัดกัน:** ไฟล์นี้ (ข้อ "ตัดสินแล้ว" > เนื้อหาเอกสาร) → "กฎธุรกิจที่ตกลงแล้ว" ใน `CLAUDE.md` → `docs/PROMPT.md`
