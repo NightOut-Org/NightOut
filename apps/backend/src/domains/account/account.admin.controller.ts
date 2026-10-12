@@ -10,7 +10,7 @@ import { ApiDoc } from '../../common/api-doc';
 import { ADMIN_FORBIDDEN, Id } from '../../common/params';
 import { SupabaseService } from '../../supabase/supabase.service';
 import { AccountUsersService } from './account-users.service';
-import { CreateUserDto, SetUserRoleDto, UnbanUserDto, UpdateUserAccountDto } from './account.dto';
+import { CreateUserDto, SetUsersRoleDto, UnbanUserDto, UpdateUserAccountDto } from './account.dto';
 
 /** account · Backoffice — ผู้ใช้ ชั้นบัญชี (ADR 0005) แบน/ปลดแบน · audit log ในธุรกรรมเดียว */
 @ApiTags('account')
@@ -55,6 +55,22 @@ export class AccountAdminController {
     return this.users.create(me.id, me.role, b);
   }
 
+  // ต้องอยู่ก่อน PATCH users/:id — ไม่งั้น "roles" ถูกจับเป็น :id
+  @Patch('users/roles')
+  @UseGuards(SuperAdminGuard)
+  @ApiDoc({
+    summary: 'แก้ชั้นบัญชีหลายคน (บันทึกหน้าผู้ใช้)',
+    description:
+      'หน้า /users แก้ชั้นบัญชีในหน้าแล้วบันทึกครั้งเดียว · เฉพาะ SUPER_ADMIN ใช้แก้บัญชีที่สร้างผิด · `changes` = เฉพาะคนที่เปลี่ยน ตั้งเป็น CUSTOMER / MERCHANT / STAFF / ADMIN / SUPER_ADMIN · ' +
+      'ชั้นใหม่เป็น CUSTOMER / ADMIN / SUPER_ADMIN → หลุดจากทุกร้าน (เลิกเป็นเจ้าของ + ถอนจากทีม) · ' +
+      'ห้ามเหลือ SUPER_ADMIN เป็นศูนย์ (`LAST_SUPER_ADMIN`) · ธุรกรรมเดียว (คนไหนพลาด = ไม่บันทึกเลย) · audit log ต่อคน (rpc admin_set_users_role → admin_set_user_role)',
+    returns: '`updated` จำนวนคนที่บันทึก · `bars_detached` จำนวนร้านที่หลุดรวม',
+    forbidden: 'ไม่ใช่ SUPER_ADMIN (`SUPER_ADMIN_REQUIRED`)',
+  })
+  setUsersRole(@CurrentUser() me: AuthUser, @Body() b: SetUsersRoleDto) {
+    return this.db.rpc('admin_set_users_role', { p_actor: me.id, p_changes: b.changes });
+  }
+
   @Patch('users/:id')
   @ApiDoc({
     summary: 'แก้ข้อมูลบัญชี',
@@ -79,21 +95,6 @@ export class AccountAdminController {
     const result = await this.db.rpc<{ id: string; deleted: boolean }>('admin_delete_user', { p_actor: me.id, p_user: id });
     await this.db.banUser(id);
     return result;
-  }
-
-  @Patch('users/:id/role')
-  @UseGuards(SuperAdminGuard)
-  @ApiDoc({
-    summary: 'แก้ชั้นบัญชี',
-    description:
-      'เฉพาะ SUPER_ADMIN ใช้แก้บัญชีที่สร้างผิด · ตั้งเป็น CUSTOMER / MERCHANT / STAFF / ADMIN / SUPER_ADMIN · ' +
-      'ชั้นใหม่เป็น CUSTOMER / ADMIN / SUPER_ADMIN → หลุดจากทุกร้าน (เลิกเป็นเจ้าของ + ถอนจากทีม) · ' +
-      'ห้ามเหลือ SUPER_ADMIN เป็นศูนย์ (`LAST_SUPER_ADMIN`) · บันทึก audit log (rpc admin_set_user_role)',
-    returns: '`id` รหัสผู้ใช้ · `role` · `bars_detached` จำนวนร้านที่หลุด',
-    forbidden: 'ไม่ใช่ SUPER_ADMIN (`SUPER_ADMIN_REQUIRED`)',
-  })
-  setUserRole(@CurrentUser() me: AuthUser, @Id() id: string, @Body() b: SetUserRoleDto) {
-    return this.db.rpc('admin_set_user_role', { p_actor: me.id, p_user: id, p_role: b.role });
   }
 
   @Post('users/:id/unban')

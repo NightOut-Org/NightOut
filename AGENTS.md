@@ -39,6 +39,7 @@
 ## Security & Agent Workflow
 
 - Repository skills: `.agents/skills/<skill>/SKILL.md`. Read relevant instructions before work; UI requires `frontend-design`, plus `antd`/`ant-design`, `mobile-native`, or `animate` as applicable.
+- Scope, phases, and business rules come from `docs/REQUIREMENTS.md` (synced from the Google Doc "Nightout_2.day"). Run the `sync-requirements` skill before code work; it compares the doc's revisionId with `docs/requirements/nightout-2-day.md`.
 - Follow `CLAUDE.md`: agents must not commit, push, or merge. Confirm out-of-plan features and unspecified admin counterparts before implementation.
 - Update module changelogs, `docs/STRUCTURE.md` for module changes, and `docs/SITEMAP.md` for route changes.
 - Keep secrets outside Git and browser bundles. Use Supabase only for Auth in clients; route database operations through NestJS with RLS. Payment settlement remains DRAFT; do not enable real-money collection.

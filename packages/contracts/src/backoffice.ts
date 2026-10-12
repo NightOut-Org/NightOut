@@ -20,6 +20,8 @@ export const ADMIN_VIEWS = [
   'admin_home_categories',
   'admin_home_popular',
   'admin_bar_media',
+  'admin_community_threads',
+  'admin_community_comments',
 ] as const;
 export type AdminView = (typeof ADMIN_VIEWS)[number];
 

@@ -45,9 +45,23 @@ export type TeamMemberBody = z.input<typeof TeamMemberBody>;
 export const UpdateTeamMemberBody = TeamMemberBody.extend({ roles, skills, contacts: TeamContacts, active: z.boolean() }).partial();
 export type UpdateTeamMemberBody = z.infer<typeof UpdateTeamMemberBody>;
 
-/** PUT /admin/team-members/order */
-export const ReorderTeamBody = z.object({ ids: z.array(uuid).min(1).max(200).describe('id ทีมงานเรียงจากบนลงล่าง') });
-export type ReorderTeamBody = z.infer<typeof ReorderTeamBody>;
+/** PATCH /admin/team-members — หน้า /team บันทึกครั้งเดียว: ลำดับ (Super Admin) และ/หรือ แสดงบนเว็บหลายแถว */
+export const SaveTeamPageBody = z
+  .object({
+    order: z.array(uuid).min(1).max(200).optional().describe('id ทีมงานทั้งหมดเรียงจากบนลงล่าง (ไม่ส่ง = ไม่เปลี่ยนลำดับ)'),
+    active: z
+      .array(z.object({ id: uuid, active: z.boolean() }))
+      .max(200)
+      .refine((a) => new Set(a.map((x) => x.id)).size === a.length, 'ทีมงานซ้ำกัน')
+      .optional()
+      .describe('เฉพาะแถวที่เปลี่ยน · false = ซ่อนจากหน้าเกี่ยวกับเรา'),
+  })
+  .refine((b) => !!b.order || !!b.active?.length, 'ไม่มีอะไรให้บันทึก');
+export type SaveTeamPageBody = z.infer<typeof SaveTeamPageBody>;
+export interface SaveTeamPageResult {
+  reordered: number;
+  active_updated: number;
+}
 
 /** GET /public/team (view public_team) */
 export interface PublicTeamMember {
@@ -67,5 +81,6 @@ export const SITE_TEAM_ERRORS = {
   INVALID_TEAM_MEMBER: 'ข้อมูลทีมงานไม่ครบหรือไม่ถูกต้อง (ชื่อเล่น 1–40 ตัว · รูปต้องเป็น URL หรือ path ที่ขึ้นต้นด้วย /)',
   INVALID_TEAM_ORDER: 'ลำดับทีมงานไม่ถูกต้อง — รีเฟรชหน้าแล้วลองใหม่',
   TEAM_MEMBER_NOT_OWN: 'แอดมินแก้หรือซ่อนได้เฉพาะแถวของตัวเอง (อีเมลในช่องทางติดต่อต้องตรงกับอีเมลบัญชี) — แถวอื่นให้ซูเปอร์แอดมินแก้',
+  INVALID_TEAM_PAGE: 'ไม่มีอะไรให้บันทึก หรือข้อมูลไม่ถูกต้อง — รีเฟรชหน้าแล้วลองใหม่',
   TEAM_MEMBER_EMAIL_LOCKED: 'อีเมลในช่องทางติดต่อต้องเป็นอีเมลบัญชีของคุณ — เปลี่ยนได้เฉพาะซูเปอร์แอดมิน',
 } as const satisfies Record<string, string>;

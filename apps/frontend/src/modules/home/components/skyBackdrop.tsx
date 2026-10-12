@@ -1,6 +1,6 @@
 import { useReducedMotion } from 'motion/react';
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
-import { prefersLightweight } from '../utils/prefersLightweight';
+import { prefersLightweight } from '@/ui/utils/prefersLightweight';
 import './skyBackdrop.css';
 
 /**

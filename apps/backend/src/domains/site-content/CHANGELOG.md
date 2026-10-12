@@ -1,5 +1,9 @@
 # site-content — ประวัติการแก้ไข
 
+## 2026-10-12 — บันทึกหน้าแรกครั้งเดียว
+- ใหม่ `PUT /admin/home-page` `{ content?, categories?, popular? }` (`admin_save_home_page`) · ลบ `PATCH /admin/home-content` · `PATCH /admin/home-categories/:slot` · `PUT /admin/home-popular`
+- migration `20261012000600_site_content_save_home_page` · ไฟล์: `site-content.admin.controller.ts` · `site-content.dto.ts` (`SaveHomePageDto`) · เทสต์ `test/app.test.ts`
+
 ## 2026-10-08 — ร้านยอดนิยมหน้าแรก
 - migration ใหม่ `20261008000300_site_content_home_popular.sql`: `home_content` + `popular_eyebrow` / `popular_title` · ตาราง `home_popular_bars` · view `public_home_popular` (เฉพาะร้าน APPROVED) / `admin_home_popular` · rpc `admin_save_home_popular` · `admin_save_home_content` / `home_content_check` ตัวใหม่
 - endpoint ใหม่ `PUT /admin/home-popular` `{bar_ids}` (สูงสุด 8 · ไม่ซ้ำ · แทนที่ทั้งรายการ · audit log)

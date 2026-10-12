@@ -24,8 +24,8 @@ export const updateUserAction = (userId: string, body: C.UpdateUserAccountBody):
 /** DELETE /admin/users/:id */
 export const deleteUserAction = (userId: string): AdminActionInput => ({ method: 'DELETE', path: `users/${userId}` });
 
-/** PATCH /admin/users/:id/role */
-export const setUserRoleAction = (userId: string, body: C.SetUserRoleBody): AdminActionInput => ({ method: 'PATCH', path: `users/${userId}/role`, body });
+/** PATCH /admin/users/roles — บันทึกชั้นบัญชีที่แก้ในหน้า ครั้งเดียว (Super Admin) */
+export const setUsersRoleAction = (body: C.SetUsersRoleBody): AdminActionInput => ({ method: 'PATCH', path: 'users/roles', body });
 
-/** POST /admin/users/:id/unban — ปลดแบน (บัญชี + ทุกเบอร์ที่เคยใช้) */
+/** POST /admin/users/:id/unban — ปลดแบน (บัญชี + ทุกเบอร์ที่เคยใช้) · ข้อยกเว้นที่บันทึกทันที */
 export const unbanUserAction = (userId: string, body: C.UnbanUserBody = {}): AdminActionInput => ({ method: 'POST', path: `users/${userId}/unban`, body });

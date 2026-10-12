@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Patch, Post, Put, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Patch, Post, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { AdminGuard, SuperAdminGuard } from '../../auth/admin.guard';
 import { CurrentUser } from '../../auth/current-user.decorator';
@@ -6,12 +6,12 @@ import { SupabaseJwtGuard, type AuthUser } from '../../auth/supabase-jwt.guard';
 import { ApiDoc } from '../../common/api-doc';
 import { Id } from '../../common/params';
 import { SupabaseService } from '../../supabase/supabase.service';
-import { CreateTeamMemberDto, ReorderTeamDto, UpdateTeamMemberDto } from './site-team.dto';
+import { CreateTeamMemberDto, SaveTeamPageDto, UpdateTeamMemberDto } from './site-team.dto';
 
 const SUPER_ONLY = 'ไม่ใช่ SUPER_ADMIN (`SUPER_ADMIN_REQUIRED`)';
 
 /**
- * site-team · Backoffice — จัดการทีมงานหน้า /about (rpc admin_save_team_member, admin_delete_team_member, admin_reorder_team_members · audit log)
+ * site-team · Backoffice — จัดการทีมงานหน้า /about (rpc admin_save_team_member, admin_delete_team_member, admin_save_team_page · audit log)
  * เพิ่ม / ลบ / สลับลำดับ = SUPER_ADMIN · แก้ / ซ่อน = SUPER_ADMIN ทุกแถว หรือ ADMIN เฉพาะแถวที่ contacts.email ตรงกับอีเมลตัวเอง (DB ตรวจ)
  */
 @ApiTags('site-team')
@@ -35,17 +35,16 @@ export class SiteTeamAdminController {
     return this.db.rpc('admin_save_team_member', { p_actor: me.id, p_id: null, p: b });
   }
 
-  @Put('order')
-  @UseGuards(SuperAdminGuard)
+  @Patch()
   @ApiDoc({
-    summary: 'เรียงลำดับทีมงาน',
+    summary: 'บันทึกหน้าจัดการทีมงาน (ลำดับ + แสดงบนเว็บ)',
     description:
-      'เฉพาะ SUPER_ADMIN · ส่ง id ทั้งหมดเรียงจากบนลงล่าง → sort_order 10, 20, 30, … (ลำดับเดียวกับหน้าเกี่ยวกับเรา) · rpc admin_reorder_team_members (ตรวจ super_admin_assert ซ้ำ)',
-    returns: '`updated` จำนวนแถวที่เปลี่ยนลำดับ',
-    forbidden: SUPER_ONLY,
+      'หน้า /team แก้ในหน้าแล้วบันทึกครั้งเดียว · `order` = id ทีมงานทั้งหมดเรียงบน→ล่าง → sort_order 10, 20, 30, … (เฉพาะ SUPER_ADMIN · ไม่ส่ง = ไม่เปลี่ยนลำดับ) · `active` = เฉพาะแถวที่เปลี่ยน (SUPER_ADMIN ทุกแถว · ADMIN เฉพาะแถวที่ `contacts.email` ตรงกับอีเมลตัวเอง) · ธุรกรรมเดียว (แถวไหนไม่มีสิทธิ์ = ไม่บันทึกเลย) · audit log ต่อแถว + ลำดับ (rpc admin_save_team_page → admin_save_team_member + admin_reorder_team_members)',
+    returns: '`reordered` จำนวนแถวที่เปลี่ยนลำดับ · `active_updated` จำนวนแถวที่เปลี่ยนการแสดง',
+    forbidden: 'ไม่ใช่แอดมิน · `SUPER_ADMIN_REQUIRED` ADMIN ส่ง `order` · `TEAM_MEMBER_NOT_OWN` แถวของคนอื่น',
   })
-  reorder(@CurrentUser() me: AuthUser, @Body() b: ReorderTeamDto) {
-    return this.db.rpc('admin_reorder_team_members', { p_actor: me.id, p_ids: b.ids });
+  savePage(@CurrentUser() me: AuthUser, @Body() b: SaveTeamPageDto) {
+    return this.db.rpc('admin_save_team_page', { p_actor: me.id, p_ids: b.order ?? null, p_active: b.active ?? null });
   }
 
   @Patch(':id')

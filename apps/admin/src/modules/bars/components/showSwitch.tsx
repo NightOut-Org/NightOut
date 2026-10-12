@@ -1,31 +1,30 @@
-import type { Db } from '@nightout/types';
 import { Input, Popconfirm, Switch } from 'antd';
 import { useState } from 'react';
-import { useAdminAction } from '@/services/adminData';
-import { barStatusAction } from '../api';
 
 /**
  * สวิตช์ "แสดง" ของร้าน — เปิด = APPROVED (ขึ้นเว็บ) · ปิด = SUSPENDED (ซ่อน)
- * ปิดต้องใส่เหตุผลก่อน (ร้านเห็นข้อความนี้ และลง audit log) · ใช้กับร้านที่แสดง/ระงับอยู่เท่านั้น
- * (ร่าง / รอตรวจ / ไม่อนุมัติ จัดการที่หน้า /merchants)
+ * แก้ใน draft ของหน้าเท่านั้น (บันทึกด้วยปุ่มบันทึกของหน้า) · ปิดต้องใส่เหตุผลก่อน (ร้านเห็นข้อความนี้ และลง audit log)
  */
-export function ShowSwitch({ bar }: { bar: Pick<Db.AdminBar, 'id' | 'name' | 'status'> }) {
-  const act = useAdminAction();
+export function ShowSwitch({
+  name,
+  shown,
+  disabled,
+  askReason,
+  onChange,
+}: {
+  name: string;
+  /** ค่าที่แสดงอยู่ (draft ถ้ามี ไม่งั้นค่าจาก server) */
+  shown: boolean;
+  disabled: boolean;
+  /** ปิดแล้วต้องถามเหตุผลไหม (false = ปิดกลับเป็นค่าเดิมที่ระงับอยู่แล้ว) */
+  askReason: boolean;
+  onChange: (shown: boolean, reason?: string) => void;
+}) {
   const [open, setOpen] = useState(false);
   const [reason, setReason] = useState('');
-  const shown = bar.status === 'APPROVED';
-  const pending = act.isPending && act.variables?.path === `bars/${bar.id}/status`;
 
-  const show = () =>
-    act.mutate({
-      ...barStatusAction(bar.id, { status: 'APPROVED' }),
-      success: `แสดง ${bar.name} แล้ว`,
-    });
   const hide = () => {
-    act.mutate({
-      ...barStatusAction(bar.id, { status: 'SUSPENDED', reason: reason.trim() }),
-      success: `ซ่อน ${bar.name} แล้ว`,
-    });
+    onChange(false, reason.trim());
     setOpen(false);
     setReason('');
   };
@@ -34,7 +33,7 @@ export function ShowSwitch({ bar }: { bar: Pick<Db.AdminBar, 'id' | 'name' | 'st
     <Popconfirm
       open={open}
       onOpenChange={(v) => !v && setOpen(false)}
-      title={`ซ่อน ${bar.name}? ร้านจะหายจากเว็บทันที`}
+      title={`ซ่อน ${name}? (มีผลเมื่อกดบันทึก)`}
       description={
         <Input.TextArea
           className="!mt-2 !w-64"
@@ -53,9 +52,9 @@ export function ShowSwitch({ bar }: { bar: Pick<Db.AdminBar, 'id' | 'name' | 'st
     >
       <Switch
         checked={shown}
-        loading={pending}
-        aria-label={`แสดง ${bar.name} บนเว็บ`}
-        onChange={(next) => (next ? show() : setOpen(true))}
+        disabled={disabled}
+        aria-label={`แสดง ${name} บนเว็บ`}
+        onChange={(next) => (next || !askReason ? onChange(next) : setOpen(true))}
       />
     </Popconfirm>
   );

@@ -1,5 +1,16 @@
 # homeContent — ประวัติการแก้ไข
 
+## 2026-10-12 — การ์ดหมวด: ค่ากลับมาตรงกับ server = ไม่นับว่าแก้
+- กด "ตกลง" ใน Drawer การ์ดหมวดโดยค่าเหมือนบน server (ไม่ได้แก้ หรือแก้กลับเอง) ไม่ขึ้น "ยังไม่บันทึก" / ไม่นับในปุ่มบันทึกแล้ว (ช่องว่างกับ null นับเท่ากัน)
+- แก้ด้วย: เปิดการ์ดที่เลือกภาพใหม่ไว้แล้วกด "ตกลง" อีกรอบโดยไม่เลือกภาพ ภาพที่เลือกไว้ไม่หายแล้ว
+- ไฟล์: `utils/useHomePageDraft.ts` (`setCategory` รับแถวการ์ดจาก server) · `page.tsx`
+
+## 2026-10-12 — แก้ทั้งหน้าแล้วกดบันทึกครั้งเดียว
+- รวม 3 ปุ่มบันทึกเดิม (Hero · หัวข้อ section · ร้านยอดนิยม) เป็นปุ่ม "บันทึก" เดียวที่หัวหน้า (`SaveBar` + คืนค่า) · Drawer การ์ดหมวดกด "ตกลง" = เข้า draft (การ์ดที่แก้มีป้าย "ยังไม่บันทึก")
+- ภาพ Hero / การ์ด พรีวิวจากเครื่อง อัปโหลดตอนกดบันทึก (แสดง "กำลังอัปโหลด n/N") — เดิมอัปโหลดทันทีที่เลือก · ระหว่างบันทึกทั้งหน้า disabled · พลาด = การแก้ยังอยู่ (ภาพที่อัปโหลดแล้วไม่อัปโหลดซ้ำ) · ออกจากหน้าตอนยังไม่บันทึก = ถามก่อน
+- endpoint ใหม่ `PUT /admin/home-page` (`admin_save_home_page` · migration `20261012000600_site_content_save_home_page`) ส่งเฉพาะส่วนที่แก้ แทน `PATCH /admin/home-content` · `PATCH /admin/home-categories/:slot` · `PUT /admin/home-popular`
+- ไฟล์: `page.tsx` (ฟอร์มเดียวครอบทั้งหน้า) · `utils/useHomePageDraft.ts` (ใหม่) · `form/heroForm.tsx` · `form/sectionHeadingForm.tsx` (เหลือแค่ช่องกรอก) · `form/popularCard.tsx` (controlled) · `form/categoryDrawer.tsx` (ฟอร์มแยกคอมโพเนนต์ `key` ตามช่อง) · `api.ts` (`homePageAction`)
+
 ## 2026-10-09 — ย้าย API เข้า `api.ts` ของโมดูล (ADR 0007)
 - เพิ่ม `api.ts`: `useHomeContent` · `useHomeCategories` · `useHomePopular` · `useBars` · `homeContentAction` · `homeCategoryAction` · `homePopularAction` — ชื่อ view / path / body ของหน้านี้ย้ายมาอยู่ที่เดียว (เดิมเขียนในหน้าผ่าน `useAdminView('admin_x', …)` / `act.mutate({ method, path, body })`) · body มี type จาก `@nightout/contracts`
 - หน้า / form / modal ของโมดูลเรียกผ่าน `./api` · พฤติกรรมเดิม (query key, ข้อความแจ้งผล, invalidate `['admin']`)

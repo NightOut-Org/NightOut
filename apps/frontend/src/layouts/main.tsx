@@ -23,10 +23,14 @@ export function MainLayout() {
   // - darkTop: ส่วนบนของหน้ามืดเสมอทุกธีม (ภาพ/วิดีโอกลางคืน) → navbar ใสตัวหนังสือขาวได้
   //   ไม่ใส่ = navbar ใช้สีตามธีม (เช่น /ranking ธีมสว่างพื้นขาว ถ้าใช้ตัวขาวจะมองไม่เห็น)
   const handles = useMatches().map(
-    (m) => (m.handle ?? {}) as { fullBleed?: boolean; hideFooter?: boolean; darkTop?: boolean },
+    (m) => (m.handle ?? {}) as { fullBleed?: boolean; hideFooter?: boolean; darkTop?: boolean; merchantShell?: boolean; hideBottomNav?: boolean },
   );
   const fullBleed = handles.some((h) => h.fullBleed);
   const hideFooter = handles.some((h) => h.hideFooter);
+  // หน้าร้าน (/merchant/*): มือถือ/แท็บเล็ตใช้แถบบน + แท็บล่างของ MerchantLayout แทน navbar ของเว็บ
+  const merchantShell = handles.some((h) => h.merchantShell);
+  // หน้าที่มีแถบล่างของตัวเอง (ช่องตอบกระทู้ / ปุ่มโพสต์) — มือถือไม่แสดงเมนูล่าง
+  const hideBottomNav = handles.some((h) => h.hideBottomNav);
   const bleed = isHome || fullBleed;
   const darkTop = isHome || handles.some((h) => h.darkTop);
   const isShop = user?.role === 'MERCHANT' || user?.role === 'STAFF';
@@ -35,9 +39,10 @@ export function MainLayout() {
   const items: NavItem[] = [...baseNav, ...(isShop ? [{ to: '/merchant', label: 'ร้านของฉัน' }] : [])];
 
   return (
-    <Layout className="min-h-dvh !bg-background">
+    // หน้าแรก: isolate ให้ <EmbersBackdrop> (fixed -z-10 ใน modules/home/page.tsx) อยู่เหนือพื้นของ Layout แต่หลังเนื้อหาทั้งหมด
+    <Layout className={`min-h-dvh !bg-background ${isHome ? 'isolate' : ''}`}>
       <AgeGate />
-      <header className="sticky top-0 z-40 h-0">
+      <header className={`sticky top-0 z-40 h-0 ${merchantShell ? 'hidden lg:block' : ''}`}>
         <div className="flex justify-center px-3 pt-3 md:pt-4">
           <Navbar items={items} overVideo={darkTop} />
         </div>
@@ -48,14 +53,18 @@ export function MainLayout() {
           <Outlet />
         </main>
       ) : (
-        <main className="mx-auto w-full max-w-7xl flex-1 px-4 pb-24 pt-24 md:pb-10">
+        <main
+          className={`mx-auto w-full max-w-7xl flex-1 ${
+            merchantShell ? 'px-0 pb-0 pt-0 lg:px-4 lg:pb-10 lg:pt-24' : 'px-4 pb-24 pt-24 md:pb-10'
+          }`}
+        >
           <Outlet />
         </main>
       )}
 
       {!hideFooter && <SiteFooter />}
 
-      <BottomIsland items={[...baseNav, { to: '/profile', label: 'โปรไฟล์', icon: User }]} />
+      {!merchantShell && !hideBottomNav && <BottomIsland items={[...baseNav, { to: '/profile', label: 'โปรไฟล์', icon: User }]} />}
     </Layout>
   );
 }

@@ -13,7 +13,7 @@ export function MyReviewsPage() {
     <div className="mx-auto max-w-3xl">
       <PageHeader title="รีวิวของฉัน" />
       {reviews.length === 0 ? (
-        <Empty description="ยังไม่มีรีวิว — รีวิวได้หลังเช็กอินที่ร้าน" />
+        <Empty description="ยังไม่มีรีวิว — รีวิวได้หลังจองและมัดจำผ่านแล้ว" />
       ) : (
         <div className="grid gap-3">
           {reviews.map((r) => {

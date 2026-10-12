@@ -1,5 +1,36 @@
 # CHANGELOG — @nightout/contracts
 
+## 2026-10-12 — body บันทึกหน้าแรก + ตั้งค่าร้านครั้งเดียว
+- `site-content.ts`: `SaveHomePageBody` (`content?` + `categories?` (การ์ด + `slot` ไม่ซ้ำ) + `popular?` อย่างน้อย 1) + result · error `INVALID_HOME_PAGE` · ลบ `UpdateHomePopularResult`
+- `bar.ts`: `SettingsPageBody` (`booking?` + `payout?` อย่างน้อย 1) + result · error `INVALID_SETTINGS_PAGE`
+- เทสต์ใน `contracts.test.ts`
+
+## 2026-10-12 — body บันทึกหน้าโปรโมชันครั้งเดียว
+- `bar.ts`: `PromotionsPageBody` (`items?` + `fees?` อย่างน้อย 1) + `PromotionsPageResult` (PUT …/promotions-page) · `BarPromotionsBody` / `FeesBody` เดิมคงไว้ · error `INVALID_PROMOTIONS_PAGE` · เทสต์ใน `contracts.test.ts`
+
+## 2026-10-12 — body บันทึกชั้นบัญชี + Safety ครั้งเดียว
+- `account.ts`: `SetUsersRoleBody` (`changes: [{id, role}]` ไม่ซ้ำคน) + result · error `INVALID_ROLE_CHANGES` · ลบ `SetUserRoleBody`
+- `bar.ts`: `SaveSafetyBody` (`items` แต่ละข้อมีค่าและ/หรือหลักฐาน · key ไม่ซ้ำ) + result · error `INVALID_SAFETY_ITEMS` · ลบ `SafetyBody` / `EvidenceBody`
+- เทสต์ใน `contracts.test.ts`
+
+## 2026-10-12 — body สำหรับบันทึกทั้งหน้าครั้งเดียว
+- `bar.ts`: `SetBarsStatusBody` (ระงับต้องมีเหตุผล · ไม่ซ้ำร้าน) · `AdminBarMediaBody` (`gallery?` + `menu_images?` อย่างน้อย 1) · `DiscardBarMediaBody` · `BarStoreBody` (`info?` + `media?` อย่างน้อย 1) + result · error `INVALID_BAR_STORE` / `INVALID_BAR_STATUS_CHANGES` / `BAR_NOT_TOGGLEABLE` · ลบ `MenuItemImageBody`
+- `site-team.ts`: `SaveTeamPageBody` (`order?` + `active?`) + result · error `INVALID_TEAM_PAGE` · ลบ `ReorderTeamBody`
+- เทสต์ใน `contracts.test.ts`
+
+## 2026-10-11 — รีวิวได้เมื่อมัดจำผ่าน (ไม่ต้องเช็กอิน)
+- `REVIEW_ERRORS`: `REVIEW_REQUIRES_CHECKIN` → `REVIEW_REQUIRES_BOOKING` ("รีวิวได้หลังจองและมัดจำผ่านแล้วเท่านั้น")
+- ไฟล์: `src/review.ts`
+
+## 2026-10-11 — ชุมชน: แนบรูป/วิดีโอในกระทู้และความเห็น
+- `community.ts`: `CommunityMediaItem` + `COMMUNITY_MEDIA_LIMITS` (6 ไฟล์ · รูป 15MB · วิดีโอ 60MB / 60 วิ) · `media` ใน `CommunityThreadBody` / `CommunityCommentBody` (ความเห็นต้องมีข้อความหรือไฟล์) / `CommunityDraftPayload` · response `CommunityMedia` (`url` / `thumb_url`) ใน `CommunityThreadDetail` + `CommunityComment` · error `INVALID_COMMUNITY_MEDIA`
+- `storage.ts`: `community-media` อยู่ใน `UPLOAD_BUCKETS` · เทสต์ใน `contracts.test.ts`
+
+## 2026-10-10 — ชุมชน: ปักหมุดส่วนตัว + ฉบับร่างเก็บที่ backend
+- `community.ts` ใหม่: body/query ของฟีด (`CommunityFeedQuery` · `MyCommunityFeedQuery` scope mine/saved/pinned), กระทู้ (`CommunityThreadBody`), ความเห็น, ถูกใจ/บันทึก/ปักหมุด (`CommunityToggleBody`), รายงาน, ฉบับร่าง (`SaveCommunityDraftBody` · `CommunityDraftPayload` · `DeleteCommunityDraftQuery`), แอดมิน (`ModerateCommunityBody`) + type ของ response + ค่าคงที่ `COMMUNITY_PIN_MAX` = 3 · `COMMUNITY_DRAFT_TTL_DAYS` = 7
+- `COMMUNITY_ERRORS` (รวมใน `ERROR_MESSAGES`) เช่น `COMMUNITY_PIN_LIMIT` · `THREAD_NOT_FOUND` · `INVALID_COMMUNITY_DRAFT` · `ADMIN_VIEWS` + `admin_community_threads` / `admin_community_comments`
+- เทสต์ใน `contracts.test.ts`
+
 ## 2026-10-09 — รูปร้าน + รูปเมนู
 - `bar.ts`: `BarMediaBody` (`paths` ไม่ซ้ำ ≤ `BAR_GALLERY_MAX` = 10 · `cover_path` ต้องอยู่ใน paths) + `BarMediaResult` · `MenuItemImageBody` + `MenuItemImageResult` · `MenuBody.items[].image_path` (nullish) · error ใหม่ `INVALID_BAR_MEDIA` · `INVALID_MENU_IMAGE` · `MENU_ITEM_NOT_FOUND` · `INVALID_MENU_ITEM` (DB โยนอยู่แล้วแต่ยังไม่มีข้อความไทย)
 - `storage.ts`: `bar-media` อยู่ใน `UPLOAD_BUCKETS` และ `PUBLIC_BUCKETS` · `backoffice.ts`: `ADMIN_VIEWS` + `admin_bar_media`

@@ -4,23 +4,29 @@ import type { Db } from '@nightout/types';
 import { App, Button, Input, Popconfirm, Select, Space, Table, Tag, Typography } from 'antd';
 import { useMemo, useState } from 'react';
 import { PAGE_SIZE } from '@/configs/constants';
+import { useUnsavedGuard } from '@/hooks/useUnsavedGuard';
 import { useAdminAuth } from '@/services/adminAuth';
 import { useAdminAction } from '@/services/adminData';
 import { LoadError } from '@/ui/components/LoadError';
+import { SaveBar } from '@/ui/components/SaveBar';
 import { formatThaiPhone } from '@nightout/utils';
 import { dateTime } from '@/ui/utils/format';
 import { STAFF_ROLE, USER_ROLE } from '@/ui/utils/labels';
 import { CreateUserModal } from './modal/createUserModal';
 import { EditUserModal } from './modal/editUserModal';
-import { useUsers, useAccountRoles, deleteUserAction, setUserRoleAction, unbanUserAction } from './api';
-
-type Role = Db.Enums<'user_role'>;
-/** ชั้นที่ไม่ผูกกับร้าน — แก้เป็นชั้นนี้แล้วหลุดจากทุกร้าน (admin_set_user_role) */
-const LEAVES_BARS: Role[] = ['CUSTOMER', 'ADMIN', 'SUPER_ADMIN'];
+import { LEAVES_BARS, roleNotes, useRoleDraft, type Role } from './utils/useRoleDraft';
+import {
+  useUsers,
+  useAccountRoles,
+  deleteUserAction,
+  setUsersRoleAction,
+  unbanUserAction,
+} from './api';
 
 /**
  * ผู้ใช้ทั้งหมด — เพิ่มผู้ใช้ (แอดมินสร้างได้แค่ลูกค้า / เจ้าของ / ผู้จัดการ / พนักงานร้าน)
- * แก้ชั้นบัญชีที่สร้างผิดได้เฉพาะซูเปอร์แอดมิน (ADR 0005 · ลงบันทึก audit)
+ * แก้ชั้นบัญชีที่สร้างผิดได้เฉพาะซูเปอร์แอดมิน: เลือกในตารางได้หลายคน แล้วกดบันทึกครั้งเดียว (ยืนยันผลกระทบก่อน · ADR 0005 · ลงบันทึก audit)
+ * ปลดแบน / ลบบัญชี / เพิ่ม-แก้ผ่าน modal บันทึกทันที
  */
 export function UsersPage() {
   const { modal } = App.useApp();
@@ -31,6 +37,12 @@ export function UsersPage() {
   const { data, isLoading, error, refetch } = useUsers();
   const roles = useAccountRoles();
   const act = useAdminAction();
+  const saveAct = useAdminAction();
+  const draft = useRoleDraft(data ?? []);
+  const saving = saveAct.isPending;
+  /** ระหว่างบันทึกชั้นบัญชี หรือกำลังปลดแบน/ลบ — ล็อกปุ่มในตาราง */
+  const busy = saving || act.isPending;
+  const { confirmDiscard } = useUnsavedGuard(draft.changes.length > 0);
   const roleText = (r: Role) =>
     roles.data?.find((o) => o.code === r)?.label_th ?? USER_ROLE[r].text;
   const roleOptions = useMemo(
@@ -66,41 +78,46 @@ export function UsersPage() {
         }),
     });
 
-  const changeRole = (u: Db.AdminUser, role: Role) => {
-    const self = u.id === auth.session?.user.id;
-    const notes = [
-      role === 'ADMIN' && 'เข้าหลังบ้านได้ (ตั้ง MFA ตอนเข้าครั้งแรก) แต่แก้ชั้นบัญชีไม่ได้',
-      role === 'SUPER_ADMIN' && 'เข้าหลังบ้านได้ และแก้ชั้นบัญชีของทุกคนได้',
-      LEAVES_BARS.includes(role) &&
-        u.bars.length > 0 &&
-        `หลุดจากร้าน ${u.bars.map((b) => b.name).join(', ')} (เลิกเป็นเจ้าของและออกจากทีม)`,
-      self &&
-        u.role === 'SUPER_ADMIN' &&
-        role !== 'SUPER_ADMIN' &&
-        'นี่คือบัญชีของคุณ — หลังเปลี่ยน คุณจะแก้ชั้นบัญชีไม่ได้อีก',
-    ].filter((n): n is string => !!n);
+  /** ยืนยันผลกระทบของทุกคนที่แก้ แล้วบันทึกครั้งเดียว */
+  const save = () => {
+    const { changed, changes } = draft;
+    const risky = changed.some(
+      ({ user, role }) => LEAVES_BARS.includes(role) && user.bars.length > 0,
+    );
     modal.confirm({
-      title: `แก้ชั้นบัญชีของ ${u.display_name}?`,
+      title: `บันทึกชั้นบัญชี ${changed.length} คน?`,
+      width: 520,
       content: (
-        <div className="flex flex-col gap-1">
-          <span>
-            {roleText(u.role)} → {roleText(role)}
-          </span>
-          {notes.map((n) => (
-            <Typography.Text key={n} type="secondary">
-              {n}
-            </Typography.Text>
+        <ul className="m-0 flex list-none flex-col gap-2 p-0">
+          {changed.map(({ user, role }) => (
+            <li key={user.id} className="flex flex-col gap-0.5">
+              <span>
+                <b>{user.display_name}</b> · {roleText(user.role)} → {roleText(role)}
+              </span>
+              {roleNotes(user, role, auth.session?.user.id).map((n) => (
+                <Typography.Text key={n} type="secondary" className="text-xs">
+                  {n}
+                </Typography.Text>
+              ))}
+            </li>
           ))}
-        </div>
+        </ul>
       ),
-      okText: 'แก้ชั้นบัญชี',
-      okButtonProps: { danger: LEAVES_BARS.includes(role) && u.bars.length > 0 },
+      okText: 'บันทึกชั้นบัญชี',
+      okButtonProps: { danger: risky },
       cancelText: 'ยกเลิก',
-      onOk: () =>
-        act.mutateAsync({
-          ...setUserRoleAction(u.id, { role }),
-          success: `${u.display_name} เป็น${roleText(role)}แล้ว`,
-        }),
+      onOk: async () => {
+        try {
+          await saveAct.mutateAsync({
+            ...setUsersRoleAction({ changes }),
+            success: `บันทึกชั้นบัญชีแล้ว ${changes.length} คน`,
+          });
+          await refetch();
+          draft.reset();
+        } catch {
+          // useAdminAction แจ้งเหตุผลแล้ว · draft ยังอยู่ กดบันทึกใหม่ได้
+        }
+      },
     });
   };
 
@@ -116,6 +133,14 @@ export function UsersPage() {
             onSearch={setQ}
             className="w-64"
           />
+          {auth.isSuperAdmin && (
+            <SaveBar
+              count={draft.changes.length}
+              saving={saving}
+              onSave={save}
+              onReset={() => confirmDiscard(draft.reset)}
+            />
+          )}
           {auth.isSuperAdmin && (
             <Button
               type="primary"
@@ -150,14 +175,22 @@ export function UsersPage() {
             onFilter: (v, u) => u.role === v,
             render: (role: Role, u) =>
               auth.isSuperAdmin && !u.deleted_at ? (
-                <Select<Role>
-                  className="w-40"
-                  value={role}
-                  options={roleOptions}
-                  loading={roles.isLoading}
-                  aria-label={`ชั้นบัญชีของ ${u.display_name}`}
-                  onChange={(next) => changeRole(u, next)}
-                />
+                <span className="inline-flex items-center gap-2">
+                  <Select<Role>
+                    className="w-40"
+                    value={draft.roleOf(u)}
+                    options={roleOptions}
+                    loading={roles.isLoading}
+                    disabled={saving}
+                    aria-label={`ชั้นบัญชีของ ${u.display_name}`}
+                    onChange={(next) => draft.set(u, next)}
+                  />
+                  {draft.isChanged(u) && (
+                    <Tag color="warning" className="!m-0">
+                      ยังไม่บันทึก
+                    </Tag>
+                  )}
+                </span>
               ) : (
                 <Tag color={USER_ROLE[role].color}>{roleText(role)}</Tag>
               ),
@@ -192,7 +225,7 @@ export function UsersPage() {
                   <Tag color="red" title={u.ban_reason ?? undefined}>
                     ถูกแบน · {dateTime(u.banned_at)}
                   </Tag>
-                  <Button size="small" onClick={() => unban(u)}>
+                  <Button disabled={busy} onClick={() => unban(u)}>
                     ปลดแบน
                   </Button>
                 </Space>
@@ -220,6 +253,7 @@ export function UsersPage() {
                     <Button
                       icon={<PencilSimple size={16} />}
                       aria-label={`แก้ไข ${u.display_name}`}
+                      disabled={busy}
                       onClick={() => setEditing(u)}
                     ></Button>
                   )}
@@ -230,6 +264,7 @@ export function UsersPage() {
                       okText="ลบ"
                       okButtonProps={{ danger: true }}
                       cancelText="ยกเลิก"
+                      disabled={busy}
                       onConfirm={() =>
                         act.mutateAsync({
                           ...deleteUserAction(u.id),
@@ -241,6 +276,7 @@ export function UsersPage() {
                         danger
                         icon={<Trash size={16} />}
                         aria-label={`ลบบัญชี ${u.display_name}`}
+                        disabled={busy}
                       />
                     </Popconfirm>
                   )}

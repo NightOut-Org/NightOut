@@ -1,12 +1,14 @@
-import { Plus, Trash } from '@phosphor-icons/react';
-import { type Bar } from '@/services/data';
-import { setZones } from './api';
-import { App, Button, Card, Form, Input, InputNumber, Modal, Popconfirm, Tag } from 'antd';
+import { Info, Plus } from '@phosphor-icons/react';
+import { App, Empty, Form, Input, InputNumber, Modal, Popconfirm } from 'antd';
 import { useState } from 'react';
-import { PageHeader } from '@/ui/components/pageHeader';
+import { Link } from 'react-router';
 import { useMerchantBar } from '@/hooks/useMerchantBar';
+import { useUnsavedGuard } from '@/hooks/useUnsavedGuard';
+import { Tile } from '@/ui/components/merchantUi';
+import { baht } from '@/ui/utils/format';
+import { setZones } from './api';
+import { isNewId, useZonesDraft, type Zone } from './utils/useZonesDraft';
 
-type Zone = Bar['zones'][number];
 interface NewZone {
   name: string;
   tables: number;
@@ -14,129 +16,264 @@ interface NewZone {
   duration: number;
 }
 
-/** /merchant/tables — โซน/โต๊ะ (DB กันจองซ้อนเวลาต่อโต๊ะ + นับความจุโซน) */
+const hoursLabel = (min: number) =>
+  `${(min / 60).toLocaleString('th-TH', { maximumFractionDigits: 1 })} ชม.`;
+
+/**
+ * /merchant/tables — การ์ดโซนละใบ: ความจุ · ระยะเวลาจอง · มัดจำ · โต๊ะ (DB กันจองซ้อนเวลาต่อโต๊ะ + นับความจุโซน)
+ * เพิ่มโซน / เพิ่ม-ปิดใช้โต๊ะ / แก้ความจุ-เวลาจอง ในหน้าก่อน แล้วกดบันทึกครั้งเดียว (PUT /merchant/bars/:barId/zones)
+ */
 export function MerchantTablesPage() {
   const bar = useMerchantBar();
   const { message } = App.useApp();
   const [saving, setSaving] = useState(false);
   const [open, setOpen] = useState(false);
   const [form] = Form.useForm<NewZone>();
+  const draft = useZonesDraft(bar.zones);
+  const { confirmDiscard } = useUnsavedGuard(draft.count > 0);
 
-  const save = async (zones: Zone[], done: string) => {
+  const save = async () => {
     setSaving(true);
     try {
-      await setZones(bar.id, zones);
-      message.success(done);
-      return true;
+      await setZones(bar.id, draft.zones);
+      draft.reset();
+      void message.success('บันทึกโซนและโต๊ะแล้ว');
     } catch (e) {
-      message.error((e as Error).message);
-      return false;
+      void message.error((e as Error).message);
     } finally {
       setSaving(false);
     }
   };
-  const nextName = (z: Zone) => {
-    const prefix = z.tables[0]?.name.replace(/\d+$/, '') || z.name.slice(0, 1).toUpperCase();
-    let n = z.tables.length + 1;
-    while (z.tables.some((t) => t.name === `${prefix}${n}`)) n++;
-    return `${prefix}${n}`;
-  };
-  const addTable = (z: Zone) =>
-    save(
-      bar.zones.map((x) =>
-        x.id === z.id ? { ...x, tables: [...x.tables, { id: '', name: nextName(x), seats: 4 }], capacityPax: x.capacityPax + 4 } : x,
-      ),
-      `เพิ่มโต๊ะใน ${z.name} แล้ว`,
-    );
-  const removeTable = (z: Zone, tableId: string) => {
-    const t = z.tables.find((x) => x.id === tableId);
-    return save(
-      bar.zones.map((x) =>
-        x.id === z.id ? { ...x, tables: x.tables.filter((y) => y.id !== tableId), capacityPax: Math.max(1, x.capacityPax - (t?.seats ?? 0)) } : x,
-      ),
-      'ปิดใช้โต๊ะแล้ว (การจองเดิมยังอยู่)',
-    );
+
+  const saveButton = (cls: string, label: string) => (
+    <button
+      type="button"
+      disabled={saving || !draft.count}
+      onClick={() => void save()}
+      className={`merchant-pill disabled:opacity-60 ${cls}`}
+    >
+      {saving ? 'กำลังบันทึก…' : label}
+    </button>
+  );
+
+  const zoneTag = (z: Zone) => {
+    const st = draft.zoneState(z);
+    return st ? (
+      <span className="rounded-full bg-gold/15 px-2 py-0.5 text-[11px] font-normal text-gold-text">
+        {st === 'new' ? 'ใหม่ · ยังไม่บันทึก' : 'ยังไม่บันทึก'}
+      </span>
+    ) : null;
   };
 
-  return (
-    <div>
-      <PageHeader
-        title="โซน / โต๊ะ"
-        subtitle="ระบบกันจองซ้อนจากช่วงเวลาจองต่อโต๊ะ และนับคนไม่ให้เกินความจุโซน"
-        extra={
-          <Button type="primary" icon={<Plus />} onClick={() => setOpen(true)}>
-            เพิ่มโซน
-          </Button>
-        }
+  const tableCount = draft.zones.reduce((a, z) => a + z.tables.length, 0);
+  const pax = draft.zones.reduce((a, z) => a + z.capacityPax, 0);
+  const deposit =
+    bar.deposit.amount > 0
+      ? `${baht(bar.deposit.amount)}/${bar.deposit.unit === 'PER_PERSON' ? 'คน' : 'โต๊ะ'}`
+      : 'ไม่มี';
+
+  /** ช่องสถิติแก้ได้ในที่ (เข้า draft) */
+  const statInput = (
+    label: string,
+    value: number,
+    suffix: string,
+    min: number,
+    max: number,
+    step: number,
+    onChange: (v: number) => void,
+  ) => (
+    <label className="flex min-w-0 flex-col gap-0.5 rounded-xl bg-surface p-2.5">
+      <span className="text-[11px] text-muted">{label}</span>
+      <InputNumber
+        variant="borderless"
+
+        min={min}
+        max={max}
+        step={step}
+        value={value}
+        disabled={saving}
+        suffix={<span className="text-xs text-muted">{suffix}</span>}
+        className="!w-full !p-0 [&_input]:!p-0 [&_input]:!text-base [&_input]:!font-bold"
+        aria-label={label}
+        onChange={(v) => typeof v === 'number' && onChange(v)}
       />
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {bar.zones.map((z) => (
-          <Card
-            key={z.id}
-            title={z.name}
-            extra={
-              <Button icon={<Plus />} loading={saving} onClick={() => void addTable(z)}>
-                โต๊ะ
-              </Button>
-            }
+    </label>
+  );
+
+  const tableButton = (z: Zone, t: Zone['tables'][number], compact: boolean) => (
+    <Popconfirm
+      key={t.id}
+      title={`ปิดใช้โต๊ะ ${t.name}?`}
+      description="การจองเดิมยังอยู่ · ลูกค้าจองโต๊ะนี้ใหม่ไม่ได้"
+      okText="ปิดใช้"
+      cancelText="ยกเลิก"
+      okButtonProps={{ danger: true }}
+      disabled={saving}
+      onConfirm={() => draft.removeTable(z, t.id)}
+    >
+      <button
+        type="button"
+        disabled={saving}
+        aria-label={`โต๊ะ ${t.name} ${t.seats} ที่ — กดเพื่อปิดใช้`}
+        className={`merchant-pill flex flex-col items-center justify-center border bg-surface hover:border-(--crowd-full) disabled:opacity-60 ${
+          isNewId(t.id) ? 'border-dashed border-gold/60' : 'border-border'
+        } ${compact ? 'h-11 rounded-[10px] text-xs' : 'h-14 rounded-[14px]'}`}
+      >
+        <b className={compact ? '' : 'text-[15px]'}>{t.name}</b>
+        <span className={`${compact ? 'text-[10px]' : 'text-[11px]'} text-muted`}>
+          {t.seats}
+          {compact ? '' : ' ที่'}
+        </span>
+      </button>
+    </Popconfirm>
+  );
+
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="text-[17px] font-bold lg:font-display lg:text-[30px]">โซน / โต๊ะ</h1>
+          <p className="mt-1 text-xs text-muted lg:text-sm">
+            {draft.zones.length} โซน · {tableCount} โต๊ะ · รับได้ {pax} คน
+            <span className="hidden lg:inline"> · ระบบกันจองซ้อนตามระยะเวลาจอง</span>
+          </p>
+        </div>
+        <div className="flex items-center gap-1 lg:gap-3">
+          {draft.count > 0 && !saving && (
+            <>
+              <span className="hidden text-sm text-gold-text lg:inline" role="status">
+                ยังไม่บันทึก {draft.count} โซน
+              </span>
+              <button
+                type="button"
+                onClick={() => confirmDiscard(draft.reset)}
+                className="merchant-pill px-2 py-1 text-sm text-muted lg:h-10 lg:rounded-xl lg:border lg:border-border lg:px-[18px]"
+              >
+                คืนค่า
+              </button>
+            </>
+          )}
+          <button
+            type="button"
+            disabled={saving}
+            onClick={() => setOpen(true)}
+            className="merchant-pill hidden h-10 items-center gap-2 rounded-xl bg-gold px-[18px] text-sm font-semibold text-on-gold disabled:opacity-60 lg:inline-flex"
           >
-            <div className="mb-3 flex flex-wrap items-center gap-2 text-sm text-muted">
-              <span>ความจุ</span>
-              <InputNumber
-                min={1}
-                max={2000}
-                defaultValue={z.capacityPax}
-                suffix="คน"
-                aria-label={`ความจุ ${z.name}`}
-                onBlur={(e) => {
-                  const v = Number(e.target.value);
-                  if (v && v !== z.capacityPax)
-                    void save(bar.zones.map((x) => (x.id === z.id ? { ...x, capacityPax: v } : x)), 'บันทึกความจุแล้ว');
-                }}
-              />
-              <span>จองนาน</span>
-              <InputNumber
-                min={60}
-                max={480}
-                step={30}
-                defaultValue={z.defaultDurationMinutes}
-                suffix="นาที"
-                aria-label={`เวลาจองของ ${z.name}`}
-                onBlur={(e) => {
-                  const v = Number(e.target.value);
-                  if (v && v !== z.defaultDurationMinutes)
-                    void save(bar.zones.map((x) => (x.id === z.id ? { ...x, defaultDurationMinutes: v } : x)), 'บันทึกเวลาจองแล้ว');
-                }}
-              />
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {z.tables.length === 0 && <span className="text-sm text-muted">ยังไม่มีโต๊ะ — ลูกค้าจองเป็นโซน</span>}
-              {z.tables.map((t) => (
-                <Tag key={t.id} className="!inline-flex !items-center !gap-1 !px-3 !py-1">
-                  {t.name} · {t.seats} ที่
-                  <Popconfirm
-                    title={`ปิดใช้โต๊ะ ${t.name}?`}
-                    okText="ปิดใช้"
-                    cancelText="ยกเลิก"
-                    okButtonProps={{ danger: true }}
-                    onConfirm={() => removeTable(z, t.id)}
-                  >
-                    <button type="button" aria-label={`ปิดใช้โต๊ะ ${t.name}`} className="text-muted hover:text-(--crowd-full)">
-                      <Trash size={12} />
-                    </button>
-                  </Popconfirm>
-                </Tag>
-              ))}
-            </div>
-          </Card>
-        ))}
+            <Plus /> เพิ่มโซน
+          </button>
+          {saveButton(
+            'hidden h-10 items-center rounded-xl bg-gold px-[18px] text-sm font-semibold text-on-gold lg:inline-flex',
+            'บันทึกการเปลี่ยนแปลง',
+          )}
+          <button
+            type="button"
+            aria-label="เพิ่มโซน"
+            disabled={saving}
+            onClick={() => setOpen(true)}
+            className="grid size-10 place-items-center text-xl text-gold disabled:opacity-60 lg:hidden"
+          >
+            <Plus />
+          </button>
+          {saveButton('px-2 py-1 text-sm font-semibold text-gold-text lg:hidden', 'บันทึก')}
+        </div>
       </div>
+
+      {draft.zones.length === 0 ? (
+        <Tile>
+          <Empty description="ยังไม่มีโซน — ต้องมีอย่างน้อย 1 โซนเพื่อรับจอง" />
+        </Tile>
+      ) : (
+        <>
+          {/* Desktop */}
+          <div className="hidden gap-4 lg:grid lg:grid-cols-3">
+            {draft.zones.map((z) => (
+              <Tile key={z.id} className="flex flex-col gap-3.5">
+                <span className="flex flex-wrap items-center gap-2">
+                  <b className="text-lg font-semibold">{z.name}</b>
+                  {zoneTag(z)}
+                </span>
+                <div className="grid grid-cols-3 gap-2">
+                  {statInput('ความจุรวม', z.capacityPax, 'คน', 1, 2000, 1, (v) =>
+                    draft.setCapacity(z, v),
+                  )}
+                  {statInput('ระยะเวลาจอง', z.defaultDurationMinutes, 'นาที', 60, 480, 30, (v) =>
+                    draft.setDuration(z, v),
+                  )}
+                  <span className="flex min-w-0 flex-col gap-0.5 rounded-xl bg-surface p-2.5">
+                    <span className="text-[11px] text-muted">มัดจำ</span>
+                    <b className="truncate text-base text-gold-text">{deposit}</b>
+                  </span>
+                </div>
+                <span className="text-[13px] text-muted">
+                  โต๊ะ ({z.tables.length}) · {hoursLabel(z.defaultDurationMinutes)} ต่อรอบ
+                </span>
+                {z.tables.length === 0 ? (
+                  <span className="text-sm text-muted">ยังไม่มีโต๊ะ — ลูกค้าจองเป็นโซน</span>
+                ) : (
+                  <div className="grid grid-cols-3 gap-2">
+                    {z.tables.map((t) => tableButton(z, t, false))}
+                  </div>
+                )}
+                <button
+                  type="button"
+                  disabled={saving}
+                  onClick={() => draft.addTable(z)}
+                  className="merchant-pill mt-auto flex h-10 items-center justify-center gap-1.5 rounded-xl border border-dashed border-muted/60 text-sm text-muted hover:border-gold hover:text-text disabled:opacity-50"
+                >
+                  <Plus /> เพิ่มโต๊ะ
+                </button>
+              </Tile>
+            ))}
+          </div>
+
+          {/* มือถือ */}
+          <div className="flex flex-col gap-3 lg:hidden">
+            {draft.zones.map((z) => (
+              <Tile key={z.id} className="flex flex-col gap-2.5 !rounded-[18px] !p-3.5">
+                <span className="flex items-center justify-between gap-2">
+                  <span className="flex min-w-0 flex-wrap items-center gap-1.5">
+                    <b className="text-base font-semibold">{z.name}</b>
+                    {zoneTag(z)}
+                  </span>
+                  <span className="text-xs text-muted">
+                    {z.tables.length} โต๊ะ · {z.capacityPax} คน ·{' '}
+                    {hoursLabel(z.defaultDurationMinutes)}
+                  </span>
+                </span>
+                <div className="grid grid-cols-6 gap-1.5">
+                  {z.tables.map((t) => tableButton(z, t, true))}
+                  <button
+                    type="button"
+                    aria-label={`เพิ่มโต๊ะใน ${z.name}`}
+                    disabled={saving}
+                    onClick={() => draft.addTable(z)}
+                    className="grid h-11 place-items-center rounded-[10px] border border-dashed border-muted/60 text-muted"
+                  >
+                    <Plus />
+                  </button>
+                </div>
+              </Tile>
+            ))}
+          </div>
+        </>
+      )}
+
+      <div className="flex items-center gap-3 rounded-2xl border border-border bg-surface px-[18px] py-3.5 text-sm text-muted">
+        <Info size={18} className="shrink-0 text-link" />
+        <span className="flex-1">
+          ลูกค้าเลือกได้ทั้งโซนหรือโต๊ะ · ถ้าไม่มาเช็กอินเกิน grace period ({bar.gracePeriodMinutes}{' '}
+          นาที) ระบบยกเลิกโต๊ะอัตโนมัติ
+        </span>
+        <Link to="/merchant/settings" className="hidden shrink-0 lg:inline">
+          ตั้งค่าการจอง →
+        </Link>
+      </div>
+
       <Modal
         open={open}
         title="เพิ่มโซน"
         okText="เพิ่ม"
         cancelText="ยกเลิก"
-        confirmLoading={saving}
         onCancel={() => setOpen(false)}
         onOk={() => form.submit()}
         destroyOnHidden
@@ -145,19 +282,11 @@ export function MerchantTablesPage() {
           form={form}
           layout="vertical"
           initialValues={{ tables: 4, seats: 4, duration: 180 }}
-          onFinish={async (v) => {
-            const prefix = v.name.trim().slice(0, 1).toUpperCase();
-            const zone: Zone = {
-              id: '',
-              name: v.name.trim(),
-              capacityPax: v.tables * v.seats,
-              defaultDurationMinutes: v.duration,
-              tables: Array.from({ length: v.tables }, (_, i) => ({ id: '', name: `${prefix}${i + 1}`, seats: v.seats })),
-            };
-            if (await save([...bar.zones, zone], `เพิ่มโซน ${zone.name} แล้ว`)) {
-              form.resetFields();
-              setOpen(false);
-            }
+          onFinish={(v) => {
+            // เพิ่มเข้า draft — บันทึกพร้อมการแก้อื่นด้วยปุ่มบันทึกของหน้า
+            draft.addZone({ ...v, name: v.name.trim() });
+            form.resetFields();
+            setOpen(false);
           }}
         >
           <Form.Item name="name" label="ชื่อโซน" rules={[{ required: true, max: 60 }]}>

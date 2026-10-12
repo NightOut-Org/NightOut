@@ -1,5 +1,9 @@
 # CHANGELOG — frontend/modules/bookingDetail
 
+## 2026-10-11 — รีวิวได้เมื่อมัดจำผ่าน (ไม่ต้องเช็กอิน)
+- ปุ่ม "เขียนรีวิว" โผล่เมื่อการจองมัดจำผ่านแล้ว (`isReviewableStatus()`) ไม่ต้องรอเช็กอิน
+- ไฟล์: `page.tsx`
+
 ## 2026-10-09 — ย้าย API เข้า `api.ts` ของโมดูล (ADR 0007)
 - เพิ่ม `api.ts`: `cancelBooking` (`POST /bookings/:id/cancel`) — ย้ายมาจาก `services/api/<domain>.ts` / `services/queries/<domain>.ts` (ลบแล้ว) · เรียก `Rest` ตรง
 - หน้าในโมดูล import จาก `./api` แทน `@/services/data` · พฤติกรรมเดิม (ชื่อฟังก์ชัน, query key)

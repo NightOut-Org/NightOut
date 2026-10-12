@@ -6,15 +6,17 @@ import { ArrowSquareOut, PencilSimple, Plus, Trash, UserCircle } from '@phosphor
 import type { Db } from '@nightout/types';
 import { Avatar, Button, Popconfirm, Space, Switch, Table, Tag, Tooltip, Typography } from 'antd';
 import { useState } from 'react';
+import { useUnsavedGuard } from '@/hooks/useUnsavedGuard';
 import { useAdminAuth } from '@/services/adminAuth';
 import { useAdminAction } from '@/services/adminData';
 import { LoadError } from '@/ui/components/LoadError';
+import { SaveBar } from '@/ui/components/SaveBar';
 import { DragHandle, SortableDisabledContext, SortableRow } from './components/sortableRow';
 import { TeamMemberDrawer } from './form/teamMemberDrawer';
 import { contactCount, isOwnMember } from './utils/contacts';
 import { photoSrc } from './utils/photo';
-import { useTeamOrder } from './utils/useTeamOrder';
-import { useTeamMembers, updateTeamMemberAction, deleteTeamMemberAction } from './api';
+import { useTeamDraft } from './utils/useTeamDraft';
+import { useTeamMembers, deleteTeamMemberAction, saveTeamPageAction } from './api';
 
 /** หน้าเกี่ยวกับเราบนเว็บลูกค้า (deploy: โดเมนเดียวกัน · dev: คนละ port) */
 const ABOUT_URL = import.meta.env.DEV ? 'http://localhost:5173/about' : '/about';
@@ -23,6 +25,7 @@ const ABOUT_URL = import.meta.env.DEV ? 'http://localhost:5173/about' : '/about'
  * จัดการทีมงาน — คนที่แสดงในหน้า /about ของเว็บลูกค้า
  * เพิ่ม / ลบ / ลากเรียงลำดับ = ซูเปอร์แอดมิน (ลำดับในตาราง = ลำดับบนหน้าเว็บ)
  * แก้ / ซ่อน = ซูเปอร์แอดมินทุกแถว · แอดมินเฉพาะแถวที่อีเมลในช่องทางติดต่อตรงกับอีเมลบัญชี · ทุกการเปลี่ยนแปลงลง Audit Log
+ * ลำดับ + สวิตช์แสดงบนเว็บ แก้ในหน้าแล้วกดบันทึกครั้งเดียว · เพิ่ม/แก้รายคน (Drawer) และลบ บันทึกทันที
  */
 export function TeamPage() {
   const { data, isLoading, error, refetch } = useTeamMembers();
@@ -40,7 +43,23 @@ export function TeamPage() {
     setDrawerOpen(true);
   };
 
-  const order = useTeamOrder(rows);
+  const saveAct = useAdminAction();
+  const draft = useTeamDraft(rows);
+  const saving = saveAct.isPending;
+  /** ระหว่างบันทึกหน้า หรือกำลังลบ — ล็อกตาราง */
+  const busy = saving || act.isPending;
+  const { confirmDiscard } = useUnsavedGuard(draft.count > 0);
+
+  const save = async () => {
+    if (!draft.body) return;
+    try {
+      await saveAct.mutateAsync({ ...saveTeamPageAction(draft.body), success: 'บันทึกทีมงานแล้ว' });
+      await refetch();
+      draft.reset();
+    } catch {
+      // useAdminAction แจ้งเหตุผลแล้ว · draft ยังอยู่ กดบันทึกใหม่ได้
+    }
+  };
 
   return (
     <PageContainer
@@ -51,7 +70,13 @@ export function TeamPage() {
           : undefined
       }
       extra={
-        <Space>
+        <Space wrap>
+          <SaveBar
+            count={draft.count}
+            saving={saving}
+            onSave={() => void save()}
+            onReset={() => confirmDiscard(draft.reset)}
+          />
           <Button
             href={ABOUT_URL}
             target="_blank"
@@ -75,30 +100,36 @@ export function TeamPage() {
       <LoadError error={error} onRetry={() => void refetch()} />
       {/* ลากเรียงลำดับ — เฉพาะซูเปอร์แอดมิน (API ตอบ SUPER_ADMIN_REQUIRED ถ้าไม่ใช่) · ระหว่างบันทึกล็อกไว้ */}
       <DndContext
-        sensors={order.sensors}
+        sensors={draft.sensors}
         modifiers={[restrictToVerticalAxis]}
-        onDragEnd={order.onDragEnd}
+        onDragEnd={draft.onDragEnd}
       >
         <SortableContext
-          items={order.ordered.map((r) => r.id)}
+          items={draft.ordered.map((r) => r.id)}
           strategy={verticalListSortingStrategy}
         >
-          <SortableDisabledContext.Provider value={!isSuperAdmin || order.saving}>
+          <SortableDisabledContext.Provider value={!isSuperAdmin || busy}>
             <Table<Db.AdminTeamMember>
               rowKey="id"
               loading={isLoading}
-              dataSource={order.ordered}
+              dataSource={draft.ordered}
               components={{ body: { row: SortableRow } }}
               pagination={false}
               scroll={{ x: 880 }}
-              rowClassName={(r) => (r.active ? '' : 'opacity-60')}
+              rowClassName={(r) => (draft.activeOf(r) ? '' : 'opacity-60')}
               locale={{ emptyText: 'ยังไม่มีทีมงาน — กด "เพิ่มทีมงาน" เพื่อเริ่ม' }}
               columns={[
                 ...(!isSuperAdmin
                   ? []
                   : [
                       {
-                        title: 'ลำดับ',
+                        title: draft.orderChanged ? (
+                          <Tooltip title="ลำดับใหม่ยังไม่บันทึก">
+                            <span className="text-(--ant-color-warning)">ลำดับ*</span>
+                          </Tooltip>
+                        ) : (
+                          'ลำดับ'
+                        ),
                         key: 'order',
                         width: 64,
                         align: 'center' as const,
@@ -165,22 +196,21 @@ export function TeamPage() {
                 {
                   title: 'แสดงบนเว็บ',
                   dataIndex: 'active',
-                  width: 110,
-                  render: (active: boolean, r) => (
-                    <Switch
-                      checked={active}
-                      disabled={!canEdit(r)}
-                      loading={act.isPending && act.variables?.path === `team-members/${r.id}`}
-                      aria-label={`แสดง ${r.nickname} บนหน้าเกี่ยวกับเรา`}
-                      onChange={(next) =>
-                        act.mutate({
-                          ...updateTeamMemberAction(r.id, { active: next }),
-                          success: next
-                            ? `แสดง${r.nickname}บนเว็บแล้ว`
-                            : `ซ่อน${r.nickname}จากเว็บแล้ว`,
-                        })
-                      }
-                    />
+                  width: 170,
+                  render: (_: boolean, r) => (
+                    <span className="inline-flex items-center gap-2">
+                      <Switch
+                        checked={draft.activeOf(r)}
+                        disabled={!canEdit(r) || busy}
+                        aria-label={`แสดง ${r.nickname} บนหน้าเกี่ยวกับเรา`}
+                        onChange={(next) => draft.setRowActive(r, next)}
+                      />
+                      {draft.activeChanged(r) && (
+                        <Tag color="warning" className="!m-0">
+                          ยังไม่บันทึก
+                        </Tag>
+                      )}
+                    </span>
                   ),
                 },
                 {
@@ -196,7 +226,7 @@ export function TeamPage() {
                         <Button
                           icon={<PencilSimple size={16} />}
                           aria-label={`แก้ข้อมูล ${r.nickname}`}
-                          disabled={!canEdit(r)}
+                          disabled={!canEdit(r) || busy}
                           onClick={() => openDrawer(r)}
                         />
                       </Tooltip>
@@ -207,6 +237,7 @@ export function TeamPage() {
                           okText="ลบ"
                           okButtonProps={{ danger: true }}
                           cancelText="ยกเลิก"
+                          disabled={busy}
                           onConfirm={() =>
                             act.mutateAsync({
                               ...deleteTeamMemberAction(r.id),
@@ -219,6 +250,7 @@ export function TeamPage() {
                               danger
                               icon={<Trash size={16} />}
                               aria-label={`ลบ ${r.nickname}`}
+                              disabled={busy}
                             />
                           </Tooltip>
                         </Popconfirm>

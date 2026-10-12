@@ -9,15 +9,5 @@ export const useHomePopular = () => useAdminView('admin_home_popular', { order: 
 /** ร้านทั้งหมดไว้เลือกเป็นร้านยอดนิยม */
 export const useBars = () => useAdminView('admin_bars', { order: { column: 'name', ascending: true } });
 
-/** PATCH /admin/home-content — Hero + หัวข้อ section */
-export const homeContentAction = (body: C.UpdateHomeContentBody): AdminActionInput => ({ method: 'PATCH', path: 'home-content', body });
-
-/** PATCH /admin/home-categories/:slot — การ์ดหมวด */
-export const homeCategoryAction = (slot: string, body: C.UpdateHomeCategoryBody): AdminActionInput => ({
-  method: 'PATCH',
-  path: `home-categories/${slot}`,
-  body,
-});
-
-/** PUT /admin/home-popular — ร้านยอดนิยม (แทนทั้งรายการ) */
-export const homePopularAction = (body: C.UpdateHomePopularBody): AdminActionInput => ({ method: 'PUT', path: 'home-popular', body });
+/** PUT /admin/home-page — บันทึกทั้งหน้าครั้งเดียว: Hero/หัวข้อ · การ์ดที่แก้ · ร้านยอดนิยม (ส่งเฉพาะส่วนที่แก้) */
+export const homePageAction = (body: C.SaveHomePageBody): AdminActionInput => ({ method: 'PUT', path: 'home-page', body });

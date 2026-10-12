@@ -1,89 +1,43 @@
-import { ImageSquare, Trash, UploadSimple } from '@phosphor-icons/react';
-import { App, Button, Image, Popconfirm, Spin, Upload } from 'antd';
-import { useState } from 'react';
+import { ImageSquare } from '@phosphor-icons/react';
+import { App, Upload } from 'antd';
 import { PHOTO_ACCEPT, checkPhoto } from '@/ui/utils/media';
 
 interface Props {
   name: string;
   url?: string;
   disabled?: boolean;
-  /** ย่อ + อัปโหลดไฟล์ → คืน path ใน bar-media */
-  upload: (file: File) => Promise<string>;
-  /** บันทึก path ใหม่ (null = ลบรูป) */
-  onChange: (path: string | null) => Promise<void>;
+  /** ขนาดกรอบ (px) */
+  size?: number;
+  /** เลือกรูปใหม่ (ตรวจไฟล์แล้ว) — เข้า draft · อัปโหลดตอนกดบันทึกของหน้า */
+  onPick: (file: File) => void;
 }
 
-/** ช่องรูปของรายการเมนูในตาราง — รูปเล็กกดดูเต็ม · เปลี่ยน/ลบได้ทันที */
-export function MenuPhoto({ name, url, disabled, upload, onChange }: Props) {
+/** รูปของรายการเมนู — กดที่รูปเพื่อเลือกรูปใหม่ (เอารูปออกทำในหน้าต่างแก้ไขรายการ) */
+export function MenuPhoto({ name, url, disabled, size = 48, onPick }: Props) {
   const { message } = App.useApp();
-  const [busy, setBusy] = useState(false);
 
-  const pick = async (file: File) => {
-    const err = checkPhoto(file);
-    if (err) return void message.error(err);
-    setBusy(true);
-    try {
-      await onChange(await upload(file));
-    } catch (e) {
-      message.error((e as Error).message);
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const picker = (label: string) => (
+  return (
     <Upload
       accept={PHOTO_ACCEPT}
       showUploadList={false}
-      disabled={disabled || busy}
+      disabled={disabled}
       beforeUpload={(file) => {
-        void pick(file);
+        const err = checkPhoto(file);
+        if (err) void message.error(err);
+        else onPick(file);
         return Upload.LIST_IGNORE;
       }}
     >
-      <Button
-        size="small"
-        icon={<UploadSimple />}
-        disabled={disabled || busy}
-        aria-label={`${label} ${name}`}
+      <span
+        role="button"
+        aria-label={`${url ? 'เปลี่ยนรูป' : 'เพิ่มรูป'} ${name}`}
+        title={url ? 'เปลี่ยนรูป' : 'เพิ่มรูป'}
+        onClick={(e) => e.stopPropagation()}
+        className="relative grid shrink-0 cursor-pointer place-items-center overflow-hidden rounded-xl border border-border bg-[repeating-linear-gradient(135deg,var(--card)_0_6px,var(--surface)_6px_12px)] text-muted hover:border-gold"
+        style={{ width: size, height: size }}
       >
-        {url ? undefined : label}
-      </Button>
+        {url ? <img src={url} alt="" className="absolute inset-0 size-full object-cover" /> : <ImageSquare size={20} />}
+      </span>
     </Upload>
-  );
-
-  return (
-    <Spin spinning={busy} size="small">
-      <div className="flex items-center gap-2">
-        {url ? (
-          <Image src={url} alt={name} width={48} height={48} className="rounded-lg object-cover" />
-        ) : (
-          <span
-            className="grid size-12 place-items-center rounded-lg border border-dashed border-border text-muted"
-            aria-hidden
-          >
-            <ImageSquare size={20} />
-          </span>
-        )}
-        {picker(url ? 'เปลี่ยนรูป' : 'เพิ่มรูป')}
-        {url && (
-          <Popconfirm
-            title="ลบรูปเมนูนี้?"
-            okText="ลบ"
-            cancelText="ยกเลิก"
-            okButtonProps={{ danger: true }}
-            onConfirm={() => onChange(null)}
-          >
-            <Button
-              size="small"
-              danger
-              icon={<Trash />}
-              disabled={disabled || busy}
-              aria-label={`ลบรูป ${name}`}
-            />
-          </Popconfirm>
-        )}
-      </div>
-    </Spin>
   );
 }

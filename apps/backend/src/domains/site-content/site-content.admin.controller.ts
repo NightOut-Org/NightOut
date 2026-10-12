@@ -1,16 +1,15 @@
-import { Body, Controller, Param, Patch, Put, UseGuards } from '@nestjs/common';
+import { Body, Controller, Put, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { HomeCategorySlot, type UpdateHomePopularResult } from '@nightout/contracts';
-import { ZodValidationPipe } from 'nestjs-zod';
+import type { SaveHomePageResult } from '@nightout/contracts';
 import { AdminGuard } from '../../auth/admin.guard';
 import { CurrentUser } from '../../auth/current-user.decorator';
 import { SupabaseJwtGuard, type AuthUser } from '../../auth/supabase-jwt.guard';
 import { ApiDoc } from '../../common/api-doc';
 import { ADMIN_FORBIDDEN } from '../../common/params';
 import { SupabaseService } from '../../supabase/supabase.service';
-import { UpdateHomeCategoryDto, UpdateHomeContentDto, UpdateHomePopularDto } from './site-content.dto';
+import { SaveHomePageDto } from './site-content.dto';
 
-/** site-content · Backoffice — แก้เนื้อหาหน้าแรก (rpc admin_save_home_content, admin_save_home_category, admin_save_home_popular · audit log) */
+/** site-content · Backoffice — แก้เนื้อหาหน้าแรกทั้งหน้าในคำขอเดียว (rpc admin_save_home_page → admin_save_home_content / admin_save_home_category / admin_save_home_popular · audit log) */
 @ApiTags('site-content')
 @ApiBearerAuth()
 @UseGuards(SupabaseJwtGuard, AdminGuard)
@@ -18,42 +17,24 @@ import { UpdateHomeCategoryDto, UpdateHomeContentDto, UpdateHomePopularDto } fro
 export class SiteContentAdminController {
   constructor(private readonly db: SupabaseService) {}
 
-  @Patch('home-content')
+  @Put('home-page')
   @ApiDoc({
-    summary: 'แก้ Hero / ชื่อ section หมวดของหน้าแรก',
+    summary: 'บันทึกหน้าแรก (Hero · หัวข้อ section · การ์ดหมวด · ร้านยอดนิยม)',
     description:
-      'ส่งเฉพาะ field ที่แก้ · ภาพอัปโหลดเข้า bucket site-media ก่อนด้วย POST /storage/upload-url แล้วส่ง URL มา · `hero_image_url: null` = กลับไปใช้ภาพตั้งต้น · rpc admin_save_home_content · บันทึก audit log',
-    returns: 'แถว home_content หลังแก้',
+      'หน้า /home-content แก้ในหน้าแล้วบันทึกครั้งเดียว · ส่งเฉพาะส่วนที่แก้ อย่างน้อย 1 ส่วน · ' +
+      '`content` = field ของ Hero / หัวข้อ section ที่แก้ (`hero_image_url: null` = ภาพตั้งต้น) · ' +
+      '`categories` = เฉพาะการ์ดที่แก้ คู่กับ `slot` (popular · pub · food · live · rooftop · chill · outdoor · party) · ' +
+      '`popular.bar_ids` = ร้านยอดนิยมทั้งรายการตามลำดับ (สูงสุด 8 · เฉพาะร้าน APPROVED · `[]` = ไม่ปัก) · ' +
+      'ภาพอัปโหลดเข้า bucket site-media ก่อนด้วย POST /storage/upload-url แล้วส่ง URL · ธุรกรรมเดียว · audit log ต่อส่วน (rpc admin_save_home_page)',
+    returns: '`content_updated` · `categories_updated` จำนวนการ์ด · `popular_updated`',
     forbidden: ADMIN_FORBIDDEN,
   })
-  saveContent(@CurrentUser() me: AuthUser, @Body() b: UpdateHomeContentDto) {
-    return this.db.rpc('admin_save_home_content', { p_actor: me.id, p: b });
-  }
-
-  @Patch('home-categories/:slot')
-  @ApiDoc({
-    summary: 'แก้การ์ดหมวดบนหน้าแรก',
-    description: 'slot ตายตัว 8 ช่อง (popular · pub · food · live · rooftop · chill · outdoor · party) · ส่งเฉพาะ field ที่แก้ · rpc admin_save_home_category · บันทึก audit log',
-    returns: 'แถว home_categories หลังแก้',
-    forbidden: ADMIN_FORBIDDEN,
-  })
-  saveCategory(
-    @CurrentUser() me: AuthUser,
-    @Param('slot', new ZodValidationPipe(HomeCategorySlot)) slot: HomeCategorySlot,
-    @Body() b: UpdateHomeCategoryDto,
-  ) {
-    return this.db.rpc('admin_save_home_category', { p_actor: me.id, p_slot: slot, p: b });
-  }
-
-  @Put('home-popular')
-  @ApiDoc({
-    summary: 'ตั้งร้านยอดนิยมบนหน้าแรก',
-    description:
-      'แทนที่ทั้งรายการตามลำดับใน `bar_ids` (สูงสุด 8 · ไม่ซ้ำ · เฉพาะร้าน APPROVED) · `[]` = ไม่ปัก หน้าแรกเรียงตามคะแนนรีวิวทั้งหมด · ช่องที่เหลือหน้าเว็บเติมด้วยร้านคะแนนรีวิวสูงสุด · rpc admin_save_home_popular · บันทึก audit log',
-    returns: '`bar_ids` รายการหลังบันทึก',
-    forbidden: ADMIN_FORBIDDEN,
-  })
-  savePopular(@CurrentUser() me: AuthUser, @Body() b: UpdateHomePopularDto) {
-    return this.db.rpc<UpdateHomePopularResult>('admin_save_home_popular', { p_actor: me.id, p_bar_ids: b.bar_ids });
+  savePage(@CurrentUser() me: AuthUser, @Body() b: SaveHomePageDto) {
+    return this.db.rpc<SaveHomePageResult>('admin_save_home_page', {
+      p_actor: me.id,
+      p_content: b.content ?? null,
+      p_categories: b.categories ?? null,
+      p_popular: b.popular?.bar_ids ?? null,
+    });
   }
 }

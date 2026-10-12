@@ -112,9 +112,21 @@ export const UpdateUserAccountBody = z.object({
 });
 export type UpdateUserAccountBody = z.infer<typeof UpdateUserAccountBody>;
 
-/** PATCH /admin/users/:id/role (SUPER_ADMIN) */
-export const SetUserRoleBody = z.object({ role: UserRole.describe('ชั้นบัญชีใหม่ (ตาราง roles)') });
-export type SetUserRoleBody = z.infer<typeof SetUserRoleBody>;
+/** PATCH /admin/users/roles (SUPER_ADMIN) — หน้า /users บันทึกชั้นบัญชีที่แก้หลายคนครั้งเดียว */
+export const SetUsersRoleBody = z.object({
+  changes: z
+    .array(z.object({ id: uuid, role: UserRole.describe('ชั้นบัญชีใหม่ (ตาราง roles)') }))
+    .min(1)
+    .max(200)
+    .refine((c) => new Set(c.map((x) => x.id)).size === c.length, 'ผู้ใช้ซ้ำกัน')
+    .describe('เฉพาะคนที่เปลี่ยน'),
+});
+export type SetUsersRoleBody = z.infer<typeof SetUsersRoleBody>;
+export interface SetUsersRoleResult {
+  updated: number;
+  /** จำนวนร้านที่หลุดรวม (ชั้นใหม่เป็นลูกค้า/แอดมิน/ซูเปอร์แอดมิน) */
+  bars_detached: number;
+}
 
 /** POST /admin/users/:id/unban */
 export const UnbanUserBody = z.object({ reason: z.string().trim().max(300).optional().describe('เหตุผลที่ปลดแบน (บันทึกใน audit log)') });
@@ -146,5 +158,6 @@ export const ACCOUNT_ERRORS = {
   AGE_UNDER_20: 'ผู้ใช้ต้องอายุ 20 ปีขึ้นไป',
   SELF_ONLY: 'แอดมินแก้ไขได้เฉพาะบัญชีของตัวเอง',
   INVALID_ACCOUNT: 'ข้อมูลบัญชีไม่ถูกต้องหรือไม่สามารถเปลี่ยนแปลงได้',
+  INVALID_ROLE_CHANGES: 'ข้อมูลชั้นบัญชีไม่ถูกต้อง — รีเฟรชหน้าแล้วลองใหม่',
   LAST_SUPER_ADMIN: 'ต้องมีซูเปอร์แอดมินอย่างน้อย 1 คน — ตั้งคนอื่นเป็นซูเปอร์แอดมินก่อน',
 } as const satisfies Record<string, string>;

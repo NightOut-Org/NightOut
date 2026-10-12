@@ -4,13 +4,12 @@ import { uploadSafetyEvidence } from '@/services/api/storage';
 
 /** API ของหน้าความปลอดภัยของร้าน · backend: domains/bar */
 
-/** PUT /merchant/bars/:barId/safety/:key */
-export async function setSafety(barId: string, key: string, value: C.SafetyValue) {
-  await Rest.put(`/merchant/bars/${barId}/safety/${key}`, { value } satisfies C.SafetyBody);
+/** PUT /merchant/bars/:barId/safety — บันทึกทั้งหน้าครั้งเดียว: เฉพาะข้อที่เปลี่ยนค่า และ/หรือ แนบหลักฐาน */
+export async function saveSafety(barId: string, body: C.SaveSafetyBody) {
+  return Rest.put<C.SaveSafetyResult>(`/merchant/bars/${barId}/safety`, body);
 }
 
-/** อัปโหลดหลักฐาน (รูป/PDF) เข้า bar-verifications แล้ว PUT /merchant/bars/:barId/safety/:key/evidence ให้ทีม NightOut ตรวจ */
-export async function uploadSafetyProof(barId: string, key: string, file: Blob) {
-  const path = await uploadSafetyEvidence(barId, key, file);
-  await Rest.put(`/merchant/bars/${barId}/safety/${key}/evidence`, { path } satisfies C.EvidenceBody);
+/** อัปโหลดหลักฐาน (รูป/PDF) เข้า bar-verifications/<bar_id>/… → คืน path ไว้ส่งใน `evidence_path` ของ saveSafety */
+export function uploadSafetyProof(barId: string, key: string, file: Blob) {
+  return uploadSafetyEvidence(barId, key, file);
 }

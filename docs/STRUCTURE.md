@@ -31,6 +31,10 @@
 | `share` | บัตรจองที่แชร์ให้แก๊ง | `/share/:token` | `booking` | — | 1A |
 | `reviewNew` | เขียนรีวิว + แนบรูป/วิดีโอ ≤ 6 ไฟล์ | `/reviews/new` | `review` · `storage` | `reviews` | 1A |
 | `myReviews` | รีวิวของฉัน | `/reviews` | `review` | `reviews` | 1A |
+| `community` | ฟีดกระทู้ชุมชน: หมวด · ล่าสุด/ยอดนิยม/ยังไม่มีคำตอบ · ค้นหา · ปักหมุดส่วนตัว (ขึ้นบนสุดในฟีดของตัวเอง) | `/community` · `/community/c/:category` | `community` | `community` | นอก MVP — อนุมัติ 2026-10-10 |
+| `communityThread` | อ่านกระทู้ + ความเห็น/ตอบกลับ (แนบรูป/วิดีโอ) · ถูกใจ · บันทึก · ปักหมุด · รายงาน · ร่างตอบบันทึกที่ backend | `/community/t/:id` | `community` · `storage` | `community` | นอก MVP — อนุมัติ 2026-10-10 |
+| `communityCompose` | ตั้ง/แก้กระทู้ + รูป/วิดีโอ ≤ 6 + แท็กร้าน · ร่างบันทึกอัตโนมัติที่ backend (กู้ร่าง / เก็บหรือทิ้งร่างตอนออก) | `/community/new` · `/community/t/:id/edit` | `community` · `storage` | `community` | นอก MVP — อนุมัติ 2026-10-10 |
+| `communityMe` | กระทู้ของฉัน · ที่บันทึกไว้ · ปักหมุด · ฉบับร่าง | `/community/me` | `community` | `community` | นอก MVP — อนุมัติ 2026-10-10 |
 | `favorites` | ร้านโปรด | `/favorites` | `account` | — | 1A |
 | `notifications` | แจ้งเตือน | `/notifications` | `account` | — | 1A |
 | `profile` | โปรไฟล์ | `/profile` | `account` | `users` | 1A |
@@ -47,7 +51,8 @@
 | `status` | สถานะการสมัคร / รออนุมัติ | `/merchant/status` | `bar` | `merchants` | 1B |
 | `dashboard` | ภาพรวมร้าน | `/merchant` | `bar` · `booking` | — | 1B |
 | `tonight` | คืนนี้ + สแกน QR เช็กอิน + ความแน่น | `/merchant/tonight` | `booking` · `bar` | — | 1B |
-| `bookings` | จัดการการจอง / ย้ายโต๊ะ | `/merchant/bookings` | `booking` | `bookings` | 1B |
+| `bookings` | รายการ / ปฏิทินการจอง + ปุ่มรับ/ปฏิเสธ/เช็กอิน | `/merchant/bookings` | `booking` | `bookings` | 1B |
+| `bookingDetail` | รายละเอียดการจอง + ย้ายโต๊ะ / ยืนยันคืนเงิน | `/merchant/bookings/:id` | `booking` · `deposit` | `bookings` | 1B |
 | `deposits` | มัดจำของร้าน / ยืนยันคืนมัดจำ | `/merchant/deposits` | `deposit` | `deposits` | 1B |
 | `store` | รูปร้าน (ปก + แกลเลอรี) ข้อมูลร้าน เวลาเปิด-ปิด สไตล์ ลิงก์ | `/merchant/store` | `bar` · `storage` | `bars` · `barMedia` | 1B |
 | `menu` | เมนู ราคา และรูปเมนู | `/merchant/menu` | `bar` · `storage` | `barMedia` | 1B |
@@ -79,6 +84,7 @@
 | `bookings` | ติดตามการจอง | `/bookings` | `backoffice` · `admin_bookings` | `bookings` · `merchant/bookings` | 1C |
 | `deposits` | ตรวจสลิป / ปฏิเสธพร้อมเหตุผล / รอคืนลูกค้า | `/deposits` | `deposit` | `deposit` · `merchant/deposits` | 1C |
 | `reviews` | รีวิวที่ถูกรายงาน | `/reviews` | `review` | `barReviews` · `reviewNew` | 1C |
+| `community` | กระทู้/ความเห็นที่ถูกรายงาน (ดูรูป/วิดีโอที่แนบ) · ซ่อน / ลบ / แสดงอีกครั้ง | `/community` | `community` · `admin_community_threads` · `admin_community_comments` | `community` · `communityThread` | นอก MVP — อนุมัติ 2026-10-10 |
 | `billing` | ค่าคอม (Billing Events) | `/billing` | `backoffice` · `admin_billing_events` | `merchant/billing` | 1C |
 | `auditLogs` | Audit Log | `/audit-logs` | `backoffice` · `admin_audit_logs` | — | 1C |
 | `settings` | ดูค่าระบบ สไตล์ร้าน มาตรการ Safety (อ่านอย่างเดียว · แก้ผ่าน migration/seed) | `/settings` | `backoffice` (`/admin/master/:table`) | — | 1C |
@@ -91,6 +97,7 @@
 | `booking` | จอง ยกเลิก สถานะ เช็กอิน ย้ายโต๊ะ โซนว่าง บัตรแชร์ | public · me · merchant | 1A / 1B |
 | `deposit` | ส่งสลิป ตรวจสลิป ปิดยอด คืนมัดจำ สมุดมัดจำ | me · merchant · admin | 1A / 1B / 1C |
 | `review` | เขียน รายงาน จัดการรีวิว | me · admin | 1A / 1C |
+| `community` | ชุมชน: กระทู้ ความเห็น ไฟล์แนบ (bucket `community-media`) ถูกใจ บันทึก ปักหมุดส่วนตัว ฉบับร่าง รายงาน · แอดมินซ่อน/ลบ | public · me · admin | นอก MVP — อนุมัติ 2026-10-10 |
 | `bar` | สมัครลงร้าน ข้อมูลร้าน เมนู โปร ค่าธรรมเนียม โซน Safety ตั้งค่า บัญชีรับเงิน ความแน่น อนุมัติ | me · merchant · admin | 1B / 1C |
 | `bar-team` | ทีมร้าน: เชิญ นำออก คำเชิญของฉัน | me · merchant | 1B |
 | `account` | โปรไฟล์ overview แจ้งเตือน ร้านโปรด ลบบัญชี · ผู้ใช้ ชั้นบัญชี แบน | me · admin | 1A / 1C |

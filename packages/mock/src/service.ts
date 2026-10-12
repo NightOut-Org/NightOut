@@ -3,6 +3,7 @@ import {
   canTransition,
   HOLDING_STATUSES,
   isNewBar,
+  isReviewableStatus,
   scoreToStars,
   starsToTier,
 } from '@nightout/utils';
@@ -512,7 +513,7 @@ export function autoCancelAt(b: Booking): Date {
 
 /* =========================== Reviews =========================== */
 
-/** ร้านนี้ผู้ใช้ปัจจุบันรีวิวได้ไหม — คืน booking ที่เช็กอินแล้วแต่ยังไม่รีวิว (ถ้ามี) */
+/** ร้านนี้ผู้ใช้ปัจจุบันรีวิวได้ไหม — คืน booking ที่มัดจำผ่านแล้วแต่ยังไม่รีวิว (ถ้ามี) */
 export function reviewableBooking(barId: string): Booking | null {
   const u = currentUser();
   if (!u) return null;
@@ -521,7 +522,7 @@ export function reviewableBooking(barId: string): Booking | null {
       (b) =>
         b.barId === barId &&
         b.userId === u.id &&
-        ['CHECKED_IN', 'COMPLETED'].includes(b.status) &&
+        isReviewableStatus(b.status) &&
         !b.reviewed,
     ) ?? null
   );
@@ -547,8 +548,7 @@ export function addReview(
   const u = currentUser();
   const b = getBooking(bookingId);
   if (!u || !b) throw new Error('ไม่พบการจอง');
-  if (!['CHECKED_IN', 'COMPLETED'].includes(b.status))
-    throw new Error('รีวิวได้หลังเช็กอินแล้วเท่านั้น');
+  if (!isReviewableStatus(b.status)) throw new Error('รีวิวได้หลังจองและมัดจำผ่านแล้วเท่านั้น');
   if (b.reviewed) throw new Error('รีวิวการจองนี้ไปแล้ว');
   const review: Review = {
     id: uid('rv'),

@@ -3058,6 +3058,660 @@ export type Database = {
           },
         ]
       }
+      community_categories: {
+        Row: {
+          is_active: boolean
+          name: string
+          slug: string
+          sort_order: number
+          staff_only: boolean
+        }
+        Insert: {
+          is_active?: boolean
+          name: string
+          slug: string
+          sort_order?: number
+          staff_only?: boolean
+        }
+        Update: {
+          is_active?: boolean
+          name?: string
+          slug?: string
+          sort_order?: number
+          staff_only?: boolean
+        }
+        Relationships: []
+      }
+      community_comment_likes: {
+        Row: {
+          comment_id: string
+          created_at: string
+          user_id: string
+        }
+        Insert: {
+          comment_id: string
+          created_at?: string
+          user_id: string
+        }
+        Update: {
+          comment_id?: string
+          created_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_comment_likes_comment_id_fkey"
+            columns: ["comment_id"]
+            isOneToOne: false
+            referencedRelation: "admin_community_comments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_comment_likes_comment_id_fkey"
+            columns: ["comment_id"]
+            isOneToOne: false
+            referencedRelation: "community_comments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_comment_likes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "admin_users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_comment_likes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      community_comments: {
+        Row: {
+          author_id: string
+          body: string
+          created_at: string
+          id: string
+          like_count: number
+          parent_id: string | null
+          status: string
+          thread_id: string
+        }
+        Insert: {
+          author_id: string
+          body: string
+          created_at?: string
+          id?: string
+          like_count?: number
+          parent_id?: string | null
+          status?: string
+          thread_id: string
+        }
+        Update: {
+          author_id?: string
+          body?: string
+          created_at?: string
+          id?: string
+          like_count?: number
+          parent_id?: string | null
+          status?: string
+          thread_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_comments_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "admin_users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_comments_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_comments_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "admin_community_comments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_comments_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "community_comments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_comments_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "admin_community_threads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_comments_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "community_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      community_drafts: {
+        Row: {
+          id: string
+          kind: string
+          payload: Json
+          thread_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          kind: string
+          payload?: Json
+          thread_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          kind?: string
+          payload?: Json
+          thread_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_drafts_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "admin_community_threads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_drafts_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "community_threads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_drafts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "admin_users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_drafts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      community_media: {
+        Row: {
+          comment_id: string | null
+          created_at: string
+          duration_sec: number | null
+          id: string
+          kind: Database["public"]["Enums"]["media_kind"]
+          owner_id: string
+          size_bytes: number | null
+          sort_order: number
+          storage_path: string
+          thread_id: string | null
+          thumb_path: string | null
+        }
+        Insert: {
+          comment_id?: string | null
+          created_at?: string
+          duration_sec?: number | null
+          id?: string
+          kind: Database["public"]["Enums"]["media_kind"]
+          owner_id: string
+          size_bytes?: number | null
+          sort_order?: number
+          storage_path: string
+          thread_id?: string | null
+          thumb_path?: string | null
+        }
+        Update: {
+          comment_id?: string | null
+          created_at?: string
+          duration_sec?: number | null
+          id?: string
+          kind?: Database["public"]["Enums"]["media_kind"]
+          owner_id?: string
+          size_bytes?: number | null
+          sort_order?: number
+          storage_path?: string
+          thread_id?: string | null
+          thumb_path?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_media_comment_id_fkey"
+            columns: ["comment_id"]
+            isOneToOne: false
+            referencedRelation: "admin_community_comments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_media_comment_id_fkey"
+            columns: ["comment_id"]
+            isOneToOne: false
+            referencedRelation: "community_comments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_media_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "admin_users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_media_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_media_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "admin_community_threads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_media_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "community_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      community_pins: {
+        Row: {
+          created_at: string
+          thread_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          thread_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          thread_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_pins_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "admin_community_threads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_pins_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "community_threads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_pins_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "admin_users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_pins_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      community_reports: {
+        Row: {
+          comment_id: string | null
+          created_at: string
+          detail: string | null
+          id: string
+          reason: string
+          reporter_id: string
+          resolved_at: string | null
+          resolved_by: string | null
+          status: string
+          thread_id: string | null
+        }
+        Insert: {
+          comment_id?: string | null
+          created_at?: string
+          detail?: string | null
+          id?: string
+          reason: string
+          reporter_id: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+          thread_id?: string | null
+        }
+        Update: {
+          comment_id?: string | null
+          created_at?: string
+          detail?: string | null
+          id?: string
+          reason?: string
+          reporter_id?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+          thread_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_reports_comment_id_fkey"
+            columns: ["comment_id"]
+            isOneToOne: false
+            referencedRelation: "admin_community_comments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_reports_comment_id_fkey"
+            columns: ["comment_id"]
+            isOneToOne: false
+            referencedRelation: "community_comments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_reports_reporter_id_fkey"
+            columns: ["reporter_id"]
+            isOneToOne: false
+            referencedRelation: "admin_users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_reports_reporter_id_fkey"
+            columns: ["reporter_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_reports_resolved_by_fkey"
+            columns: ["resolved_by"]
+            isOneToOne: false
+            referencedRelation: "admin_users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_reports_resolved_by_fkey"
+            columns: ["resolved_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_reports_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "admin_community_threads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_reports_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "community_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      community_saves: {
+        Row: {
+          created_at: string
+          thread_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          thread_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          thread_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_saves_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "admin_community_threads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_saves_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "community_threads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_saves_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "admin_users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_saves_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      community_thread_likes: {
+        Row: {
+          created_at: string
+          thread_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          thread_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          thread_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_thread_likes_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "admin_community_threads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_thread_likes_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "community_threads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_thread_likes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "admin_users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_thread_likes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      community_threads: {
+        Row: {
+          author_id: string
+          bar_id: string | null
+          body: string
+          category: string
+          created_at: string
+          edited_at: string | null
+          id: string
+          last_activity_at: string
+          like_count: number
+          reply_count: number
+          status: string
+          title: string
+          updated_at: string
+          view_count: number
+        }
+        Insert: {
+          author_id: string
+          bar_id?: string | null
+          body?: string
+          category: string
+          created_at?: string
+          edited_at?: string | null
+          id?: string
+          last_activity_at?: string
+          like_count?: number
+          reply_count?: number
+          status?: string
+          title: string
+          updated_at?: string
+          view_count?: number
+        }
+        Update: {
+          author_id?: string
+          bar_id?: string | null
+          body?: string
+          category?: string
+          created_at?: string
+          edited_at?: string | null
+          id?: string
+          last_activity_at?: string
+          like_count?: number
+          reply_count?: number
+          status?: string
+          title?: string
+          updated_at?: string
+          view_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_threads_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "admin_users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_threads_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_threads_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
+            referencedRelation: "admin_bar_media"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_threads_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
+            referencedRelation: "admin_bars"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_threads_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
+            referencedRelation: "bar_cards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_threads_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
+            referencedRelation: "bar_detail"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_threads_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
+            referencedRelation: "bars"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_threads_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
+            referencedRelation: "my_bar_detail"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_threads_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
+            referencedRelation: "my_bars"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_threads_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
+            referencedRelation: "my_favorites"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_threads_category_fkey"
+            columns: ["category"]
+            isOneToOne: false
+            referencedRelation: "community_categories"
+            referencedColumns: ["slug"]
+          },
+        ]
+      }
       crowd_status_logs: {
         Row: {
           bar_id: string
@@ -6078,6 +6732,111 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_community_comments: {
+        Row: {
+          author_id: string | null
+          author_name: string | null
+          body: string | null
+          created_at: string | null
+          id: string | null
+          like_count: number | null
+          media: Json | null
+          open_report_count: number | null
+          parent_id: string | null
+          reports: Json | null
+          status: string | null
+          thread_id: string | null
+          thread_title: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_comments_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "admin_users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_comments_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_comments_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "admin_community_comments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_comments_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "community_comments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_comments_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "admin_community_threads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_comments_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "community_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      admin_community_threads: {
+        Row: {
+          author_id: string | null
+          author_name: string | null
+          bar: Json | null
+          body: string | null
+          category: string | null
+          category_name: string | null
+          created_at: string | null
+          edited_at: string | null
+          id: string | null
+          like_count: number | null
+          media: Json | null
+          open_report_count: number | null
+          reply_count: number | null
+          reports: Json | null
+          status: string | null
+          title: string | null
+          view_count: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_threads_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "admin_users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_threads_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_threads_category_fkey"
+            columns: ["category"]
+            isOneToOne: false
+            referencedRelation: "community_categories"
+            referencedColumns: ["slug"]
+          },
+        ]
+      }
       admin_deposits: {
         Row: {
           amount: number | null
@@ -7052,6 +7811,16 @@ export type Database = {
         Args: { p_booking: string }
         Returns: string
       }
+      admin_community_moderate: {
+        Args: {
+          p_action: string
+          p_actor: string
+          p_id: string
+          p_reason?: string
+          p_target: string
+        }
+        Returns: Json
+      }
       admin_dashboard: {
         Args: never
         Returns: {
@@ -7122,6 +7891,17 @@ export type Database = {
         }
         Returns: Json
       }
+      admin_save_bar_media: {
+        Args: {
+          p_actor: string
+          p_bar: string
+          p_cover_path: string
+          p_cover_url: string
+          p_menu: Json
+          p_paths: string[]
+        }
+        Returns: Json
+      }
       admin_save_home_category: {
         Args: { p: Json; p_actor: string; p_slot: string }
         Returns: Json
@@ -7130,12 +7910,25 @@ export type Database = {
         Args: { p: Json; p_actor: string }
         Returns: Json
       }
+      admin_save_home_page: {
+        Args: {
+          p_actor: string
+          p_categories: Json
+          p_content: Json
+          p_popular: string[]
+        }
+        Returns: Json
+      }
       admin_save_home_popular: {
         Args: { p_actor: string; p_bar_ids: string[] }
         Returns: Json
       }
       admin_save_team_member: {
         Args: { p: Json; p_actor: string; p_id: string }
+        Returns: Json
+      }
+      admin_save_team_page: {
+        Args: { p_active: Json; p_actor: string; p_ids: string[] }
         Returns: Json
       }
       admin_set_bar_media: {
@@ -7157,6 +7950,10 @@ export type Database = {
         }
         Returns: Json
       }
+      admin_set_bars_status: {
+        Args: { p_actor: string; p_changes: Json }
+        Returns: Json
+      }
       admin_set_menu_item_image: {
         Args: { p_actor: string; p_item: string; p_path: string }
         Returns: Json
@@ -7167,6 +7964,10 @@ export type Database = {
           p_role: Database["public"]["Enums"]["user_role"]
           p_user: string
         }
+        Returns: Json
+      }
+      admin_set_users_role: {
+        Args: { p_actor: string; p_changes: Json }
         Returns: Json
       }
       admin_settle_deposit: {
@@ -7251,6 +8052,86 @@ export type Database = {
       }
       app_check_in: {
         Args: { p_actor: string; p_bar: string; p_code: string }
+        Returns: Json
+      }
+      app_community_add_comment: {
+        Args: {
+          p_actor: string
+          p_body: string
+          p_media?: Json
+          p_parent?: string
+          p_thread: string
+        }
+        Returns: Json
+      }
+      app_community_create_thread: {
+        Args: {
+          p_actor: string
+          p_bar?: string
+          p_body: string
+          p_category: string
+          p_media?: Json
+          p_title: string
+        }
+        Returns: Json
+      }
+      app_community_delete_comment: {
+        Args: { p_actor: string; p_comment: string }
+        Returns: Json
+      }
+      app_community_delete_draft: {
+        Args: { p_actor: string; p_kind: string; p_thread?: string }
+        Returns: Json
+      }
+      app_community_delete_thread: {
+        Args: { p_actor: string; p_thread: string }
+        Returns: Json
+      }
+      app_community_report: {
+        Args: {
+          p_actor: string
+          p_comment: string
+          p_detail?: string
+          p_reason: string
+          p_thread: string
+        }
+        Returns: Json
+      }
+      app_community_save_draft: {
+        Args: {
+          p_actor: string
+          p_kind: string
+          p_payload: Json
+          p_thread: string
+        }
+        Returns: Json
+      }
+      app_community_set_comment_like: {
+        Args: { p_actor: string; p_comment: string; p_on: boolean }
+        Returns: Json
+      }
+      app_community_set_like: {
+        Args: { p_actor: string; p_on: boolean; p_thread: string }
+        Returns: Json
+      }
+      app_community_set_pin: {
+        Args: { p_actor: string; p_on: boolean; p_thread: string }
+        Returns: Json
+      }
+      app_community_set_save: {
+        Args: { p_actor: string; p_on: boolean; p_thread: string }
+        Returns: Json
+      }
+      app_community_update_thread: {
+        Args: {
+          p_actor: string
+          p_bar?: string
+          p_body: string
+          p_category: string
+          p_media?: Json
+          p_thread: string
+          p_title: string
+        }
         Returns: Json
       }
       app_create_booking: {
@@ -7354,6 +8235,34 @@ export type Database = {
       }
       app_respond_invite: {
         Args: { p_accept: boolean; p_actor: string; p_bar: string }
+        Returns: Json
+      }
+      app_save_bar_store: {
+        Args: {
+          p_actor: string
+          p_bar: string
+          p_cover_path: string
+          p_cover_url: string
+          p_info: Json
+          p_paths: string[]
+        }
+        Returns: Json
+      }
+      app_save_promotions_page: {
+        Args: { p_actor: string; p_bar: string; p_fees: Json; p_items: Json }
+        Returns: Json
+      }
+      app_save_safety: {
+        Args: { p_actor: string; p_bar: string; p_items: Json }
+        Returns: Json
+      }
+      app_save_settings_page: {
+        Args: {
+          p_actor: string
+          p_bar: string
+          p_payout: Json
+          p_settings: Json
+        }
         Returns: Json
       }
       app_set_bar_media: {
@@ -7553,6 +8462,78 @@ export type Database = {
         }
         Returns: boolean
       }
+      community_add_view: { Args: { p_thread: string }; Returns: Json }
+      community_author: { Args: { p_user: string }; Returns: Json }
+      community_bar: { Args: { p_bar: string }; Returns: Json }
+      community_categories_list: { Args: never; Returns: Json }
+      community_feed: {
+        Args: {
+          p_bar?: string
+          p_category?: string
+          p_limit?: number
+          p_offset?: number
+          p_q?: string
+          p_scope?: string
+          p_sort?: string
+        }
+        Returns: Json
+      }
+      community_media_json: {
+        Args: { p_comment: string; p_thread: string }
+        Returns: Json
+      }
+      community_media_norm: {
+        Args: { p_media: Json; p_owner: string }
+        Returns: Json
+      }
+      community_media_path_is_public: {
+        Args: { p_name: string }
+        Returns: boolean
+      }
+      community_media_path_ok: {
+        Args: { p_owner: string; p_path: string }
+        Returns: boolean
+      }
+      community_media_paths: { Args: { p_media: Json }; Returns: string[] }
+      community_media_set: {
+        Args: {
+          p_comment: string
+          p_media: Json
+          p_owner: string
+          p_thread: string
+        }
+        Returns: string[]
+      }
+      community_paths_unused: {
+        Args: { p_owner: string; p_paths: string[] }
+        Returns: Json
+      }
+      community_refresh_counts: {
+        Args: { p_thread: string }
+        Returns: undefined
+      }
+      community_thread: { Args: { p_id: string }; Returns: Json }
+      community_thread_check: {
+        Args: {
+          p_bar: string
+          p_body: string
+          p_category: string
+          p_title: string
+          p_user: Database["public"]["Tables"]["users"]["Row"]
+        }
+        Returns: undefined
+      }
+      community_thread_row: {
+        Args: {
+          p_me: string
+          t: Database["public"]["Tables"]["community_threads"]["Row"]
+        }
+        Returns: Json
+      }
+      community_trending_bars: {
+        Args: { p_days?: number; p_limit?: number }
+        Returns: Json
+      }
       deposit_reject_label: { Args: { p_code: string }; Returns: string }
       get_share_card: {
         Args: { p_token: string }
@@ -7586,6 +8567,7 @@ export type Database = {
         Args: { p_bar: string; p_path: string }
         Returns: string
       }
+      my_community_drafts: { Args: never; Returns: Json }
       my_invites: {
         Args: never
         Returns: {

@@ -304,7 +304,8 @@ export async function refresh(opts: { public?: boolean } = {}) {
 }
 
 /** การเขียนที่ไม่ต้องโหลด store ใหม่ — POST ที่จริงเป็นการขอ URL ไฟล์ / ลบบัญชี (เข้าสู่ระบบไม่ได้แล้ว) */
-const NO_REFRESH = /^\/storage\/|^\/me\/delete$/;
+// ชุมชน: หน้าใช้ TanStack Query ของตัวเอง (store ไม่มีข้อมูลกระทู้) — ร่างบันทึกทุกวินาทีที่หยุดพิมพ์ ไม่ต้องโหลด store ใหม่
+const NO_REFRESH = /^\/storage\/|^\/me\/delete$|^\/(public\/|me\/)?community\//;
 /** การเขียนที่เปลี่ยนข้อมูลหน้าร้าน → โหลด `/public/catalog` ใหม่ด้วย */
 const PUBLIC_WRITES = /^\/merchant\/bars\/[^/]+\/(crowd|info|media|menu|promotions|fees|zones|safety|booking-settings)|^\/bookings\/[^/]+\/review$/;
 

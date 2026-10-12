@@ -12,6 +12,7 @@ import { BarModule } from './domains/bar/bar.module';
 import { BillingModule } from './domains/billing/billing.module';
 import { BookingModule } from './domains/booking/booking.module';
 import { CatalogModule } from './domains/catalog/catalog.module';
+import { CommunityModule } from './domains/community/community.module';
 import { DepositModule } from './domains/deposit/deposit.module';
 import { PricingModule } from './domains/pricing/pricing.module';
 import { PromotionModule } from './domains/promotion/promotion.module';
@@ -37,6 +38,7 @@ import { SupabaseModule } from './supabase/supabase.module';
     BookingModule,
     DepositModule,
     ReviewModule,
+    CommunityModule,
     BarModule,
     BarTeamModule,
     AccountModule,

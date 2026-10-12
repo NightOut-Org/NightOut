@@ -1,5 +1,10 @@
 # CLAUDE.md — กติกาการทำงานใน repo NightOut
 
+## แหล่ง requirement (อ่านก่อนเริ่มงานทุกครั้ง)
+- แหล่งจริงของขอบเขต / Phase / กฎธุรกิจ = Google Doc **Nightout_2.day** (https://docs.google.com/document/d/1GQ3ilsu_y_dzTulZS9_UEtNH7ygOLkaM-YkqdFm3UUI/edit) · snapshot ใน repo: `docs/REQUIREMENTS.md` (ฉบับเต็มทุกแท็บ `docs/requirements/nightout-2-day.md` — ห้ามแก้มือ)
+- **ก่อนเริ่มงานแก้โค้ดทุกครั้ง agent ต้องรัน skill `sync-requirements` เอง** (ไม่ต้องรอผู้ใช้สั่ง · hook `SessionStart` เตือนให้) — revision ไม่เปลี่ยน = ทำงานต่อได้เลย · ไม่มี Google Docs connector = ใช้ snapshot
+- ลำดับเมื่อขัดกัน: `docs/REQUIREMENTS.md` (ข้อ 0 "ข้อตัดสินของเจ้าของ" ชนะ) → "กฎธุรกิจที่ตกลงแล้ว" ด้านล่าง → `docs/PROMPT.md` · งานที่แตะตาราง ❓ ของ REQUIREMENTS ต้องถามก่อน
+
 ## Branch
 - มีแค่ 2 branch: `demo` (dev) และ `main` (deploy ขึ้นเว็บ)
 - ทำงานและ push ที่ `demo` เท่านั้น ห้าม push ตรงเข้า `main` และไม่ต้องแตก branch ย่อย
@@ -11,7 +16,7 @@
 - 1 commit = 1 เรื่อง
 
 ## ขั้นตอนทำงาน (ทุกงาน)
-1. **ก่อนเริ่ม — ของนอกแผนต้องถามก่อน**: ฟีเจอร์ / โมดูล / หน้า / โดเมนที่ไม่มีใน MVP หรือ roadmap (`docs/PROMPT.md` หัวข้อ "Development Phases" + "ไม่ทำใน MVP", `README.md` หัวข้อ Roadmap) และไม่อยู่ใน "กฎธุรกิจที่ตกลงแล้ว" ของไฟล์นี้ **ต้องถามก่อนเริ่มงานทุกครั้ง** · ถ้าตรงกับรายการ "ไม่ทำใน MVP" ต้องบอกให้ชัดตอนถาม
+1. **ก่อนเริ่ม — ของนอกแผนต้องถามก่อน**: ฟีเจอร์ / โมดูล / หน้า / โดเมนที่ไม่อยู่ใน Phase ของ `docs/REQUIREMENTS.md` และไม่อยู่ใน "กฎธุรกิจที่ตกลงแล้ว" ของไฟล์นี้ **ต้องถามก่อนเริ่มงานทุกครั้ง** · ฟีเจอร์ที่อยู่ Phase หลัง (2/3/4) หรือหมวด "ตัดทิ้งถาวร ⛔" ต้องบอกให้ชัดตอนถาม
 2. **ก่อนเริ่ม — ฟีเจอร์หน้าบ้านต้องคู่กับหลังบ้าน**: ฟีเจอร์ใหม่ใน `apps/frontend` ที่มีข้อมูลให้ทีม NightOut ดูแล (สร้าง/แก้/อนุมัติ/ตรวจ/ลบ) ส่วนใหญ่ต้องมีหน้าจัดการใน `apps/admin` ของโดเมนเดียวกัน · ถ้าโจทย์ไม่ได้ระบุว่าต้องมีหรือไม่ต้องมีหน้าหลังบ้าน **ต้องถามก่อนเริ่มงานทุกครั้ง** (ห้ามเดาเอง)
 3. **ทำงาน** — ตามโครงโดเมน (ADR 0006) และ checklist "เพิ่ม/แก้ endpoint" ด้านล่าง · **เพิ่ม / ลบ / เปลี่ยนชื่อโมดูล** (หน้าใน `modules/` หรือโดเมนใน `domains/`) ต้องแก้ทะเบียน `docs/STRUCTURE.md` ในงานเดียวกัน · **เพิ่ม / ลบ / เปลี่ยน route** (ทั้ง `apps/frontend` และ `apps/admin`) ต้องแก้ `docs/SITEMAP.md` ในงานเดียวกันเสมอ (ตาราง + แผนภาพข้อ 1 + Navigation ถ้ากระทบ) · ของนอกแผนที่ตกลงแล้ว Phase = `นอก MVP — อนุมัติ YYYY-MM-DD`
 4. **จบงาน — refactor**: เก็บกวาดเฉพาะโค้ดที่แก้ในงานนั้น (ลบโค้ดซ้ำ/โค้ดตาย ตั้งชื่อให้ชัด แยก custom hook/util ให้ตรงโครงโฟลเดอร์) · ห้ามลามไปไฟล์ที่ไม่ได้แตะ · พฤติกรรมต้องเหมือนเดิม แล้วรัน `pnpm lint && pnpm typecheck && pnpm test && pnpm build` ให้ผ่าน
@@ -20,7 +25,8 @@
    - รูปแบบ: รายการใหม่อยู่บนสุด · หัวข้อ `## YYYY-MM-DD — <ชื่องานสั้นๆ>` · ใต้หัวข้อเป็น bullet ว่าแก้อะไร/ทำไม (ภาษาคน ไม่ต้องใส่ diff) + ไฟล์หลักที่แตะ · ถ้ามี migration/endpoint ใหม่ให้ระบุชื่อ
 
 ## สเปค
-- สเปคหลักอยู่ที่ `docs/PROMPT.md` ถ้าสเปคเปลี่ยน ให้อัปเดตไฟล์นี้ใน branch `demo`
+- ขอบเขต / Phase / กฎธุรกิจ: `docs/REQUIREMENTS.md` (sync จาก Google Doc — แก้ที่ Google Doc แล้วรัน `sync-requirements`)
+- tech / ดีไซน์ / schema: `docs/PROMPT.md` · `docs/ARCHITECTURE.md` · `docs/DATABASE.md` — ถ้าเปลี่ยนให้อัปเดตใน branch `demo`
 
 ## Skills
 - **ทุกครั้งที่แก้ UI ต้องเปิด skill ที่เกี่ยวข้องก่อน** (frontend-design เสมอ + mobile-native ถ้าแตะมือถือ, antd ถ้าแตะคอมโพเนนต์ antd, animate ถ้าแตะ motion) เพื่อกันดีไซน์เพี้ยน
@@ -41,6 +47,15 @@
 - ใช้ function component + hooks เท่านั้น (ยกเว้น `ErrorBoundary`) และ logic ที่ใช้ซ้ำให้แยกเป็น custom hook
 - HOC ใช้เฉพาะเรื่องที่ครอบหลายหน้า ส่วนเรื่องสิทธิ์ใช้ layout route `<RequireAuth>` / `<RequireRole>`
 
+## ฟอร์ม · การบันทึก · สถานะตอนเรียก API (ทุกหน้าที่แก้ข้อมูล — `apps/frontend` และ `apps/admin`)
+- **แก้ในหน้าก่อน แล้วกด "บันทึก" ครั้งเดียว** — การแก้ข้อมูลทุกแบบ (กรอกฟอร์ม · สวิตช์/เปลี่ยนสถานะ · เพิ่ม/ลบ/ตั้งปกรูป · ลากสลับลำดับ · เลือกตัวเลือกต่อแถว) เปลี่ยนแค่ **draft ใน state ของหน้า** ห้ามยิง API ทีละจุด · เห็นผลทันทีบนจอ
+- **ปุ่ม "บันทึก" (ปุ่มหลัก) + "ยกเลิก/คืนค่า"** อยู่แถวเดียวกับหัวข้อหน้า/การ์ด (มุมขวาบน หรือแถบล่างติดจอบนมือถือ — ตามดีไซน์หน้านั้น) · ไม่มีอะไรเปลี่ยน = ปุ่มบันทึก disabled · มีการแก้ = บอกให้รู้ (เช่น "แก้ไข 3 รายการ") · ยกเลิก = คืน draft เป็นค่าจาก server
+- **กันหลุด**: มี draft ค้างแล้วจะออกจากหน้า/ปิด drawer/ปิดแท็บ → ถามยืนยันก่อน (`beforeunload` + blocker ของ router)
+- **รูป/ไฟล์ที่เพิ่ม** แสดงพรีวิวจากเครื่อง (object URL) ไปก่อน · **อัปโหลดขึ้น Storage ตอนกดบันทึก** แล้วบันทึก path ในคำขอเดียวกัน (มีความคืบหน้าระหว่างอัปโหลด) · ไฟล์ที่เอาออก backend ลบให้ตอนบันทึก — ไม่มีไฟล์ค้างถ้าผู้ใช้ทิ้งการแก้ (ข้อยกเว้น: ร่างกระทู้ชุมชนที่อัปโหลดทันทีตามระบบร่างเดิม)
+- **ระหว่างรอ API ต้อง disabled เสมอ** — ปุ่มที่กด (`loading`) + ช่อง/คอมโพเนนต์ที่เกี่ยวข้องทั้งชุด (ฟอร์มทั้งฟอร์มตอนบันทึก · แถวนั้นตอนสั่งงานรายแถว) กันกดซ้ำ/แก้ระหว่างส่ง · สำเร็จ = ล้าง draft + ข้อความสำเร็จ 1 ครั้ง · พลาด = **คง draft ไว้** + แสดง `e.message` ให้กดบันทึกใหม่ได้
+- **API ฝั่งหลังรับการแก้ทั้งหน้าในคำขอเดียว** (ไม่ใช่เส้นละคอมโพเนนต์) — เช่น สถานะหลายร้าน = ส่ง array ของการเปลี่ยน · ลำดับ = ส่ง id ทั้งชุด · แกลเลอรี = ส่ง path ทั้งชุด + ปก · rpc เดียว **transaction เดียว (all-or-nothing)** · audit/แจ้งเตือนยังแยกต่อรายการที่เปลี่ยนจริง · ส่งเฉพาะรายการที่เปลี่ยน (diff กับค่าจาก server) ถ้าเป็นรายการต่อแถว
+- **ข้อยกเว้น — ยิงทันทีได้** (การตัดสินใจทีละรายการที่มี confirm อยู่แล้ว ไม่ใช่การแก้ฟอร์ม): อนุมัติ/ไม่อนุมัติร้าน (`/merchants`) และโปร/โปรโมท (`/promotions`) · ยืนยัน Safety · จัดการมัดจำ (`/deposits`) · ซ่อน/ลบ/แสดงอีกครั้ง รีวิว-กระทู้ · ลบบัญชี/ลบทีมงาน · ปลดแบนบัญชี (`/users` — ส่วนของ flow สลิปเดิม) · สถานะความแน่นของร้าน (`/merchant/tonight` — สถานะสดหน้างาน) · การกระทำของลูกค้า (จอง/ยกเลิก/ไลก์/ติดตาม/ส่งรีวิว) — ยังต้อง disabled ระหว่างรอ · กรณีอื่นที่คิดว่าควรยิงทันที ให้ถามก่อน
+
 ## API (NestJS)
 - key ใน body / query / response เป็น **snake_case ทั้งหมด** (เช่น `qty`, `unit_price`, `service_charge_rate`) — โค้ดภายในที่ใช้ camelCase ให้แปลงใน service
 - **ทุกคำตอบเป็น `{ status: "ok" | "no", status_code, data, code, err_msg }`** (`ApiResponse` ใน contracts) — ห่อให้อัตโนมัติด้วย `common/api-response.ts` (controller คืน data ตามปกติ ห้ามห่อเอง) · HTTP status เป็นค่าจริง · err_msg = ข้อความไทยจาก `<DOMAIN>_ERRORS` · หน้าเว็บ**ไม่ต้อง**เช็ก `status`: `Rest` คืน `data` ให้ และ throw `ApiError` (`e.message` = err_msg · `e.code` = รหัส)
@@ -56,12 +71,18 @@
 - สี / ธีม: แก้ที่ `packages/ui/src/tokens.ts` และ `theme.css` ให้ตรงกัน (มี test ตรวจ)
 
 ## กฎธุรกิจที่ตกลงแล้ว
-- จอง**เฉพาะโต๊ะ** + เลือกโปรโมชันของร้านได้ 1 อย่าง (มี cutoff time เช่น โปรเบียร์ก่อน 2 ทุ่ม) — **ไม่มี**สั่งอาหาร/เครื่องดื่ม/แพ็กเกจล่วงหน้า เมนูราคาแสดงเพื่อประเมินงบเท่านั้น
-- **Party Set** = โต๊ะกลุ่ม + ราคาเซ็ตอ้างอิง (ไม่ขายเครื่องดื่มออนไลน์) · มัดจำต่อหัวมีเพดาน · ยกเลิก/ลดคนเข้มกว่าโต๊ะปกติ (คืนเต็ม ≥48 ชม. / ครึ่ง 24–48 ชม. / ริบ <24 ชม. · มา ≥50% นับเช็กอิน) — รายละเอียดและตัวเลขที่รอเคาะ: `docs/PARTY_SET.md`
-- **ทุกการจองต้องมัดจำ** เงินเข้า PromptPay ของ NightOut (ไม่เข้าร้าน) → แอดมินตรวจสลิป → ถือไว้ → ลูกค้าเช็กอิน/ไม่มาแล้วค่อยโอนให้ร้านหรือเก็บเป็นเครดิตร้าน
+- จอง**เฉพาะโต๊ะ** + เลือกโปรโมชันของร้านได้ 1 อย่าง (มี cutoff time เช่น มาก่อน 3 ทุ่มรีฟิลมิกเซอร์ 4 จ่าย 3) — **ไม่มี**สั่งอาหาร/เครื่องดื่ม/แพ็กเกจล่วงหน้า (พรีออเดอร์เซ็ตเปิดตี้ตัดทิ้งถาวร) เมนูราคาแสดงเพื่อประเมินงบเท่านั้น · เงินที่จ่ายผ่านแอปเรียก **"ค่าธรรมเนียมจองโต๊ะ (Table Fee)"** เท่านั้น
+- โปรโมชันของร้านต้อง**ไม่ใช่แอลกอฮอล์** (มิกเซอร์ อาหาร น้ำแข็ง ส่วนลดวันเกิด) ห้ามลด/แถมแอลกอฮอล์ (พ.ร.บ.ควบคุมเครื่องดื่มแอลกอฮอล์ ม.30) · ห้ามคำว่า "ขายเหล้า/เบียร์" — ตัวอย่าง "โปรเบียร์ก่อน 2 ทุ่ม" ในหน้า `/merchant/promotions` + seed ต้องเปลี่ยน (ยังไม่ทำในโค้ด)
+- **Party Set** = โต๊ะกลุ่ม + ราคาเซ็ตอ้างอิง (ไม่ขายเครื่องดื่มออนไลน์) · มัดจำต่อหัวมีเพดาน · ยกเลิกคืนเต็มเมื่อ ≥24 ชม. ก่อนเวลาจอง หลังจากนั้นริบ (ยังไม่ทำในโค้ด) — รายละเอียดและตัวเลขที่รอเคาะ: `docs/PARTY_SET.md`
+- **ทุกการจองต้องมัดจำ** ผ่าน **Beam Payment แบบ Escrow** ตั้งแต่ Phase 1 (ผู้จองจ่ายยอดรวมคนเดียว · ไม่มี Split-Pay · ไม่ใช้ Omise/2C2P) · **ไม่มีการโอน + แนบสลิป และไม่มีแอดมินตรวจสลิปแล้ว** (ไม่มีทางสำรอง) · E-Ticket ออกอัตโนมัติเมื่อจ่ายสำเร็จ · เงินพักไว้จนเช็กอิน/ไม่มาแล้วส่งต่อให้ร้าน — **ยังไม่ทำในโค้ด**: ตอนนี้ยังเป็น PromptPay ของ NightOut + อัปโหลดสลิป + แอดมินตรวจ (DRAFT) ต้องเปลี่ยนทั้ง flow
+- ยกเลิก/คืนมัดจำ: **โต๊ะทั่วไป** คืนเต็มเมื่อยกเลิก ≥6 ชม. ก่อนเวลาจอง · **กลุ่ม** ≥24 ชม. · หลังจากนั้นริบ · มัดจำประมาณ 200–300 บาท/คน (ตอนนี้ร้านตั้ง `refund_before_hours` เอง — ยังไม่ทำในโค้ด)
+- เช็กอินสำเร็จเมื่อ**สมาชิกคนแรก**ของกลุ่มสแกน QR · เวลาเช็กอินใช้ timestamp ของ server เท่านั้น · แจ้งเตือนลูกค้า 15 นาทีก่อนเวลาจอง + ปุ่ม "ขอต่อเวลา 15 นาที" ได้ 1 ครั้ง · สายเกิน 30 นาที ระบบปลดโต๊ะ (Forfeited) ร้านยึดมัดจำ 100% + แจ้งเตือนแอดมิน (ยังไม่ทำในโค้ด)
+- ร้านรับจองแล้วไม่มีโต๊ะให้ → คืนมัดจำลูกค้า + ติด Blacklist ร้าน (ปรับเงินร้านไม่ได้ · ยังไม่ทำในโค้ด)
+- ป้าย Safety ใช้คำว่า **"ข้อมูลอ้างอิงจากร้านค้า (Merchant Declared)"** + วันที่ตรวจล่าสุด + ข้อความปฏิเสธความรับผิด · ห้ามคำว่า "Safety Verified" / "ยืนยันโดย NightOut" (ยังไม่ทำในโค้ด: `ui/components/safetyList.tsx`, `merchant/safety`) · **Inspector** = แอดมินที่ลงพื้นที่ตรวจ มี checklist และระบบบันทึกชื่อผู้ตรวจ (ยังไม่ทำในโค้ด)
+- **รีวิว**: รีวิวได้เมื่อการจองร้านนั้นมัดจำผ่านแล้ว (`CONFIRMED` / `CHECKED_IN` / `COMPLETED` / `NO_SHOW` — `REVIEWABLE_BOOKING_STATUSES` ใน `@nightout/utils`) ไม่ต้องเช็กอิน · 1 การจอง = 1 รีวิว
 - หน้า Checkout ต้องกรอกเบอร์โทร + ติ๊กยอมรับเงื่อนไขริบมัดจำ (ข้อความจาก `depositTermsText()` ใน `@nightout/utils` · เปลี่ยนเนื้อหา = ขึ้น `DEPOSIT_TERMS_VERSION`) → DB เก็บหลักฐานใน `booking_deposit_consents` (แก้/ลบไม่ได้)
-- แอดมินปฏิเสธสลิปต้องเลือกเหตุผล (`DEPOSIT_REJECT_REASONS`) · "สลิปปลอม" ติดธงลูกค้า ครบ 2 ครั้ง (นับบัญชี + เบอร์) แบนบัญชีและทุกเบอร์ที่เคยใช้ — ปลดได้ที่หน้า `/users` ของ Backoffice
-- ทีมร้านทุกบทบาท (รวม PR/STAFF) ย้ายโต๊ะ และยืนยันคืนมัดจำได้ (เคสหน้างาน) — เงินคืนยังเป็น NightOut โอนจากแท็บ "รอคืนลูกค้า"
+- (ของเดิมในโค้ด จะถูกเลิกใช้เมื่อเปลี่ยนเป็น Beam) แอดมินปฏิเสธสลิปต้องเลือกเหตุผล (`DEPOSIT_REJECT_REASONS`) · "สลิปปลอม" ติดธงลูกค้า ครบ 2 ครั้ง (นับบัญชี + เบอร์) แบนบัญชีและทุกเบอร์ที่เคยใช้ — ปลดได้ที่หน้า `/users` ของ Backoffice · ห้ามต่อยอด flow สลิปเพิ่ม
+- ทีมร้านทุกบทบาท (รวม PR/STAFF) ย้ายโต๊ะ และยืนยันคืนมัดจำได้ (เคสหน้างาน) — เงินคืนยังเป็น NightOut โอนจากแท็บ "รอคืนลูกค้า" · **Staff/PR ห้ามเห็นยอดเงินรวมของร้าน** (เห็นเฉพาะคิว) · มี QR Code พาพนักงานเข้าหน้า Staff ของเว็บโดยตรง (ยังไม่ทำในโค้ด)
 - PR ของร้าน (ชาย/หญิง/LGBTQ+ กี่คน) ร้านกรอกเองใน `/merchant/settings` แสดงในหน้าร้าน/การ์ด และกรองได้ในหน้าค้นหา
 - แผนที่ใช้ Leaflet + vector tiles OpenFreeMap (ฟรี ไม่ต้องมี key) สีตามพาเลต Google Maps ปกติ/กลางคืน (`ui/utils/mapStyle.ts`) — ไม่ใช้ Google Maps API / CARTO · สำรองเป็น OSM raster · หน้า `/map` เต็มจอ หมุดและการ์ดใช้รูปร้าน `barImage()` (coverUrl หรือรูปแทน `/images/bars/placeholder.webp`)
 - หน้าจัดอันดับเป็นรายสัปดาห์/รายเดือนตามจำนวนโหวต (1 การจองที่เช็กอิน = 1 โหวต) ใช้ GSAP + ScrollTrigger (`modules/ranking/utils/gsap.ts`) — GSAP ใช้เฉพาะหน้านั้น ที่อื่นใช้ Motion ตามเดิม
@@ -70,13 +91,17 @@
 - ธีมมืดเป็นค่าเริ่มต้น · หน้า Auth ไม่มีปุ่มเปลี่ยนธีม/ปุ่มเข้าสู่ระบบบน navbar (`<Navbar minimal />`)
 - ไม่มีโหมดเดโมแล้ว (เอาปุ่มเข้าเร็วเดโม/ปุ่มรีเซ็ตออก)
 - **ไม่มี Editor's Pick** (ตัดออก 2026-10-08) · ป้ายร้านมีแค่ "แนะนำ · โฆษณา" (ร้านจ่ายเงินโปรโมท — แอดมินเปิดเองไม่ได้ จัดการที่ `/promotions`) และ "ร้านใหม่" · สถานะร้าน `APPROVED` เรียกว่า "แสดง" (Backoffice `/bars` สวิตช์แสดง ↔ ระงับ)
+- **ชุมชน (Community)** — Phase 1 · นอก MVP อนุมัติ 2026-10-11 (ทำในโค้ดแล้วบางส่วน — ดูหัวข้อถัดไป · ส่วนทีมร้าน/"ข่าวจากร้าน"/"ร้านมาแรง" ยังไม่ทำ): ฟีดกระทู้ 6 หมวด (ดนตรีสด/รีวิว/หาเพื่อนเที่ยว/เครื่องดื่ม/ถาม-ตอบ/ประกาศ) · แท็กร้าน 1 ร้าน · สื่อ ≤6 ไฟล์ (วิดีโอ ≤30 วิ) · ตอบซ้อน 1 ชั้น · ปักหมุดส่วนตัว ≤3 · ร่างเก็บ 7 วัน · guest อ่านได้ · บัญชีแบนอ่านอย่างเดียว · ทีมร้านมีป้าย "ทีมร้าน · <ชื่อร้าน>" ตั้งกระทู้ได้เฉพาะหมวด "ข่าวจากร้าน" ≤3/ร้าน/สัปดาห์ และไลก์/กระทู้ร้านตัวเองไม่นับ "ร้านมาแรง" · หมวด "ประกาศ" ตั้งได้เฉพาะทีม NightOut · Backoffice `/community` ซ่อน/ลบ/แสดงอีกครั้ง/ปิดรายงาน + Audit Log + แจ้งเจ้าของ (Inspector จัดการไม่ได้) — รายละเอียด `docs/REQUIREMENTS.md`
+- **ชุมชน — ที่ทำในโค้ดแล้ว** (`/community` · โดเมน `community` · migration `…20261010000100`): **ปักหมุดเป็นของผู้ใช้แต่ละคน** (กระทู้ขึ้นบนสุดในฟีดของคนที่ปัก · คนอื่นไม่เห็น · สูงสุด 3 = `COMMUNITY_PIN_MAX`) — แอดมินไม่มีปักหมุดรวม · **ฉบับร่างเก็บที่ backend** (`community_drafts` · NEW 1 ร่าง/บัญชี · REPLY/EDIT 1 ร่าง/กระทู้ · บันทึกเมื่อหยุดพิมพ์ 1 วิ ด้วย `hooks/useAutosaveDraft.ts` · โพสต์สำเร็จ backend ลบร่าง · เกิน 7 วันไม่คืน) · หมวด `staff_only` (ประกาศ) ตั้งได้เฉพาะทีม NightOut · Backoffice `/community` ซ่อน/ลบ/แสดงอีกครั้ง (audit + แจ้งเจ้าของ) · **ไฟล์แนบ** กระทู้/ความเห็น ≤ 6 ไฟล์ (วิดีโอ ≤ 60 วิ / 60MB — **ไม่ตรง requirement ที่กำหนด ≤30 วิ** รอเคาะ) bucket `community-media` (private · `<user_id>/<ไฟล์>`) อัปโหลดทันทีที่เลือก ร่างเก็บ path · อ่านไฟล์ได้เมื่อกระทู้/ความเห็นแสดงอยู่ (NestJS เติม signed URL) · ไฟล์ที่ไม่มีกระทู้/ความเห็น/ร่างไหนอ้าง backend ลบจาก Storage ให้ (`removed_paths` · `…20261011000100`)
+- **แผนที่ / ตำแหน่งร้าน**: หน้าค้นหาสลับรายการ/แผนที่ (มีแล้ว) · ร้าน (เจ้าของ/ผู้จัดการ) ปักหมุดตำแหน่ง + ที่อยู่ จุดจอดรถ รถไฟฟ้าใกล้สุด · หมุดใหม่/ที่แก้ต้องรอแอดมินตรวจก่อนแสดง (ระหว่างรอแสดงหมุดเดิม) · แอดมินอนุมัติ/ตีกลับพร้อมเหตุผล หรือแก้หมุดแทนร้าน (Audit Log + แจ้งทีมร้าน) — ปักหมุด/ตรวจหมุดยังไม่ทำในโค้ด
+- **ตัดทิ้งถาวร** (ห้ามทำโดยไม่ถาม): โอน + แนบสลิป / ตรวจสลิป · พรีออเดอร์เซ็ตเปิดตี้ · Split-Pay · AI Chat · สะสมแต้มข้ามร้าน · Centralized Digital Billing · Digital Waitlist & Walk-in
 - หน้าจัดการทีมงาน (`/team` Backoffice): **เพิ่ม / ลบ / สลับลำดับ เฉพาะ Super Admin** · แก้/ซ่อน: Super Admin ทุกแถว · Admin เฉพาะแถวที่ `contacts.email` ตรงกับอีเมลบัญชีตัวเอง (เปลี่ยนอีเมลนั้นไม่ได้) — DB ตรวจใน `admin_*_team_member*` (`…20261008000200`)
 
 ## ชื่อโปรเจกต์
 - ชื่อแบรนด์ **NightOut** (เดิม NightList) · package `@nightout/*` · QR เช็กอิน `NIGHTOUT:<booking id>` · key ใน localStorage/IndexedDB ขึ้นต้น `nightout-` · repo GitHub ยังชื่อ `genminigpt/NightList`
 
 ## โครงโค้ดตามโดเมน (ADR 0006 — `docs/adr/0006-domain-sliced-api-and-shared-contracts.md`)
-- **1 เรื่องธุรกิจ = ชื่อโดเมนเดียวกันใน 4 ที่** — ไล่เรื่องไหน grep ชื่อโดเมนนั้น: `catalog` `booking` `deposit` `review` `bar` `bar-team` `account` `promotion` `billing` `site-team` `site-content` `storage` `pricing` `backoffice`
+- **1 เรื่องธุรกิจ = ชื่อโดเมนเดียวกันใน 4 ที่** — ไล่เรื่องไหน grep ชื่อโดเมนนั้น: `catalog` `booking` `deposit` `review` `community` `bar` `bar-team` `account` `promotion` `billing` `site-team` `site-content` `storage` `pricing` `backoffice`
   1. `packages/contracts/src/<domain>.ts` — zod ของ body/query + type ของ response + `<DOMAIN>_ERRORS` (ไม่มี Nest/React) · `ERROR_MESSAGES` รวมอยู่ใน `errors.ts`
   2. `apps/backend/src/domains/<domain>/` — `<domain>.module.ts` · `<domain>.{public,me,merchant,admin}.controller.ts` (แยกตามคนเรียก · guard ต่างกัน) · `<domain>.dto.ts` = `class XDto extends createZodDto(C.XBody)` · `<domain>.service.ts` เฉพาะที่มี logic มากกว่าเรียก rpc 1 ครั้ง
   3. หน้าเว็บ (ADR 0007): **`modules/<หน้า>/api.ts` ของแต่ละโมดูล** — ทุกเส้นที่โมดูลใช้ (เรียก `Rest` · body `satisfies C.XBody` · response `C.XResult` · อ่าน = `useQuery` · เขียนแล้ว **ไม่ต้อง** `refresh()` — Rest โหลด store ใหม่ให้เอง: `afterWrite` → `refreshAfterWrite` ใน `services/sync.ts`) · Backoffice: `api.ts` ของโมดูลประกาศ view (`useAdminView('admin_x', opts)`) + action builder (`xAction(id, body): AdminActionInput`) แล้วหน้าเรียก `useAdminAction().mutate({ ...xAction(…), success })` · ของกลางที่เหลือใน `services/`: `sync.ts` + `mappers/` (store ของ catalog / `/me/overview`) · `data.ts` (อ่าน store) · `api/storage.ts` · `auth.tsx` · admin: `adminData.ts` (hook กลาง)
@@ -93,7 +118,7 @@
    - ฟังก์ชันเดียวถูกประกาศซ้ำในหลาย migration ได้ — **ไฟล์หลังสุดคือของจริง**: `grep -l "function public.<ชื่อ>(" apps/backend/supabase/migrations/* | tail -1` แล้วอัปเดตตาราง `docs/DATABASE.md` ข้อ 5.0
    - ค่าใหม่ของ enum ต้องอยู่คนละ migration กับที่ใช้ค่านั้น
 2. **contracts** — `packages/contracts/src/<domain>.ts`: `export const XBody = z.object({…})` + `export type XBody = z.infer<…>` (ใช้ `z.input` ถ้ามี default/transform) + `export interface XResult` · รหัส error ใหม่ → `<DOMAIN>_ERRORS` (ข้อความไทย) · เทสต์ใน `contracts.test.ts`
-3. **API** — `domains/<domain>/<domain>.dto.ts` เพิ่ม `class XDto extends createZodDto(C.XBody)` · endpoint ใน controller ที่ตรงกับคนเรียก (`public` / `me` / `merchant` / `admin`) · `@ApiDoc` ทุกเส้น (บอกชื่อ rpc ที่เรียกใน description) · อ่าน = `db.selectAs/rpcAs(bearerOf(req), …)` · เขียน = `db.rpc('app_*', { p_actor: me.id, … })` · param ใช้ `Id()` / `BarId()` / `BookingId()` จาก `common/params` · view ใหม่ของ Backoffice → `ADMIN_VIEWS` ใน `contracts/backoffice.ts` + `AdminViewRows` ใน `apps/admin/src/services/api/backoffice.ts`
+3. **API** — `domains/<domain>/<domain>.dto.ts` เพิ่ม `class XDto extends createZodDto(C.XBody)` · endpoint ใน controller ที่ตรงกับคนเรียก (`public` / `me` / `merchant` / `admin`) · `@ApiDoc` ทุกเส้น (บอกชื่อ rpc ที่เรียกใน description) · อ่าน = `db.selectAs/rpcAs(bearerOf(req), …)` · เขียน = `db.rpc('app_*', { p_actor: me.id, … })` · param ใช้ `Id()` / `BarId()` / `BookingId()` จาก `common/params` · เส้นเขียนของหน้าแบบฟอร์มรับการแก้ทั้งหน้าในคำขอเดียว (ดูหัวข้อ "ฟอร์ม · การบันทึก") · view ใหม่ของ Backoffice → `ADMIN_VIEWS` ใน `contracts/backoffice.ts` + `AdminViewRows` ใน `apps/admin/src/services/api/backoffice.ts`
 4. **type ของแถว** — `packages/types/src/database.ts` (`Db.*`) + รัน `db:types` หลัง `db:push` · response ที่หน้าเว็บใช้ต้องตรงกับ API (อย่าซ่อน/กรองค่าเงียบๆ ใน mapper)
 5. **หน้าเว็บ** — เพิ่มใน `modules/<หน้า>/api.ts` ของโมดูลที่ใช้ (ไฟล์เดียว): เขียน = ฟังก์ชันเรียก `Rest.post/put/patch/delete` · อ่านสด = hook `useQuery` (key ขึ้นต้นด้วยชื่อโดเมน เช่น `['booking', …]`) · 2 โมดูลใช้เส้นเดียวกัน = ประกาศในแต่ละ `api.ts` (ไม่ import ข้ามโมดูล) · ข้อมูลที่อยู่ใน catalog/overview: mapper ใน `services/mappers/<domain>.ts` · Backoffice: `api.ts` ของโมดูล = `useXxx = () => useAdminView('admin_x', opts)` + `xAction(…): AdminActionInput` (`method` POST/PATCH/PUT/DELETE + path ต่อจาก `/admin/`) · หน้าเรียก `useAdminAction().mutate({ ...xAction(…), success })` · query อื่นของ admin ต้องขึ้นต้น `['admin', …]`
 6. **logic ที่ทั้งหน้าเว็บและ backend ใช้** (ข้อความเงื่อนไข, เบอร์โทร, ราคา, state machine) → `packages/utils` + เทสต์ (utils ห้าม import contracts — contracts พึ่ง utils)
@@ -104,7 +129,8 @@
 - `modules/home/components/skyBackdrop.tsx` + `skyBackdrop.css` · ภาพ `public/images/home/hero-night{,-2560,-1280}.jpg` (16:9 · 3840/2560/1280) · **ไม่ใช้วิดีโอ**
 - ภาพกับ SVG (ดาว/ไฟตึก/แสงผิวน้ำ) อยู่ในกล่อง 16:9 เดียวกัน (ขนาดแบบ cover คำนวณด้วย `cqw/cqh` · วางด้วย `--sky-x`) พิกัดใน SVG เป็นระบบ 736×414 → เปลี่ยนภาพแล้วต้องวางตำแหน่งใหม่ · เพิ่ม/ลดขนาดไฟล์ต้องแก้ `SKY_SET` / `SKY_SIZES` ใน `skyBackdrop.tsx` (ไม่ preload ใน `index.html` เพราะไฟล์นั้นใช้ทุกหน้า)
 - motion เบามาก ใช้ `transform`/`opacity` เท่านั้น หยุดเมื่อพ้นจอ/สลับแท็บ และต้องเคารพ `prefers-reduced-motion` + โหมดประหยัดเน็ต (ภาพนิ่ง)
-- ใต้ Hero (ธีมมืด): `modules/home/components/auroraBackdrop.tsx` aurora มืดแบบเรียบ — ม่านแสงม่วง/ทองจาง ๆ จาก token ธีม (`--purple` `--gold` `--link`) ไม่มีภาพ ไม่มี motion · ห้ามใช้ภาพที่ติดลิขสิทธิ์คนอื่น
+- ใต้ Hero (ธีมมืด): `ui/components/embersBackdrop.tsx` "Golden Embers" (variant 10 ของดีไซน์ Home/Merchant Aurora) — canvas fixed เต็มจอ แสงม่วง/ทองขอบบน ม่วงอมชมพูขอบล่าง ประกายทองลอยขึ้นและหลบเมาส์ · วาด 1/2 ความละเอียด หยุดเมื่อสลับแท็บ · reduced-motion / ประหยัดเน็ต (`ui/utils/prefersLightweight.ts`) = ภาพนิ่ง · ธีมสว่างไม่แสดง · Hero ต้องทึบ (แสงห้ามล้นเข้า Hero) — `<EmbersBackdrop />` อยู่ชั้นล่างสุดของ MainLayout (Layout หน้าแรก `isolate`) Hero ทึบบังไว้ · แถบไล่ `#07070d → ใส` 280px ที่ขอบล่าง Hero · ฟุตเตอร์ธีมมืดภาพเมืองไล่จากใส (mask) เห็นพื้นหลังต่อลงมาหลังฟุตเตอร์ · ห้ามใช้ภาพที่ติดลิขสิทธิ์คนอื่น
+- **หน้าร้าน `/merchant/*`** ใช้ `<EmbersBackdrop />` เดียวกัน (`layouts/merchant.tsx` + `layouts/merchantOnboarding.tsx` ของ `/merchant/join` `/merchant/status`) · container ใส่ `relative isolate embers-glass` → การ์ด/เมนูเป็นกระจกโปร่งในธีมมืด (`embersBackdrop.css`) · ห้ามมี `bg-background` ทึบครอบเนื้อหาในหน้าเหล่านี้ (บังพื้นหลัง)
 
 ## การเชื่อมต่อ API (ADR 0002 — `docs/adr/0002-migrate-direct-db-calls-to-backend-api.md`)
 - `apps/frontend` และ `apps/admin` **ห้าม query DB / Storage ตรง** — `supabase` ใช้ได้เฉพาะ `supabase.auth.*` (ESLint บล็อก `supabase.from/rpc/storage`) · Backoffice: ADR 0003 (`/admin/views/:view`, `/admin/dashboard`, `/admin/master/:table`)
