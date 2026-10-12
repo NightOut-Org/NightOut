@@ -3,7 +3,8 @@ import { estimatePrice } from '@nightout/utils';
 import { App, Checkbox, Empty, Form, Input, InputNumber, Modal, Switch, TimePicker } from 'antd';
 import dayjs from 'dayjs';
 import { useState } from 'react';
-import { barBookings, type BarPromotion } from '@/services/data';
+import { barBookings, type Bar, type BarPromotion } from '@/services/data';
+import { useFormDirty } from '@/hooks/useFormDirty';
 import { useMerchantBar } from '@/hooks/useMerchantBar';
 import { useUnsavedGuard } from '@/hooks/useUnsavedGuard';
 import { Tile } from '@/ui/components/merchantUi';
@@ -30,6 +31,13 @@ function daysLabel(days?: number[]) {
   return run && s.length > 1 ? `${DAY_SHORT[s[0]!]} – ${DAY_SHORT[s.at(-1)!]}` : s.map((d) => DAY_SHORT[d]).join(', ');
 }
 
+/** ค่าธรรมเนียมในฟอร์ม → `fees` ของ PUT /merchant/bars/:barId/promotions (ช่องว่าง = 0) */
+const toFeesBody = (f: Bar['fees']) => ({
+  service_charge: f.serviceChargeRate ?? 0,
+  vat: f.vatRate ?? 0,
+  other: f.otherFees ?? 0,
+});
+
 /**
  * /merchant/promotions — โปรที่ลูกค้าเลือกได้ตอนจองโต๊ะ (การ์ดละโปร) + ค่าธรรมเนียมที่ใช้ประเมินราคา + ข้อกำหนด
  * เช่น "โปรเบียร์ก่อน 2 ทุ่ม" = ต้องเช็กอินก่อน 20:00 · เลือกวันได้ · เปิด/ปิดได้
@@ -43,7 +51,7 @@ export function MerchantPromotionsPage() {
   const [feeForm] = Form.useForm<typeof bar.fees>();
   const fees = (Form.useWatch([], feeForm) as typeof bar.fees | undefined) ?? bar.fees;
   const promos = usePromotionsDraft(bar.promotions);
-  const [feesDirty, setFeesDirty] = useState(false);
+  const feesDirty = useFormDirty(feeForm, bar.fees, toFeesBody);
   const [saving, setSaving] = useState(false);
   const [since] = useState(() => Date.now() - 30 * DAY_MS);
   const count = promos.count + (feesDirty ? 1 : 0);
@@ -52,7 +60,6 @@ export function MerchantPromotionsPage() {
   const reset = () => {
     promos.reset();
     feeForm.resetFields();
-    setFeesDirty(false);
   };
 
   const save = async () => {
@@ -68,12 +75,9 @@ export function MerchantPromotionsPage() {
     try {
       const r = await savePromotionsPage(bar.id, {
         ...(promos.count ? { items: toPromotionItems(promos.list) } : {}),
-        ...(feeValues
-          ? { fees: { service_charge: feeValues.serviceChargeRate ?? 0, vat: feeValues.vatRate ?? 0, other: feeValues.otherFees ?? 0 } }
-          : {}),
+        ...(feeValues ? { fees: toFeesBody(feeValues) } : {}),
       });
       promos.reset();
-      setFeesDirty(false);
       void message.success(r.pending ? 'บันทึกแล้ว — โปรที่เพิ่ม/แก้ข้อความ รอทีม NightOut ตรวจถ้อยคำก่อนแสดง' : 'บันทึกแล้ว');
     } catch (e) {
       void message.error((e as Error).message);
@@ -241,7 +245,7 @@ export function MerchantPromotionsPage() {
             <b className="text-[15px] font-semibold">ค่าธรรมเนียมที่ใช้ประเมินราคา</b>
             {feesDirty && <span className="text-xs text-gold-text">ยังไม่บันทึก</span>}
           </span>
-          <Form form={feeForm} initialValues={bar.fees} disabled={saving} onValuesChange={() => setFeesDirty(true)}>
+          <Form form={feeForm} initialValues={bar.fees} disabled={saving}>
             <div className="grid gap-3 sm:grid-cols-3">
               {(
                 [

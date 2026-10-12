@@ -135,7 +135,7 @@ export function HomeContentPage() {
       <CategoryDrawer
         category={editing}
         current={editing ? draft.categoryOf(editing) : null}
-        onApply={(values, file) => editing && draft.setCategory(editing.slot, values, file)}
+        onApply={(values, file) => editing && draft.setCategory(editing, values, file)}
         onClose={() => setEditing(null)}
       />
     </PageContainer>

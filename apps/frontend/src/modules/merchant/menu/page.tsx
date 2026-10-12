@@ -1,5 +1,16 @@
 import { MagnifyingGlass, PencilSimple, Plus, Trash } from '@phosphor-icons/react';
-import { App, Empty, Form, Input, InputNumber, Modal, Popconfirm, Select, Switch, Upload } from 'antd';
+import {
+  App,
+  Empty,
+  Form,
+  Input,
+  InputNumber,
+  Modal,
+  Popconfirm,
+  Select,
+  Switch,
+  Upload,
+} from 'antd';
 import { useEffect, useMemo, useState } from 'react';
 import { type MenuItem } from '@/services/data';
 import { useMerchantBar } from '@/hooks/useMerchantBar';
@@ -41,7 +52,9 @@ export function MerchantMenuPage() {
     try {
       let menu;
       try {
-        menu = await draft.upload((done, n) => setProgress(done < n ? `กำลังอัปโหลด ${done + 1}/${n}` : 'กำลังบันทึก…'));
+        menu = await draft.upload((done, n) =>
+          setProgress(done < n ? `กำลังอัปโหลด ${done + 1}/${n}` : 'กำลังบันทึก…'),
+        );
       } catch (e) {
         // รูปที่อัปโหลดสำเร็จแล้วอยู่ใน draft — กดบันทึกใหม่ไม่อัปโหลดซ้ำ
         void message.error(`อัปโหลดรูปไม่สำเร็จ — ${(e as Error).message}`);
@@ -74,7 +87,12 @@ export function MerchantMenuPage() {
     form.setFieldsValue(
       item === 'new'
         ? { category: cat ?? 'อาหาร', name: '', price: undefined, available: true }
-        : { category: item.category, name: item.name, price: item.price, available: item.available },
+        : {
+            category: item.category,
+            name: item.name,
+            price: item.price,
+            available: item.available,
+          },
     );
     setEditing(item);
   };
@@ -94,7 +112,9 @@ export function MerchantMenuPage() {
 
   const keyword = q.trim().toLowerCase();
   const menu = draft.items;
-  const rows = menu.filter((m) => (!cat || m.category === cat) && (!keyword || m.name.toLowerCase().includes(keyword)));
+  const rows = menu.filter(
+    (m) => (!cat || m.category === cat) && (!keyword || m.name.toLowerCase().includes(keyword)),
+  );
   const count = (c: MenuItem['category']) => menu.filter((m) => m.category === c).length;
   const { serviceChargeRate, vatRate } = bar.fees;
   const pct = (r: number) => `${r}%`;
@@ -102,7 +122,13 @@ export function MerchantMenuPage() {
   const shownPhoto = photoUrl ?? (current && !removePhoto ? current.imageUrl : undefined);
 
   const photoCell = (m: MenuItem, size: number) => (
-    <MenuPhoto name={m.name} url={m.imageUrl} size={size} disabled={saving} onPick={(f) => draft.setPhoto(m.id, f)} />
+    <MenuPhoto
+      name={m.name}
+      url={m.imageUrl}
+      size={size}
+      disabled={saving}
+      onPick={(f) => draft.setPhoto(m.id, f)}
+    />
   );
   const stateTag = (m: MenuItem) => {
     const st = draft.stateOf(m);
@@ -113,7 +139,10 @@ export function MerchantMenuPage() {
     ) : null;
   };
   const empty = (
-    <Empty className="!my-10" description={menu.length ? 'ไม่มีรายการในหมวดนี้' : 'ยังไม่มีเมนู — เพิ่มรายการแรกได้เลย'} />
+    <Empty
+      className="!my-10"
+      description={menu.length ? 'ไม่มีรายการในหมวดนี้' : 'ยังไม่มีเมนู — เพิ่มรายการแรกได้เลย'}
+    />
   );
 
   return (
@@ -123,7 +152,8 @@ export function MerchantMenuPage() {
         <div className="min-w-0">
           <h1 className="text-[17px] font-bold lg:font-display lg:text-[30px]">เมนู</h1>
           <p className="mt-1 hidden text-sm text-muted lg:block">
-            {menu.length} รายการ · ใช้คำนวณยอดประเมินให้ลูกค้า (+ SC {pct(serviceChargeRate)} + VAT {pct(vatRate)})
+            {menu.length} รายการ · ใช้คำนวณยอดประเมินให้ลูกค้า (+ SC {pct(serviceChargeRate)} + VAT{' '}
+            {pct(vatRate)})
           </p>
         </div>
         <div className="flex items-center gap-1 lg:gap-3">
@@ -149,7 +179,10 @@ export function MerchantMenuPage() {
           >
             <Plus /> เพิ่มรายการ
           </button>
-          {saveButton('hidden h-10 items-center rounded-xl bg-gold px-[18px] text-sm font-semibold text-on-gold lg:inline-flex', 'บันทึกการเปลี่ยนแปลง')}
+          {saveButton(
+            'hidden h-10 items-center rounded-xl bg-gold px-[18px] text-sm font-semibold text-on-gold lg:inline-flex',
+            'บันทึกการเปลี่ยนแปลง',
+          )}
           <button
             type="button"
             aria-label="ค้นหาเมนู"
@@ -165,7 +198,10 @@ export function MerchantMenuPage() {
 
       {/* ---------- Desktop ---------- */}
       <div className="hidden gap-4 lg:grid lg:grid-cols-[260px_minmax(0,1fr)]">
-        <nav aria-label="หมวดเมนู" className="flex flex-col gap-0.5 self-start rounded-[20px] border border-border bg-card p-2.5">
+        <nav
+          aria-label="หมวดเมนู"
+          className="flex flex-col gap-0.5 self-start rounded-[20px] border border-border bg-card p-2.5"
+        >
           {[null, ...CATS].map((c) => {
             const on = cat === c;
             return (
@@ -224,7 +260,6 @@ export function MerchantMenuPage() {
                     <td className="text-right font-semibold text-gold-text">{baht(m.price)}</td>
                     <td className="text-center">
                       <Switch
-                        size="small"
                         checked={m.available}
                         disabled={saving}
                         aria-label={`แสดง ${m.name}`}
@@ -299,9 +334,18 @@ export function MerchantMenuPage() {
               <li key={m.id}>
                 <div className="flex items-center gap-3 rounded-2xl border border-border bg-card p-2.5">
                   {photoCell(m, 56)}
-                  <button type="button" disabled={saving} onClick={() => openEditor(m)} className="flex min-w-0 flex-1 items-center gap-3 text-left">
+                  <button
+                    type="button"
+                    disabled={saving}
+                    onClick={() => openEditor(m)}
+                    className="flex min-w-0 flex-1 items-center gap-3 text-left"
+                  >
                     <span className="flex min-w-0 flex-1 flex-col text-sm">
-                      <b className={`truncate font-medium ${m.available ? '' : 'text-muted line-through'}`}>{m.name}</b>
+                      <b
+                        className={`truncate font-medium ${m.available ? '' : 'text-muted line-through'}`}
+                      >
+                        {m.name}
+                      </b>
                       <span className="text-xs text-muted">
                         {m.available ? m.category : `${m.category} · ซ่อนอยู่`}
                         {stateTag(m)}
@@ -360,20 +404,34 @@ export function MerchantMenuPage() {
           <Form.Item name="category" label="หมวด">
             <Select options={CATS.map((c) => ({ label: c, value: c }))} />
           </Form.Item>
-          <Form.Item name="name" label="ชื่อรายการ" rules={[{ required: true, message: 'กรอกชื่อรายการ' }]}>
+          <Form.Item
+            name="name"
+            label="ชื่อรายการ"
+            rules={[{ required: true, message: 'กรอกชื่อรายการ' }]}
+          >
             <Input />
           </Form.Item>
           <div className="grid grid-cols-[1fr_auto] items-end gap-4">
-            <Form.Item name="price" label="ราคา (บาท)" rules={[{ required: true, message: 'กรอกราคา' }]}>
+            <Form.Item
+              name="price"
+              label="ราคา (บาท)"
+              rules={[{ required: true, message: 'กรอกราคา' }]}
+            >
               <InputNumber className="!w-full" min={0} inputMode="decimal" />
             </Form.Item>
             <Form.Item name="available" label="แสดงให้ลูกค้าเห็น" valuePropName="checked">
               <Switch />
             </Form.Item>
           </div>
-          <Form.Item label="รูป (ไม่บังคับ)" extra="JPG, PNG หรือ WebP ไม่เกิน 15MB · ลูกค้าเห็นในแท็บเมนูของหน้าร้าน" className="!mb-0">
+          <Form.Item
+            label="รูป (ไม่บังคับ)"
+            extra="JPG, PNG หรือ WebP ไม่เกิน 15MB · ลูกค้าเห็นในแท็บเมนูของหน้าร้าน"
+            className="!mb-0"
+          >
             <div className="flex items-center gap-3">
-              {shownPhoto && <img src={shownPhoto} alt="" className="size-16 rounded-xl object-cover" />}
+              {shownPhoto && (
+                <img src={shownPhoto} alt="" className="size-16 rounded-xl object-cover" />
+              )}
               <Upload
                 accept={PHOTO_ACCEPT}
                 showUploadList={false}
@@ -384,7 +442,10 @@ export function MerchantMenuPage() {
                   return Upload.LIST_IGNORE;
                 }}
               >
-                <button type="button" className="merchant-pill h-9 rounded-xl border border-border px-3.5 text-sm">
+                <button
+                  type="button"
+                  className="merchant-pill h-9 rounded-xl border border-border px-3.5 text-sm"
+                >
                   {shownPhoto ? 'เปลี่ยนรูป' : 'เลือกรูป'}
                 </button>
               </Upload>

@@ -4,6 +4,7 @@ import { App, Form, Input, Select, Switch, TimePicker } from 'antd';
 import dayjs from 'dayjs';
 import { useState } from 'react';
 import { MASTER, type Bar } from '@/services/data';
+import { useFormDirty } from '@/hooks/useFormDirty';
 import { useMerchantBar } from '@/hooks/useMerchantBar';
 import { useUnsavedGuard } from '@/hooks/useUnsavedGuard';
 import { Tile } from '@/ui/components/merchantUi';
@@ -68,6 +69,22 @@ const toInfo = (v: StoreForm, links: Bar['links']): C.BarInfoBody => ({
   })),
 });
 
+/** ค่าจาก server → ค่าตั้งต้นของฟอร์ม */
+const toForm = (bar: Bar): StoreForm => ({
+  name: bar.name,
+  description: bar.description,
+  address: bar.address,
+  district: bar.districtId,
+  styles: MASTER.styles.filter((st) => bar.styles.includes(st.label)).map((st) => st.key),
+  instagram: bar.links.find((l) => l.type === 'INSTAGRAM')?.url,
+  tiktok: bar.links.find((l) => l.type === 'TIKTOK')?.url,
+  // ครบ 7 วันเสมอ (ร้านใหม่ยังไม่มีเวลาเปิด-ปิด → ค่าเริ่มต้น 18:00–02:00)
+  hours: Array.from(
+    { length: 7 },
+    (_, day) => bar.hours.find((h) => h.day === day) ?? { day, open: '18:00', close: '02:00', closed: false },
+  ).map((h) => ({ closed: !!h.closed, range: [dayjs(h.open, 'HH:mm'), dayjs(h.close, 'HH:mm')] })),
+});
+
 /**
  * /merchant/store — รูปร้าน (ซ้าย) · ข้อมูลร้าน เวลาเปิด-ปิด สไตล์ ลิงก์ (ขวา)
  * แก้ทั้งหน้าในเครื่องก่อน แล้วกดบันทึกครั้งเดียว: อัปโหลดรูปใหม่ → PUT /merchant/bars/:barId/store (ส่งเฉพาะส่วนที่แก้)
@@ -77,7 +94,8 @@ export function MerchantStorePage() {
   const { message } = App.useApp();
   const [form] = Form.useForm<StoreForm>();
   const gallery = useGalleryDraft(bar);
-  const [formDirty, setFormDirty] = useState(false);
+  const initial = toForm(bar);
+  const formDirty = useFormDirty(form, initial, (v) => toInfo(v, bar.links));
   const [progress, setProgress] = useState<string | null>(null);
   const saving = progress !== null;
   const count = (formDirty ? 1 : 0) + (gallery.changed ? 1 : 0);
@@ -86,7 +104,6 @@ export function MerchantStorePage() {
   const reset = () => {
     form.resetFields();
     gallery.reset();
-    setFormDirty(false);
   };
 
   const save = async () => {
@@ -112,7 +129,6 @@ export function MerchantStorePage() {
       }
       await saveStore(bar.id, { ...(values ? { info: toInfo(values, bar.links) } : {}), ...(media ? { media } : {}) });
       gallery.reset();
-      setFormDirty(false);
       void message.success('บันทึกข้อมูลร้านแล้ว');
     } catch (e) {
       void message.error((e as Error).message);
@@ -170,20 +186,8 @@ export function MerchantStorePage() {
             layout="vertical"
             requiredMark={false}
             className="merchant-store-form"
-            initialValues={{
-              ...bar,
-              district: bar.districtId,
-              styles: MASTER.styles.filter((st) => bar.styles.includes(st.label)).map((st) => st.key),
-              instagram: bar.links.find((l) => l.type === 'INSTAGRAM')?.url,
-              tiktok: bar.links.find((l) => l.type === 'TIKTOK')?.url,
-              // ครบ 7 วันเสมอ (ร้านใหม่ยังไม่มีเวลาเปิด-ปิด → ค่าเริ่มต้น 18:00–02:00)
-              hours: Array.from(
-                { length: 7 },
-                (_, day) => bar.hours.find((h) => h.day === day) ?? { day, open: '18:00', close: '02:00', closed: false },
-              ).map((h) => ({ closed: !!h.closed, range: [dayjs(h.open, 'HH:mm'), dayjs(h.close, 'HH:mm')] })),
-            }}
+            initialValues={initial}
             disabled={saving}
-            onValuesChange={() => setFormDirty(true)}
           >
             <Form.Item name="name" label="ชื่อร้าน" rules={[{ required: true, message: 'กรอกชื่อร้าน' }]}>
               <Input />

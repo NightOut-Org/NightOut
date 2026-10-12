@@ -10,11 +10,7 @@ export function LoadError({ error, onRetry }: { error: Error | null; onRetry: ()
       showIcon
       title="โหลดข้อมูลไม่สำเร็จ"
       description={error.message}
-      action={
-        <Button size="small" onClick={onRetry}>
-          ลองใหม่
-        </Button>
-      }
+      action={<Button onClick={onRetry}>ลองใหม่</Button>}
     />
   );
 }

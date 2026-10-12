@@ -20,10 +20,8 @@ export const CONTENT_FIELDS = [
 ] as const;
 type ContentField = (typeof CONTENT_FIELDS)[number];
 export type ContentValues = Pick<Db.AdminHomeContent, ContentField>;
-export type CategoryValues = Pick<
-  Db.AdminHomeCategory,
-  'title' | 'hint' | 'link_to' | 'image_url' | 'badge'
->;
+const CATEGORY_FIELDS = ['title', 'hint', 'link_to', 'image_url', 'badge'] as const;
+export type CategoryValues = Pick<Db.AdminHomeCategory, (typeof CATEGORY_FIELDS)[number]>;
 
 /** การ์ดที่แก้แล้ว — `file` = ภาพใหม่ที่ยังไม่อัปโหลด (พรีวิว `preview`) · อัปโหลดแล้วเก็บ URL ใน `values.image_url` */
 interface CategoryEdit {
@@ -93,10 +91,17 @@ export function useHomePageDraft(
         changed: !!e,
       };
     },
-    setCategory: (slot: string, values: CategoryValues, file?: File) =>
-      setCards((prev) =>
-        new Map(prev).set(slot, { values, ...(file ? { file, preview: preview(file) } : {}) }),
-      ),
+    /** กด "ตกลง" ใน Drawer — ไม่เลือกภาพใหม่ = คงภาพที่เลือกไว้ก่อนหน้า · ค่ากลับมาตรงกับ server = ไม่นับว่าแก้ */
+    setCategory: (c: Db.AdminHomeCategory, values: CategoryValues, file?: File) =>
+      setCards((prev) => {
+        const next = new Map(prev);
+        const kept = file ? { file, preview: preview(file) } : prev.get(c.slot);
+        // ช่องว่าง = null (ป้าย/คำอธิบายที่ลบออก ตรงกับค่าว่างจาก server)
+        const same = CATEGORY_FIELDS.every((f) => (norm(values[f]) || null) === (norm(c[f]) || null));
+        if (same && !kept?.file) next.delete(c.slot);
+        else next.set(c.slot, { values, ...(kept?.file ? { file: kept.file, preview: kept.preview } : {}) });
+        return next;
+      }),
     popularIds,
     setPopular: (next: string[]) => setPopular(next),
     popularDirty,

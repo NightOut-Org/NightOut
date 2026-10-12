@@ -15,7 +15,13 @@ import { STAFF_ROLE, USER_ROLE } from '@/ui/utils/labels';
 import { CreateUserModal } from './modal/createUserModal';
 import { EditUserModal } from './modal/editUserModal';
 import { LEAVES_BARS, roleNotes, useRoleDraft, type Role } from './utils/useRoleDraft';
-import { useUsers, useAccountRoles, deleteUserAction, setUsersRoleAction, unbanUserAction } from './api';
+import {
+  useUsers,
+  useAccountRoles,
+  deleteUserAction,
+  setUsersRoleAction,
+  unbanUserAction,
+} from './api';
 
 /**
  * ผู้ใช้ทั้งหมด — เพิ่มผู้ใช้ (แอดมินสร้างได้แค่ลูกค้า / เจ้าของ / ผู้จัดการ / พนักงานร้าน)
@@ -75,7 +81,9 @@ export function UsersPage() {
   /** ยืนยันผลกระทบของทุกคนที่แก้ แล้วบันทึกครั้งเดียว */
   const save = () => {
     const { changed, changes } = draft;
-    const risky = changed.some(({ user, role }) => LEAVES_BARS.includes(role) && user.bars.length > 0);
+    const risky = changed.some(
+      ({ user, role }) => LEAVES_BARS.includes(role) && user.bars.length > 0,
+    );
     modal.confirm({
       title: `บันทึกชั้นบัญชี ${changed.length} คน?`,
       width: 520,
@@ -217,7 +225,7 @@ export function UsersPage() {
                   <Tag color="red" title={u.ban_reason ?? undefined}>
                     ถูกแบน · {dateTime(u.banned_at)}
                   </Tag>
-                  <Button size="small" disabled={busy} onClick={() => unban(u)}>
+                  <Button disabled={busy} onClick={() => unban(u)}>
                     ปลดแบน
                   </Button>
                 </Space>

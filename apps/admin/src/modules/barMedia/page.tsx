@@ -135,7 +135,6 @@ export function BarMediaPage() {
             width: 110,
             render: (_, b) => (
               <Button
-                size="small"
                 onClick={(e) => {
                   e.stopPropagation();
                   select(b.id);

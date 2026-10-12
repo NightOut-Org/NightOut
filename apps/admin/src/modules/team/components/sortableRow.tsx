@@ -26,7 +26,7 @@ export function DragHandle({ label }: { label: string }) {
   return (
     <Button
       type="text"
-      size="small"
+
       ref={setActivatorNodeRef}
       icon={<DotsSixVertical size={18} weight="bold" />}
       aria-label={label}

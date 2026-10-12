@@ -10,7 +10,10 @@ export function SettingsPage() {
   const safety = useMasterTable<Db.Tables<'safety_features'>>('safety_features', 'sort_order');
   const settings = useMasterTable<Db.Tables<'platform_settings'>>('platform_settings', 'key');
   return (
-    <PageContainer title="ตั้งค่าระบบ" content="ข้อมูลในหน้านี้แก้ผ่าน migration / seed ของทีม (ยังไม่เปิดให้แก้จากหน้านี้)">
+    <PageContainer
+      title="ตั้งค่าระบบ"
+      content="ข้อมูลในหน้านี้แก้ผ่าน migration / seed ของทีม (ยังไม่เปิดให้แก้จากหน้านี้)"
+    >
       <Space orientation="vertical" size="large" className="w-full">
         <Card title="สไตล์ร้าน">
           <LoadError error={styles.error} onRetry={() => void styles.refetch()} />
@@ -26,7 +29,7 @@ export function SettingsPage() {
           <LoadError error={safety.error} onRetry={() => void safety.refetch()} />
           <Table<Db.Tables<'safety_features'>>
             rowKey="id"
-            size="small"
+
             pagination={false}
             loading={safety.isLoading}
             dataSource={safety.data}
@@ -40,7 +43,7 @@ export function SettingsPage() {
           <LoadError error={settings.error} onRetry={() => void settings.refetch()} />
           <Table<Db.Tables<'platform_settings'>>
             rowKey="id"
-            size="small"
+
             pagination={false}
             loading={settings.isLoading}
             dataSource={settings.data}
@@ -49,7 +52,9 @@ export function SettingsPage() {
               {
                 title: 'ค่า',
                 dataIndex: 'value',
-                render: (v: unknown) => <code className="text-xs break-all">{JSON.stringify(v)}</code>,
+                render: (v: unknown) => (
+                  <code className="text-xs break-all">{JSON.stringify(v)}</code>
+                ),
               },
             ]}
           />

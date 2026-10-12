@@ -303,9 +303,7 @@ function ComposeForm({
           <Field label="หมวดหมู่">
             <div role="radiogroup" aria-label="หมวดหมู่" className="flex flex-wrap gap-2">
               {categories.isPending
-                ? [0, 1, 2, 3, 4].map((i) => (
-                    <Skeleton.Button key={i} active size="small" shape="round" />
-                  ))
+                ? [0, 1, 2, 3, 4].map((i) => <Skeleton.Button key={i} active shape="round" />)
                 : cats.map((c) => {
                     const on = form.category === c.slug;
                     return (

@@ -32,7 +32,10 @@ export function BarsPage() {
   const save = async () => {
     const n = status.changes.length;
     try {
-      await act.mutateAsync({ ...barsStatusAction({ changes: status.changes }), success: `บันทึกการแสดงร้านแล้ว ${n} ร้าน` });
+      await act.mutateAsync({
+        ...barsStatusAction({ changes: status.changes }),
+        success: `บันทึกการแสดงร้านแล้ว ${n} ร้าน`,
+      });
       await refetch();
       status.reset();
     } catch {
@@ -94,7 +97,10 @@ export function BarsPage() {
               b.is_new || !b.current_stars ? (
                 <Tag>ร้านใหม่</Tag>
               ) : (
-                <span className="inline-flex items-center gap-1 tabular-nums" aria-label={`${b.current_stars} ดาว`}>
+                <span
+                  className="inline-flex items-center gap-1 tabular-nums"
+                  aria-label={`${b.current_stars} ดาว`}
+                >
                   {b.current_stars}
                   <Star size={14} weight="fill" className="text-(--gold-text)" aria-hidden />
                 </span>
@@ -129,7 +135,9 @@ export function BarsPage() {
                     onChange={(shown, reason) => status.set(b, shown, reason)}
                   />
                   {status.changed(b) && (
-                    <Tooltip title={status.reasonOf(b) ? `เหตุผล: ${status.reasonOf(b)}` : undefined}>
+                    <Tooltip
+                      title={status.reasonOf(b) ? `เหตุผล: ${status.reasonOf(b)}` : undefined}
+                    >
                       <Tag color="warning" className="!m-0">
                         ยังไม่บันทึก
                       </Tag>
@@ -145,7 +153,10 @@ export function BarsPage() {
             key: 'media',
             width: 110,
             render: (_, b) => (
-              <Button size="small" icon={<Images size={14} />} onClick={() => void navigate(`/bar-media?bar=${b.id}`)}>
+              <Button
+                icon={<Images size={14} />}
+                onClick={() => void navigate(`/bar-media?bar=${b.id}`)}
+              >
                 รูปร้าน
               </Button>
             ),

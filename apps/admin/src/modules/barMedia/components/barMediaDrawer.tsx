@@ -8,7 +8,19 @@ import {
 } from '@phosphor-icons/react';
 import { BAR_GALLERY_MAX } from '@nightout/contracts';
 import type { Db } from '@nightout/types';
-import { App, Button, Drawer, Empty, Image, Popconfirm, Space, Spin, Tag, Typography, Upload } from 'antd';
+import {
+  App,
+  Button,
+  Drawer,
+  Empty,
+  Image,
+  Popconfirm,
+  Space,
+  Spin,
+  Tag,
+  Typography,
+  Upload,
+} from 'antd';
 import { useState, type ReactNode } from 'react';
 import { useUnsavedGuard } from '@/hooks/useUnsavedGuard';
 import { useAdminAction } from '@/services/adminData';
@@ -50,12 +62,14 @@ export function BarMediaDrawer({
     setProgress('กำลังบันทึก…');
     const uploaded: string[] = [];
     // อัปโหลดแล้วแต่บันทึกไม่สำเร็จ → ลบไฟล์ที่เพิ่งอัปโหลด (draft ยังเก็บไฟล์ในเครื่อง กดบันทึกใหม่ได้)
-    const discard = () => uploaded.length && discardBarMedia(bar.id, uploaded).catch(() => undefined);
+    const discard = () =>
+      uploaded.length && discardBarMedia(bar.id, uploaded).catch(() => undefined);
     try {
       let body;
       try {
         body = await draft.upload(
-          (done, total) => setProgress(done < total ? `กำลังอัปโหลด ${done + 1}/${total}` : 'กำลังบันทึก…'),
+          (done, total) =>
+            setProgress(done < total ? `กำลังอัปโหลด ${done + 1}/${total}` : 'กำลังบันทึก…'),
           uploaded,
         );
       } catch (e) {
@@ -215,7 +229,6 @@ function Gallery({
                 <div className="absolute inset-x-0 bottom-0 flex justify-end gap-1.5 bg-linear-to-t from-black/70 to-transparent p-2 pt-6">
                   {!isCover && (
                     <Button
-                      size="small"
                       icon={<Star size={14} />}
                       disabled={disabled}
                       onClick={() => draft.setCover(g.key)}
@@ -237,7 +250,6 @@ function Gallery({
                     onConfirm={() => draft.removePhoto(g.key)}
                   >
                     <Button
-                      size="small"
                       danger
                       icon={<Trash size={14} />}
                       disabled={disabled}
@@ -347,7 +359,7 @@ function MenuPhotos({
                       return Upload.LIST_IGNORE;
                     }}
                   >
-                    <Button size="small" icon={<UploadSimple size={14} />} disabled={disabled}>
+                    <Button icon={<UploadSimple size={14} />} disabled={disabled}>
                       {url ? 'เปลี่ยน' : 'เพิ่มรูป'}
                     </Button>
                   </Upload>
@@ -362,7 +374,6 @@ function MenuPhotos({
                       onConfirm={() => draft.removeMenuPhoto(m)}
                     >
                       <Button
-                        size="small"
                         danger
                         icon={<Trash size={14} />}
                         disabled={disabled}

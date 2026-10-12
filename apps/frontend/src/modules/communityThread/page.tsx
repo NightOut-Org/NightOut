@@ -242,7 +242,6 @@ export function CommunityThreadPage() {
             <div className="flex items-center justify-between">
               <h2 className="m-0 text-[15px] font-semibold">{t.reply_count} ความคิดเห็น</h2>
               <Segmented
-                size="small"
                 value={order}
                 onChange={(v) => setOrder(v as 'latest' | 'oldest')}
                 options={[

@@ -1,15 +1,42 @@
+import type * as C from '@nightout/contracts';
 import { Bank, ClockCountdown, MinusCircle, PlusCircle, UserSound, Wallet } from '@phosphor-icons/react';
 import { Alert, App, Form, Input, InputNumber, Segmented, Select } from 'antd';
 import { useState, type ReactNode } from 'react';
+import { useFormDirty } from '@/hooks/useFormDirty';
 import { useMerchantBar } from '@/hooks/useMerchantBar';
 import { useUnsavedGuard } from '@/hooks/useUnsavedGuard';
 import { Tile } from '@/ui/components/merchantUi';
 import { saveSettings } from './api';
 
 const BANKS = ['กสิกรไทย', 'ไทยพาณิชย์', 'กรุงเทพ', 'กรุงไทย', 'กรุงศรี', 'ทหารไทยธนชาต', 'ออมสิน', 'อื่นๆ'];
-const GRACE = [15, 30, 45, 60, 90];
+const GRACE = [15, 30, 45, 60, 90] as const;
+type SettingsForm = {
+  amount: number;
+  unit: 'PER_TABLE' | 'PER_PERSON';
+  policy?: string | null;
+  gracePeriodMinutes: number;
+  prMale?: number | null;
+  prFemale?: number | null;
+  prLgbtq?: number | null;
+  /** บังคับกรอกเมื่อมีเลขบัญชี (rules ของฟอร์ม) */
+  bankName?: string;
+  accountNo?: string;
+  accountName?: string;
+};
+
 /** ช่องของบัญชีรับเงิน — นอกนั้นเป็นตั้งค่าการจอง */
-const PAYOUT_FIELDS = ['bankName', 'accountNo', 'accountName'];
+const PAYOUT_FIELDS: (keyof SettingsForm)[] = ['bankName', 'accountNo', 'accountName'];
+
+/** ค่าในฟอร์ม → `booking` ของ PUT /merchant/bars/:barId/settings (ไม่รวมบัญชีรับเงิน) */
+const toBookingBody = (v: SettingsForm): NonNullable<C.SettingsPageBody['booking']> => ({
+  deposit_amount: v.amount,
+  deposit_unit: v.unit,
+  deposit_policy: v.policy ?? '',
+  grace_minutes: v.gracePeriodMinutes as (typeof GRACE)[number],
+  pr_male: v.prMale ?? 0,
+  pr_female: v.prFemale ?? 0,
+  pr_lgbtq: v.prLgbtq ?? 0,
+});
 
 /** ปุ่ม − จำนวน + (PR) — control ของ Form.Item */
 function Stepper({
@@ -72,10 +99,19 @@ function Section({ icon, title, children }: { icon: ReactNode; title: string; ch
 export function MerchantSettingsPage() {
   const bar = useMerchantBar();
   const { message } = App.useApp();
-  const [form] = Form.useForm();
+  const [form] = Form.useForm<SettingsForm>();
   const [saving, setSaving] = useState(false);
   const [editAccount, setEditAccount] = useState(!bar.payout.accountNo);
-  const [bookingDirty, setBookingDirty] = useState(false);
+  const initial: SettingsForm = {
+    ...bar.deposit,
+    bankName: bar.payout.bankName || undefined,
+    accountName: bar.payout.accountName || undefined,
+    prMale: bar.pr.male,
+    prFemale: bar.pr.female,
+    prLgbtq: bar.pr.lgbtq ?? 0,
+    gracePeriodMinutes: bar.gracePeriodMinutes,
+  };
+  const bookingDirty = useFormDirty(form, initial, toBookingBody);
   // เลขบัญชีไม่ส่งกลับมาหน้าเว็บ (เข้ารหัสใน DB) — มีเลขบัญชีในฟอร์ม = จะเปลี่ยนบัญชี
   const accountNo = Form.useWatch('accountNo', form) as string | undefined;
   const count = (bookingDirty ? 1 : 0) + (accountNo ? 1 : 0);
@@ -83,7 +119,6 @@ export function MerchantSettingsPage() {
 
   const reset = () => {
     form.resetFields();
-    setBookingDirty(false);
     setEditAccount(!bar.payout.accountNo);
   };
 
@@ -97,26 +132,13 @@ export function MerchantSettingsPage() {
     setSaving(true);
     try {
       await saveSettings(bar.id, {
-        ...(bookingDirty
-          ? {
-              booking: {
-                deposit_amount: v.amount,
-                deposit_unit: v.unit,
-                deposit_policy: v.policy ?? '',
-                grace_minutes: v.gracePeriodMinutes,
-                pr_male: v.prMale ?? 0,
-                pr_female: v.prFemale ?? 0,
-                pr_lgbtq: v.prLgbtq ?? 0,
-              },
-            }
-          : {}),
-        ...(v.accountNo ? { payout: { bank_code: v.bankName, account_name: v.accountName, account_no: v.accountNo } } : {}),
+        ...(bookingDirty ? { booking: toBookingBody(v) } : {}),
+        ...(v.accountNo ? { payout: { bank_code: v.bankName!, account_name: v.accountName!, account_no: v.accountNo } } : {}),
       });
       if (v.accountNo) {
         form.setFieldValue('accountNo', undefined);
         setEditAccount(false);
       }
-      setBookingDirty(false);
       void message.success('บันทึกแล้ว');
     } catch (e) {
       void message.error((e as Error).message);
@@ -163,18 +185,7 @@ export function MerchantSettingsPage() {
         layout="vertical"
         requiredMark={false}
         disabled={saving}
-        initialValues={{
-          ...bar.deposit,
-          bankName: bar.payout.bankName || undefined,
-          accountName: bar.payout.accountName || undefined,
-          prMale: bar.pr.male,
-          prFemale: bar.pr.female,
-          prLgbtq: bar.pr.lgbtq ?? 0,
-          gracePeriodMinutes: bar.gracePeriodMinutes,
-        }}
-        onValuesChange={(changed: Record<string, unknown>) => {
-          if (Object.keys(changed).some((k) => !PAYOUT_FIELDS.includes(k))) setBookingDirty(true);
-        }}
+        initialValues={initial}
       >
         <div className="grid gap-3 lg:grid-cols-2 lg:gap-4">
           <Section icon={<Wallet />} title="มัดจำ (เก็บทุกการจอง)">

@@ -24,7 +24,8 @@ export function PopularCard({
 }) {
   const pinned = useHomePopular();
   const bars = useBars();
-  const setIds = (next: string[] | ((cur: string[]) => string[])) => onChange(typeof next === 'function' ? next(ids) : next);
+  const setIds = (next: string[] | ((cur: string[]) => string[])) =>
+    onChange(typeof next === 'function' ? next(ids) : next);
 
   // ชื่อร้าน: จาก admin_bars ก่อน (สดกว่า) · ร้านที่ปักแต่ไม่ APPROVED แล้วมีแค่ใน admin_home_popular
   const barById = useMemo(() => {
@@ -34,10 +35,12 @@ export function PopularCard({
     return m;
   }, [pinned.data, bars.data]);
   const options = useMemo(
-    () => (bars.data ?? []).filter((b) => b.status === 'APPROVED').map((b) => ({ value: b.id, label: b.name })),
+    () =>
+      (bars.data ?? [])
+        .filter((b) => b.status === 'APPROVED')
+        .map((b) => ({ value: b.id, label: b.name })),
     [bars.data],
   );
-
 
   const move = (from: number, to: number) =>
     setIds((cur) => {
@@ -59,7 +62,8 @@ export function PopularCard({
       />
 
       <p className="mb-3 text-sm opacity-70">
-        เลือกร้านที่จะขึ้นก่อนได้สูงสุด {HOME_POPULAR_MAX} ร้าน ช่องที่ว่างจะเติมด้วยร้านคะแนนรีวิวสูงสุดให้เอง
+        เลือกร้านที่จะขึ้นก่อนได้สูงสุด {HOME_POPULAR_MAX} ร้าน
+        ช่องที่ว่างจะเติมด้วยร้านคะแนนรีวิวสูงสุดให้เอง
       </p>
       <Select
         mode="multiple"
@@ -79,7 +83,9 @@ export function PopularCard({
       />
 
       {ids.length === 0 ? (
-        <Typography.Text type="secondary">ยังไม่ได้ปักร้าน — หน้าแรกเรียงตามคะแนนรีวิวทั้ง {HOME_POPULAR_MAX} ช่อง</Typography.Text>
+        <Typography.Text type="secondary">
+          ยังไม่ได้ปักร้าน — หน้าแรกเรียงตามคะแนนรีวิวทั้ง {HOME_POPULAR_MAX} ช่อง
+        </Typography.Text>
       ) : (
         <ol className="m-0 list-none space-y-2 p-0">
           {ids.map((id, i) => {
@@ -90,12 +96,16 @@ export function PopularCard({
                 key={id}
                 className="flex items-center gap-3 rounded-lg border border-solid border-black/10 px-3 py-2 dark:border-white/10"
               >
-                <span className="w-6 text-center font-semibold tabular-nums opacity-60">{i + 1}</span>
+                <span className="w-6 text-center font-semibold tabular-nums opacity-60">
+                  {i + 1}
+                </span>
                 <span className="min-w-0 flex-1 truncate">{name}</span>
-                {bar?.status !== 'APPROVED' && <Tag color="error">ไม่แสดงบนเว็บ — เอาออกก่อนบันทึก</Tag>}
+                {bar?.status !== 'APPROVED' && (
+                  <Tag color="error">ไม่แสดงบนเว็บ — เอาออกก่อนบันทึก</Tag>
+                )}
                 <Button
                   type="text"
-                  size="small"
+
                   icon={<ArrowUp size={16} />}
                   disabled={disabled || i === 0}
                   onClick={() => move(i, i - 1)}
@@ -103,7 +113,7 @@ export function PopularCard({
                 />
                 <Button
                   type="text"
-                  size="small"
+
                   icon={<ArrowDown size={16} />}
                   disabled={disabled || i === ids.length - 1}
                   onClick={() => move(i, i + 1)}
@@ -111,7 +121,7 @@ export function PopularCard({
                 />
                 <Button
                   type="text"
-                  size="small"
+
                   danger
                   icon={<X size={16} />}
                   disabled={disabled}
