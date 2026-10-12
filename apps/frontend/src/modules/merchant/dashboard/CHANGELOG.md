@@ -1,3 +1,8 @@
+## 2026-10-12 — ย้ายพื้นหลังไปเป็น `EmbersBackdrop` ตัวกลาง (ตาม handoff aurora-embers)
+- `ui/components/merchantAurora.tsx` → `ui/components/embersBackdrop.tsx` (ใช้ร่วมกับหน้าแรก) · ประกายทองหลบเมาส์ในรัศมี 8% ของจอ (ไม่ขยับ 4 วิ จุดหลบลอยวนเอง) · แสงด้านบนยังไม่ตามเมาส์
+- ติดตั้งที่ `layouts/merchant.tsx` (ครอบทุกหน้าใต้ /merchant) และ `layouts/merchantOnboarding.tsx` (layout ใหม่ของ `/merchant/join` `/merchant/status`) แทน handle `merchantAurora` ใน `layouts/main.tsx` (เอาออกแล้ว)
+- คลาสกระจก `merchant-aurora-scope` → `embers-glass` (`embersBackdrop.css`) · แถบบนมือถือโปร่ง 60% + เบลอในธีมมืด
+
 ## 2026-10-12 — พื้นหลัง Merchant Aurora (Golden Embers) ทุกหน้า /merchant
 - ทุกหน้าใต้ `/merchant` (รวม `/merchant/join` และ `/merchant/status`) มีพื้นหลังตามดีไซน์ "Merchant Aurora" แบบ 10 Golden Embers: แสงม่วง/ทองจากขอบบน ม่วงอมชมพูที่ขอบล่าง และประกายทองลอยขึ้น ไม่ตามเมาส์ มีเกรนบาง ๆ ทับ · เฉพาะธีมมืด
 - กระจก (glassmorphism): การ์ดชั้นนอก (`bg-card` / `bg-surface` / `ant-card`) โปร่ง ~55–62% + เบลอ 20px + ขอบและไฮไลต์ขอบบนสีขาวจาง ๆ · กล่องที่ซ้อนในการ์ดโปร่งอย่างเดียว ไม่เบลอซ้ำ · กลางวงแหวนทึบเสมอ (`merchant-solid` ใน `merchantUi.tsx`)

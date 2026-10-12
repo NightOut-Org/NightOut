@@ -7,7 +7,7 @@ import { BarRating } from '@/ui/components/barRating';
 import { FavoriteButton } from '@/ui/components/favoriteButton';
 import { SectionHeader } from '@/ui/components/sectionHeader';
 import { barImage } from '@/ui/utils/barImage';
-import { prefersLightweight } from '../utils/prefersLightweight';
+import { prefersLightweight } from '@/ui/utils/prefersLightweight';
 import { SURFACE, SURFACE_HOVER } from '../utils/surface';
 import { useDiagonalVar } from '../utils/useDiagonalVar';
 import { useOffscreenPause } from '../utils/useOffscreenPause';

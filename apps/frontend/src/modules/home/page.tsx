@@ -1,6 +1,6 @@
 import { rankingByPeriod } from '@/services/data';
 import { useDemo } from '@/hooks/useDemo';
-import { AuroraBackdrop } from './components/auroraBackdrop';
+import { EmbersBackdrop } from '@/ui/components/embersBackdrop';
 import { CategoryGrid } from './components/categoryGrid';
 import { Hero } from './components/hero';
 import { Newsletter } from './components/newsletter';
@@ -25,10 +25,19 @@ export function HomePage() {
 
   return (
     <>
+      {/*
+        พื้นหลัง Golden Embers (canvas fixed เต็มจอ · ธีมมืด) อยู่ชั้นล่างสุดของ MainLayout (Layout หน้าแรกเป็น isolate)
+        → Hero ที่ทึบบังไว้ แสงไม่ล้นเข้า Hero · ใต้ Hero ไปจนถึงฟุตเตอร์ (ภาพเมืองไล่จากใส) เห็นพื้นหลังต่อเนื่อง
+      */}
+      <EmbersBackdrop />
       <Hero content={content} failed={failed} onRetry={retry} />
-      {/* ทุกส่วนใต้ Hero อยู่บนพื้นหลัง aurora เดียวกัน (<AuroraBackdrop>) — ซ้อนขึ้นทับ Hero ให้เห็นหมวดหมู่ตั้งแต่จอแรก · ธีมสว่างใช้พื้นเรียบ */}
+      {/* ทุกส่วนใต้ Hero ซ้อนขึ้นทับ Hero ให้เห็นหมวดหมู่ตั้งแต่จอแรก · ธีมสว่างใช้พื้นเรียบ */}
       <div className="relative isolate z-10 -mt-28 md:-mt-36">
-        <AuroraBackdrop />
+        {/* แถบไล่ #07070d → ใส 280px เริ่มที่ขอบล่าง Hero (ต่อจากสีขอบล่างของ Hero) ให้แสงค่อย ๆ โผล่ */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 top-28 -z-10 hidden h-[280px] bg-gradient-to-b from-[#07070d] to-transparent dark:block md:top-36"
+        />
 
         <div className="bg-gradient-to-b from-transparent via-background/80 to-background pt-24 md:pt-28 dark:bg-none">
           {!failed && (

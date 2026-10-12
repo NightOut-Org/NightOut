@@ -1,5 +1,12 @@
 # home — ประวัติการแก้ไข
 
+## 2026-10-12 — พื้นหลังใต้ Hero เป็น Golden Embers (แทน AuroraBackdrop)
+- ลบ `components/auroraBackdrop.tsx` + `.css` (ม่านแสงนิ่ง) → ใช้ `<EmbersBackdrop />` ตัวกลาง (`ui/components/embersBackdrop.tsx`) แบบเดียวกับหน้าร้าน: canvas แสงม่วง/ทอง + ประกายทองลอยขึ้น หลบเมาส์ · ธีมมืดเท่านั้น
+- Hero ทึบ: เพิ่มแถบไล่ `#07070d` สูง 160px ที่ขอบล่าง (ธีมมืด) · `<EmbersBackdrop />` อยู่ชั้นล่างสุดของหน้า (`layouts/main.tsx` ให้ Layout หน้าแรกเป็น `isolate`) Hero บังไว้ แสงไม่ล้นเข้า Hero · แถบไล่ `#07070d → ใส` 280px เริ่มที่ขอบล่าง Hero ให้แสงค่อย ๆ โผล่ ไม่มีรอยตัด
+- ฟุตเตอร์ (`ui/components/siteFooter.tsx`) ธีมมืด: ภาพเมืองไล่จากใส (mask 0 → 55%) แทนแถบไล่สีพื้นทึบ — เห็นประกายทอง/แสงม่วงต่อลงมาหลังการ์ดฟุตเตอร์ตามดีไซน์ · ธีมสว่างเหมือนเดิม
+- ย้าย `utils/prefersLightweight.ts` → `ui/utils/prefersLightweight.ts` (ใช้ร่วมกับพื้นหลังตัวกลาง) · แก้ import ใน `skyBackdrop.tsx` `weeklySpotlight.tsx`
+- ไฟล์หลัก: `page.tsx` · `components/hero.tsx`
+
 ## 2026-10-09 — ย้าย API เข้า `api.ts` ของโมดูล (ADR 0007)
 - เพิ่ม `api.ts`: `prefetchSiteHome` · `useSiteHome` (`GET /public/home`) — ย้ายมาจาก `services/api/<domain>.ts` / `services/queries/<domain>.ts` (ลบแล้ว) · เรียก `Rest` ตรง
 - หน้าในโมดูล import จาก `./api` แทน `@/services/data` · พฤติกรรมเดิม (ชื่อฟังก์ชัน, query key)

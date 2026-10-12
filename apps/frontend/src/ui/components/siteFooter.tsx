@@ -60,9 +60,10 @@ export function SiteFooter({ className = '' }: { className?: string }) {
         alt=""
         loading="lazy"
         decoding="async"
-        className="absolute inset-0 -z-10 size-full object-cover object-bottom"
+        className="absolute inset-0 -z-10 size-full object-cover object-bottom dark:[mask-image:linear-gradient(to_bottom,transparent,#000_55%)]"
       />
-      <div className="absolute inset-0 -z-10 bg-gradient-to-b from-background via-background/40 to-black/30" />
+      {/* ธีมสว่าง: ไล่ขอบบนเข้าสีพื้น · ธีมมืด: ภาพไล่จากใสแทน (mask) — เห็นพื้นหลังของหน้า (เช่น Golden Embers) ต่อลงมาหลังฟุตเตอร์ */}
+      <div className="absolute inset-0 -z-10 bg-gradient-to-b from-background via-background/40 to-black/30 dark:hidden" />
 
       <div className="mx-auto max-w-6xl rounded-[28px] border border-white/15 bg-black/35 p-6 text-white shadow-[0_20px_60px_rgba(0,0,0,0.45)] backdrop-blur-xl md:p-10">
         <div className="flex flex-col gap-8 md:flex-row md:items-stretch md:gap-12">

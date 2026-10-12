@@ -31,8 +31,9 @@ export function Hero({
       {/* ยังไม่รู้ภาพ Hero จาก API → แสดงแค่พื้นสีกลางคืน (ไม่โหลดภาพตั้งต้นทิ้งแล้วสลับกลางคัน) */}
       <SkyBackdrop imageUrl={c?.hero_image_url} pending={!c} />
       <div className="absolute inset-0 -z-10 bg-gradient-to-t from-black/45 via-black/10 to-transparent" />
-      {/* ธีมสว่างเท่านั้น: ไล่ขอบล่างเข้าสีพื้น · ธีมมืดต่อกับพื้นหลัง aurora ของหน้าแรก (<AuroraBackdrop> ใน page.tsx) */}
+      {/* ขอบล่างไล่เข้าสีพื้น — ธีมสว่าง: สีพื้นเรียบ · ธีมมืด: #07070d (Hero ทึบ แสงพื้นหลัง <EmbersBackdrop> ใน page.tsx ห้ามล้นเข้ามา) */}
       <div className="absolute inset-x-0 bottom-0 -z-10 h-24 bg-gradient-to-t from-background to-transparent dark:hidden" />
+      <div className="absolute inset-x-0 bottom-0 -z-10 hidden h-40 bg-gradient-to-t from-[#07070d] to-transparent dark:block" />
 
       <div className="mx-auto flex w-full max-w-7xl flex-col items-center px-4 text-center md:px-8">
         {c ? (

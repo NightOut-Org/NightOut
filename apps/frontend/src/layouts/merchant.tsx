@@ -28,6 +28,7 @@ import { useAuth } from '@/services/auth';
 import { useDemo } from '@/hooks/useDemo';
 import { barImage } from '@/ui/utils/barImage';
 import { CrowdBadge } from '@/ui/components/crowdBadge';
+import { EmbersBackdrop } from '@/ui/components/embersBackdrop';
 import './merchant.css';
 
 interface NavItem {
@@ -146,9 +147,11 @@ export function MerchantLayout() {
   );
 
   return (
-    <div className="merchant-layout min-w-0">
+    <div className="merchant-layout embers-glass relative isolate min-w-0">
+      {/* พื้นหลัง Golden Embers ครอบทุกหน้าใต้ /merchant (ธีมมืด) + การ์ด/เมนูเป็นกระจก (embers-glass) */}
+      <EmbersBackdrop />
       {/* มือถือ — แถบบนของร้าน */}
-      <header className="merchant-appbar sticky top-0 z-40 flex h-14 items-center gap-2.5 border-b border-border bg-surface/95 px-4 backdrop-blur lg:hidden">
+      <header className="merchant-appbar sticky top-0 z-40 flex h-14 items-center gap-2.5 border-b border-border bg-surface/95 px-4 backdrop-blur dark:bg-surface/60 dark:backdrop-blur-xl lg:hidden">
         <span
           aria-hidden
           className="size-[30px] shrink-0 rounded-[9px] bg-cover bg-center"

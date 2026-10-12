@@ -2,6 +2,7 @@ import { createBrowserRouter, type RouteObject } from 'react-router';
 import { AuthLayout } from '@/layouts/auth';
 import { MainLayout } from '@/layouts/main';
 import { MerchantLayout } from '@/layouts/merchant';
+import { MerchantOnboardingLayout } from '@/layouts/merchantOnboarding';
 import { RootLayout } from '@/layouts/root';
 import { HomePage } from '@/modules/home/page';
 import { RequireAuth, RequireRole } from './middleware';
@@ -217,21 +218,26 @@ const routes: RouteObject[] = [
             lazy: () =>
               import('@/modules/settings/page').then((m) => ({ Component: m.SettingsPage })),
           },
+          // สมัครร้าน / สถานะการสมัคร — พื้นหลังเดียวกับหน้าร้าน
           {
-            path: 'merchant/join',
-            handle: { merchantShell: true, hideFooter: true, merchantAurora: true },
-            lazy: () =>
-              import('@/modules/merchant/join/page').then((m) => ({
-                Component: m.MerchantJoinPage,
-              })),
-          },
-          {
-            path: 'merchant/status',
-            handle: { merchantAurora: true },
-            lazy: () =>
-              import('@/modules/merchant/status/page').then((m) => ({
-                Component: m.MerchantStatusPage,
-              })),
+            element: <MerchantOnboardingLayout />,
+            children: [
+              {
+                path: 'merchant/join',
+                handle: { merchantShell: true, hideFooter: true },
+                lazy: () =>
+                  import('@/modules/merchant/join/page').then((m) => ({
+                    Component: m.MerchantJoinPage,
+                  })),
+              },
+              {
+                path: 'merchant/status',
+                lazy: () =>
+                  import('@/modules/merchant/status/page').then((m) => ({
+                    Component: m.MerchantStatusPage,
+                  })),
+              },
+            ],
           },
 
           // ---- ร้าน /merchant ----
@@ -241,8 +247,8 @@ const routes: RouteObject[] = [
               {
                 path: 'merchant',
                 element: <MerchantLayout />,
-                // merchantShell: มือถือใช้แถบบน/แท็บล่างของร้านแทน navbar ของเว็บ · merchantAurora: พื้นหลังหน้าร้าน
-                handle: { merchantShell: true, merchantAurora: true },
+                // merchantShell: มือถือใช้แถบบน/แท็บล่างของร้านแทน navbar ของเว็บ
+                handle: { merchantShell: true },
                 children: [
                   {
                     index: true,
