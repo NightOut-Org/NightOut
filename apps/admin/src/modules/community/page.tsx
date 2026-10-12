@@ -21,6 +21,8 @@ type Action = 'KEEP' | 'HIDE' | 'REMOVE' | 'RESTORE';
 type Row = Db.AdminCommunityThread | Db.AdminCommunityComment;
 type Mode = 'reported' | 'live' | 'hidden';
 const isThread = (r: Row): r is Db.AdminCommunityThread => 'title' in r;
+/** ความกว้างคอลัมน์ปุ่ม ตามจำนวนปุ่มของแต่ละแท็บ */
+const ACTION_WIDTH: Record<Mode, number> = { reported: 250, live: 180, hidden: 150 };
 const DONE: Record<Action, string> = {
   KEEP: 'เก็บไว้ และปิดรายงานแล้ว',
   HIDE: 'ซ่อนแล้ว — เจ้าของได้รับแจ้งเตือน',
@@ -55,9 +57,10 @@ export function CommunityPage() {
   const c = useMemo(() => split(comments.data ?? []), [comments.data]);
 
   const actions = (mode: Mode) => ({
-    title: '',
+    title: 'จัดการ',
     key: 'a',
     fixed: 'right' as const,
+    width: ACTION_WIDTH[mode],
     render: (_: unknown, r: Row) =>
       mode === 'hidden' ? (
         <Button loading={act.isPending} onClick={() => moderate(r, 'RESTORE')}>
@@ -130,13 +133,16 @@ export function CommunityPage() {
     {
       title: 'กระทู้',
       key: 'title',
+      width: 300,
       render: (_: unknown, r: Db.AdminCommunityThread) => (
-        <div className="max-w-md">
-          <div className="font-medium">{r.title}</div>
+        <>
+          <Typography.Text strong ellipsis={{ tooltip: r.title }} className="block">
+            {r.title}
+          </Typography.Text>
           <Typography.Paragraph type="secondary" ellipsis={{ rows: 2 }} className="!mb-0 !text-xs">
             {r.body || '—'}
           </Typography.Paragraph>
-        </div>
+        </>
       ),
     },
     { title: 'หมวด', dataIndex: 'category_name', width: 110 },
@@ -149,7 +155,8 @@ export function CommunityPage() {
     {
       title: 'ตอบ / ถูกใจ',
       key: 'stats',
-      width: 100,
+      width: 120,
+      align: 'center' as const,
       render: (_: unknown, r: Db.AdminCommunityThread) => `${r.reply_count} / ${r.like_count}`,
     },
     ...common,
@@ -160,13 +167,16 @@ export function CommunityPage() {
     {
       title: 'ความคิดเห็น',
       key: 'body',
+      width: 320,
       render: (_: unknown, r: Db.AdminCommunityComment) => (
-        <div className="max-w-md">
+        <>
           <Typography.Paragraph ellipsis={{ rows: 3 }} className="!mb-0">
             {r.body}
           </Typography.Paragraph>
-          <div className="text-xs opacity-60">ในกระทู้: {r.thread_title}</div>
-        </div>
+          <Typography.Text type="secondary" ellipsis className="block !text-xs">
+            ในกระทู้: {r.thread_title}
+          </Typography.Text>
+        </>
       ),
     },
     ...common,
@@ -179,7 +189,7 @@ export function CommunityPage() {
       loading={loading}
       dataSource={rows}
       pagination={{ pageSize: PAGE_SIZE }}
-      scroll={{ x: 1200 }}
+      scroll={{ x: 'max-content' }}
       locale={{ emptyText: empty }}
       columns={columns}
     />
