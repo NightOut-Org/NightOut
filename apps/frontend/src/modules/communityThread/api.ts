@@ -42,6 +42,22 @@ export const addComment = (threadId: string, body: C.CommunityCommentBody) =>
     body satisfies C.CommunityCommentBody,
   );
 
+/** PATCH /community/comments/:id — แก้ความเห็นของตัวเอง (ข้อความ + ไฟล์ทั้งชุด) */
+export const updateComment = (id: string, body: C.UpdateCommunityCommentBody) =>
+  Rest.patch<C.UpdateCommunityCommentResult>(
+    `/community/comments/${id}`,
+    body satisfies C.UpdateCommunityCommentBody,
+  );
+
+/** GET /public/community/{threads|comments}/:id/history — ประวัติการแก้ไข (ใหม่สุดก่อน) */
+export const useHistory = (target: { kind: 'thread' | 'comment'; id: string } | null) =>
+  useQuery({
+    queryKey: ['community', 'history', target?.kind, target?.id],
+    queryFn: () =>
+      Rest.get<C.CommunityRevision[]>(`/public/community/${target!.kind}s/${target!.id}/history`),
+    enabled: !!target,
+  });
+
 /** DELETE /community/comments/:id */
 export const deleteComment = (id: string) => Rest.delete(`/community/comments/${id}`);
 
@@ -87,5 +103,19 @@ export const saveReplyDraft = (threadId: string, payload: C.CommunityDraftPayloa
 /** DELETE /me/community/drafts/REPLY?thread_id= */
 export const deleteReplyDraft = (threadId: string) =>
   Rest.delete('/me/community/drafts/REPLY', {
+    params: { thread_id: threadId } satisfies C.DeleteCommunityDraftQuery,
+  });
+
+/** PUT /me/community/drafts — ร่างแก้ความเห็น (1 ร่างต่อกระทู้ · payload.comment_id) */
+export const saveCommentEditDraft = (threadId: string, payload: C.CommunityDraftPayload) =>
+  Rest.put<C.CommunityDraft>('/me/community/drafts', {
+    kind: 'EDIT_COMMENT',
+    thread_id: threadId,
+    payload,
+  } satisfies C.SaveCommunityDraftBody);
+
+/** DELETE /me/community/drafts/EDIT_COMMENT?thread_id= — ไฟล์ที่เลือกระหว่างแก้ backend ลบให้ */
+export const deleteCommentEditDraft = (threadId: string) =>
+  Rest.delete('/me/community/drafts/EDIT_COMMENT', {
     params: { thread_id: threadId } satisfies C.DeleteCommunityDraftQuery,
   });

@@ -1,5 +1,10 @@
 # CHANGELOG — @nightout/contracts
 
+## 2026-10-12 — ชุมชน: แก้ไขความเห็น + ประวัติการแก้ไข
+- `community.ts`: `UpdateCommunityCommentBody` (PATCH /community/comments/:id — ข้อความหรือไฟล์อย่างน้อย 1 อย่าง) · `UpdateCommunityCommentResult` · `CommunityRevision` (1 เวอร์ชันในประวัติ) · `CommunityComment.edited_at`
+- ร่างชนิดใหม่ `EDIT_COMMENT` + `payload.comment_id` (ต้องมีเมื่อเป็นร่างแก้ความเห็น) · ข้อความ `NOT_COMMENT_OWNER` = แก้หรือลบได้เฉพาะของตัวเอง
+- เทสต์ใน `contracts.test.ts`
+
 ## 2026-10-12 — body บันทึกหน้าแรก + ตั้งค่าร้านครั้งเดียว
 - `site-content.ts`: `SaveHomePageBody` (`content?` + `categories?` (การ์ด + `slot` ไม่ซ้ำ) + `popular?` อย่างน้อย 1) + result · error `INVALID_HOME_PAGE` · ลบ `UpdateHomePopularResult`
 - `bar.ts`: `SettingsPageBody` (`booking?` + `payout?` อย่างน้อย 1) + result · error `INVALID_SETTINGS_PAGE`

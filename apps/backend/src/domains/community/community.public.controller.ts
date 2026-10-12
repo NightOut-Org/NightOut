@@ -50,11 +50,35 @@ export class CommunityPublicController {
     summary: 'อ่านกระทู้',
     description:
       'กระทู้ + ความเห็นทั้งหมดที่แสดงอยู่ (แบน · parent_id ชี้ความเห็นหลัก) · กระทู้ที่ถูกซ่อนเห็นเฉพาะเจ้าของ · ไฟล์แนบได้ signed URL (6 ชม.) ในนามผู้เรียก (rpc community_thread + Storage community-media)',
-    returns: `${THREAD_FIELDS} · \`body\` · \`media\` [{id, kind, path, thumb_path, duration_sec, url, thumb_url}] · \`comments\` [{id, parent_id, body, author, like_count, created_at, media, is_mine, is_liked}] · ไม่พบ = 404 THREAD_NOT_FOUND`,
+    returns: `${THREAD_FIELDS} · \`body\` · \`media\` [{id, kind, path, thumb_path, duration_sec, url, thumb_url}] · \`comments\` [{id, parent_id, body, author, like_count, created_at, edited_at, media, is_mine, is_liked}] · ไม่พบ = 404 THREAD_NOT_FOUND`,
     auth: false,
   })
   thread(@Req() req: Request, @Id() id: string) {
     return this.community.thread(bearerOf(req), id);
+  }
+
+  @Get('threads/:id/history')
+  @ApiDoc({
+    summary: 'ประวัติการแก้ไขกระทู้',
+    description:
+      'ทุกเวอร์ชันของกระทู้ ใหม่สุดก่อน (แถวแรก = ปัจจุบัน) · เห็นได้เท่ากับที่เห็นกระทู้ · ไฟล์แนบได้ signed URL ในนามผู้เรียก (rpc community_history)',
+    returns: 'รายการ `title` · `category_name` · `bar` · `body` · `media` · `at` (เวอร์ชันนี้เริ่มแสดงเมื่อไร) · `is_current` · ไม่พบ = 404 THREAD_NOT_FOUND',
+    auth: false,
+  })
+  threadHistory(@Req() req: Request, @Id() id: string) {
+    return this.community.history(bearerOf(req), 'THREAD', id);
+  }
+
+  @Get('comments/:id/history')
+  @ApiDoc({
+    summary: 'ประวัติการแก้ไขความคิดเห็น',
+    description:
+      'ทุกเวอร์ชันของความเห็น ใหม่สุดก่อน (แถวแรก = ปัจจุบัน) · เห็นได้เมื่อความเห็นแสดงอยู่ · ไฟล์แนบได้ signed URL ในนามผู้เรียก (rpc community_history)',
+    returns: 'รายการ `body` · `media` · `at` · `is_current` · ไม่พบ = 404 COMMENT_NOT_FOUND',
+    auth: false,
+  })
+  commentHistory(@Req() req: Request, @Id() id: string) {
+    return this.community.history(bearerOf(req), 'COMMENT', id);
   }
 
   @Post('threads/:id/view')

@@ -9,6 +9,7 @@ import {
   type CommunityPinResult,
   type CommunitySaveResult,
   type CreateCommunityThreadResult,
+  type UpdateCommunityCommentResult,
 } from '@nightout/contracts';
 import type { Request } from 'express';
 import { ZodValidationPipe } from 'nestjs-zod';
@@ -27,6 +28,7 @@ import {
   feedArgs,
   MyCommunityFeedQueryDto,
   SaveCommunityDraftDto,
+  UpdateCommunityCommentDto,
 } from './community.dto';
 import { CommunityService } from './community.service';
 
@@ -58,8 +60,8 @@ export class CommunityMeController {
   @Get('me/community/drafts')
   @ApiDoc({
     summary: 'ฉบับร่างของฉัน',
-    description: 'ร่างที่ยังไม่หมดอายุ (แก้ล่าสุดไม่เกิน 7 วัน) ทุกช่อง — NEW 1 ร่าง · REPLY / EDIT 1 ร่างต่อกระทู้ (rpc my_community_drafts)',
-    returns: 'รายการ `id` · `kind` · `thread_id` · `payload` {category, title, body, bar_id, parent_id} · `updated_at` (ใหม่สุดก่อน)',
+    description: 'ร่างที่ยังไม่หมดอายุ (แก้ล่าสุดไม่เกิน 7 วัน) ทุกช่อง — NEW 1 ร่าง · REPLY / EDIT / EDIT_COMMENT 1 ร่างต่อกระทู้ (rpc my_community_drafts)',
+    returns: 'รายการ `id` · `kind` · `thread_id` · `payload` {category, title, body, bar_id, parent_id, comment_id, media} · `updated_at` (ใหม่สุดก่อน)',
     validates: false,
   })
   drafts(@Req() req: Request) {
@@ -70,7 +72,7 @@ export class CommunityMeController {
   @ApiDoc({
     summary: 'บันทึกร่าง',
     description:
-      'แทนที่ร่างเดิมของช่องเดียวกัน (kind + thread_id) · หน้าเว็บบันทึกอัตโนมัติเมื่อหยุดพิมพ์ · `payload.media` = ไฟล์ที่อัปโหลดเข้า community-media แล้ว (DB ตรวจว่ามีจริง) · ไฟล์ที่เอาออกจากร่าง/ร่างเกิน 7 วัน ถูกลบจาก Storage · ร่าง EDIT ได้เฉพาะเจ้าของกระทู้ (rpc app_community_save_draft)',
+      'แทนที่ร่างเดิมของช่องเดียวกัน (kind + thread_id) · หน้าเว็บบันทึกอัตโนมัติเมื่อหยุดพิมพ์ · `payload.media` = ไฟล์ที่อัปโหลดเข้า community-media แล้ว (DB ตรวจว่ามีจริง) · ไฟล์ที่เอาออกจากร่าง/ร่างเกิน 7 วัน ถูกลบจาก Storage · ร่าง EDIT ได้เฉพาะเจ้าของกระทู้ · ร่าง EDIT_COMMENT ต้องมี payload.comment_id = ความเห็นของฉันในกระทู้นั้น (rpc app_community_save_draft)',
     returns: '`id` · `kind` · `thread_id` · `payload` · `updated_at`',
   })
   saveDraft(@CurrentUser() me: AuthUser, @Body() b: SaveCommunityDraftDto) {
@@ -85,7 +87,7 @@ export class CommunityMeController {
   @Delete('me/community/drafts/:kind')
   @ApiDoc({
     summary: 'ทิ้งร่าง',
-    description: '`kind` = NEW | REPLY | EDIT · REPLY / EDIT ระบุ `thread_id` ใน query · ไฟล์แนบของร่างถูกลบจาก Storage (rpc app_community_delete_draft)',
+    description: '`kind` = NEW | REPLY | EDIT | EDIT_COMMENT · ที่ไม่ใช่ NEW ระบุ `thread_id` ใน query · ไฟล์แนบของร่างถูกลบจาก Storage (rpc app_community_delete_draft)',
     returns: '`kind` · `thread_id` · `deleted` (มีร่างให้ลบไหม)',
   })
   deleteDraft(
@@ -196,10 +198,27 @@ export class CommunityMeController {
     });
   }
 
+  @Patch('community/comments/:id')
+  @ApiDoc({
+    summary: 'แก้ความคิดเห็นของฉัน',
+    description:
+      'เฉพาะเจ้าของความเห็น · ส่งข้อความ + `media` ทั้งชุด (มีไฟล์แล้วไม่ต้องพิมพ์ข้อความ) · เนื้อหาเปลี่ยนจริงเท่านั้นที่เก็บเวอร์ชันเดิมลงประวัติ + บันทึก edited_at (ไฟล์ของเวอร์ชันเดิมเก็บไว้ให้ประวัติ) · ร่าง EDIT_COMMENT ของความเห็นนี้ถูกลบ (rpc app_community_update_comment)',
+    returns: '`id` · `thread_id` · `edited_at`',
+    forbidden: 'ไม่ใช่เจ้าของความเห็น (NOT_COMMENT_OWNER) · บัญชีถูกระงับ (COMMUNITY_BANNED)',
+  })
+  updateComment(@CurrentUser() me: AuthUser, @Id() id: string, @Body() b: UpdateCommunityCommentDto) {
+    return this.community.write<UpdateCommunityCommentResult>('app_community_update_comment', {
+      p_actor: me.id,
+      p_comment: id,
+      p_body: b.body ?? '',
+      p_media: b.media ?? [],
+    });
+  }
+
   @Delete('community/comments/:id')
   @ApiDoc({
     summary: 'ลบความคิดเห็นของฉัน',
-    description: 'เฉพาะเจ้าของความเห็น (rpc app_community_delete_comment)',
+    description: 'เฉพาะเจ้าของความเห็น · ไฟล์แนบ ประวัติการแก้ไข และร่างแก้ความเห็นนี้ถูกลบ (rpc app_community_delete_comment)',
     returns: '`id` · `thread_id` · `status` = DELETED',
     forbidden: 'ไม่ใช่เจ้าของความเห็น (NOT_COMMENT_OWNER)',
   })

@@ -15,7 +15,7 @@ import { RequireAuth, RequireRole } from './middleware';
  */
 const routes: RouteObject[] = [
   // แผนที่เต็มจอ (ไม่มี navbar — มีปุ่มลอยของตัวเอง) ซ่อนไว้ก่อนตอนนี้ไม่ใช้
-  // { path: 'map', lazy: () => import('@/modules/map/page').then((m) => ({ Component: m.MapPage })) },
+  { path: 'map', lazy: () => import('@/modules/map/page').then((m) => ({ Component: m.MapPage })) },
   // /login, /register = redirect ไปหน้าหลักแล้วเปิด modal (ลิงก์เก่า + RequireAuth)
   {
     path: 'login',

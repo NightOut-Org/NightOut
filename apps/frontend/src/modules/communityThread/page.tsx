@@ -23,7 +23,7 @@ import { CommunityAvatar } from '@/ui/components/communityAvatar';
 import { CommunityMediaView } from '@/ui/components/communityMediaView';
 import { barImage } from '@/ui/utils/barImage';
 import { compactCount } from '@/ui/utils/community';
-import { CROWD, timeAgo } from '@/ui/utils/format';
+import { CROWD, dateTime, timeAgo } from '@/ui/utils/format';
 import {
   addView,
   deleteComment,
@@ -36,6 +36,7 @@ import {
   useThread,
 } from './api';
 import { CommentList } from './components/commentList';
+import { HistoryModal, type HistoryTarget } from './components/historyModal';
 import { ReplyComposer, type ReplyComposerHandle } from './components/replyComposer';
 import { ReportModal } from './components/reportModal';
 
@@ -55,6 +56,7 @@ export function CommunityThreadPage() {
     thread_id?: string;
     comment_id?: string;
   } | null>(null);
+  const [historyOf, setHistoryOf] = useState<HistoryTarget | null>(null);
   const viewed = useRef<string | null>(null);
 
   // นับยอดเข้าชมครั้งเดียวต่อการเปิดกระทู้
@@ -192,6 +194,7 @@ export function CommunityThreadPage() {
     onDelete: (c: CommunityComment) => guard(() => deleteComment(c.id))(),
     onReport: (c: CommunityComment) =>
       user ? setReportTarget({ comment_id: c.id }) : openLogin(`/community/t/${t.id}`),
+    onHistory: (c: CommunityComment) => setHistoryOf({ kind: 'comment', id: c.id }),
   };
 
   return (
@@ -232,6 +235,7 @@ export function CommunityThreadPage() {
             onLike={guard(() => setThreadLike(t.id, !t.is_liked))}
             onSave={toggleSave}
             onPin={togglePin}
+            onHistory={() => setHistoryOf({ kind: 'thread', id: t.id })}
           />
 
           {t.status === 'PUBLISHED' && (
@@ -250,7 +254,12 @@ export function CommunityThreadPage() {
                 ]}
               />
             </div>
-            <CommentList comments={t.comments} order={order} actions={commentActions} />
+            <CommentList
+              threadId={t.id}
+              comments={t.comments}
+              order={order}
+              actions={commentActions}
+            />
           </section>
         </main>
 
@@ -283,6 +292,7 @@ export function CommunityThreadPage() {
       </div>
 
       <ReportModal target={reportTarget} onClose={() => setReportTarget(null)} />
+      <HistoryModal target={historyOf} onClose={() => setHistoryOf(null)} />
     </div>
   );
 }
@@ -293,12 +303,14 @@ function ThreadArticle({
   onLike,
   onSave,
   onPin,
+  onHistory,
 }: {
   t: CommunityThreadDetail;
   menu: MenuProps['items'];
   onLike: () => void;
   onSave: () => void;
   onPin: () => void;
+  onHistory: () => void;
 }) {
   const pill =
     'inline-flex h-10 touch-manipulation select-none items-center gap-1.5 rounded-full border px-3.5 text-sm font-medium transition-transform active:scale-95';
@@ -318,7 +330,20 @@ function ThreadArticle({
           </div>
           <div className="text-xs text-muted">
             {timeAgo(t.created_at)}
-            {t.edited_at && ' · แก้ไขแล้ว'} · เข้าชม {compactCount(t.view_count)}
+            {t.edited_at && (
+              <>
+                {' · '}
+                <button
+                  type="button"
+                  onClick={onHistory}
+                  title={`แก้ไขล่าสุด ${dateTime(t.edited_at)} — ดูประวัติการแก้ไข`}
+                  className="touch-manipulation bg-transparent p-0 text-muted underline decoration-dotted underline-offset-2 md:hover:text-text"
+                >
+                  แก้ไขแล้ว
+                </button>
+              </>
+            )}{' '}
+            · เข้าชม {compactCount(t.view_count)}
           </div>
         </div>
         <Dropdown menu={{ items: menu }} trigger={['click']} placement="bottomRight">

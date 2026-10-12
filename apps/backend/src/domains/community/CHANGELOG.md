@@ -1,5 +1,10 @@
 # CHANGELOG — backend · community
 
+## 2026-10-12 — ชุมชน: แก้ไขความเห็น + ประวัติการแก้ไข
+- migration `20261012000800_community_edit_history.sql`: ตาราง `community_revisions` (เวอร์ชันที่ถูกแก้ทับ · แก้/ลบไม่ได้) · `community_comments.edited_at` · `app_community_update_comment` · `community_history` · `app_community_update_thread` เก็บเวอร์ชันเดิมเฉพาะเมื่อเนื้อหาเปลี่ยนจริง · ร่าง `EDIT_COMMENT` · ไฟล์ของเวอร์ชันเดิมเก็บไว้ (ลบเมื่อเจ้าของลบกระทู้/ความเห็น) และทุกคนที่เห็นกระทู้อ่านได้ · view admin + `revisions`
+- endpoint ใหม่: `PATCH /community/comments/:id` (me) · `GET /public/community/threads/:id/history` · `GET /public/community/comments/:id/history` (เติม signed URL ของไฟล์ทุกเวอร์ชันใน `CommunityService.history`)
+- ไฟล์: `community.me.controller.ts` · `community.public.controller.ts` · `community.service.ts` · `community.dto.ts`
+
 ## 2026-10-11 — ชุมชน: แนบรูป/วิดีโอในกระทู้และความเห็น
 - migration `20261011000100_community_media.sql`: bucket `community-media` (private) + storage policy · ตาราง `community_media` · ลายเซ็นใหม่ของ `app_community_create_thread` / `update_thread` / `add_comment` (`p_media`) · ร่างเก็บ `payload.media` · ทุกฟังก์ชันเขียนคืน `removed_paths` · `community_thread` + `media` · view แอดมิน + `media` — ทดสอบด้วย PGlite (stub auth/storage) ผ่าน 55 กรณี
 - `community.service.ts` ใหม่: `write()` = rpc แล้วลบไฟล์ใน `removed_paths` ออกจาก Storage (service_role) · `thread()` = เติม signed URL ของไฟล์แนบในนามผู้เรียก (6 ชม.)

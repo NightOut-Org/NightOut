@@ -180,7 +180,7 @@ function ReplyBox({
         </div>
       )}
       <CommunityMediaPicker ref={picker} variant="row" value={value.media} onChange={setMedia} />
-      <div className="flex items-end gap-2.5">
+      <div className="flex items-end gap-2.5 md:items-start md:gap-3">
         <span className="mb-5 flex shrink-0 md:hidden">
           <AttachButton label="แนบรูป" onClick={() => pick('image')}>
             <ImageIcon size={22} />
@@ -190,7 +190,7 @@ function ReplyBox({
           </AttachButton>
         </span>
         {user && (
-          <span className="hidden md:block">
+          <span className="mt-[5px] hidden shrink-0 md:block">
             <CommunityAvatar id={user.id} name={user.displayName} size={36} />
           </span>
         )}
@@ -214,15 +214,15 @@ function ReplyBox({
             enterKeyHint="send"
             className="!rounded-[22px] !px-4 !py-2.5 !text-base"
           />
-          <div className="mt-1 flex min-h-4 flex-wrap items-center gap-x-3 gap-y-1 px-1">
-            <span className="hidden items-center gap-1 md:flex">
+          <div className="mt-1 flex min-h-4 flex-wrap items-center gap-x-3 gap-y-1 px-1 md:mt-2 md:px-0">
+            <span className="-ml-2.5 hidden items-center gap-1 md:flex">
               <AttachButton label="แนบรูป" onClick={() => pick('image')} wide>
                 <ImageIcon size={18} /> รูปภาพ
               </AttachButton>
               <AttachButton label="แนบวิดีโอ" onClick={() => pick('video')} wide>
                 <VideoCamera size={18} /> วิดีโอ
               </AttachButton>
-              <span className="text-xs text-muted">
+              <span className="ml-1 text-xs text-muted">
                 {value.media.length}/{COMMUNITY_MEDIA_LIMITS.maxFiles} ไฟล์ · วิดีโอไม่เกิน{' '}
                 {COMMUNITY_MEDIA_LIMITS.videoSeconds} วิ / {COMMUNITY_MEDIA_LIMITS.videoMB}MB
               </span>
@@ -232,6 +232,15 @@ function ReplyBox({
               savedAt={autosave.savedAt}
               onRetry={() => void autosave.flush()}
             />
+            <Button
+              type="primary"
+              disabled={!canSend}
+              loading={sending}
+              onClick={() => void send()}
+              className="!ml-auto !hidden !h-9 !rounded-full !px-5 !font-bold md:!inline-flex"
+            >
+              ตอบกลับ
+            </Button>
           </div>
         </div>
         <Button
@@ -245,15 +254,6 @@ function ReplyBox({
           icon={<PaperPlaneRight size={20} weight="fill" />}
           className="!mb-5 !size-[46px] shrink-0 md:!hidden"
         />
-        <Button
-          type="primary"
-          disabled={!canSend}
-          loading={sending}
-          onClick={() => void send()}
-          className="!mb-5 !hidden !h-10 !rounded-full !px-5 !font-bold md:!inline-flex"
-        >
-          ตอบกลับ
-        </Button>
       </div>
     </Shell>
   );

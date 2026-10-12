@@ -1,7 +1,7 @@
 import { PageContainer } from '@ant-design/pro-components';
 import type { Db } from '@nightout/types';
 import { Button, Popconfirm, Space, Table, Tabs, Tag, Typography } from 'antd';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { PAGE_SIZE } from '@/configs/constants';
 import { useAdminAction } from '@/services/adminData';
 import { LoadError } from '@/ui/components/LoadError';
@@ -15,6 +15,7 @@ import {
   useCommunityThreads,
   useMediaUrls,
 } from './api';
+import { HistoryModal } from './components/historyModal';
 import { MediaCell } from './components/mediaCell';
 
 type Action = 'KEEP' | 'HIDE' | 'REMOVE' | 'RESTORE';
@@ -35,6 +36,7 @@ export function CommunityPage() {
   const threads = useCommunityThreads();
   const comments = useCommunityComments();
   const act = useAdminAction();
+  const [history, setHistory] = useState<Row | null>(null);
 
   const moderate = (r: Row, action: Action) =>
     act.mutate({
@@ -45,14 +47,23 @@ export function CommunityPage() {
     });
 
   const t = useMemo(() => split(threads.data ?? []), [threads.data]);
-  // ไฟล์แนบทุกแถว ขอ signed URL ครั้งเดียว
+  // ไฟล์แนบทุกแถว (รวมฉบับก่อนแก้) ขอ signed URL ครั้งเดียว
   const mediaPaths = useMemo(
     () =>
       [...(threads.data ?? []), ...(comments.data ?? [])].flatMap((r) =>
-        r.media.flatMap((m) => (m.thumb_path ? [m.path, m.thumb_path] : [m.path])),
+        [...r.media, ...r.revisions.flatMap((v) => v.media)].flatMap((m) =>
+          m.thumb_path ? [m.path, m.thumb_path] : [m.path],
+        ),
       ),
     [threads.data, comments.data],
   );
+  /** "แก้ไขแล้ว N ครั้ง" ใต้เนื้อหา → เปิดประวัติ */
+  const editedLink = (r: Row) =>
+    r.revisions.length > 0 && (
+      <Typography.Link className="!text-xs" onClick={() => setHistory(r)}>
+        แก้ไขแล้ว {r.revisions.length} ครั้ง · ดูประวัติ
+      </Typography.Link>
+    );
   const { data: urls = {} } = useMediaUrls(mediaPaths);
   const c = useMemo(() => split(comments.data ?? []), [comments.data]);
 
@@ -142,6 +153,7 @@ export function CommunityPage() {
           <Typography.Paragraph type="secondary" ellipsis={{ rows: 2 }} className="!mb-0 !text-xs">
             {r.body || '—'}
           </Typography.Paragraph>
+          {editedLink(r)}
         </>
       ),
     },
@@ -176,6 +188,7 @@ export function CommunityPage() {
           <Typography.Text type="secondary" ellipsis className="block !text-xs">
             ในกระทู้: {r.thread_title}
           </Typography.Text>
+          {editedLink(r)}
         </>
       ),
     },
@@ -255,6 +268,7 @@ export function CommunityPage() {
           },
         ]}
       />
+      <HistoryModal row={history} urls={urls} onClose={() => setHistory(null)} />
     </PageContainer>
   );
 }

@@ -5,7 +5,7 @@ import { SaveHomePageBody, UpdateHomeCategoryBody, UpdateHomeContentBody, Update
 import { SetUsersRoleBody } from './account';
 import { AdminBarMediaBody, BAR_GALLERY_MAX, BarMediaBody, BarStoreBody, MenuBody, PromotionsPageBody, SaveSafetyBody, SettingsPageBody, SetBarsStatusBody } from './bar';
 import { PUBLIC_BUCKETS, UploadBucket } from './storage';
-import { CommunityCommentBody, CommunityFeedQuery, CommunityReportBody, CommunityThreadBody, MyCommunityFeedQuery, SaveCommunityDraftBody } from './community';
+import { CommunityCommentBody, CommunityFeedQuery, CommunityReportBody, CommunityThreadBody, MyCommunityFeedQuery, SaveCommunityDraftBody, UpdateCommunityCommentBody } from './community';
 
 describe('booking', () => {
   const base = {
@@ -222,6 +222,17 @@ describe('community', () => {
     expect(SaveCommunityDraftBody.safeParse({ kind: 'NEW', thread_id: id, payload: {} }).success).toBe(false);
     expect(SaveCommunityDraftBody.safeParse({ kind: 'REPLY', payload: { body: 'กำลังพิมพ์' } }).success).toBe(false);
     expect(SaveCommunityDraftBody.safeParse({ kind: 'EDIT', thread_id: id, payload: { title: 'x'.repeat(121) } }).success).toBe(false);
+  });
+  it('draft: EDIT_COMMENT needs a thread and the comment being edited', () => {
+    expect(SaveCommunityDraftBody.safeParse({ kind: 'EDIT_COMMENT', thread_id: id, payload: { comment_id: id, body: 'แก้' } }).success).toBe(true);
+    expect(SaveCommunityDraftBody.safeParse({ kind: 'EDIT_COMMENT', thread_id: id, payload: { body: 'แก้' } }).success).toBe(false);
+    expect(SaveCommunityDraftBody.safeParse({ kind: 'EDIT_COMMENT', payload: { comment_id: id } }).success).toBe(false);
+  });
+  it('edit comment: trims · needs text or a file', () => {
+    expect(UpdateCommunityCommentBody.parse({ body: '  แก้แล้ว  ' })).toEqual({ body: 'แก้แล้ว', media: [] });
+    expect(UpdateCommunityCommentBody.safeParse({ body: '  ' }).success).toBe(false);
+    expect(UpdateCommunityCommentBody.safeParse({ media: [{ path: 'u1/a.jpg', kind: 'IMAGE' }] }).success).toBe(true);
+    expect(UpdateCommunityCommentBody.safeParse({ body: 'x'.repeat(2001) }).success).toBe(false);
   });
   it('media: up to 6 files · a comment needs text or a file', () => {
     const img = { path: 'u1/a.jpg', kind: 'IMAGE' as const };

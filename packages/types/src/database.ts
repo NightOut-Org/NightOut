@@ -479,8 +479,19 @@ export interface CommunityReportRow {
   status: 'OPEN' | 'RESOLVED';
   created_at: ISODateTime;
 }
+/** เวอร์ชันก่อนหน้าของกระทู้/ความเห็น (community_revisions · migration 20261012000800) ใหม่สุดก่อน */
+export interface CommunityRevisionRow {
+  /** กระทู้เท่านั้น (ความเห็น = null) */
+  title: string | null;
+  body: string;
+  media: CommunityMediaRow[];
+  /** เวอร์ชันนี้เริ่มแสดงเมื่อไร */
+  version_at: ISODateTime;
+  /** ถูกแก้ทับเมื่อไร */
+  replaced_at: ISODateTime;
+}
 
-/** admin_community_threads (migration 20261010000100) — กระทู้ทุกสถานะยกเว้นที่เจ้าของลบ · Backoffice "ชุมชน" */
+/** admin_community_threads (migration 20261012000800) — กระทู้ทุกสถานะยกเว้นที่เจ้าของลบ · Backoffice "ชุมชน" */
 export interface AdminCommunityThread {
   id: UUID;
   title: string;
@@ -499,9 +510,10 @@ export interface AdminCommunityThread {
   open_report_count: number;
   reports: CommunityReportRow[];
   media: CommunityMediaRow[];
+  revisions: CommunityRevisionRow[];
 }
 
-/** admin_community_comments (migration 20261010000100) — ความเห็นทุกสถานะยกเว้นที่เจ้าของลบ */
+/** admin_community_comments (migration 20261012000800) — ความเห็นทุกสถานะยกเว้นที่เจ้าของลบ */
 export interface AdminCommunityComment {
   id: UUID;
   thread_id: UUID;
@@ -516,6 +528,8 @@ export interface AdminCommunityComment {
   open_report_count: number;
   reports: CommunityReportRow[];
   media: CommunityMediaRow[];
+  edited_at: ISODateTime | null;
+  revisions: CommunityRevisionRow[];
 }
 
 // ---------------------------------------------------------------------

@@ -66,6 +66,15 @@ export const CommunityCommentBody = z
   .refine((b) => b.body.length > 0 || b.media.length > 0, { message: 'พิมพ์ความคิดเห็นหรือแนบไฟล์ก่อนส่ง', path: ['body'] });
 export type CommunityCommentBody = z.input<typeof CommunityCommentBody>;
 
+/** PATCH /community/comments/:id — แก้ความเห็นของตัวเอง (ข้อความ + ไฟล์ทั้งชุด · เวอร์ชันเดิมเก็บในประวัติ) */
+export const UpdateCommunityCommentBody = z
+  .object({
+    body: z.string().trim().max(COMMUNITY_COMMENT_MAX).default(''),
+    media: mediaList.default([]).describe('ไฟล์ทั้งชุดของความเห็น (แทนที่ทั้งชุด)'),
+  })
+  .refine((b) => b.body.length > 0 || b.media.length > 0, { message: 'พิมพ์ความคิดเห็นหรือแนบไฟล์ก่อนบันทึก', path: ['body'] });
+export type UpdateCommunityCommentBody = z.input<typeof UpdateCommunityCommentBody>;
+
 /** PUT /community/threads/:id/like · /save · /pin · PUT /community/comments/:id/like */
 export const CommunityToggleBody = z.object({ on: z.boolean() });
 export type CommunityToggleBody = z.infer<typeof CommunityToggleBody>;
@@ -87,8 +96,11 @@ export type CommunityReportBody = z.infer<typeof CommunityReportBody>;
 // ---------------------------------------------------------------------
 // ฉบับร่าง
 // ---------------------------------------------------------------------
-/** NEW = ตั้งกระทู้ใหม่ (1 ร่างต่อบัญชี) · REPLY = ตอบกระทู้ (1 ร่างต่อกระทู้) · EDIT = แก้กระทู้ (1 ร่างต่อกระทู้) */
-export const CommunityDraftKind = z.enum(['NEW', 'REPLY', 'EDIT']);
+/**
+ * NEW = ตั้งกระทู้ใหม่ (1 ร่างต่อบัญชี) · REPLY = ตอบกระทู้ · EDIT = แก้กระทู้
+ * EDIT_COMMENT = แก้ความเห็น (payload.comment_id) — REPLY / EDIT / EDIT_COMMENT 1 ร่างต่อกระทู้
+ */
+export const CommunityDraftKind = z.enum(['NEW', 'REPLY', 'EDIT', 'EDIT_COMMENT']);
 export type CommunityDraftKind = z.infer<typeof CommunityDraftKind>;
 
 /** ช่องในฟอร์มที่เก็บไว้ (ไม่ตรวจความยาวขั้นต่ำ — ร่างยังพิมพ์ไม่เสร็จได้) */
@@ -98,6 +110,7 @@ export const CommunityDraftPayload = z.object({
   body: z.string().max(COMMUNITY_BODY_MAX).nullish(),
   bar_id: uuid.nullish(),
   parent_id: uuid.nullish(),
+  comment_id: uuid.nullish().describe('ร่าง EDIT_COMMENT: ความเห็นที่กำลังแก้'),
   media: mediaList.nullish(),
 });
 export type CommunityDraftPayload = z.infer<typeof CommunityDraftPayload>;
@@ -105,7 +118,11 @@ export type CommunityDraftPayload = z.infer<typeof CommunityDraftPayload>;
 /** PUT /me/community/drafts */
 export const SaveCommunityDraftBody = z
   .object({ kind: CommunityDraftKind, thread_id: uuid.nullish(), payload: CommunityDraftPayload })
-  .refine((b) => (b.kind === 'NEW') === !b.thread_id, { message: 'ร่างกระทู้ใหม่ไม่มี thread_id · ร่างตอบ/แก้ต้องมี', path: ['thread_id'] });
+  .refine((b) => (b.kind === 'NEW') === !b.thread_id, { message: 'ร่างกระทู้ใหม่ไม่มี thread_id · ร่างตอบ/แก้ต้องมี', path: ['thread_id'] })
+  .refine((b) => b.kind !== 'EDIT_COMMENT' || !!b.payload.comment_id, {
+    message: 'ร่างแก้ความเห็นต้องมี comment_id',
+    path: ['payload', 'comment_id'],
+  });
 export type SaveCommunityDraftBody = z.infer<typeof SaveCommunityDraftBody>;
 
 /** DELETE /me/community/drafts/:kind?thread_id= */
@@ -194,6 +211,8 @@ export interface CommunityComment {
   author: CommunityAuthor;
   like_count: number;
   created_at: string;
+  /** แก้ไขล่าสุดเมื่อไร (null = ไม่เคยแก้) */
+  edited_at: string | null;
   is_mine: boolean;
   is_liked: boolean;
   media: CommunityMedia[];
@@ -204,6 +223,25 @@ export interface CommunityThreadDetail extends CommunityThreadSummary {
   media: CommunityMedia[];
   /** ความเห็นทั้งหมดเรียงตามเวลา (แบน — parent_id ชี้ความเห็นหลัก) */
   comments: CommunityComment[];
+}
+
+/** GET /public/community/{threads|comments}/:id/history — 1 เวอร์ชัน (ใหม่สุดก่อน · แถวแรก = ปัจจุบัน) */
+export interface CommunityRevision {
+  /** กระทู้เท่านั้น */
+  title?: string;
+  category_name?: string;
+  bar?: CommunityBarRef | null;
+  body: string;
+  media: CommunityMedia[];
+  /** เวอร์ชันนี้เริ่มแสดงเมื่อไร (ตั้ง / แก้) */
+  at: string;
+  is_current: boolean;
+}
+
+export interface UpdateCommunityCommentResult {
+  id: string;
+  thread_id: string;
+  edited_at: string | null;
 }
 
 export interface CommunityTrendingBar extends CommunityBarRef {
@@ -244,7 +282,7 @@ export const COMMUNITY_ERRORS = {
   THREAD_NOT_FOUND: 'ไม่พบกระทู้นี้ หรือกระทู้ถูกลบไปแล้ว',
   COMMENT_NOT_FOUND: 'ไม่พบความคิดเห็นนี้ หรือถูกลบไปแล้ว',
   NOT_THREAD_OWNER: 'แก้หรือลบได้เฉพาะกระทู้ของตัวเอง',
-  NOT_COMMENT_OWNER: 'ลบได้เฉพาะความคิดเห็นของตัวเอง',
+  NOT_COMMENT_OWNER: 'แก้หรือลบได้เฉพาะความคิดเห็นของตัวเอง',
   NOT_AUTHENTICATED: 'เข้าสู่ระบบก่อน',
   COMMUNITY_BANNED: 'บัญชีนี้ถูกระงับ ตั้งกระทู้หรือแสดงความคิดเห็นไม่ได้',
   COMMUNITY_CATEGORY_STAFF_ONLY: 'หมวดนี้ตั้งกระทู้ได้เฉพาะทีม NightOut',

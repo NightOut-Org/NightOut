@@ -1,5 +1,9 @@
 # CHANGELOG — @nightout/types
 
+## 2026-10-12 — ชุมชน: แก้ไขความเห็น + ประวัติการแก้ไข
+- `Db.CommunityRevisionRow` · `AdminCommunityThread.revisions` · `AdminCommunityComment.edited_at` + `revisions` (view admin_community_* · migration `20261012000800`)
+- `database.generated.ts` ยังไม่ได้สร้างใหม่ — รัน `db:types` หลัง `db:push`
+
 ## 2026-10-11 — ชุมชน: แนบรูป/วิดีโอในกระทู้และความเห็น
 - `database.ts`: `CommunityMediaRow` + `media` ใน `AdminCommunityThread` / `AdminCommunityComment` (migration `20261011000100_community_media`)
 
