@@ -18,8 +18,8 @@ export const EnvSchema = z.object({
   QR_SIGNING_KEY: z.string().optional(),
   /** เข้ารหัสเลขบัญชีร้าน (AES-256-GCM) — ห้ามเปลี่ยนหลังมีข้อมูลแล้ว */
   PAYOUT_ENCRYPTION_KEY: z.string().min(16).optional(),
-  /** dev: รัน job หมดเวลา/ไม่มาตามนัด ทุกกี่ ms ในเครื่อง (0 = ปิด · production ใช้ pg_cron) */
-  JOBS_LOCAL_INTERVAL_MS: z.coerce.number().int().min(0).default(60_000),
+  /** dev: รัน job หมดเวลา/ไม่มาตามนัด ทุกกี่ ms ในเครื่อง · ค่าเริ่มต้น 0 = ปิด (DB จริงมี pg_cron รันให้แล้ว — เปิดเฉพาะ DB ในเครื่องที่ไม่มี pg_cron · ต่อ DB จริงแล้วเปิด = ยิงซ้ำ + กิน API log) */
+  JOBS_LOCAL_INTERVAL_MS: z.coerce.number().int().min(0).default(0),
   /** ค้นหาที่อยู่/หาที่อยู่จากหมุด (GET /geocode/*) — OSM Nominatim · instance สาธารณะต้อง ≤ 1 ครั้ง/วินาที · traffic เยอะ = เปลี่ยนเป็น self-host / เสียเงิน */
   GEOCODER_URL: z.url().default('https://nominatim.openstreetmap.org'),
   /** นโยบาย Nominatim: ต้องระบุตัวตนแอป */

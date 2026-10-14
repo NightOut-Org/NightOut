@@ -1,5 +1,11 @@
 # booking — ประวัติการแก้ไข
 
+## 2026-10-14 — ตั้งตัวรัน job ด้วย pg_cron + ปิด job ในเครื่อง dev
+- ปัญหา: บน DB จริงไม่มี pg_cron ตั้งไว้ และ backend `pnpm dev` ทุกเครื่องที่ต่อ DB จริงยิง `rpc/run_booking_timeouts` ทุกนาทีซ้ำกัน (~3 ครั้ง/นาที) → API log เต็มโควตา Free Plan · เว็บจริงไม่มีตัวรัน job ถ้าไม่มีใครเปิด dev
+- migration `20261014000100_booking_cron_jobs`: pg_cron เรียกฟังก์ชันใน DB ตรง (ไม่ผ่าน HTTP → ไม่เกิด API log) — `nightout-booking-timeouts` ทุกนาที · `nightout-tier` 00:05 เวลาไทย · `nightout-job-cleanup` ล้าง `cron.job_run_details` / `job_runs` เก่าทุกคืน
+- `JOBS_LOCAL_INTERVAL_MS` ค่าเริ่มต้นเป็น 0 (ปิด `LocalJobsScheduler`) เปิดเองเฉพาะ DB ในเครื่องที่ไม่มี pg_cron · `/api/jobs/*` ยังเรียกมือได้
+- ไฟล์: `supabase/migrations/20261014000100_booking_cron_jobs.sql` · `src/jobs/local-jobs.scheduler.ts` · `src/config/env.ts` · `.env.example`
+
 ## 2026-10-13 — ทีมร้านกด "ปลดโต๊ะ (Forfeited)" เอง (คอมเมนต์ #76)
 - migration `20261013001500_booking_team_forfeit`: rpc `app_team_forfeit_booking(p_actor, p_booking)` — ทีมร้านทุกบทบาท (รวม STAFF/PR) ปลดโต๊ะได้เฉพาะการจอง CONFIRMED ที่เลย `auto_cancel_at` แล้ว → `NO_SHOW` ผลเหมือน job `run_booking_timeouts` (Table Fee ให้ร้าน + แจ้งลูกค้า/ทีมร้าน/แอดมินผ่าน trigger เดิม) · ประวัติ reason `team forfeit` · audit `booking.forfeit`
 - endpoint ใหม่ `POST /merchant/bookings/:bookingId/forfeit` (`booking.merchant.controller.ts` · ตอบ `{id, status: "NO_SHOW"}`) · error `BOOKING_NOT_OVERDUE` / `BOOKING_NOT_CONFIRMED` / `NOT_BAR_MEMBER` · เทสต์ 401 ใน `test/app.test.ts`

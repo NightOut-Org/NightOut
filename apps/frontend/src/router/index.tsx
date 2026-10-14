@@ -7,7 +7,7 @@ import { RootLayout } from '@/layouts/root';
 import { HomePage } from '@/modules/home/page';
 import { RequireAuth, RequireBarRole, RequireRole } from './middleware';
 
-// หมดเวลา / ปลดโต๊ะ (Forfeited) / แจ้งเตือน 15 นาทีก่อนเวลาจอง: ฐานข้อมูลจัดการเอง (pg_cron → /api/jobs/booking-timeouts · dev: NestJS รันทุก 1 นาที)
+// หมดเวลา / ปลดโต๊ะ (Forfeited) / แจ้งเตือน 15 นาทีก่อนเวลาจอง: ฐานข้อมูลจัดการเอง (pg_cron → run_booking_timeouts() ทุก 1 นาที)
 
 /**
  * route ทั้งหมดตาม docs/SITEMAP.md
