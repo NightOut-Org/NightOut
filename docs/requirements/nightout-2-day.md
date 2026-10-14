@@ -1,6 +1,6 @@
 <!-- สร้างจาก /sync-requirements (scripts/gdoc-to-md.mjs) — ห้ามแก้มือ -->
 <!-- source: https://docs.google.com/document/d/1GQ3ilsu_y_dzTulZS9_UEtNH7ygOLkaM-YkqdFm3UUI/edit -->
-<!-- revisionId: AHj4eMS8utfAP-tszegckU4H0staYQyWjV6ZqxYOy8n43F6nSux3ys9-s3iBMgHFcC2LIOJdUpV44MQIe2ummzpllsCPGqMoHrJITW8z_t0 -->
+<!-- revisionId: AHj4eMSSoFOaasknKrPfmyvsPBEbJ_oH9pL2SLzBZ5jIjb-NkEZFkVS21JM06OC9Cosa_m4cNlr0Qt5jgpDkdAqqIemGoE0XJeLQxh4VUMA -->
 <!-- synced: 2026-10-14 -->
 
 # Nightout_2.day
