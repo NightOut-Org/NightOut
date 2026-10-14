@@ -1,0 +1,48 @@
+/*
+ * หน้า /search (ดีไซน์ Search Combined)
+ * หมุดราคาแคปซูลทองบนแผนที่ — divIcon ของ components/pricePin.ts
+ */
+.nl-price-pin {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  width: 82px;
+  height: 30px;
+  box-sizing: border-box;
+  padding: 0 6px 0 3px;
+  border-radius: 9999px;
+  border: 1px solid var(--gold);
+  background: var(--card);
+  color: var(--gold-text);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5);
+  transition:
+    transform 160ms cubic-bezier(0.22, 1, 0.36, 1),
+    background-color 160ms,
+    color 160ms;
+}
+.nl-price-pin:hover {
+  transform: translateY(-2px);
+}
+.nl-price-pin.is-active {
+  background: var(--gold);
+  color: var(--on-gold);
+  transform: scale(1.08);
+}
+.nl-price-pin__img {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  border-radius: 9999px;
+  background-size: cover;
+  background-position: center;
+}
+@media (prefers-reduced-motion: reduce) {
+  .nl-price-pin {
+    transition: none;
+  }
+}
