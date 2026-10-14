@@ -1,4 +1,6 @@
 import { Bell, SignOut, User, type Icon } from '@phosphor-icons/react';
+import type * as C from '@nightout/contracts';
+import { Rest } from '@nightout/utils/rest';
 import { myNotifications } from '@/services/data';
 import { ThemeToggle } from '@nightout/ui';
 import { App, Badge, Button, Dropdown, Empty, Tag } from 'antd';
@@ -35,6 +37,10 @@ const ISLAND = {
 
 const spring = { type: 'spring', stiffness: 420, damping: 34 } as const;
 
+/** POST /me/notifications/read — อ่านแล้วเฉพาะรายการที่ส่งไป (แจ้งเตือนที่เข้ามาทีหลังยังนับเป็นใหม่) */
+const markNotificationsRead = (ids: string[]) =>
+  Rest.post('/me/notifications/read', { ids } satisfies C.MarkReadBody);
+
 /**
  * Floating island navbar (บนสุด)
  * - แคปซูลลอยกลางจอ แยกจากขอบ · เลื่อนลงแล้วหดให้กะทัดรัด
@@ -57,6 +63,8 @@ export function Navbar({
   const { openLogin } = useAuthModal();
   const navigate = useNavigate();
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  // แจ้งเตือนที่เพิ่งกดเข้าไปดู → เลขบนกระดิ่งและจุดของอันนั้นหายทันที (ไม่ต้องรอ store โหลดใหม่)
+  const [seenIds, setSeenIds] = useState<ReadonlySet<string>>(() => new Set());
   const [profileOpen, setProfileOpen] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
   const scrolled = useScrolled();
@@ -66,7 +74,19 @@ export function Navbar({
   const latestNotifications = notifications
     .toSorted((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt))
     .slice(0, NOTIFICATION_PREVIEW_LIMIT);
-  const unread = notifications.filter((n) => !n.readAt).length;
+  const isUnread = (n: { id: string; readAt?: string }) => !n.readAt && !seenIds.has(n.id);
+  const unread = notifications.filter(isUnread).length;
+
+  /** กดเข้าไปดูแจ้งเตือน = อ่านเฉพาะอันนั้น */
+  const openNotification = (n: { id: string; readAt?: string }) => {
+    setNotificationsOpen(false);
+    if (!isUnread(n)) return;
+    setSeenIds((prev) => new Set(prev).add(n.id));
+    markNotificationsRead([n.id]).catch((e: Error) => {
+      setSeenIds((prev) => new Set([...prev].filter((id) => id !== n.id)));
+      message.error(e.message);
+    });
+  };
   const glass = overVideo && !scrolled;
   const dim = glass ? 'text-white/75 hover:text-white' : 'text-muted hover:text-text';
 
@@ -161,10 +181,10 @@ export function Navbar({
                       <li key={n.id}>
                         <Link
                           to={n.link || '/notifications'}
-                          onClick={() => setNotificationsOpen(false)}
+                          onClick={() => openNotification(n)}
                           className="flex gap-3 p-4 !text-text transition-colors hover:bg-card"
                         >
-                          <Badge dot={!n.readAt} className="mt-1 shrink-0">
+                          <Badge dot={isUnread(n)} className="mt-1 shrink-0">
                             <Bell size={20} className="text-gold-text" />
                           </Badge>
                           <div className="min-w-0">

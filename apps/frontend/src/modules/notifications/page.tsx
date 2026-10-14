@@ -1,6 +1,6 @@
 import { Bell } from '@phosphor-icons/react';
 import { myNotifications } from '@/services/data';
-import { markAllRead } from './api';
+import { markAllRead, markRead } from './api';
 import { App, Badge, Button, Empty, Listy } from 'antd';
 import { ListRow } from '@/ui/components/listRow';
 import { Link } from 'react-router';
@@ -38,7 +38,20 @@ export function NotificationsPage() {
                   <Bell size={22} className="text-gold-text" />
                 </Badge>
               }
-              title={n.link ? <Link to={n.link}>{n.title}</Link> : n.title}
+              title={
+                n.link ? (
+                  <Link
+                    to={n.link}
+                    onClick={() => {
+                      if (!n.readAt) void markRead([n.id]).catch((e: Error) => message.error(e.message));
+                    }}
+                  >
+                    {n.title}
+                  </Link>
+                ) : (
+                  n.title
+                )
+              }
               description={
                 <>
                   {n.body} · <span className="text-xs">{timeAgo(n.createdAt)}</span>
