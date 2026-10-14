@@ -36,7 +36,7 @@ export const ModerateReviewBody = z.object({
 export type ModerateReviewBody = z.infer<typeof ModerateReviewBody>;
 
 export const REVIEW_ERRORS = {
-  REVIEW_REQUIRES_BOOKING: 'รีวิวได้หลังจองและมัดจำผ่านแล้วเท่านั้น',
+  REVIEW_REQUIRES_BOOKING: 'รีวิวได้หลังจองและชำระ Table Fee แล้วเท่านั้น',
   REVIEW_EXISTS: 'คุณรีวิวการจองนี้แล้ว',
   INVALID_RATING: 'ให้คะแนน 1–5 ดาว',
   REVIEW_MEDIA_LIMIT: 'แนบไฟล์ได้สูงสุด 6 ไฟล์',

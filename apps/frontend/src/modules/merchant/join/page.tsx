@@ -1,17 +1,21 @@
 import { Armchair, ArrowLeft, ArrowRight, CheckCircle, ForkKnife, MusicNotes, X } from '@phosphor-icons/react';
 import type { BarCategory } from '@nightout/types';
+import { formatTransit } from '@nightout/utils';
 import { App, Form, Input, Select } from 'antd';
 import { useState, type ReactNode } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { CATEGORY_LABELS, MASTER } from '@/services/data';
 import { useAuth } from '@/services/auth';
-import { merchantJoin } from './api';
+import { BarLocationFields } from '@/ui/components/barLocationFields';
+import { LocationPicker } from '@/ui/components/locationPicker';
+import { fillEmptyAddress, toLocationBody, type LocationFormValues } from '@/ui/utils/barLocation';
+import { merchantJoin, reversePlace, searchPlace } from './api';
 
-interface JoinValues {
+/** ข้อมูลร้าน + เอกสาร + ตำแหน่งร้าน (หมุด · ที่อยู่ · ที่จอดรถ · รถไฟฟ้า — ชื่อช่องจาก LocationFormValues) */
+interface JoinValues extends LocationFormValues {
   name: string;
   category: BarCategory;
   district?: string;
-  address: string;
   license: string;
 }
 
@@ -21,11 +25,17 @@ const CATEGORY_ICON: Record<BarCategory, ReactNode> = {
   RESTAURANT: <ForkKnife size={20} />,
 };
 
-/** 3 ขั้น: ฟิลด์ที่ต้องผ่านก่อนไปขั้นถัดไป */
+/** 4 ขั้น: ฟิลด์ที่ต้องผ่านก่อนไปขั้นถัดไป */
 const STEPS: { title: string; fields: (keyof JoinValues)[]; next: string; nextHint: string }[] = [
   {
     title: 'ข้อมูลร้าน',
-    fields: ['name', 'category', 'district', 'address'],
+    fields: ['name', 'category', 'district'],
+    next: 'ตำแหน่งร้าน',
+    nextHint: 'ปักหมุดร้านบนแผนที่ + ที่อยู่ ที่จอดรถ และรถไฟฟ้าใกล้สุด',
+  },
+  {
+    title: 'ตำแหน่งร้าน',
+    fields: ['pin', 'address', 'parking_note', 'transit_line', 'transit_station', 'transit_walk_minutes'],
     next: 'เอกสาร',
     nextHint: 'เลขใบอนุญาตสถานบริการ หรือทะเบียนพาณิชย์ของร้าน',
   },
@@ -65,7 +75,7 @@ function CategoryPicker({ value, onChange }: { value?: BarCategory; onChange?: (
   );
 }
 
-/** ตัวบอกขั้น 1 — 2 — 3 (Desktop) */
+/** ตัวบอกขั้น 1 — 2 — 3 — 4 (Desktop) */
 function StepDots({ step }: { step: number }) {
   return (
     <ol className="m-0 flex list-none items-center gap-2.5 p-0 text-sm" aria-label="ขั้นตอนสมัคร">
@@ -88,7 +98,7 @@ function StepDots({ step }: { step: number }) {
   );
 }
 
-/** /merchant/join — สมัครเป็นร้าน 3 ขั้น (ข้อมูลร้าน → เอกสาร → ส่งตรวจ) · ส่งครั้งเดียวตอนจบ */
+/** /merchant/join — สมัครเป็นร้าน 4 ขั้น (ข้อมูลร้าน → ตำแหน่งร้าน → เอกสาร → ส่งตรวจ) · ส่งครั้งเดียวตอนจบ */
 export function MerchantJoinPage() {
   const { message } = App.useApp();
   const navigate = useNavigate();
@@ -103,14 +113,19 @@ export function MerchantJoinPage() {
 
   const submit = async () => {
     const values = form.getFieldsValue(true) as JoinValues;
+    if (!values.pin) {
+      setStep(1);
+      void message.error('ปักหมุดตำแหน่งร้านบนแผนที่');
+      return;
+    }
     setSending(true);
     try {
       await merchantJoin({
         name: values.name,
         category: values.category,
         district_id: values.district ?? null,
-        address: values.address,
         license: values.license,
+        ...toLocationBody(values),
       });
       await reload(); // role เปลี่ยนเป็นร้านค้า → เมนูร้านค้าเปิดให้เตรียมข้อมูลระหว่างรอตรวจ
       message.success('ส่งข้อมูลแล้ว ทีม NightOut จะตรวจภายใน 1–2 วันทำการ');
@@ -132,11 +147,17 @@ export function MerchantJoinPage() {
   };
 
   const nextLabel = last ? (sending ? 'กำลังส่ง…' : 'ส่งให้ทีมตรวจ') : `ถัดไป: ${cur.next}`;
+  const transit = v.transit_line
+    ? formatTransit({ line: v.transit_line, station: v.transit_station ?? '', walkMinutes: v.transit_walk_minutes })
+    : null;
   const summary: [string, string | undefined][] = [
     ['ชื่อร้าน', v.name],
     ['ประเภทร้าน', v.category && CATEGORY_LABELS[v.category]],
     ['ย่าน', district],
     ['ที่อยู่', v.address],
+    ['ตำแหน่ง', v.pin ? `${v.pin.lat.toFixed(5)}, ${v.pin.lng.toFixed(5)}` : undefined],
+    ['รถไฟฟ้าใกล้สุด', transit ?? undefined],
+    ['ที่จอดรถ', v.parking_note],
     ['เลขใบอนุญาต / ทะเบียนพาณิชย์', v.license],
   ];
 
@@ -152,11 +173,22 @@ export function MerchantJoinPage() {
         <Form.Item name="district" label="ย่าน" rules={[{ required: true, message: 'เลือกย่าน' }]}>
           <Select showSearch={{ optionFilterProp: 'label' }} options={MASTER.districts.map((d) => ({ label: d.name, value: d.id }))} />
         </Form.Item>
-        <Form.Item name="address" label="ที่อยู่" rules={[{ required: true, message: 'กรอกที่อยู่ร้าน' }]} className="lg:col-span-2">
-          <Input.TextArea rows={2} autoComplete="street-address" />
-        </Form.Item>
       </div>
-      <div className={step === 1 ? '' : 'hidden'}>
+      {/* แผนที่ mount ตอนถึงขั้นนี้ (ไม่ซ่อนไว้ใน hidden — Leaflet ที่สร้างตอนขนาด 0 จะจัดกลางเพี้ยน) · ค่าในฟอร์มยังอยู่ (preserve) */}
+      {step === 1 && (
+        <div>
+          <Form.Item
+            name="pin"
+            label="หมุดร้าน"
+            rules={[{ required: true, message: 'ปักหมุดตำแหน่งร้านบนแผนที่' }]}
+            extra="ทีม NightOut ตรวจหมุดพร้อมการอนุมัติร้าน"
+          >
+            <LocationPicker search={searchPlace} onPickPlace={(p) => fillEmptyAddress(form, p)} />
+          </Form.Item>
+          <BarLocationFields reverse={reversePlace} disabled={sending} />
+        </div>
+      )}
+      <div className={step === 2 ? '' : 'hidden'}>
         <Form.Item
           name="license"
           label="เลขใบอนุญาตสถานบริการ / ทะเบียนพาณิชย์"
@@ -166,15 +198,18 @@ export function MerchantJoinPage() {
           <Input autoCapitalize="characters" />
         </Form.Item>
       </div>
-      {step === 2 && (
-        <dl className="m-0 grid gap-3.5">
-          {summary.map(([k, val]) => (
-            <div key={k} className="flex flex-col gap-0.5">
-              <dt className="text-[13px] text-muted">{k}</dt>
-              <dd className="m-0 text-[15px]">{val || '-'}</dd>
-            </div>
-          ))}
-        </dl>
+      {step === 3 && (
+        <>
+          <dl className="m-0 grid gap-3.5">
+            {summary.map(([k, val]) => (
+              <div key={k} className="flex flex-col gap-0.5">
+                <dt className="text-[13px] text-muted">{k}</dt>
+                <dd className="m-0 break-words text-[15px]">{val || '-'}</dd>
+              </div>
+            ))}
+          </dl>
+          {v.pin && <LocationPicker value={v.pin} readOnly className="mt-4 h-40" />}
+        </>
       )}
     </Form>
   );
@@ -244,7 +279,7 @@ export function MerchantJoinPage() {
           <h1 className="mb-3.5 font-display text-[26px] font-bold lg:hidden">{cur.title}</h1>
           {fields}
         </div>
-        <div className={`flex-col gap-4 ${step === 2 ? 'flex' : 'hidden lg:flex'}`}>
+        <div className={`flex-col gap-4 ${step === 3 ? 'flex' : 'hidden lg:flex'}`}>
           {preview}
           <div className="hidden flex-col gap-2 rounded-[20px] border border-border bg-surface p-[18px] text-[13px] text-muted lg:flex">
             <b className="text-sm font-semibold text-text">{last ? 'หลังส่งตรวจ' : `ขั้นถัดไป: ${cur.next}`}</b>

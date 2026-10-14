@@ -1,10 +1,10 @@
-import { BadRequestException, Controller, Get, Param, Query, Req, UseGuards } from '@nestjs/common';
+import { BadRequestException, Controller, ForbiddenException, Get, Param, Query, Req, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { AdminGuard } from '../../auth/admin.guard';
 import { bearerOf } from '../../auth/bearer';
 import { SupabaseJwtGuard, type AuthedRequest } from '../../auth/supabase-jwt.guard';
 import { ApiDoc } from '../../common/api-doc';
-import { ADMIN_MASTER_TABLES, ADMIN_VIEW_MAX_LIMIT, ADMIN_VIEWS } from '@nightout/contracts';
+import { ADMIN_MASTER_TABLES, ADMIN_VIEW_MAX_LIMIT, ADMIN_VIEWS, SUPER_ADMIN_VIEWS } from '@nightout/contracts';
 import { SupabaseService } from '../../supabase/supabase.service';
 
 const COLUMN = /^[a-z][a-z0-9_]{0,62}$/;
@@ -48,6 +48,14 @@ export function toPostgrestQuery(q: Record<string, unknown>, defaultOrder?: stri
   return parts.join('&');
 }
 
+/** view ต้องอยู่ใน ADMIN_VIEWS · view ค่าคอม (SUPER_ADMIN_VIEWS) เฉพาะ SUPER_ADMIN — role มาจาก AdminGuard */
+export function assertAdminView(view: string, role: string | undefined): void {
+  if (!(ADMIN_VIEWS as readonly string[]).includes(view)) throw new BadRequestException(`ไม่รู้จัก view: ${view}`);
+  if ((SUPER_ADMIN_VIEWS as readonly string[]).includes(view) && role !== 'SUPER_ADMIN') {
+    throw new ForbiddenException('SUPER_ADMIN_REQUIRED');
+  }
+}
+
 /**
  * backoffice — การอ่านของหน้าแอดมิน (ADR 0003): แดชบอร์ด · view admin_* (ADMIN_VIEWS ใน @nightout/contracts) · ตาราง master
  * ด่าน 1: JWT + AdminGuard (ADMIN + MFA) · ด่าน 2: RLS ของ view (อ่านในนามผู้เรียก ไม่ใช้ service_role)
@@ -81,10 +89,10 @@ export class BackofficeAdminController {
     description:
       `view ที่อ่านได้: ${ADMIN_VIEWS.join(', ')} · กรองด้วย query string \`<คอลัมน์>=<ค่า>\` (หลายค่าคั่นด้วย , = in) เช่น \`?status=PENDING_REVIEW,DRAFT&order=created_at.asc\``,
     returns: 'รายการแถวของ view (key เป็น snake_case ตามคอลัมน์)',
-    forbidden: 'ไม่ใช่ ADMIN หรือยังไม่ผ่าน MFA',
+    forbidden: `ไม่ใช่ ADMIN หรือยังไม่ผ่าน MFA · ${SUPER_ADMIN_VIEWS.join(', ')} เฉพาะ SUPER_ADMIN · admin_audit_logs ของแอดมินไม่มีรายการที่ SUPER_ADMIN ทำ`,
   })
   view(@Req() req: AuthedRequest, @Param('view') view: string, @Query() q: Record<string, unknown>) {
-    if (!(ADMIN_VIEWS as readonly string[]).includes(view)) throw new BadRequestException(`ไม่รู้จัก view: ${view}`);
+    assertAdminView(view, req.user?.role);
     return this.db.selectAs<unknown[]>(bearerOf(req), `${view}?${toPostgrestQuery(q)}`);
   }
 

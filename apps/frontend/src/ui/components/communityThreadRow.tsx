@@ -4,6 +4,7 @@ import { Tooltip } from 'antd';
 import { Link } from 'react-router';
 import { compactCount } from '@/ui/utils/community';
 import { timeAgo } from '@/ui/utils/format';
+import { CommunityAuthorBadges } from './communityAuthorBadges';
 import { CommunityAvatar } from './communityAvatar';
 
 const STATUS_NOTE: Partial<Record<CommunityThreadSummary['status'], string>> = {
@@ -34,7 +35,8 @@ export function CommunityThreadRow({
       <div className="flex min-w-0 flex-1 flex-col gap-2">
         <div className="flex items-center gap-2 text-[13px] text-muted md:hidden">
           <CommunityAvatar id={t.author.id} name={t.author.name} size={28} />
-          <span className="truncate font-medium text-text">{t.author.name}</span>
+          <span className="min-w-0 truncate font-medium text-text">{t.author.name}</span>
+          <CommunityAuthorBadges author={t.author} link={false} />
           <span className="shrink-0">{timeAgo(t.created_at)}</span>
         </div>
         <div className="flex flex-wrap items-center gap-1.5 pr-10">
@@ -68,8 +70,10 @@ export function CommunityThreadRow({
           </Link>
         </h3>
         <div className="flex items-center gap-3.5 text-[13px] text-muted">
-          <span className="hidden md:inline">
-            {t.author.name} · {timeAgo(t.created_at)}
+          <span className="hidden min-w-0 items-center gap-1.5 md:inline-flex">
+            <span className="truncate">{t.author.name}</span>
+            <CommunityAuthorBadges author={t.author} link={false} />
+            <span className="shrink-0">· {timeAgo(t.created_at)}</span>
           </span>
           <span
             className="inline-flex items-center gap-1"

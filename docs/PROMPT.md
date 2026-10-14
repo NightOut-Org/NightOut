@@ -83,10 +83,11 @@ Age Gate (20+) → Onboarding (ความชอบ) → Home / Tier List / Sea
   - หน้าจัดอันดับแบ่งแถวตาม **ดาว** (5★ → 4★ → 3★ → 1–2★) ไม่แสดงตัวอักษร S/A/B/C ให้ผู้ใช้เห็น ดูหัวข้อ "ระดับร้าน = ดาว" ในส่วนดีไซน์
   - ดาวของ NightOut ต่างจากคะแนนรีวิว (rating ที่ลูกค้าให้) ต้องแสดงแยกกันให้ชัด
 - **คะแนนคำนวณจาก:**
-  - รีวิวที่มาจากการเช็กอินจริงเท่านั้น (ถ่วงน้ำหนักตามความใหม่ของรีวิว)
-  - จำนวนการเช็กอินจริงผ่านแอป
-  - คะแนนความปลอดภัย (ข้อ 3)
-  - ความครบถ้วนของข้อมูลราคา
+  - รีวิว **50** คะแนน — Bayesian กับค่าเฉลี่ยตั้งต้น 3.5 น้ำหนักเท่ากับ 5 รีวิว (จาก `bar_stats.rating_avg/rating_count`) · ยังไม่ถ่วงน้ำหนักตามความใหม่ของรีวิว
+  - เช็กอินจริงผ่านแอป **30** คะแนน — นับ 90 วันล่าสุด · สเกล log เต็มที่ 30 ครั้ง
+  - คะแนนความปลอดภัย (ข้อ 3) **20** คะแนน
+  - **ไม่มีคะแนนความครบของข้อมูลราคา** (เจ้าของตัดสิน 2026-10-13) · ร้านที่ยังไม่มีเช็กอินเลยใน 90 วัน = (รีวิว + Safety) ขยายจากเต็ม 70 เป็น 100 (ไม่ลงโทษร้านที่ยังไม่มีข้อมูลเช็กอิน)
+  - สูตรอยู่ `packages/utils/src/ranking.ts` (`rankingScore()`) ตรงกับ SQL `run_tier_scores()` (`…20261013001030`) · คำนวณทุกคืน 00:05 (`/jobs/tier`) + ปุ่ม "คำนวณใหม่" ของแอดมิน
 - **ร้านจ่ายเงินเพื่อเพิ่มดาวไม่ได้** ดาวมาจากคะแนนระบบเท่านั้น ส่วนการโปรโมทแบบจ่ายเงินดูที่ข้อ 1.1
 - เก็บประวัติดาวรายเดือน เพื่อให้แสดงได้ว่าร้าน "ขึ้น/ลงดาว"
 
@@ -299,7 +300,7 @@ Age Gate (20+) → Onboarding (ความชอบ) → Home / Tier List / Sea
 - **อีเมลของระบบ** (ยืนยันอีเมล, รีเซ็ตรหัส, เชิญ Staff): ใช้ custom SMTP (เช่น Resend) และ template ภาษาไทยตามธีม
 - Supabase Auth เปิดเฉพาะ Email provider ส่วน Phone / Google / LINE provider ปิด
 
-### 17. ชุมชน (Community) — Phase 1 · นอก MVP อนุมัติ 2026-10-11 (ยังไม่ทำในโค้ด)
+### 17. ชุมชน (Community) — Phase 1 · นอก MVP อนุมัติ 2026-10-11
 - ฟีดกระทู้ 6 หมวด (ดนตรีสด · รีวิว · หาเพื่อนเที่ยว · เครื่องดื่ม · ถาม-ตอบ · ประกาศ) · เรียงล่าสุด/ยอดนิยม/ยังไม่มีคำตอบ · ค้นหาได้ · guest อ่านได้
 - ลูกค้าที่ล็อกอิน: ตั้งกระทู้ (แท็กร้าน 1 ร้าน · สื่อ ≤6 ไฟล์ วิดีโอ ≤30 วิ) · ตอบซ้อน 1 ชั้น · ถูกใจ · บันทึก · ปักหมุดส่วนตัว ≤3 · ร่างเก็บ 7 วัน · รายงาน · บัญชีแบนอ่านอย่างเดียว
 - ทีมร้าน: ป้าย "ทีมร้าน · <ชื่อร้าน>" · ตั้งกระทู้เฉพาะหมวด "ข่าวจากร้าน" ≤3/ร้าน/สัปดาห์ · ไม่นับใน "ร้านมาแรง" · ห้ามโปรแอลกอฮอล์/โจมตีร้านอื่น
@@ -364,7 +365,7 @@ Age Gate (20+) → Onboarding (ความชอบ) → Home / Tier List / Sea
 - `bar_links`: id, bar_id, type (INSTAGRAM / TIKTOK / FACEBOOK / LINE_OA / WEBSITE / REVIEW_CLIP), url, sort_order
 - `bar_safety_features`: id, bar_id, feature_key, value (YES / NO / UNKNOWN), source (SELF_DECLARED / ADMIN_VERIFIED), evidence_url, verified_by, verified_at
 - `crowd_status_logs`: id, bar_id, status (AVAILABLE / ALMOST_FULL / FULL), updated_by, created_at
-- `tier_scores`: id, bar_id, period, category, review_score, checkin_score, safety_score, price_info_score, total_score, stars (1–5), tier (S / A / B / C — คำนวณจาก stars), is_new (boolean)
+- `tier_scores`: id, bar_id, period, category, review_score, checkin_score, safety_score, price_info_score (= 0 เสมอ — ไม่มีคะแนนความครบของราคา), total_score, stars (1–5), tier (S / A / B / C — คำนวณจาก stars), is_new (boolean)
 - `table_zones`: id, bar_id, name, capacity_pax, default_duration_minutes, allow_zone_only_booking
 - `tables`: id, zone_id, name, seats, active
 - `price_packages`: id, bar_id, name, pax_min, pax_max, total_price, active
@@ -449,7 +450,7 @@ night-list/
 **Background Jobs (เพราะ NestJS รันแบบ serverless บน Vercel)**
 - ใช้ **Supabase pg_cron + pg_net** เรียก endpoint `POST /jobs/*` ของ NestJS ตามรอบเวลา และป้องกัน endpoint ด้วย `JOB_SECRET`
   - ทุก 1 นาที: auto-cancel/no-show, pending/deposit expiry, notification retry, เปิด/ปิด promoted listing
-  - รายวัน: คำนวณดาว, ลบสลิปที่หมดอายุ, สรุป promoted_listing_stats
+  - รายวัน: คำนวณดาว (`/jobs/tier` 00:05 เวลาไทย → `run_tier_scores()`), ลบสลิปที่หมดอายุ, สรุป promoted_listing_stats
   - (ทางเลือก: Vercel Cron ได้ แต่รอบทุกนาทีต้องใช้แพลน Pro)
 - ทุก job ต้อง idempotent และทำงานเป็น batch สั้นๆ ไม่เกิน timeout ของ Vercel Function
 - แจ้งเตือนใช้ outbox pattern: บันทึกลง `notification_deliveries` สถานะ QUEUED ใน transaction เดียวกับ event แล้วให้ job ส่งพร้อม retry
@@ -690,7 +691,7 @@ night-list/
 - **Phase 2 (เดือน 4–6):** จ่ายอัตโนมัติ 100% ผ่าน Beam (ต่อจาก Phase 1), หัก GP 5–7%, Fast-Track, Social Proof, ขยายโซนที่ 2
 - **Phase 3 (เดือน 7–9):** แต้มเช็กอินตรงเวลา, แนะนำร้านตามสไตล์, Sponsored Search, CRM, In-App Chat
 - **Phase 4+:** Data API, เรียกรถกลับบ้าน, AI พยากรณ์ความแน่น, Wallet, Nightlife Pass
-- **สถานะในโค้ด — ชุมชน (มีแล้ว):** ฟีดกระทู้ · ความเห็น/ตอบกลับ 1 ชั้น · ถูกใจ/บันทึก/แชร์/รายงาน · ปักหมุดส่วนตัว ≤3 · ฉบับร่างเก็บที่ backend 7 วัน · แนบรูป/วิดีโอ ≤6 ไฟล์ · Backoffice `/community` · ยังไม่ทำ: กระทู้มาแรงบนหน้าแรก · แท็บกระทู้บนหน้าร้าน · กติกาทีมร้าน (ป้าย/หมวด "ข่าวจากร้าน")
+- **สถานะในโค้ด — ชุมชน (มีแล้ว):** ฟีดกระทู้ · ความเห็น/ตอบกลับ 1 ชั้น · ถูกใจ/บันทึก/แชร์/รายงาน · ปักหมุดส่วนตัว ≤3 · ฉบับร่างเก็บที่ backend 7 วัน · แนบรูป/วิดีโอ ≤6 ไฟล์ · Backoffice `/community` · กติกาทีมร้าน (ป้าย "ทีมร้าน · <ร้าน>" / หมวด "ข่าวจากร้าน" ≤ 3 กระทู้/ร้าน/7 วัน / ถูกใจของทีมร้านในกระทู้ร้านตัวเองไม่นับ · 2026-10-13) · ยังไม่ทำ: กระทู้มาแรงบนหน้าแรก · แท็บกระทู้บนหน้าร้าน
 
 ## ไม่ทำ (ตัดทิ้งถาวร — ดู `docs/REQUIREMENTS.md`)
 - โปรลด แจก หรือแถมเครื่องดื่มแอลกอฮอล์ รวมถึงการใช้คำเลี่ยงเพื่อทำโปรเหล่านี้ · ขาย/พรีออเดอร์แอลกอฮอล์ทุกรูปแบบ

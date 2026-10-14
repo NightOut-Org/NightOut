@@ -1,6 +1,7 @@
 import type { BarCategory, BookingStatus, CrowdStatus, Tier } from '@nightout/types';
 import {
   canTransition,
+  fitsGroup,
   HOLDING_STATUSES,
   isNewBar,
   isReviewableStatus,
@@ -44,7 +45,10 @@ export interface BarFilter {
   category?: BarCategory | 'ALL';
   district?: string;
   styles?: string[];
+  /** งบต่อหัวสูงสุด (บาท) — ร้านที่ไม่มีข้อมูลราคา (avgPerPerson = 0) ไม่แสดงเมื่อตั้งงบ */
   maxBudget?: number;
+  /** จำนวนคนในกลุ่ม: ร้านต้องมีโซนที่ความจุ ≥ จำนวนนี้ */
+  people?: number;
   crowd?: CrowdStatus[];
   minSafety?: number;
   /** ร้านที่มี PR (ชายหรือหญิงอย่างน้อย 1 คน) */
@@ -59,7 +63,8 @@ export function listBars(filter: BarFilter = {}): BarWithTier[] {
     .filter((b) => !filter.category || filter.category === 'ALL' || b.category === filter.category)
     .filter((b) => !filter.district || b.district === filter.district)
     .filter((b) => !filter.styles?.length || filter.styles.every((s) => b.styles.includes(s)))
-    .filter((b) => !filter.maxBudget || b.avgPerPerson <= filter.maxBudget)
+    .filter((b) => !filter.maxBudget || (b.avgPerPerson > 0 && b.avgPerPerson <= filter.maxBudget))
+    .filter((b) => fitsGroup(b.zones, filter.people))
     .filter((b) => !filter.crowd?.length || filter.crowd.includes(b.crowd))
     .filter((b) => !filter.minSafety || safetyScore(b) >= filter.minSafety)
     .filter((b) => !filter.hasPR || b.pr.male + b.pr.female + (b.pr.lgbtq ?? 0) > 0)
@@ -506,7 +511,9 @@ export function runTimeouts(): { noShow: number; expired: number } {
   return { noShow, expired };
 }
 
+/** เวลาปลดโต๊ะ (Forfeited) — ใช้ค่าจาก DB ถ้ามี (รวมการต่อเวลา 15 นาที) ไม่งั้นคำนวณจาก grace ของร้าน */
 export function autoCancelAt(b: Booking): Date {
+  if (b.autoCancelAt) return new Date(b.autoCancelAt);
   const bar = getBar(b.barId);
   return new Date(new Date(b.datetime).getTime() + (bar?.gracePeriodMinutes ?? 30) * 60_000);
 }
@@ -717,6 +724,8 @@ export function verifySafety(barId: string, key: string, actor: string): void {
     const f = b?.safety.find((x) => x.key === key);
     if (!b || !f) return;
     f.source = 'ADMIN_VERIFIED';
+    f.verifyMethod = 'EVIDENCE'; // ปุ่ม "ยืนยันแล้ว" = ตรวจหลักฐาน ไม่ได้ลงพื้นที่
+    f.verifiedAt = nowIso();
     s.audit.unshift({
       id: uid('au'),
       actor,

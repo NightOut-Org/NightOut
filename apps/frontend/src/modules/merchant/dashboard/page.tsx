@@ -135,7 +135,7 @@ export function MerchantDashboardPage() {
             </span>
           )}
           <span className="mt-auto flex justify-between border-t border-border/60 pt-2 text-[13px]">
-            <span className="text-muted">ไม่มาตามนัด</span>
+            <span className="text-muted">ปลดโต๊ะ (Forfeited)</span>
             <span>{cur?.noShow ?? 0} โต๊ะ</span>
           </span>
         </Tile>
@@ -152,7 +152,7 @@ export function MerchantDashboardPage() {
 
         {!isStaff && (
           <Tile className="flex flex-col gap-1.5">
-            <TileLabel end={<Link to="/merchant/deposits" aria-label="ไปหน้าเงินมัดจำ"><ArrowUpRight /></Link>}>มัดจำวันนี้</TileLabel>
+            <TileLabel end={<Link to="/merchant/deposits" aria-label="ไปหน้า Table Fee"><ArrowUpRight /></Link>}>Table Fee วันนี้</TileLabel>
             <span className="text-[30px] font-semibold text-gold-text">{baht(heldToday)}</span>
             <span className="text-[13px] text-muted">NightOut ถือไว้ · โอนเข้าร้านหลังลูกค้าเช็กอิน</span>
           </Tile>

@@ -1,4 +1,6 @@
-import type { Bar } from '@nightout/mock';
+import type { Bar, BarLocationRequest, BarTransit } from '@nightout/mock';
+import type { Db, TransitLine } from '@nightout/types';
+import { DEFAULT_REFUND_BEFORE_HOURS } from '@nightout/utils';
 import { barMediaUrl } from '@/services/api/storage';
 
 /**
@@ -58,6 +60,9 @@ export interface BarDetailRow {
     description: string | null;
     cutoff_time: string | null;
     days_of_week: number[];
+    /** 'YYYY-MM-DD' · null = ไม่จำกัด */
+    valid_from?: string | null;
+    valid_to?: string | null;
     /** เฉพาะ my_bar_detail */
     active?: boolean;
     moderation_status?: 'PENDING' | 'APPROVED' | 'REJECTED';
@@ -69,12 +74,27 @@ export interface BarDetailRow {
     default_duration_minutes: number;
     tables: { id: string; name: string; seats: number }[];
   }[];
-  safety: { key: string; value: 'YES' | 'NO' | 'UNKNOWN'; source: 'SELF_DECLARED' | 'ADMIN_VERIFIED' | null }[];
+  safety: {
+    key: string;
+    value: 'YES' | 'NO' | 'UNKNOWN';
+    source: 'SELF_DECLARED' | 'ADMIN_VERIFIED' | null;
+    verified_at: string | null;
+    /** วิธีตรวจของข้อที่ ADMIN_VERIFIED (EVIDENCE ตรวจหลักฐาน · ON_SITE ลงพื้นที่) · cache เก่าไม่มี key นี้ */
+    verify_method?: 'EVIDENCE' | 'ON_SITE' | null;
+  }[];
   /** เฉพาะ my_bar_detail */
   status?: Bar['status'];
   status_reason?: string | null;
   staff_role?: 'OWNER' | 'MANAGER' | 'STAFF';
   payout_account?: { bank_code: string; account_name: string; account_no_last4: string } | null;
+  /** ตำแหน่งร้าน (migration 20261013000600) — optional เพราะ cache เก่าอาจยังไม่มีคอลัมน์ */
+  parking_note?: string | null;
+  transit_line?: TransitLine | null;
+  transit_station?: string | null;
+  transit_walk_minutes?: number | null;
+  /** เฉพาะ my_bar_detail: หมุดผ่านการตรวจล่าสุด · คำขอแก้ตำแหน่งล่าสุด (ทุกสถานะ) */
+  location_reviewed_at?: string | null;
+  location_request?: Db.MyBarLocationRequest | null;
 }
 
 const DEFAULT_COVER = 'linear-gradient(135deg,#2E1065 0%,#A738F5 55%,#E8B64C 100%)';
@@ -93,6 +113,30 @@ export const STYLE_LABELS: Record<string, string> = {
   BUFFET: 'Buffet',
 };
 
+/** รถไฟฟ้าใกล้สุด — มีเมื่อมีทั้งสายและสถานี */
+const toTransit = (
+  line: TransitLine | null | undefined,
+  station: string | null | undefined,
+  walk: number | null | undefined,
+): BarTransit | undefined =>
+  line && station ? { line, station, ...(walk ? { walkMinutes: Number(walk) } : {}) } : undefined;
+
+/** my_bar_detail.location_request → คำขอแก้ตำแหน่ง (camelCase · numeric → number) */
+const toLocationRequest = (r: Db.MyBarLocationRequest): BarLocationRequest => ({
+  id: r.id,
+  status: r.status,
+  source: r.source,
+  lat: Number(r.lat),
+  lng: Number(r.lng),
+  address: r.address,
+  parkingNote: r.parking_note ?? undefined,
+  transit: toTransit(r.transit_line, r.transit_station, r.transit_walk_minutes),
+  reason: r.reason ?? undefined,
+  adminEdited: r.admin_edited,
+  createdAt: r.created_at,
+  reviewedAt: r.reviewed_at ?? undefined,
+});
+
 export function toBar(r: BarDetailRow): Bar {
   const pct = (type: string) => r.fees.find((f) => f.fee_type === type && f.calc === 'PERCENTAGE')?.value ?? 0;
   const settings = r.booking_settings;
@@ -103,6 +147,10 @@ export function toBar(r: BarDetailRow): Bar {
     category: r.category,
     district: r.district?.name_th ?? '',
     districtId: r.district?.id,
+    parkingNote: r.parking_note ?? undefined,
+    transit: toTransit(r.transit_line, r.transit_station, r.transit_walk_minutes),
+    locationReviewedAt: r.location_reviewed_at ?? undefined,
+    locationRequest: r.location_request ? toLocationRequest(r.location_request) : undefined,
     address: r.address,
     lat: Number(r.lat),
     lng: Number(r.lng),
@@ -144,6 +192,8 @@ export function toBar(r: BarDetailRow): Bar {
       description: p.description ?? '',
       cutoffTime: p.cutoff_time ?? undefined,
       days: p.days_of_week.length >= 7 ? undefined : p.days_of_week,
+      validFrom: p.valid_from ?? undefined,
+      validTo: p.valid_to ?? undefined,
       // bar_detail ส่งเฉพาะโปรที่ active + ผ่านการตรวจแล้ว · my_bar_detail ส่งทุกโปรพร้อมสถานะ
       active: p.active ?? true,
       moderationStatus: p.moderation_status,
@@ -165,6 +215,8 @@ export function toBar(r: BarDetailRow): Bar {
       key: s.key as Bar['safety'][number]['key'],
       value: s.value,
       source: s.source ?? 'SELF_DECLARED',
+      verifiedAt: s.verified_at,
+      verifyMethod: s.verify_method ?? null,
     })),
     links: r.links
       .filter((l): l is { type: Bar['links'][number]['type']; url: string } =>
@@ -186,7 +238,7 @@ export function toBar(r: BarDetailRow): Bar {
       amount: Number(settings?.deposit_amount ?? 0),
       unit: settings?.deposit_unit ?? 'PER_TABLE',
       policy: settings?.deposit_policy ?? '',
-      refundBeforeHours: settings?.refund_before_hours ?? 24,
+      refundBeforeHours: settings?.refund_before_hours ?? DEFAULT_REFUND_BEFORE_HOURS,
     },
     // เลขบัญชีเต็มไม่ออกจาก DB (เข้ารหัส) — แสดงแค่ 4 ตัวท้าย
     payout: r.payout_account

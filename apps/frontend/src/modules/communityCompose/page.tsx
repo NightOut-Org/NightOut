@@ -2,15 +2,20 @@ import {
   COMMUNITY_BODY_MAX,
   COMMUNITY_DRAFT_TTL_DAYS,
   COMMUNITY_MEDIA_LIMITS,
+  COMMUNITY_SHOP_NEWS_CATEGORY,
+  COMMUNITY_SHOP_NEWS_WEEKLY_MAX,
+  COMMUNITY_SHOP_NEWS_WINDOW_DAYS,
   COMMUNITY_TITLE_MAX,
   type CommunityDraft,
   type CommunityDraftPayload,
   type CommunityMediaItem,
+  type CommunityTeamBar,
   type CommunityThreadDetail,
 } from '@nightout/contracts';
-import { ClockCounterClockwise, Info, Storefront, X } from '@phosphor-icons/react';
+import { ClockCounterClockwise, Info, Storefront, Warning, X } from '@phosphor-icons/react';
 import { useQueryClient } from '@tanstack/react-query';
-import { App, Button, Input, Result, Select, Skeleton } from 'antd';
+import { ALCOHOL_WARNING_TEXT, alcoholWordsIn } from '@nightout/utils';
+import { Alert, App, Button, Input, Result, Select, Skeleton } from 'antd';
 import { useMemo, useState, type ReactNode } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router';
 import { useAutosaveDraft } from '@/hooks/useAutosaveDraft';
@@ -19,12 +24,14 @@ import { useAuth } from '@/services/auth';
 import { CommunityMediaPicker } from '@/ui/components/communityMediaPicker';
 import { DraftStatus } from '@/ui/components/draftStatus';
 import { clockTime } from '@/ui/utils/community';
+import { dateTime } from '@/ui/utils/format';
 import {
   createThread,
   deleteDraft,
   saveDraft,
   updateThread,
   useCategories,
+  useMyCommunityTeam,
   useMyDrafts,
   useThreadToEdit,
 } from './api';
@@ -67,6 +74,8 @@ const fromDraft = (p: CommunityDraftPayload, fallback: ThreadForm): ThreadForm =
 });
 const sameForm = (a: ThreadForm, b: ThreadForm) => JSON.stringify(a) === JSON.stringify(b);
 const BACKOFFICE_ROLES = new Set(['ADMIN', 'SUPER_ADMIN']);
+const isShopNews = (category: string | null) => category === COMMUNITY_SHOP_NEWS_CATEGORY;
+const quotaFull = (b: CommunityTeamBar) => b.shop_news_used >= b.shop_news_limit;
 
 /**
  * ตั้งกระทู้ใหม่ (/community/new) และแก้กระทู้ (/community/t/:id/edit)
@@ -80,6 +89,7 @@ export function CommunityComposePage() {
   const navigate = useNavigate();
   const editing = useThreadToEdit(editId, user?.id ?? null);
   const drafts = useMyDrafts();
+  const team = useMyCommunityTeam(user?.id ?? null);
 
   if (editId && editing.isSuccess && !editing.data.is_mine) {
     return (
@@ -90,16 +100,21 @@ export function CommunityComposePage() {
       />
     );
   }
-  if (editing.isError || drafts.isError) {
+  if (editing.isError || drafts.isError || team.isError) {
     return (
       <Result
         status="warning"
         title="เปิดฟอร์มไม่สำเร็จ"
-        subTitle={(editing.error ?? drafts.error)?.message}
+        subTitle={(editing.error ?? drafts.error ?? team.error)?.message}
       />
     );
   }
-  if (!drafts.isSuccess || !drafts.isFetchedAfterMount || (editId && !editing.isSuccess)) {
+  if (
+    !drafts.isSuccess ||
+    !drafts.isFetchedAfterMount ||
+    !team.isSuccess ||
+    (editId && !editing.isSuccess)
+  ) {
     return (
       <div className="mx-auto max-w-[920px] md:rounded-2xl md:border md:border-border md:bg-surface md:p-8">
         <Skeleton active paragraph={{ rows: 8 }} />
@@ -118,6 +133,7 @@ export function CommunityComposePage() {
       editId={editId}
       base={base}
       draft={draft}
+      team={team.data}
       previews={previewsOf(editing.data)}
     />
   );
@@ -127,11 +143,14 @@ function ComposeForm({
   editId,
   base,
   draft,
+  team,
   previews,
 }: {
   editId?: string;
   base: ThreadForm;
   draft: CommunityDraft | null;
+  /** ร้านที่ฉันอยู่ในทีม (ว่าง = ไม่ใช่ทีมร้าน) */
+  team: CommunityTeamBar[];
   previews: Record<string, string>;
 }) {
   const kind = editId ? 'EDIT' : 'NEW';
@@ -141,12 +160,35 @@ function ComposeForm({
   const { message } = App.useApp();
   const categories = useCategories();
 
-  const [initial] = useState(base);
+  // ทีมร้าน: ตั้งกระทู้ใหม่ได้เฉพาะ "ข่าวจากร้าน" ของร้านที่แสดงอยู่ (ร้านถูกระงับ = มีป้ายแต่ตั้งข่าวไม่ได้)
+  const isTeam = team.length > 0;
+  const postable = team.filter((b) => b.can_post);
+  const defaultTeamBar = postable.length === 1 ? (postable[0]?.bar_id ?? null) : null;
+  /** ปรับค่าตามสิทธิ์ (ใช้กับทั้ง ?category= และร่าง → initial ตรงกับฟอร์ม ร่างไม่บันทึกเอง) */
+  const coerce = (f: ThreadForm): ThreadForm => {
+    if (editId) {
+      // ร่างของการแก้อาจค้างจากก่อนเข้าทีมร้าน: ข่าวจากร้านล็อกหมวด + ร้าน · ทีมร้านย้ายหมวดไม่ได้
+      // และแท็กร้านตัวเองใหม่ไม่ได้ (COMMUNITY_TEAM_OWN_TAG) → กลับเป็นค่าของกระทู้เดิม
+      if (isShopNews(base.category)) return { ...f, category: base.category, bar_id: base.bar_id };
+      if (!isTeam) return isShopNews(f.category) ? { ...f, category: base.category } : f;
+      const newOwnTag =
+        !!f.bar_id && f.bar_id !== base.bar_id && team.some((b) => b.bar_id === f.bar_id);
+      return { ...f, category: base.category, bar_id: newOwnTag ? base.bar_id : f.bar_id };
+    }
+    if (!isTeam) return isShopNews(f.category) ? { ...f, category: null } : f;
+    return {
+      ...f,
+      category: COMMUNITY_SHOP_NEWS_CATEGORY,
+      bar_id: postable.some((b) => b.bar_id === f.bar_id) ? f.bar_id : defaultTeamBar,
+    };
+  };
+
+  const [initial] = useState(() => coerce(base));
   const [form, setForm] = useState<ThreadForm>(() =>
-    draft ? fromDraft(draft.payload, base) : base,
+    draft ? coerce(fromDraft(draft.payload, base)) : initial,
   );
   const [restoredAt, setRestoredAt] = useState<string | null>(() =>
-    draft && !sameForm(fromDraft(draft.payload, base), base) ? draft.updated_at : null,
+    draft && !sameForm(coerce(fromDraft(draft.payload, base)), initial) ? draft.updated_at : null,
   );
   const [posting, setPosting] = useState(false);
   const [uploading, setUploading] = useState(0);
@@ -167,17 +209,78 @@ function ComposeForm({
   const { baseline } = autosave;
 
   const isStaff = !!user && BACKOFFICE_ROLES.has(user.role);
-  const cats = (categories.data ?? []).filter(
-    (c) => !c.staff_only || isStaff || c.slug === form.category,
-  );
+  const initialIsShopNews = isShopNews(initial.category);
+  const cats = (categories.data ?? []).filter((c) => {
+    // แก้กระทู้: ข่าวจากร้าน / ทีมร้าน = หมวดเดิมเท่านั้น (ย้ายหมวดไม่ได้)
+    if (editId && (initialIsShopNews || isTeam)) return c.slug === initial.category;
+    if (!editId && isTeam) return c.team_only || (c.staff_only && isStaff);
+    return !c.team_only && (!c.staff_only || isStaff || c.slug === form.category);
+  });
   const barOptions = useMemo(
     () => listBars({}).map((b) => ({ value: b.id, label: b.name, district: b.district })),
     [],
   );
+  // นอกหมวดข่าวจากร้าน ทีมร้านแท็กร้านตัวเองเพิ่มไม่ได้ (COMMUNITY_TEAM_OWN_TAG) · แท็กเดิมของกระทู้คงไว้ได้
+  const ownBarIds = new Set(
+    team.map((b) => b.bar_id).filter((id) => !(editId && id === initial.bar_id)),
+  );
+  const generalBarOptions = barOptions.filter((o) => !ownBarIds.has(o.value));
+
+  const shopNews = isShopNews(form.category);
+  // ข่าวจากร้าน: เตือน (ไม่บล็อก) เมื่อหัวข้อ/รายละเอียดมีคำเกี่ยวกับแอลกอฮอล์ (พ.ร.บ.ฯ ม.30)
+  const shopNewsAlcoholWords = shopNews ? alcoholWordsIn(`${form.title}\n${form.body}`) : [];
+  const selectedTeamBar = team.find((b) => b.bar_id === form.bar_id);
+  const teamBarOptions: {
+    value: string;
+    label: string;
+    disabled: boolean;
+    bar?: CommunityTeamBar;
+  }[] = [
+    ...team.map((b) => ({
+      value: b.bar_id,
+      label: b.name,
+      disabled: !b.can_post || (!editId && quotaFull(b)),
+      bar: b,
+    })),
+    // แก้ข่าวของร้านที่ฉันไม่ได้อยู่ทีมแล้ว — ช่อง (ที่ล็อกอยู่) ยังแสดงชื่อร้าน
+    ...(editId && initial.bar_id && !team.some((b) => b.bar_id === initial.bar_id)
+      ? barOptions
+          .filter((o) => o.value === initial.bar_id)
+          .map((o) => ({ value: o.value, label: o.label, disabled: true }))
+      : []),
+  ];
+  /** ข่าวจากร้านที่ฉันแก้ไม่ได้แล้ว (ร้านไม่แสดงแล้ว / ไม่ได้อยู่ทีมของร้านที่แท็ก) */
+  const shopNewsEditLocked =
+    !!editId && initialIsShopNews && !postable.some((b) => b.bar_id === initial.bar_id);
+  /** ทีมร้านที่ทุกร้านถูกระงับ — ตั้งกระทู้ใหม่ไม่ได้ชั่วคราว */
+  const teamSuspended = !editId && isTeam && postable.length === 0;
+  const shopNewsReady =
+    !shopNews ||
+    (!!form.bar_id &&
+      (!!editId || (!!selectedTeamBar && selectedTeamBar.can_post && !quotaFull(selectedTeamBar))));
+
   const changed = !sameForm(form, initial);
-  const canPost = !!form.category && form.title.trim().length >= 3 && !posting && uploading === 0;
+  const canPost =
+    !!form.category &&
+    form.title.trim().length >= 3 &&
+    shopNewsReady &&
+    !shopNewsEditLocked &&
+    !teamSuspended &&
+    !posting &&
+    uploading === 0;
   const set = <K extends keyof ThreadForm>(k: K, v: ThreadForm[K]) =>
     setForm((f) => ({ ...f, [k]: v }));
+  /** เปลี่ยนหมวด → ร้านที่แท็กต้องเข้ากับหมวดใหม่ (ข่าวจากร้าน = ร้านตัวเอง · หมวดอื่น = ไม่ใช่ร้านตัวเอง) */
+  const pickCategory = (slug: string) =>
+    setForm((f) => {
+      let bar_id = f.bar_id;
+      if (isShopNews(slug)) {
+        if (!postable.some((b) => b.bar_id === bar_id)) bar_id = defaultTeamBar;
+      } else if (bar_id && ownBarIds.has(bar_id)) {
+        bar_id = null;
+      }
+      return { ...f, category: slug, bar_id };
+    });
 
   const backTo = editId ? `/community/t/${editId}` : '/community';
   const exit = () => (history.length > 1 ? navigate(-1) : navigate(backTo, { replace: true }));
@@ -300,6 +403,28 @@ function ComposeForm({
             </div>
           )}
 
+          {teamSuspended ? (
+            <Note>
+              ร้านของคุณถูกระงับอยู่ — ตั้งกระทู้ใหม่ไม่ได้ชั่วคราว (คอมเมนต์และตอบได้ตามปกติ)
+            </Note>
+          ) : shopNewsEditLocked ? (
+            <Note>แก้ข่าวจากร้านได้เฉพาะทีมของร้านที่แท็ก (ร้านที่แสดงอยู่)</Note>
+          ) : (
+            !editId &&
+            isTeam && (
+              <div
+                role="status"
+                className="flex items-start gap-2 rounded-xl border border-gold/40 bg-gold/10 px-3.5 py-2.5 text-[13px]"
+              >
+                <Storefront size={18} className="mt-px shrink-0 text-gold-text" />
+                <span className="flex-1">
+                  บัญชีนี้อยู่ในทีมร้าน — ตั้งกระทู้ได้เฉพาะหมวด "ข่าวจากร้าน" ·
+                  คอมเมนต์และตอบได้ทุกกระทู้
+                </span>
+              </div>
+            )
+          )}
+
           <Field label="หมวดหมู่">
             <div role="radiogroup" aria-label="หมวดหมู่" className="flex flex-wrap gap-2">
               {categories.isPending
@@ -312,7 +437,7 @@ function ComposeForm({
                         type="button"
                         role="radio"
                         aria-checked={on}
-                        onClick={() => set('category', c.slug)}
+                        onClick={() => pickCategory(c.slug)}
                         className={`h-[34px] touch-manipulation select-none whitespace-nowrap rounded-full border px-3.5 text-[13px] font-medium ${
                           on
                             ? 'border-text bg-text text-background'
@@ -348,6 +473,16 @@ function ComposeForm({
             />
           </Field>
 
+          {shopNewsAlcoholWords.length > 0 && (
+            <Alert
+              type="warning"
+              showIcon
+              icon={<Warning size={18} weight="fill" />}
+              title="อาจผิด พ.ร.บ.ควบคุมเครื่องดื่มแอลกอฮอล์ ม.30"
+              description={`พบคำ: ${shopNewsAlcoholWords.join(', ')} — ${ALCOHOL_WARNING_TEXT} (ยังโพสต์ได้ ตรวจถ้อยคำให้แน่ใจก่อน)`}
+            />
+          )}
+
           <Field
             label="รูปภาพ / วิดีโอ"
             hint={`สูงสุด ${COMMUNITY_MEDIA_LIMITS.maxFiles} ไฟล์ · วิดีโอไม่เกิน ${COMMUNITY_MEDIA_LIMITS.videoSeconds} วิ`}
@@ -365,34 +500,98 @@ function ComposeForm({
             )}
           </Field>
 
-          <Field label="แท็กร้าน" hint="ไม่บังคับ">
-            <Select
-              allowClear
-              showSearch={{ optionFilterProp: 'label' }}
-              value={form.bar_id ?? undefined}
-              onChange={(v?: string) => set('bar_id', v ?? null)}
-              options={barOptions}
-              optionRender={(o) => (
-                <span>
-                  {o.data.label} <span className="text-xs text-muted">· {o.data.district}</span>
-                </span>
+          {shopNews ? (
+            <Field label="ร้านของคุณ" hint="บังคับ">
+              <Select
+                value={form.bar_id ?? undefined}
+                onChange={(v: string) => set('bar_id', v)}
+                options={teamBarOptions}
+                disabled={!!editId}
+                optionRender={(o) => {
+                  const b = o.data.bar;
+                  if (!b) return o.data.label;
+                  // ตัวเลือกของ antd ตัดบรรทัดเดียว (ellipsis) → ให้ขึ้นบรรทัดใหม่ได้ บนมือถือจะได้เห็นเวลาโพสต์ได้อีก
+                  return (
+                    <span className="block whitespace-normal">
+                      {b.name}{' '}
+                      <span className="text-xs text-muted">
+                        {!b.can_post
+                          ? '· ร้านถูกระงับ — โพสต์ข่าวไม่ได้'
+                          : `· โพสต์แล้ว ${b.shop_news_used}/${b.shop_news_limit}${
+                              !editId && quotaFull(b) && b.next_slot_at
+                                ? ` · ครบแล้ว — โพสต์ได้อีก ${dateTime(b.next_slot_at)}`
+                                : ''
+                            }`}
+                      </span>
+                    </span>
+                  );
+                }}
+                placeholder="เลือกร้านที่จะโพสต์ข่าว"
+                prefix={<Storefront size={20} className="text-link" />}
+                aria-label="ร้านของคุณ"
+                className="!h-[52px] w-full md:max-w-md [&_.ant-select-selector]:!rounded-xl"
+              />
+              {editId && (
+                <div className="mt-1.5 text-xs text-muted">
+                  ข่าวจากร้านเปลี่ยนหมวดหรือร้านที่แท็กไม่ได้
+                </div>
               )}
-              placeholder="ค้นหาชื่อร้าน"
-              prefix={<Storefront size={20} className="text-link" />}
-              aria-label="แท็กร้าน"
-              className="!h-[52px] w-full md:max-w-md [&_.ant-select-selector]:!rounded-xl"
-            />
-          </Field>
+            </Field>
+          ) : (
+            <Field label="แท็กร้าน" hint="ไม่บังคับ">
+              <Select
+                allowClear
+                showSearch={{ optionFilterProp: 'label' }}
+                value={form.bar_id ?? undefined}
+                onChange={(v?: string) => set('bar_id', v ?? null)}
+                options={generalBarOptions}
+                optionRender={(o) => (
+                  <span>
+                    {o.data.label} <span className="text-xs text-muted">· {o.data.district}</span>
+                  </span>
+                )}
+                placeholder="ค้นหาชื่อร้าน"
+                prefix={<Storefront size={20} className="text-link" />}
+                aria-label="แท็กร้าน"
+                className="!h-[52px] w-full md:max-w-md [&_.ant-select-selector]:!rounded-xl"
+              />
+            </Field>
+          )}
 
           <div className="flex gap-2.5 rounded-xl bg-gold/[0.14] px-3.5 py-3 text-[13px] leading-relaxed">
             <Info size={18} className="mt-px shrink-0 text-gold-text" />
             <div>
               <div className="font-semibold">ก่อนโพสต์</div>
-              <ul className="m-0 mt-0.5 list-disc pl-4">
-                <li>ตั้งหัวข้อให้ชัด ระบุย่านหรือวันที่</li>
-                <li>แท็กร้านเพื่อให้คนอ่านจองต่อได้ทันที</li>
-                <li>ไม่โฆษณาแฝง · 20+ · ดื่มไม่ขับ</li>
-              </ul>
+              {shopNews ? (
+                <ul className="m-0 mt-0.5 list-disc pl-4">
+                  <li>
+                    ร้านละไม่เกิน {COMMUNITY_SHOP_NEWS_WEEKLY_MAX} กระทู้ใน{' '}
+                    {COMMUNITY_SHOP_NEWS_WINDOW_DAYS} วัน (นับรวมทั้งทีม · ลบแล้วก็ยังนับ)
+                  </li>
+                  <li>
+                    ห้ามโปรโมชัน ลด แจก แถมเครื่องดื่มแอลกอฮอล์ (พ.ร.บ.ควบคุมเครื่องดื่มแอลกอฮอล์
+                    ม.30/32)
+                  </li>
+                  <li>ห้ามพูดถึงร้านอื่นในทางเสีย — ลูกค้ารายงานได้ ทีมงานซ่อน/ลบได้</li>
+                  <li>โพสต์และความเห็นของคุณจะมีป้าย "ทีมร้าน · &lt;ชื่อร้าน&gt;"</li>
+                  {selectedTeamBar && (
+                    <li>
+                      {selectedTeamBar.name}: โพสต์แล้ว {selectedTeamBar.shop_news_used}/
+                      {selectedTeamBar.shop_news_limit} ใน {COMMUNITY_SHOP_NEWS_WINDOW_DAYS} วัน
+                      {!editId &&
+                        quotaFull(selectedTeamBar) &&
+                        selectedTeamBar.next_slot_at &&
+                        ` — ครบแล้ว โพสต์ได้อีก ${dateTime(selectedTeamBar.next_slot_at)}`}
+                    </li>
+                  )}
+                </ul>
+              ) : (
+                <ul className="m-0 mt-0.5 list-disc pl-4">
+                  <li>ตั้งหัวข้อให้ชัด ระบุย่านหรือวันที่</li>
+                  <li>แท็กร้านเพื่อให้คนอ่านจองต่อได้ทันที</li>
+                  <li>ไม่โฆษณาแฝง · 20+ · ดื่มไม่ขับ</li>
+                </ul>
+              )}
               <div className="mt-1 text-muted">
                 ร่างเก็บไว้ในบัญชี {COMMUNITY_DRAFT_TTL_DAYS} วัน
               </div>
@@ -424,6 +623,19 @@ function ComposeForm({
         onDiscard={() => void discardAndLeave()}
         onCancel={() => setLeaving(false)}
       />
+    </div>
+  );
+}
+
+/** ข้อความแจ้งเหตุที่โพสต์/บันทึกไม่ได้ (โทนเงียบ) */
+function Note({ children }: { children: ReactNode }) {
+  return (
+    <div
+      role="status"
+      className="flex items-start gap-2 rounded-xl border border-border bg-card px-3.5 py-2.5 text-[13px] text-muted"
+    >
+      <Info size={18} className="mt-px shrink-0" />
+      <span className="flex-1">{children}</span>
     </div>
   );
 }

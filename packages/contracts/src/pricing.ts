@@ -7,7 +7,7 @@ export const PriceEstimateBody = z.object({
   items: z
     .array(
       z.object({
-        name: z.string().min(1).describe('ชื่อรายการ เช่น "เบียร์ทาวเวอร์"'),
+        name: z.string().min(1).describe('ชื่อรายการ เช่น "มิกเซอร์ (ชุด)"'),
         qty: z.number().int().positive().max(999).describe('จำนวนที่สั่ง'),
         unit_price: z.number().nonnegative().describe('ราคาต่อหน่วย (บาท)'),
       }),

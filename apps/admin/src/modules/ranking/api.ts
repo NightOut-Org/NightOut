@@ -1,6 +1,9 @@
-import { useAdminView } from '@/services/adminData';
+import { useAdminView, type AdminActionInput } from '@/services/adminData';
 
-/** API ของหน้าจัดอันดับ · backend: domains/backoffice (GET /admin/views/admin_bars) */
+/** API ของหน้าดาว / อันดับ · backend: domains/catalog (admin_ranking · POST /admin/ranking/recompute) */
 
-/** ร้านที่แสดงอยู่ เรียงตามคะแนน */
-export const useRankedBars = () => useAdminView('admin_bars', { filters: [['status', 'APPROVED']], order: { column: 'score', ascending: false } });
+/** GET /admin/views/admin_ranking — ร้านที่แสดงอยู่ + คะแนนรอบสัปดาห์ล่าสุด (แยกส่วน) + โหวตสัปดาห์/เดือน (หน้าเรียงเอง) */
+export const useRanking = () => useAdminView('admin_ranking');
+
+/** POST /admin/ranking/recompute — คำนวณดาว/อันดับของทุกร้านใหม่ทันที (เหมือน job ทุกคืน · audit) */
+export const recomputeRankingAction = (): AdminActionInput => ({ method: 'POST', path: 'ranking/recompute' });

@@ -1,14 +1,19 @@
-import { CheckCircle, QrCode, Scan } from '@phosphor-icons/react';
+import { Camera, CheckCircle, QrCode, Scan, SquaresFour } from '@phosphor-icons/react';
+import type * as C from '@nightout/contracts';
 import type { CrowdStatus } from '@nightout/types';
 import { getAntdTheme } from '@nightout/ui';
+import { canTeamForfeit, parseCheckInScan } from '@nightout/utils';
 import { App, ConfigProvider, Empty } from 'antd';
-import { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router';
+import { useEffect, useRef, useState, type RefObject } from 'react';
+import { Link, useNavigate } from 'react-router';
 import { autoCancelAt, barBookings, type Booking } from '@/services/data';
+import { useConfirmForfeit } from '@/hooks/useConfirmForfeit';
 import { useMerchantBar } from '@/hooks/useMerchantBar';
 import { Chip, Ring, Tile } from '@/ui/components/merchantUi';
 import { BOOKING_STATUS } from '@/ui/utils/format';
-import { checkIn, setCrowd } from './api';
+import { forfeitBooking, setCrowd } from './api';
+import { QrScanner } from './components/qrScanner';
+import { CheckInConfirmModal } from './modal/checkInConfirmModal';
 
 const CLOSED = ['CANCELLED_BY_CUSTOMER', 'CANCELLED_BY_MERCHANT', 'REJECTED', 'EXPIRED'];
 const isIn = (s: string) => s === 'CHECKED_IN' || s === 'COMPLETED';
@@ -21,7 +26,7 @@ const CROWD_OPTIONS: { value: CrowdStatus; label: string; short: string; color: 
   { value: 'FULL', label: 'โต๊ะเต็ม', short: 'เต็ม', color: 'var(--crowd-full)' },
 ];
 
-/** เวลาปัจจุบัน อัปเดตทุก 30 วิ (ใช้กับนาฬิกาและนับถอยหลังยกเลิกอัตโนมัติ) */
+/** เวลาปัจจุบัน อัปเดตทุก 30 วิ (ใช้กับนาฬิกาและนับถอยหลังปลดโต๊ะ) */
 function useNow() {
   const [now, setNow] = useState(() => new Date());
   useEffect(() => {
@@ -31,16 +36,24 @@ function useNow() {
   return now;
 }
 
-/** /merchant/tonight — Staff Scanner (บังคับ Dark เสมอ) */
+/**
+ * /merchant/tonight — Staff Scanner (บังคับ Dark เสมอ)
+ * เช็กอิน: กล้อง (QrScanner) / เครื่องสแกนแบบคีย์บอร์ด / พิมพ์รหัส / ปุ่มในรายการ → ขั้นยืนยัน (CheckInConfirmModal) → เช็กอิน
+ */
 export function TonightPage() {
   const bar = useMerchantBar();
   const { message } = App.useApp();
   const navigate = useNavigate();
   const now = useNow();
+  const confirmForfeit = useConfirmForfeit();
   const inputRef = useRef<HTMLInputElement>(null);
+  const desktopInputRef = useRef<HTMLInputElement>(null);
   const [code, setCode] = useState('');
   const [last, setLast] = useState<string>();
-  const [busy, setBusy] = useState(false);
+  /** เปิดกล้องสแกนอยู่ */
+  const [scanning, setScanning] = useState(false);
+  /** รหัสที่รอกดยืนยันเช็กอิน (เปิด CheckInConfirmModal) */
+  const [pendingCode, setPendingCode] = useState<string | null>(null);
   const [filter, setFilter] = useState<'all' | 'waiting' | 'in'>('all');
 
   const tonight = barBookings(bar.id)
@@ -51,29 +64,53 @@ export function TonightPage() {
   const waiting = tonight.filter((b) => !isIn(b.status));
   const shown = filter === 'in' ? tonight.filter((b) => isIn(b.status)) : filter === 'waiting' ? waiting : tonight;
 
-  // เลยเวลานัดแต่ยังไม่เช็กอิน → ระบบยกเลิกเองเมื่อพ้น grace period
+  // เลยเวลานัดแต่ยังไม่เช็กอิน → ระบบปลดโต๊ะ (Forfeited) เมื่อพ้นเวลาเก็บโต๊ะ (grace + ที่ลูกค้าต่อเวลา)
   const overdue = tonight.filter(
     (b) => b.status === 'CONFIRMED' && new Date(b.datetime) < now && autoCancelAt(b) > now,
   );
-  const nextCancelMin = overdue.length
+  const nextReleaseMin = overdue.length
     ? Math.max(0, Math.ceil((Math.min(...overdue.map((b) => autoCancelAt(b).getTime())) - now.getTime()) / 60_000))
     : null;
+  // เลยเวลาเก็บโต๊ะแล้ว (ยังไม่ถึงรอบ job) → ทีมร้านทุกบทบาทกดปลดโต๊ะเองได้จากแถว
+  const isForfeitable = (b: Booking) => canTeamForfeit({ status: b.status, autoCancelAt: autoCancelAt(b) }, now);
+  const forfeitable = tonight.filter(isForfeitable).length;
+  const overdueText = [
+    overdue.length ? `เลยเวลา ${overdue.length} โต๊ะ · ปลดโต๊ะใน ${nextReleaseMin} นาที` : '',
+    forfeitable ? `เลยเวลาเก็บโต๊ะ ${forfeitable} โต๊ะ · กดปลดโต๊ะได้` : '',
+  ]
+    .filter(Boolean)
+    .join(' · ');
   const hours = bar.hours.find((h) => h.day === now.getDay());
   const closeLabel = !hours || hours.closed ? 'วันนี้ปิด' : `ปิดรับ ${hours.close}`;
 
-  const doCheckIn = async (value: string) => {
-    if (!value.trim()) return;
-    setBusy(true);
-    try {
-      const b = await checkIn(bar.id, value.trim());
-      setLast(`${b.customer_name ?? 'ลูกค้า'} · ${b.pax} คน · ${b.zone_name ?? ''} · ${b.code}`);
-      setCode('');
-      message.success('เช็กอินสำเร็จ');
-    } catch (e) {
-      message.error((e as Error).message);
-    } finally {
-      setBusy(false);
+  /** พิมพ์ / เครื่องสแกนแบบคีย์บอร์ด → ตรวจรูปแบบ แล้วเปิดขั้นยืนยัน (ยังไม่เช็กอิน) */
+  const submitTyped = () => {
+    if (!code.trim()) return;
+    const c = parseCheckInScan(code);
+    if (!c) {
+      message.error('รหัสไม่ถูกต้อง — ใช้รหัสจอง เช่น NL-3F8K2A หรือสแกน QR จาก E-Ticket');
+      return;
     }
+    setPendingCode(c);
+  };
+
+  /** กล้องอ่าน QR ได้ — ไม่ใช่ E-Ticket ของ NightOut = เตือนแล้วสแกนต่อ */
+  const onScan = (text: string) => {
+    const c = parseCheckInScan(text);
+    if (!c) {
+      message.warning({ content: 'QR นี้ไม่ใช่ E-Ticket ของ NightOut', key: 'scan-invalid' });
+      return;
+    }
+    setScanning(false);
+    navigator.vibrate?.(50);
+    setPendingCode(c);
+  };
+
+  const onCheckedIn = (b: C.CheckInResult) => {
+    setPendingCode(null);
+    setLast(`${b.customer_name ?? 'ลูกค้า'} · ${b.pax} คน · ${b.zone_name ?? ''} · ${b.code}`);
+    setCode('');
+    message.success('เช็กอินสำเร็จ — โต๊ะกำลังใช้งาน');
   };
 
   const updateCrowd = async (v: CrowdStatus) => {
@@ -93,14 +130,26 @@ export function TonightPage() {
   /** ปุ่มท้ายแถว: ยืนยันแล้ว → เช็กอิน · มาแล้ว → ป้ายเขียวน้ำทะเล · อื่น ๆ → ชื่อสถานะ */
   const rowAction = (b: Booking, big: boolean) => {
     const size = big ? 'h-11 px-3.5 text-sm rounded-xl' : 'h-8 px-3 text-[13px] rounded-[10px]';
+    if (isForfeitable(b))
+      return (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            confirmForfeit(b, () => forfeitBooking(b.id));
+          }}
+          className={`merchant-pill inline-flex shrink-0 items-center border border-[color-mix(in_srgb,var(--crowd-full)_45%,transparent)] font-semibold text-(--crowd-full) ${size}`}
+        >
+          ปลดโต๊ะ
+        </button>
+      );
     if (b.status === 'CONFIRMED')
       return (
         <button
           type="button"
-          disabled={busy}
           onClick={(e) => {
             e.stopPropagation();
-            void doCheckIn(b.code);
+            setPendingCode(b.code);
           }}
           className={`merchant-pill inline-flex shrink-0 items-center border border-gold bg-gold font-semibold text-on-gold ${size}`}
         >
@@ -124,7 +173,8 @@ export function TonightPage() {
         role="link"
         tabIndex={0}
         onClick={() => navigate(`/merchant/bookings/${b.id}`)}
-        onKeyDown={(e) => e.key === 'Enter' && navigate(`/merchant/bookings/${b.id}`)}
+        // Enter บนปุ่มในแถว (เช็กอิน/ปลดโต๊ะ) ห้ามพาไปหน้ารายละเอียด
+        onKeyDown={(e) => e.target === e.currentTarget && e.key === 'Enter' && navigate(`/merchant/bookings/${b.id}`)}
         className={`flex cursor-pointer items-center gap-3 rounded-[14px] border px-3 py-2.5 ${
           big ? 'border-border bg-card' : 'border-border/60 bg-surface'
         }`}
@@ -140,6 +190,10 @@ export function TonightPage() {
             {zoneTable(b)}
             {big ? '' : ` · ${b.code}`}
           </span>
+          {/* แยกบรรทัด ไม่ให้ถูกตัดด้วย … — พนักงานต้องเห็นว่าเก็บโต๊ะถึงกี่โมง */}
+          {b.status === 'CONFIRMED' && b.extendedAt && (
+            <span className="text-xs font-medium text-gold-text">ต่อเวลาแล้ว · เก็บโต๊ะถึง {hhmm(autoCancelAt(b))}</span>
+          )}
         </span>
         {rowAction(b, big)}
       </div>
@@ -168,20 +222,26 @@ export function TonightPage() {
     );
   };
 
-  const scanInput = (
+  /** ช่องพิมพ์รหัสมี 2 ชุด (Desktop / มือถือ ซ่อนด้วย CSS) — โฟกัสชุดที่มองเห็นอยู่ */
+  const focusInput = () =>
+    [desktopInputRef.current, inputRef.current].find((el) => el && el.offsetParent !== null)?.focus();
+
+  const scanInput = (ref: RefObject<HTMLInputElement | null>) => (
     <form
       className="flex h-14 overflow-hidden rounded-[14px] border border-gold shadow-[0_0_0_3px_rgba(232,182,76,.15)]"
       onSubmit={(e) => {
         e.preventDefault();
-        void doCheckIn(code);
+        submitTyped();
       }}
     >
       <input
-        ref={inputRef}
+        ref={ref}
         value={code}
         onChange={(e) => setCode(e.target.value)}
+        // เลือกข้อความเดิมทั้งหมดตอนโฟกัส (เช่น ปิดขั้นยืนยันแล้วกลับมา) — สแกนใบถัดไปทับได้เลย ไม่ต่อท้ายรหัสเก่า
+        onFocus={(e) => e.currentTarget.select()}
         aria-label="รหัสจองหรือข้อความจาก QR"
-        placeholder="เช่น NL-3F8K2 หรือข้อความจาก QR"
+        placeholder="เช่น NL-3F8K2A หรือข้อความจาก QR"
         autoCapitalize="characters"
         autoCorrect="off"
         autoComplete="off"
@@ -190,18 +250,27 @@ export function TonightPage() {
       />
       <button
         type="submit"
-        disabled={busy || !code.trim()}
+        disabled={!code.trim()}
         className="merchant-pill bg-gold px-6 text-base font-semibold text-on-gold disabled:opacity-70"
       >
-        {busy ? 'กำลังเช็กอิน…' : 'เช็กอิน'}
+        เช็กอิน
       </button>
     </form>
   );
 
   const lastCheckIn = last && (
-    <div className="flex items-center gap-2.5 rounded-xl border border-(--crowd-available) px-3 py-2.5" role="status">
-      <CheckCircle size={24} weight="fill" className="shrink-0 text-(--crowd-available)" />
-      <b className="text-sm font-semibold">{last}</b>
+    <div className="flex items-center gap-2.5 rounded-xl border border-(--crowd-available) px-3 py-2.5">
+      <CheckCircle size={24} weight="fill" className="shrink-0 text-(--crowd-available)" aria-hidden />
+      <b className="min-w-0 flex-1 text-sm font-semibold" role="status">
+        {last}
+      </b>
+      <button
+        type="button"
+        onClick={() => setScanning(true)}
+        className="merchant-pill inline-flex h-10 shrink-0 items-center gap-1.5 rounded-xl border border-border px-3 text-[13px] font-medium"
+      >
+        <Scan size={16} aria-hidden /> สแกนคนต่อไป
+      </button>
     </div>
   );
 
@@ -219,18 +288,40 @@ export function TonightPage() {
     </span>
   );
 
+  /** ทางลัดไปผังโต๊ะ (ทีมร้านทุกบทบาท) */
+  const floorLink = (
+    <Link
+      to="/merchant/floor"
+      className="merchant-pill inline-flex h-11 shrink-0 lg:h-9 items-center gap-1.5 rounded-full border border-border px-3 text-[13px] text-text hover:border-gold"
+    >
+      <SquaresFour size={16} aria-hidden /> ผังโต๊ะ
+    </Link>
+  );
+
   return (
     <ConfigProvider theme={getAntdTheme('dark')}>
       <div className="dark text-text">
         {/* ---------- Desktop ---------- */}
         <div className="hidden gap-4 lg:grid lg:grid-cols-4 lg:grid-rows-[minmax(220px,auto)_auto]">
           <Tile className="col-span-2 flex flex-col gap-3 !p-[22px]">
-            <p className="flex items-center gap-2 font-semibold">
-              <QrCode size={22} className="text-gold" /> สแกน / กรอกรหัส
-            </p>
-            {scanInput}
+            <div className="flex items-center justify-between gap-3">
+              <p className="flex items-center gap-2 font-semibold">
+                <QrCode size={22} className="text-gold" /> สแกน / กรอกรหัส
+              </p>
+              <span className="flex items-center gap-2">
+                {floorLink}
+                <button
+                  type="button"
+                  onClick={() => setScanning(true)}
+                  className="merchant-pill inline-flex h-9 items-center gap-1.5 rounded-xl border border-border px-3 text-sm hover:border-gold"
+                >
+                  <Camera size={18} aria-hidden /> เปิดกล้อง
+                </button>
+              </span>
+            </div>
+            {scanInput(desktopInputRef)}
             {lastCheckIn ?? (
-              <p className="text-xs text-muted">ใช้เครื่องอ่าน QR ที่ต่อเป็นคีย์บอร์ด หรือพิมพ์รหัสจองแล้วกด Enter</p>
+              <p className="text-xs text-muted">ใช้เครื่องอ่าน QR ที่ต่อเป็นคีย์บอร์ด พิมพ์รหัสจองแล้วกด Enter หรือเปิดกล้อง</p>
             )}
           </Tile>
           <Tile className="flex flex-col gap-2.5">
@@ -250,10 +341,8 @@ export function TonightPage() {
                 คนเช็กอินแล้ว
               </span>
             </div>
-            <span className={`text-[13px] ${overdue.length ? 'text-(--crowd-full)' : 'text-muted'}`}>
-              {overdue.length
-                ? `เลยเวลา ${overdue.length} โต๊ะ · ยกเลิกอัตโนมัติใน ${nextCancelMin} นาที`
-                : 'ยังไม่มีโต๊ะเลยเวลานัด'}
+            <span className={`text-[13px] ${overdueText ? 'text-(--crowd-full)' : 'text-muted'}`}>
+              {overdueText || 'ยังไม่มีโต๊ะเลยเวลานัด'}
             </span>
           </Tile>
           <Tile className="col-span-4 flex flex-col gap-2.5">
@@ -271,28 +360,28 @@ export function TonightPage() {
 
         {/* ---------- มือถือ ---------- */}
         <div className="flex flex-col gap-3 lg:hidden">
-          <div className="flex items-baseline justify-between">
-            <h1 className="font-display text-2xl font-bold">คืนนี้</h1>
+          <div className="flex items-center justify-between gap-2">
+            <span className="flex items-center gap-2">
+              <h1 className="font-display text-2xl font-bold">คืนนี้</h1>
+              {floorLink}
+            </span>
             <span className="text-[13px] text-muted">
               {hhmm(now)} · {closeLabel}
             </span>
           </div>
           <button
             type="button"
-            onClick={() => inputRef.current?.focus()}
+            onClick={() => setScanning(true)}
             className="merchant-pill flex h-28 flex-col items-center justify-center gap-1 rounded-[20px] bg-gold text-[17px] font-bold text-on-gold"
           >
-            <Scan size={38} />
-            แตะเพื่อสแกน / กรอกรหัสจอง
+            <Scan size={38} aria-hidden />
+            แตะเพื่อสแกน QR
           </button>
-          {scanInput}
+          <p className="-mb-1 text-center text-[13px] text-muted">หรือพิมพ์รหัสจองด้านล่าง</p>
+          {scanInput(inputRef)}
           {lastCheckIn}
           <div className="grid grid-cols-3 gap-2">{CROWD_OPTIONS.map((o) => crowdButton(o, true))}</div>
-          {overdue.length > 0 && (
-            <p className="text-[13px] text-(--crowd-full)">
-              เลยเวลา {overdue.length} โต๊ะ · ยกเลิกอัตโนมัติใน {nextCancelMin} นาที
-            </p>
-          )}
+          {overdueText && <p className="text-[13px] text-(--crowd-full)">{overdueText}</p>}
           <span className="flex justify-between text-sm text-muted">
             จองคืนนี้ ({tonight.length})
             <span>
@@ -306,6 +395,17 @@ export function TonightPage() {
             <ul className="m-0 grid list-none gap-2 p-0">{shown.map((b) => bookingCard(b, true))}</ul>
           )}
         </div>
+
+        <QrScanner
+          open={scanning}
+          onClose={() => setScanning(false)}
+          onDetect={onScan}
+          onTypeInstead={() => {
+            setScanning(false);
+            focusInput();
+          }}
+        />
+        <CheckInConfirmModal barId={bar.id} code={pendingCode} onClose={() => setPendingCode(null)} onDone={onCheckedIn} />
       </div>
     </ConfigProvider>
   );

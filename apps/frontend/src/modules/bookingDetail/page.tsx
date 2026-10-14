@@ -1,6 +1,6 @@
-import { Clock, ChatCircleDots, MapPin, ShareNetwork } from '@phosphor-icons/react';
+import { CheckCircle, Clock, ClockClockwise, ChatCircleDots, MapPin, ShareNetwork } from '@phosphor-icons/react';
 import { autoCancelAt, getBar, getBooking } from '@/services/data';
-import { cancelBooking } from './api';
+import { cancelBooking, extendBooking } from './api';
 import { App, Button, Card, Timeline } from 'antd';
 import { QRCodeSVG } from 'qrcode.react';
 import { Link, useParams } from 'react-router';
@@ -11,11 +11,16 @@ import { useDemo } from '@/hooks/useDemo';
 import { BOOKING_STATUS, dateTime } from '@/ui/utils/format';
 import { useNow } from '@/hooks/useNow';
 import { NotFoundResult } from '@/ui/components/notFoundResult';
-import { isReviewableStatus } from '@nightout/utils';
+import {
+  BOOKING_EXTENSION_MINUTES,
+  canExtendBooking,
+  checkInWindow,
+  isReviewableStatus,
+  TABLE_FEE_LABEL,
+} from '@nightout/utils';
 
-function useCountdown(target: Date) {
-  const now = useNow(1000);
-  const ms = target.getTime() - now;
+/** เวลาที่เหลือ → "1 ชม. 5 นาที 3 วินาที" (หมดแล้ว = null) */
+function countdownText(ms: number) {
   if (ms <= 0) return null;
   const h = Math.floor(ms / 3_600_000);
   const m = Math.floor((ms % 3_600_000) / 60_000);
@@ -23,21 +28,56 @@ function useCountdown(target: Date) {
   return `${h > 0 ? `${h} ชม. ` : ''}${m} นาที ${s} วินาที`;
 }
 
-/** /bookings/:id — บัตรจอง + QR เช็กอิน */
+const hhmm = (d: Date | string) =>
+  new Date(d).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', hour12: false });
+
+/** เวลา "HH:mm น." — ถ้าคนละวันกับเวลาจอง ให้มีวันที่ด้วย */
+const clockOf = (d: Date, bookingAt: string) =>
+  d.toDateString() === new Date(bookingAt).toDateString() ? `${hhmm(d)} น.` : dateTime(d.toISOString());
+
+/**
+ * /bookings/:id — บัตรจอง + QR เช็กอิน
+ * เก็บโต๊ะถึง auto_cancel_at (grace ของร้าน) · กด "ขอต่อเวลา 15 นาที" ได้ 1 ครั้ง ตั้งแต่ 15 นาทีก่อนเวลาจอง
+ * · เลยเวลา → ปลดโต๊ะ (Forfeited) · เช็กอินได้ตั้งแต่ 3 ชม. ก่อนเวลาจอง (กติกาใน @nightout/utils booking-time)
+ */
 export function BookingDetailPage() {
   useDemo();
   const { id = '' } = useParams();
   const { user } = useAuth();
   const { message, modal } = App.useApp();
+  const now = useNow(1000);
   const b = getBooking(id);
   const bar = b ? getBar(b.barId) : null;
-  const countdown = useCountdown(b ? autoCancelAt(b) : new Date(0));
 
   if (!b || !bar || b.userId !== user?.id) return <NotFoundResult title="ไม่พบการจองนี้" kind="booking" />;
   const zone = bar.zones.find((z) => z.id === b.zoneId);
   const table = zone?.tables.find((t) => t.id === b.tableId);
   const shareUrl = `${location.origin}/share/${b.shareToken}`;
   const canCancel = ['PENDING', 'AWAITING_DEPOSIT', 'DEPOSIT_SUBMITTED', 'CONFIRMED'].includes(b.status);
+  const releaseAt = autoCancelAt(b);
+  const countdown = countdownText(releaseAt.getTime() - now);
+  const timing = { status: b.status, datetime: b.datetime, autoCancelAt: releaseAt, extendedAt: b.extendedAt };
+  const canExtend = canExtendBooking(timing, new Date(now));
+  const extendOpensAt = new Date(b.datetime).getTime() - BOOKING_EXTENSION_MINUTES * 60_000;
+  const checkInOpensAt = checkInWindow(timing).opensAt;
+
+  const askExtend = () => {
+    const until = new Date(releaseAt.getTime() + BOOKING_EXTENSION_MINUTES * 60_000);
+    modal.confirm({
+      title: `ขอต่อเวลา ${BOOKING_EXTENSION_MINUTES} นาที?`,
+      content: `ต่อได้ 1 ครั้ง เก็บโต๊ะถึง ${hhmm(until)} น.`,
+      okText: 'ต่อเวลา',
+      cancelText: 'ไม่ต่อ',
+      onOk: async () => {
+        try {
+          const r = await extendBooking(b.id);
+          message.success(`ต่อเวลาแล้ว · เก็บโต๊ะถึง ${hhmm(r.auto_cancel_at)} น.`);
+        } catch (e) {
+          message.error((e as Error).message);
+        }
+      },
+    });
+  };
 
   const share = async () => {
     const text = `ไป ${bar.name} กัน! ${dateTime(b.datetime)} · ${zone?.name}\n${shareUrl}`;
@@ -96,7 +136,7 @@ export function BookingDetailPage() {
             </Button>
             {b.status === 'AWAITING_DEPOSIT' && (
               <Link to={`/bookings/${b.id}/deposit`}>
-                <Button type="primary">จ่ายมัดจำ</Button>
+                <Button type="primary">ชำระ Table Fee</Button>
               </Link>
             )}
             {isReviewableStatus(b.status) && !b.reviewed && (
@@ -141,7 +181,7 @@ export function BookingDetailPage() {
             <p className="text-sm text-muted">แจ้งพนักงานตอนเช็กอิน</p>
           </Card>
         )}
-        <Card title="มัดจำ">
+        <Card title={TABLE_FEE_LABEL}>
           <DepositSummary booking={b} />
         </Card>
         <Card title="ประวัติสถานะ">
@@ -153,7 +193,8 @@ export function BookingDetailPage() {
         </Card>
       </div>
 
-      <Card className="h-fit text-center md:sticky md:top-24">
+      {/* มือถือ: การจองที่ยืนยันแล้วเอาการ์ด QR + ปุ่มต่อเวลาขึ้นก่อน (แจ้งเตือนก่อนปลดโต๊ะพามาหน้านี้ตอนยืนอยู่หน้าร้าน) */}
+      <Card className={`h-fit text-center md:sticky md:top-24 ${b.status === 'CONFIRMED' ? 'max-md:order-first' : ''}`}>
         {b.status === 'CONFIRMED' ? (
           <>
             <p className="mb-3 font-semibold">แสดง QR นี้ให้การ์ดหน้าร้าน</p>
@@ -161,13 +202,34 @@ export function BookingDetailPage() {
               <QRCodeSVG value={`NIGHTOUT:${b.id}`} size={200} level="M" />
             </div>
             <p className="mt-3 font-mono text-lg tracking-widest">{b.code}</p>
+            {now < checkInOpensAt.getTime() && (
+              <p className="mt-1 text-xs text-muted">เช็กอินได้ตั้งแต่ {clockOf(checkInOpensAt, b.datetime)}</p>
+            )}
             {countdown ? (
               <p className="mt-3 flex items-center justify-center gap-1 text-sm text-muted">
-                <Clock /> โต๊ะจะถูกยกเลิกอัตโนมัติใน {countdown}
+                <Clock /> ปลดโต๊ะ (Forfeited) ใน {countdown}
               </p>
             ) : (
               <p className="mt-3 text-sm text-(--crowd-full)">เลยเวลาเก็บโต๊ะแล้ว</p>
             )}
+            {canExtend ? (
+              <Button className="mt-4" block type="primary" size="large" icon={<ClockClockwise />} onClick={askExtend}>
+                ขอต่อเวลา {BOOKING_EXTENSION_MINUTES} นาที
+              </Button>
+            ) : b.extendedAt ? (
+              <p className="mt-2 flex items-center justify-center gap-1 text-sm text-gold-text">
+                <CheckCircle weight="fill" /> ต่อเวลาแล้ว · เก็บโต๊ะถึง {hhmm(releaseAt)} น.
+              </p>
+            ) : (
+              now < extendOpensAt && (
+                <p className="mt-1 text-xs text-muted">
+                  ขอต่อเวลาได้ตั้งแต่ {BOOKING_EXTENSION_MINUTES} นาทีก่อนเวลาจอง (1 ครั้ง)
+                </p>
+              )
+            )}
+            <p className="mt-4 border-t border-border pt-3 text-xs text-muted">
+              เพื่อนที่กด &quot;ไปด้วย&quot; จากลิงก์แชร์จะเห็น QR เดียวกัน — ใครถึงร้านก่อนสแกนได้เลย
+            </p>
           </>
         ) : (
           <div className="py-8 text-muted">
@@ -175,8 +237,10 @@ export function BookingDetailPage() {
             <p className="text-sm">
               {b.status === 'CHECKED_IN' || b.status === 'COMPLETED'
                 ? `เช็กอินแล้ว${b.checkedInAt ? ` · ${dateTime(b.checkedInAt)}` : ''} ขอให้สนุกนะ!`
-                : ['PENDING', 'AWAITING_DEPOSIT', 'DEPOSIT_SUBMITTED'].includes(b.status)
-                  ? 'จะแสดงเมื่อ NightOut ตรวจสลิปมัดจำแล้ว'
+                : b.status === 'AWAITING_DEPOSIT'
+                  ? 'จะแสดงเมื่อชำระ Table Fee สำเร็จ'
+                  : ['PENDING', 'DEPOSIT_SUBMITTED'].includes(b.status)
+                    ? 'จะแสดงเมื่อ NightOut ตรวจสลิปแล้ว'
                   : 'การจองนี้ไม่สามารถเช็กอินได้แล้ว'}
             </p>
           </div>

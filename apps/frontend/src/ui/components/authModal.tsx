@@ -9,7 +9,7 @@ import { AuthRegisterForm } from './authRegisterForm';
 type AuthView = 'login' | 'register';
 
 interface AuthModalApi {
-  /** เปิด modal เข้าสู่ระบบ · next = path ที่จะไปต่อหลังล็อกอินสำเร็จ (ไม่ใส่ = อยู่หน้าเดิม) */
+  /** เปิด modal เข้าสู่ระบบ · next = path ที่จะไปต่อหลังล็อกอินสำเร็จ (ไม่ใส่ = อยู่หน้าเดิม) · สลับไปสมัครก็ส่งต่อ (หลัง onboarding) */
   openLogin: (next?: string) => void;
   /** เปิด modal สมัครสมาชิก */
   openRegister: () => void;
@@ -54,6 +54,7 @@ export function AuthModalProvider({ children }: { children: ReactNode }) {
     setOpen(true);
   }, []);
   const openRegister = useCallback(() => {
+    setNext(undefined);
     setView('register');
     setOpen(true);
   }, []);
@@ -97,7 +98,7 @@ export function AuthModalProvider({ children }: { children: ReactNode }) {
               onSwitch={() => setView('register')}
             />
           ) : (
-            <AuthRegisterForm onNavigate={close} onSwitch={() => setView('login')} />
+            <AuthRegisterForm next={next} onNavigate={close} onSwitch={() => setView('login')} />
           )}
         </Modal>
       </ConfigProvider>

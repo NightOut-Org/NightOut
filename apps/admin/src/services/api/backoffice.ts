@@ -27,6 +27,17 @@ export interface AdminViewRows {
   admin_bar_media: Db.AdminBarMedia;
   admin_community_threads: Db.AdminCommunityThread;
   admin_community_comments: Db.AdminCommunityComment;
+  admin_bar_locations: Db.AdminBarLocation;
+  admin_bar_location_requests: Db.AdminBarLocationRequest;
+  admin_bar_blacklist: Db.AdminBarBlacklist;
+  admin_bar_safety: Db.AdminBarSafety;
+  admin_safety_inspections: Db.AdminSafetyInspection;
+  admin_bar_details: Db.AdminBarDetails;
+  admin_styles: Db.AdminStyle;
+  admin_ranking: Db.AdminRanking;
+  admin_payment_intents: Db.AdminPaymentIntent;
+  admin_payment_unmatched: Db.AdminPaymentUnmatched;
+  admin_mini_ads: Db.AdminMiniAd;
 }
 
 /** ตัวกรองแบบง่าย: [คอลัมน์, ค่า] = eq · [คอลัมน์, ค่า[]] = in */

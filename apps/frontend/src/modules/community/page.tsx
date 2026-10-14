@@ -1,4 +1,9 @@
-import type { CommunitySort, CommunityThreadSummary } from '@nightout/contracts';
+import {
+  COMMUNITY_SHOP_NEWS_WEEKLY_MAX,
+  COMMUNITY_SHOP_NEWS_WINDOW_DAYS,
+  type CommunitySort,
+  type CommunityThreadSummary,
+} from '@nightout/contracts';
 import { MagnifyingGlass, Plus, PushPin } from '@phosphor-icons/react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { App, Button, Empty, Input, Skeleton } from 'antd';
@@ -83,7 +88,11 @@ export function CommunityPage() {
           <h1 className="m-0 mt-0.5 text-[28px] font-bold leading-tight md:text-4xl">
             {current?.name ?? 'ชุมชน'}
           </h1>
-          <p className="m-0 mt-0.5 text-sm text-muted">คุยเรื่องคืนนี้กับคนที่ไปมาแล้วจริง</p>
+          <p className="m-0 mt-0.5 text-sm text-muted">
+            {current?.team_only
+              ? `ข่าวและกิจกรรมจากทีมร้านโดยตรง · ร้านละไม่เกิน ${COMMUNITY_SHOP_NEWS_WEEKLY_MAX} กระทู้ใน ${COMMUNITY_SHOP_NEWS_WINDOW_DAYS} วัน`
+              : 'คุยเรื่องคืนนี้กับคนที่ไปมาแล้วจริง'}
+          </p>
         </div>
         <Input
           allowClear
@@ -174,9 +183,15 @@ export function CommunityPage() {
           ) : threads.length === 0 ? (
             <Empty
               className="!py-12"
-              description={q ? `ไม่พบกระทู้ที่ตรงกับ "${q}"` : 'ยังไม่มีกระทู้ในหมวดนี้'}
+              description={
+                q
+                  ? `ไม่พบกระทู้ที่ตรงกับ "${q}"`
+                  : current?.team_only
+                    ? 'ยังไม่มีข่าวจากร้าน'
+                    : 'ยังไม่มีกระทู้ในหมวดนี้'
+              }
             >
-              {!q && <Button onClick={compose}>ตั้งกระทู้แรก</Button>}
+              {!q && !current?.team_only && <Button onClick={compose}>ตั้งกระทู้แรก</Button>}
             </Empty>
           ) : (
             <>

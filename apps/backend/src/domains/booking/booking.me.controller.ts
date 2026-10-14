@@ -1,5 +1,6 @@
-import { Body, Controller, HttpCode, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, HttpCode, Param, Post, Req, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import type { ExtendBookingResult, JoinShareResult } from '@nightout/contracts';
 import type { Request } from 'express';
 import { CurrentUser } from '../../auth/current-user.decorator';
 import { SupabaseJwtGuard, type AuthUser } from '../../auth/supabase-jwt.guard';
@@ -9,7 +10,7 @@ import { Id } from '../../common/params';
 import { SupabaseService } from '../../supabase/supabase.service';
 import { CancelBookingDto, CreateBookingDto } from './booking.dto';
 
-/** booking · ลูกค้า — จอง / ยกเลิก (rpc app_create_booking, app_cancel_booking) */
+/** booking · ลูกค้า — จอง / ยกเลิก / ขอต่อเวลา / ไปด้วย (rpc app_create_booking, app_cancel_booking, app_extend_booking, app_join_share) */
 @ApiTags('booking')
 @ApiBearerAuth()
 @UseGuards(SupabaseJwtGuard)
@@ -48,5 +49,29 @@ export class BookingMeController {
   })
   cancel(@CurrentUser() me: AuthUser, @Id() id: string, @Body() b: CancelBookingDto) {
     return this.db.rpc('app_cancel_booking', { p_actor: me.id, p_booking: id, p_reason: b.reason ?? null });
+  }
+
+  @Post('bookings/:id/extend')
+  @HttpCode(200)
+  @ApiDoc({
+    summary: 'ขอต่อเวลา 15 นาที',
+    description:
+      'ลูกค้าขอเลื่อนเวลาปลดโต๊ะ (auto_cancel_at) ออกไป 15 นาที — ได้ 1 ครั้งต่อการจอง · เฉพาะการจองของตัวเองที่สถานะ CONFIRMED · กดได้ตั้งแต่ 15 นาทีก่อนเวลาจองจนถึงเวลาปลดโต๊ะ (ปลดโต๊ะ = Forfeited ริบ Table Fee) · แจ้งทีมร้าน (rpc app_extend_booking)',
+    returns: '`id` · `auto_cancel_at` เวลาปลดโต๊ะใหม่ · `extended_at`',
+  })
+  extend(@CurrentUser() me: AuthUser, @Id() id: string) {
+    return this.db.rpc<ExtendBookingResult>('app_extend_booking', { p_actor: me.id, p_booking: id });
+  }
+
+  @Post('share-cards/:token/join')
+  @HttpCode(200)
+  @ApiDoc({
+    summary: 'ไปด้วย (เข้าร่วมการจองจากลิงก์แชร์)',
+    description:
+      'เพื่อนที่ได้ลิงก์แชร์กด "ไปด้วย" → บันทึกเป็นสมาชิกของการจองนั้น แล้วเห็น QR เช็กอินชุดเดียวกับผู้จอง (ใครถึงร้านก่อนให้พนักงานสแกน = เช็กอินทั้งโต๊ะ) · กดซ้ำ/เป็นผู้จองเอง = ไม่เพิ่มซ้ำ · ลิงก์ถูกยกเลิก → 404 · การจองจบแล้ว/ยกเลิก → ปิดรับ · แจ้งผู้จองเมื่อมีคนเข้าร่วมใหม่ (rpc app_join_share)',
+    returns: '`joined` · `going_count` จำนวนคนที่กดไปด้วยแล้ว',
+  })
+  joinShare(@CurrentUser() me: AuthUser, @Param('token') token: string) {
+    return this.db.rpc<JoinShareResult>('app_join_share', { p_actor: me.id, p_token: token.slice(0, 200) });
   }
 }

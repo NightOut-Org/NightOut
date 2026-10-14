@@ -1,7 +1,13 @@
+## 2026-10-13 — ป้ายปลดโต๊ะ (Forfeited)
+- ตัวเลข "ไม่มาตามนัด" → "ปลดโต๊ะ (Forfeited)" · ไฟล์: `page.tsx`
+
 ## 2026-10-12 — ย้ายพื้นหลังไปเป็น `EmbersBackdrop` ตัวกลาง (ตาม handoff aurora-embers)
 - `ui/components/merchantAurora.tsx` → `ui/components/embersBackdrop.tsx` (ใช้ร่วมกับหน้าแรก) · ประกายทองหลบเมาส์ในรัศมี 8% ของจอ (ไม่ขยับ 4 วิ จุดหลบลอยวนเอง) · แสงด้านบนยังไม่ตามเมาส์
 - ติดตั้งที่ `layouts/merchant.tsx` (ครอบทุกหน้าใต้ /merchant) และ `layouts/merchantOnboarding.tsx` (layout ใหม่ของ `/merchant/join` `/merchant/status`) แทน handle `merchantAurora` ใน `layouts/main.tsx` (เอาออกแล้ว)
 - คลาสกระจก `merchant-aurora-scope` → `embers-glass` (`embersBackdrop.css`) · แถบบนมือถือโปร่ง 60% + เบลอในธีมมืด
+
+## 2026-10-13 — เรียก Table Fee แทนมัดจำ
+- การ์ด "Table Fee วันนี้" (Staff ยังไม่เห็นเหมือนเดิม) · ไฟล์: `page.tsx`
 
 ## 2026-10-12 — พื้นหลัง Merchant Aurora (Golden Embers) ทุกหน้า /merchant
 - ทุกหน้าใต้ `/merchant` (รวม `/merchant/join` และ `/merchant/status`) มีพื้นหลังตามดีไซน์ "Merchant Aurora" แบบ 10 Golden Embers: แสงม่วง/ทองจากขอบบน ม่วงอมชมพูที่ขอบล่าง และประกายทองลอยขึ้น ไม่ตามเมาส์ มีเกรนบาง ๆ ทับ · เฉพาะธีมมืด

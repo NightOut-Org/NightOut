@@ -5,8 +5,8 @@ import { report } from '../api';
 
 const REASONS: { value: CommunityReportReason; label: string }[] = [
   { value: 'SPAM', label: 'สแปม / โพสต์ซ้ำ' },
-  { value: 'ADVERTISING', label: 'โฆษณาแฝง' },
-  { value: 'OFFENSIVE', label: 'หยาบคาย / คุกคาม' },
+  { value: 'ADVERTISING', label: 'โฆษณาแฝง / โปรโมชันแอลกอฮอล์' },
+  { value: 'OFFENSIVE', label: 'หยาบคาย / คุกคาม / ให้ร้ายร้านอื่น' },
   { value: 'PRIVACY', label: 'เปิดเผยข้อมูลส่วนตัวของคนอื่น' },
   { value: 'OTHER', label: 'อื่น ๆ' },
 ];

@@ -1,6 +1,6 @@
 import { Plus, Trash, Warning } from '@phosphor-icons/react';
-import { estimatePrice } from '@nightout/utils';
-import { App, Checkbox, Empty, Form, Input, InputNumber, Modal, Switch, TimePicker } from 'antd';
+import { ALCOHOL_WARNING_TEXT, alcoholWordsIn, estimatePrice } from '@nightout/utils';
+import { Alert, App, Checkbox, Empty, Form, Input, InputNumber, Modal, Switch, TimePicker } from 'antd';
 import dayjs from 'dayjs';
 import { useState } from 'react';
 import { barBookings, type Bar, type BarPromotion } from '@/services/data';
@@ -38,9 +38,25 @@ const toFeesBody = (f: Bar['fees']) => ({
   other: f.otherFees ?? 0,
 });
 
+/** คำเกี่ยวกับแอลกอฮอล์ในชื่อ/รายละเอียดโปร — เตือนเท่านั้น ไม่บล็อกการบันทึก (ทีม NightOut ยังตรวจถ้อยคำตามเดิม) */
+const promoAlcoholWords = (title?: string, description?: string) => alcoholWordsIn(`${title ?? ''}\n${description ?? ''}`);
+
+function AlcoholWarning({ words }: { words: string[] }) {
+  if (!words.length) return null;
+  return (
+    <Alert
+      type="warning"
+      showIcon
+      icon={<Warning size={18} weight="fill" />}
+      title="อาจผิด พ.ร.บ.ควบคุมเครื่องดื่มแอลกอฮอล์ ม.30"
+      description={`พบคำ: ${words.join(', ')} — ${ALCOHOL_WARNING_TEXT} (ยังบันทึกได้)`}
+    />
+  );
+}
+
 /**
  * /merchant/promotions — โปรที่ลูกค้าเลือกได้ตอนจองโต๊ะ (การ์ดละโปร) + ค่าธรรมเนียมที่ใช้ประเมินราคา + ข้อกำหนด
- * เช่น "โปรเบียร์ก่อน 2 ทุ่ม" = ต้องเช็กอินก่อน 20:00 · เลือกวันได้ · เปิด/ปิดได้
+ * เช่น "มาก่อน 2 ทุ่ม มิกเซอร์ 4 จ่าย 3" = ต้องเช็กอินก่อน 20:00 · เลือกวันได้ · เปิด/ปิดได้ · ห้ามโปรลด/แถมแอลกอฮอล์ (ม.30)
  * สร้าง/ลบ/เปิด-ปิดโปร และค่าธรรมเนียม แก้ในหน้าก่อน แล้วกดบันทึกครั้งเดียว (PUT /merchant/bars/:barId/promotions)
  */
 export function MerchantPromotionsPage() {
@@ -48,6 +64,9 @@ export function MerchantPromotionsPage() {
   const { message, modal } = App.useApp();
   const [open, setOpen] = useState(false);
   const [form] = Form.useForm<PromoForm>();
+  // เตือนคำเกี่ยวกับแอลกอฮอล์ระหว่างพิมพ์ (ไม่บล็อก)
+  const draftTitle = Form.useWatch('title', form);
+  const draftDescription = Form.useWatch('description', form);
   const [feeForm] = Form.useForm<typeof bar.fees>();
   const fees = (Form.useWatch([], feeForm) as typeof bar.fees | undefined) ?? bar.fees;
   const promos = usePromotionsDraft(bar.promotions);
@@ -167,6 +186,7 @@ export function MerchantPromotionsPage() {
       </span>
       <b className="text-base font-semibold lg:text-xl">{p.title}</b>
       {p.description && <span className="hidden text-[13px] text-muted lg:block">{p.description}</span>}
+      <AlcoholWarning words={promoAlcoholWords(p.title, p.description)} />
       <span className="text-[13px] text-muted lg:hidden">
         {p.cutoffTime ? `ก่อน ${p.cutoffTime}` : 'ทั้งคืน'} · {daysLabel(p.days)}
       </span>
@@ -191,7 +211,7 @@ export function MerchantPromotionsPage() {
         <div className="min-w-0">
           <h1 className="text-[17px] font-bold lg:font-display lg:text-[30px]">โปรโมชัน</h1>
           <p className="mt-1 hidden text-sm text-muted lg:block">
-            ลูกค้าเลือกได้ 1 โปรตอนจองโต๊ะ · ระบบเช็กเวลา/วันให้อัตโนมัติ · ใช้กับอาหาร ค่าเข้า หรือบริการเท่านั้น
+            ลูกค้าเลือกได้ 1 โปรตอนจองโต๊ะ · ระบบเช็กเวลา/วันให้อัตโนมัติ · ใช้กับอาหาร ค่าเข้า หรือบริการเท่านั้น · โปรที่ใช้ได้วันนี้ขึ้นป้าย "ดีลวันนี้" บนการ์ดร้านและหน้าร้าน
           </p>
         </div>
         <div className="flex items-center gap-1 lg:gap-3">
@@ -317,6 +337,9 @@ export function MerchantPromotionsPage() {
           <Form.Item name="description" label="รายละเอียด" rules={[{ max: 160 }]}>
             <Input.TextArea rows={2} placeholder="เช่น เฉพาะเมนูอาหาร เมื่อเช็กอินก่อน 20:00 น." />
           </Form.Item>
+          <div className="mb-4 empty:hidden">
+            <AlcoholWarning words={promoAlcoholWords(draftTitle, draftDescription)} />
+          </div>
           <Form.Item name="cutoff" label="ต้องเช็กอินก่อนเวลา (เว้นว่าง = ทั้งคืน)">
             <TimePicker format="HH:mm" minuteStep={30} className="w-full" placeholder="เช่น 20:00" />
           </Form.Item>

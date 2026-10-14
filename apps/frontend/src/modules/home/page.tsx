@@ -1,6 +1,8 @@
-import { rankingByPeriod } from '@/services/data';
 import { useDemo } from '@/hooks/useDemo';
 import { EmbersBackdrop } from '@/ui/components/embersBackdrop';
+import { MiniAdSlot } from '@/ui/components/miniAdSlot';
+import { toRankedBars } from '@/ui/utils/ranking';
+import { useWeeklyTop3 } from './api';
 import { CategoryGrid } from './components/categoryGrid';
 import { Hero } from './components/hero';
 import { Newsletter } from './components/newsletter';
@@ -11,7 +13,7 @@ import { useHomeContent } from './utils/useHomeContent';
 
 /**
  * / — หน้าแรก
- * Hero → การ์ดหมวดหมู่ (ซ้อนทับขอบล่าง Hero) → อันดับประจำสัปดาห์ (แบนเนอร์อันดับ 1 + อันดับ 2–3) → กริดร้านยอดนิยม → สมัครข่าวสาร
+ * Hero → การ์ดหมวดหมู่ (ซ้อนทับขอบล่าง Hero) → อันดับประจำสัปดาห์ (แบนเนอร์อันดับ 1 + อันดับ 2–3) → กริดร้านยอดนิยม → โฆษณาแบนเนอร์เล็ก (ถ้ามี · ป้าย "โฆษณา") → สมัครข่าวสาร
  * (ฟุตเตอร์อยู่ใน MainLayout)
  */
 export function HomePage() {
@@ -20,8 +22,9 @@ export function HomePage() {
   const { content, categories, popularIds, failed, retry } = useHomeContent();
   // ร้านที่แอดมินปักไว้ก่อน แล้วเติมด้วยคะแนนรีวิวสูงสุดจนครบ 8
   const popular = pickPopular(popularIds);
-  // อันดับประจำสัปดาห์ตามโหวต (เดียวกับหน้า /ranking) — คนละชุดกับกริดยอดนิยม (ปักโดยแอดมิน + คะแนนรีวิว)
-  const weekly = rankingByPeriod('WEEK').slice(0, 3);
+  // อันดับประจำสัปดาห์ตามโหวต (GET /public/ranking เส้นเดียวกับหน้า /ranking) — คนละชุดกับกริดยอดนิยม (ปักโดยแอดมิน + คะแนนรีวิว)
+  // ยังไม่มา/ว่าง = WeeklySpotlight ไม่แสดง
+  const weekly = toRankedBars(useWeeklyTop3().data ?? []);
 
   return (
     <>
@@ -52,6 +55,8 @@ export function HomePage() {
         <div className="space-y-16 pb-10 pt-14 md:space-y-24 md:pb-14 md:pt-20">
           <WeeklySpotlight bars={weekly} />
           <PopularGrid bars={popular} eyebrow={content?.popular_eyebrow} title={content?.popular_title} />
+          {/* แบนเนอร์โฆษณาเล็ก (Backoffice /mini-ads) — ไม่มีโฆษณา/โหลดไม่ได้ = ไม่แสดง */}
+          <MiniAdSlot placement="HOME" className="mx-auto max-w-7xl px-4 md:px-8" />
           <Newsletter />
         </div>
       </div>

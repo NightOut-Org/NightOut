@@ -1,0 +1,11 @@
+# deposit — ประวัติการแก้ไข
+
+## 2026-10-13 — ชั้นชำระเงินกลาง (payment intents + mock)
+- `deposit.me.controller.ts`: `POST /bookings/:id/deposit` ตอบ 409 `SLIP_FLOW_DISABLED` เมื่อเปิดชำระออนไลน์ (`PAYMENT_PROVIDER` ตั้งและพร้อม) — ไม่ตั้ง = flow สลิปเดิมครบ
+- migration `20261013001100_payment_intents`: `booking_deposit_summary` เพิ่ม `method` (SLIP/ONLINE) + `provider` · view `admin_deposits` เพิ่มคอลัมน์ท้าย `payment_intent_id` · `payment_provider` (Backoffice แยกช่องทาง สลิป / ออนไลน์) · การชำระออนไลน์เขียนแถว `deposits` VERIFIED/HELD เสมอ (escrow + ยอดขายนับจาก deposits ได้เหมือนเดิม)
+
+## 2026-10-13 — สมุด Table Fee ของร้านเฉพาะเจ้าของ/ผู้จัดการ
+- rpc `bar_deposit_ledger` (`GET /merchant/bars/:barId/deposit-ledger`) คืนแถวเฉพาะ `is_bar_manager` — Staff ได้รายการว่าง
+- ข้อความ error ใน contracts เรียก "Table Fee" แทน "มัดจำ"
+- migration `20261013000100_bar_team_money_rbac`
+

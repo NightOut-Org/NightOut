@@ -3,6 +3,7 @@ import { Link } from 'react-router';
 import { CATEGORY_LABELS, type BarWithTier } from '@/services/data';
 import { useCrowdStatus } from '@/hooks/useCrowdStatus';
 import { BarRating } from '@/ui/components/barRating';
+import { DealBadge } from '@/ui/components/dealBadge';
 import { FavoriteButton } from '@/ui/components/favoriteButton';
 import { SectionHeader } from '@/ui/components/sectionHeader';
 import { barImage } from '@/ui/utils/barImage';
@@ -88,6 +89,7 @@ function PopularBarCard({ bar }: { bar: BarWithTier }) {
           </Link>
         </h3>
         <CrowdLine bar={bar} />
+        <DealBadge bar={bar} className="mt-1.5" />
         {bar.avgPerPerson > 0 && (
           <p className="mt-2">
             <span className="text-lg font-bold text-gold-text">{baht(bar.avgPerPerson)}</span>

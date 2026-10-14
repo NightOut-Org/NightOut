@@ -108,7 +108,12 @@ function ThreadList({ scope, empty }: { scope: CommunityScope; empty: string }) 
   );
 }
 
-const DRAFT_KIND = { NEW: 'กระทู้ใหม่', EDIT: 'แก้กระทู้', REPLY: 'ตอบกระทู้' } as const;
+const DRAFT_KIND = {
+  NEW: 'กระทู้ใหม่',
+  EDIT: 'แก้กระทู้',
+  REPLY: 'ตอบกระทู้',
+  EDIT_COMMENT: 'แก้ความเห็น',
+} as const;
 const draftLink = (d: CommunityDraft) =>
   d.kind === 'NEW'
     ? '/community/new'

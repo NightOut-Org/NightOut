@@ -17,6 +17,7 @@ export const BOOKING_TRANSITIONS: Readonly<
     { to: 'EXPIRED', by: ['SYSTEM'] },
   ],
   AWAITING_DEPOSIT: [
+    { to: 'CONFIRMED', by: ['SYSTEM'] }, // ชำระผ่านผู้ให้บริการสำเร็จ (webhook) → ยืนยันอัตโนมัติ + ออก E-Ticket
     { to: 'DEPOSIT_SUBMITTED', by: ['CUSTOMER'] },
     { to: 'CANCELLED_BY_CUSTOMER', by: ['CUSTOMER'] },
     { to: 'EXPIRED', by: ['SYSTEM'] },
@@ -29,7 +30,8 @@ export const BOOKING_TRANSITIONS: Readonly<
   ],
   CONFIRMED: [
     { to: 'CHECKED_IN', by: ['MERCHANT', 'STAFF'] },
-    { to: 'NO_SHOW', by: ['SYSTEM'] },
+    // ปลดโต๊ะ (Forfeited) — job อัตโนมัติ หรือทีมร้านทุกบทบาทกดเองเมื่อเลย auto_cancel_at (canTeamForfeit · app_team_forfeit_booking · คอมเมนต์ #76)
+    { to: 'NO_SHOW', by: ['SYSTEM', 'MERCHANT', 'STAFF'] },
     { to: 'CANCELLED_BY_CUSTOMER', by: ['CUSTOMER'] },
     { to: 'CANCELLED_BY_MERCHANT', by: ['MERCHANT'] },
   ],

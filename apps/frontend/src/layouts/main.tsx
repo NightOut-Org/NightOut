@@ -4,6 +4,7 @@ import { Outlet, useLocation, useMatches } from 'react-router';
 import { NAV } from '@/configs/nav';
 import { useDemo } from '@/hooks/useDemo';
 import { useAuth } from '@/services/auth';
+import { AccountBannedBanner } from '@/ui/components/accountBannedBanner';
 import { AgeGate } from '@/ui/components/ageGate';
 import { SiteFooter } from '@/ui/components/siteFooter';
 import { BottomIsland, Navbar, type NavItem } from '@/ui/components/navbar';
@@ -58,6 +59,7 @@ export function MainLayout() {
             merchantShell ? 'px-0 pb-0 pt-0 lg:px-4 lg:pb-10 lg:pt-24' : 'px-4 pb-24 pt-24 md:pb-10'
           }`}
         >
+          <AccountBannedBanner />
           <Outlet />
         </main>
       )}

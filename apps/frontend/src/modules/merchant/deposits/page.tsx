@@ -136,9 +136,9 @@ export function MerchantDepositsPage() {
     </div>
   );
   const errorAlert = error && (
-    <Alert className="!mb-4" type="error" showIcon title="โหลดมัดจำไม่สำเร็จ" description={(error as Error).message} />
+    <Alert className="!mb-4" type="error" showIcon title="โหลด Table Fee ไม่สำเร็จ" description={(error as Error).message} />
   );
-  const empty = <Empty className="!my-10" description={ledger.length ? 'ไม่มีรายการในตัวกรองนี้' : 'ยังไม่มีมัดจำ'} />;
+  const empty = <Empty className="!my-10" description={ledger.length ? 'ไม่มีรายการในตัวกรองนี้' : 'ยังไม่มี Table Fee'} />;
 
   return (
     <>
@@ -146,7 +146,7 @@ export function MerchantDepositsPage() {
       <div className="hidden gap-4 lg:grid lg:grid-cols-4">
         <div className="col-span-4 flex items-center justify-between gap-4">
           <div>
-            <h1 className="font-display text-[30px] font-bold">เงินมัดจำ</h1>
+            <h1 className="font-display text-[30px] font-bold">Table Fee</h1>
             <p className="mt-1 text-sm text-muted">
               ลูกค้าโอนผ่าน PromptPay · NightOut ตรวจสลิปและถือไว้ แล้วโอนเข้าบัญชีร้าน
             </p>
@@ -207,7 +207,7 @@ export function MerchantDepositsPage() {
 
       {/* ---------- มือถือ ---------- */}
       <div className="flex flex-col gap-2.5 lg:hidden">
-        <h1 className="text-[17px] font-bold">เงินมัดจำ</h1>
+        <h1 className="text-[17px] font-bold">Table Fee</h1>
         {errorAlert}
         <div className="flex flex-col gap-1 rounded-[20px] border border-gold/35 bg-[linear-gradient(160deg,color-mix(in_srgb,var(--gold)_14%,var(--card)),var(--card))] p-[18px]">
           <span className="text-[13px] text-muted">NightOut ถือไว้</span>

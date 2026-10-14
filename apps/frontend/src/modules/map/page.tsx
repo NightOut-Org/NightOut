@@ -24,6 +24,7 @@ import { useDemo } from '@/hooks/useDemo';
 import { BarRating } from '@/ui/components/barRating';
 import { directionsUrl } from '@/ui/components/barMap';
 import { CrowdBadge } from '@/ui/components/crowdBadge';
+import { DealBadge } from '@/ui/components/dealBadge';
 import { PRBadge } from '@/ui/components/prBadge';
 import { baht } from '@/ui/utils/format';
 import { barImage } from '@/ui/utils/barImage';
@@ -234,6 +235,7 @@ export function MapPage() {
                     <span aria-hidden>•</span>
                     {selected.district} · ~{baht(selected.avgPerPerson)}/คน
                   </p>
+                  <DealBadge bar={selected} className="mt-1.5" />
                   <div className="mt-1.5 flex flex-wrap items-center gap-2">
                     <CrowdBadge crowd={selected.crowd} updatedAt={selected.crowdUpdatedAt} />
                     <PRBadge pr={selected.pr} compact />

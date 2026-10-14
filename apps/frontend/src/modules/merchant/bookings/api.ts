@@ -7,3 +7,7 @@ import { Rest } from '@nightout/utils/rest';
 export async function setBookingStatus(bookingId: string, to: C.TeamBookingStatusBody['to'], reason?: string) {
   await Rest.post(`/merchant/bookings/${bookingId}/status`, { to, reason: reason ?? null } satisfies C.TeamBookingStatusBody);
 }
+
+/** POST /merchant/bookings/:id/forfeit — ปลดโต๊ะ (Forfeited) เองเมื่อเลยเวลาเก็บโต๊ะ (ทีมร้านทุกบทบาท · ผลเหมือน job ปลดโต๊ะอัตโนมัติ) */
+export const forfeitBooking = (bookingId: string) =>
+  Rest.post<C.TeamForfeitResult>(`/merchant/bookings/${bookingId}/forfeit`);

@@ -49,7 +49,7 @@ export function BarDetailPage() {
                   <div className="space-y-6">
                     <BarFacts bar={bar} />
                     <PRBadge pr={bar.pr} />
-                    <PromotionList promotions={bar.promotions} />
+                    <PromotionList bar={bar} />
                     <LocationSection bar={bar} />
                     <OpeningHours hours={bar.hours} />
                     <Perks perks={bar.perks} />

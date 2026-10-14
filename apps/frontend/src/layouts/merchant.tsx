@@ -9,10 +9,11 @@ import {
   Gauge,
   Gear,
   House,
+  MapPin,
   Megaphone,
   QrCode,
-  Receipt,
   ShieldCheck,
+  SquaresFour,
   Storefront,
   Table as TableIcon,
   Tag,
@@ -40,11 +41,15 @@ interface NavItem {
 
 /** ปุ่มตรงบนแถบเมนู (ใช้บ่อย) */
 const PRIMARY: NavItem[] = [
-  { key: '/merchant', icon: <Gauge />, label: 'แดชบอร์ด' },
+  { key: '/merchant', icon: <Gauge />, label: 'แดชบอร์ด', staff: true },
   { key: '/merchant/tonight', icon: <QrCode />, label: 'คืนนี้', staff: true },
+  { key: '/merchant/floor', icon: <SquaresFour />, label: 'ผังโต๊ะ', staff: true },
   { key: '/merchant/bookings', icon: <CalendarCheck />, label: 'การจอง', staff: true },
-  { key: '/merchant/deposits', icon: <Wallet />, label: 'เงินมัดจำ' },
+  { key: '/merchant/deposits', icon: <Wallet />, label: 'Table Fee' },
 ];
+
+/** ตำแหน่งร้าน — ทีมร้านทุกบทบาทดูได้ (Staff ดูอย่างเดียว · เห็นเป็นปุ่มบนแถบ Desktop) */
+const LOCATION_ITEM: NavItem = { key: '/merchant/location', icon: <MapPin />, label: 'ตำแหน่งร้าน', staff: true };
 
 /** กลุ่ม dropdown — ร้าน / การตลาด / ธุรกิจ */
 const GROUPS: { key: string; icon: ReactNode; label: string; items: NavItem[] }[] = [
@@ -54,6 +59,7 @@ const GROUPS: { key: string; icon: ReactNode; label: string; items: NavItem[] }[
     label: 'ร้าน',
     items: [
       { key: '/merchant/store', icon: <Storefront />, label: 'ข้อมูลร้าน' },
+      LOCATION_ITEM,
       { key: '/merchant/menu', icon: <ForkKnife />, label: 'เมนู' },
       { key: '/merchant/tables', icon: <TableIcon />, label: 'โซน / โต๊ะ' },
       { key: '/merchant/safety', icon: <ShieldCheck />, label: 'ความปลอดภัย' },
@@ -76,7 +82,6 @@ const GROUPS: { key: string; icon: ReactNode; label: string; items: NavItem[] }[
     label: 'ธุรกิจ',
     items: [
       { key: '/merchant/analytics', icon: <ChartLine />, label: 'สถิติ' },
-      { key: '/merchant/billing', icon: <Receipt />, label: 'ค่าคอม' },
       { key: '/merchant/staff', icon: <UsersThree />, label: 'พนักงาน' },
     ],
   },
@@ -84,7 +89,8 @@ const GROUPS: { key: string; icon: ReactNode; label: string; items: NavItem[] }[
 
 /** หน้าที่อยู่ใต้ "เพิ่มเติม" บนมือถือ (ที่เหลือจากแท็บ) + ทางกลับเว็บหลัก */
 const MORE_ITEMS: NavItem[] = [
-  PRIMARY[3]!,
+  { key: '/merchant/floor', icon: <SquaresFour />, label: 'ผังโต๊ะ' },
+  PRIMARY.find((i) => i.key === '/merchant/deposits')!,
   ...GROUPS[1]!.items,
   ...GROUPS[2]!.items,
   { key: '/', icon: <House />, label: 'กลับหน้าหลัก NightOut' },
@@ -96,7 +102,7 @@ const isActive = (path: string, key: string) =>
 /** หน้าที่มีแถบปุ่มล่างของตัวเอง → ซ่อนแท็บล่าง */
 const OWN_BOTTOM_BAR = /^\/merchant\/bookings\/[^/]+$/;
 
-/** Layout ฝั่งร้าน — Desktop แถบแคปซูลใต้ navbar · มือถือแถบบน + แท็บล่าง 5 ช่อง · Staff เห็นแค่ คืนนี้ + การจอง */
+/** Layout ฝั่งร้าน — Desktop แถบแคปซูลใต้ navbar · มือถือแถบบน + แท็บล่าง 5 ช่อง · Staff เห็นแค่ แดชบอร์ด Lite · คืนนี้ · ผังโต๊ะ · การจอง */
 export function MerchantLayout() {
   useDemo();
   const { user } = useAuth();
@@ -113,7 +119,8 @@ export function MerchantLayout() {
       />
     );
   const isStaff = bar.staffRole === 'STAFF';
-  const primary = PRIMARY.filter((i) => !isStaff || i.staff);
+  // Staff ไม่มี dropdown "ร้าน" → ตำแหน่งร้านเป็นปุ่มบนแถบ (มือถือ: เข้าจากลิงก์ในแจ้งเตือน)
+  const primary = isStaff ? [...PRIMARY.filter((i) => i.staff), LOCATION_ITEM] : PRIMARY;
   const groups = isStaff ? [] : GROUPS;
   const go = (key: string) => {
     setSheet(null);
@@ -127,8 +134,10 @@ export function MerchantLayout() {
 
   const tabs: { key: string; icon: ReactNode; label: string; center?: boolean }[] = isStaff
     ? [
+        { key: '/merchant', icon: <Gauge />, label: 'แดชบอร์ด' },
         { key: '/merchant/bookings', icon: <CalendarCheck />, label: 'การจอง' },
         { key: '/merchant/tonight', icon: <QrCode />, label: 'คืนนี้', center: true },
+        { key: '/merchant/floor', icon: <SquaresFour />, label: 'ผังโต๊ะ' },
         { key: '/', icon: <House />, label: 'หน้าหลัก' },
       ]
     : [

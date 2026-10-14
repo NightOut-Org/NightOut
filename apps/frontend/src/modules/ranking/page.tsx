@@ -1,8 +1,12 @@
-import { CATEGORY_LABELS, listBars, rankingByPeriod, type RankingPeriod } from '@/services/data';
+import { CATEGORY_LABELS, listBars, type RankingPeriod } from '@/services/data';
+import type { RankPeriod } from '@nightout/contracts';
 import type { BarCategory } from '@nightout/types';
-import { Empty, Segmented } from 'antd';
+import { Button, Empty, Result, Segmented, Spin } from 'antd';
+import { useMemo } from 'react';
 import { useSearchParams } from 'react-router';
 import { useDemo } from '@/hooks/useDemo';
+import { toRankedBars } from '@/ui/utils/ranking';
+import { useRanking } from './api';
 import { Podium } from './components/podium';
 import { RadialCarousel } from './components/radialCarousel';
 import { RankingBackdrop } from './components/rankingBackdrop';
@@ -11,6 +15,9 @@ import { ScrollReveal } from './components/scrollReveal';
 import { SplitHeading } from './components/splitHeading';
 
 const PERIOD_LABEL: Record<RankingPeriod, string> = { WEEK: 'สัปดาห์นี้', MONTH: 'เดือนนี้' };
+/** ค่าใน URL (?period=WEEK|MONTH) → รอบของ API */
+const PERIOD_API: Record<RankingPeriod, RankPeriod> = { WEEK: 'WEEKLY', MONTH: 'MONTHLY' };
+const CATEGORIES: readonly BarCategory[] = ['PUB_BAR', 'CHILL', 'RESTAURANT'];
 
 /**
  * /ranking — จัดอันดับรายสัปดาห์ / รายเดือน (Figma "จัดอันดับ")
@@ -22,9 +29,15 @@ const PERIOD_LABEL: Record<RankingPeriod, string> = { WEEK: 'สัปดาห�
 export function RankingPage() {
   useDemo();
   const [params, setParams] = useSearchParams();
-  const period = (params.get('period') as RankingPeriod | null) ?? 'WEEK';
-  const category = (params.get('category') as BarCategory | null) ?? 'ALL';
-  const ranked = rankingByPeriod(period, category);
+  const period: RankingPeriod = params.get('period') === 'MONTH' ? 'MONTH' : 'WEEK';
+  const rawCategory = params.get('category') as BarCategory | null;
+  // ค่าแปลกใน URL = ทุกประเภท (ไม่ส่งไปให้ API ตอบ 400)
+  const category: BarCategory | 'ALL' = rawCategory && CATEGORIES.includes(rawCategory) ? rawCategory : 'ALL';
+  // อันดับจริงรอบล่าสุด (GET /public/ranking · job คำนวณทุกคืน) เรียงตามโหวตในรอบ แล้วตามคะแนนรวม
+  const { data, isPending, isError, refetch } = useRanking(PERIOD_API[period], category === 'ALL' ? undefined : category);
+  const ranked = useMemo(() => toRankedBars(data ?? []), [data]);
+  // ยังไม่มีใครเช็กอินในรอบนี้ (เช่นต้นสัปดาห์) — อันดับมาจากคะแนนรวมล้วน ๆ บอกผู้ใช้ให้ชัด
+  const noVotes = ranked.length > 0 && ranked.every((b) => b.votes === 0);
   const heroBars = listBars({ sort: 'rating' });
 
   const set = (k: string, v: string, fallback: string) => {
@@ -64,7 +77,7 @@ export function RankingPage() {
             onChange={(v) => set('category', String(v), 'ALL')}
             options={[
               { label: 'ทั้งหมด', value: 'ALL' },
-              ...(['PUB_BAR', 'CHILL', 'RESTAURANT'] as const).map((c) => ({
+              ...CATEGORIES.map((c) => ({
                 label: CATEGORY_LABELS[c],
                 value: c,
               })),
@@ -75,10 +88,26 @@ export function RankingPage() {
 
         <div className="mt-14 sm:mt-20">
           <SplitHeading key={period} lead={PERIOD_LABEL[period]} text="ผู้ชนะได้แก่" />
+          {noVotes && (
+            <p className="mx-auto mt-3 max-w-md text-balance text-center text-sm text-muted">
+              ยังไม่มีโหวตในรอบนี้ — เรียงตามคะแนนรวม (รีวิว · เช็กอิน · Safety)
+            </p>
+          )}
         </div>
 
-        {ranked.length === 0 ? (
-          <Empty className="mt-12" description="ยังไม่มีร้านในหมวดนี้" />
+        {isPending ? (
+          <div className="mt-10 flex min-h-64 items-center justify-center sm:mt-14">
+            <Spin size="large" />
+          </div>
+        ) : isError ? (
+          <Result
+            className="mt-6"
+            status="warning"
+            title="โหลดอันดับไม่สำเร็จ"
+            extra={<Button onClick={() => void refetch()}>ลองใหม่</Button>}
+          />
+        ) : ranked.length === 0 ? (
+          <Empty className="mt-12" description="ยังไม่มีร้านติดอันดับในหมวดนี้" />
         ) : (
           <>
             <div className="mt-10 sm:mt-14">
@@ -92,8 +121,8 @@ export function RankingPage() {
 
         <ScrollReveal>
         <p className="mx-auto mt-10 max-w-2xl text-center text-xs text-muted">
-          อันดับรีเซ็ตทุกวันจันทร์ (รายสัปดาห์) และวันที่ 1 (รายเดือน) · 1 การจองที่เช็กอินแล้ว = 1 โหวต ·
-          ร้านที่มีรีวิวน้อยกว่า 5 รีวิวยังไม่ติดอันดับ
+          อันดับรีเซ็ตทุกวันจันทร์ (รายสัปดาห์) และวันที่ 1 (รายเดือน) · อัปเดตทุกคืน · 1 การจองที่เช็กอินแล้ว = 1 โหวต ·
+          โหวตเท่ากันเรียงตามคะแนนรวม · ร้านที่มีรีวิวน้อยกว่า 5 รีวิวยังไม่ติดอันดับ · โฆษณาไม่มีผล
         </p>
         </ScrollReveal>
       </section>

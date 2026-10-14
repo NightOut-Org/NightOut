@@ -13,6 +13,10 @@ export interface BookingDetailRow {
   cancel_reason: string | null;
   deposit_required: number;
   checked_in_at: string | null;
+  /** เวลาปลดโต๊ะ (Forfeited) — grace ของร้าน + เวลาที่ต่อแล้ว */
+  auto_cancel_at: string;
+  /** เวลาที่ลูกค้ากด "ขอต่อเวลา 15 นาที" (null = ยังไม่ต่อ) */
+  extended_at: string | null;
   created_at: string;
   bar: { id: string } | null;
   zone: { id: string; name: string } | null;
@@ -26,6 +30,9 @@ export interface BookingDetailRow {
     settlement: string;
     verified_at: string | null;
     created_at: string;
+    /** SLIP = โอน + สลิป · ONLINE = ชำระผ่านผู้ให้บริการ (booking_deposit_summary · migration 20261013001100) */
+    method?: 'SLIP' | 'ONLINE';
+    provider?: string | null;
   } | null;
   status_history: { from_status: BookingStatus | null; to_status: BookingStatus; reason: string | null; created_at: string }[];
   customer_name: string | null;
@@ -40,10 +47,13 @@ function historyBy(reason: string | null, customer: string): string {
     case 'customer cancelled':
       return customer;
     case 'deposit verified':
+    case 'payment paid':
     case 'slip rejected':
       return 'NightOut';
     case 'timeout':
       return 'ระบบ';
+    case 'team forfeit':
+      return 'ร้าน';
     case null:
       return 'ร้าน';
     default:
@@ -76,6 +86,8 @@ export function toBooking(r: BookingDetailRow): Booking {
           status: r.deposit.status,
           submittedAt: r.deposit.created_at,
           verifiedAt: r.deposit.verified_at ?? undefined,
+          method: r.deposit.method ?? 'SLIP',
+          provider: r.deposit.provider ?? undefined,
           settlement:
             settlement && settlement !== 'NONE'
               ? (settlement as NonNullable<Booking['deposit']>['settlement'])
@@ -91,6 +103,8 @@ export function toBooking(r: BookingDetailRow): Booking {
       at: h.created_at,
     })),
     checkedInAt: r.checked_in_at ?? undefined,
+    autoCancelAt: r.auto_cancel_at,
+    extendedAt: r.extended_at ?? undefined,
     shareToken: r.share_token ?? '',
     reviewed: r.has_review,
   };

@@ -9,7 +9,7 @@ import { useBars, useAccountRoles, createUserAction } from '../api';
 const ACCOUNT_TYPES = [
   { value: 'CUSTOMER', role: 'CUSTOMER', label: 'ลูกค้า', hint: 'จองโต๊ะ รีวิว ร้านโปรด' },
   { value: 'OWNER', role: 'MERCHANT', label: 'เจ้าของร้าน', hint: 'จัดการร้านได้ทั้งหมด รวมบัญชีรับเงิน', bar: true },
-  { value: 'MANAGER', role: 'MERCHANT', label: 'ผู้จัดการร้าน', hint: 'จัดการร้านได้ ยกเว้นบัญชีรับเงิน', bar: true },
+  { value: 'MANAGER', role: 'MERCHANT', label: 'ผู้จัดการร้าน', hint: 'จัดการร้านได้ รวมบัญชีรับเงิน (เชิญ/นำออกเจ้าของไม่ได้)', bar: true },
   { value: 'STAFF', role: 'STAFF', label: 'พนักงานร้าน', hint: 'ดูการจอง เช็กอิน อัปเดตความแน่น', bar: true },
   { value: 'ADMIN', role: 'ADMIN', label: 'แอดมิน', hint: 'เข้า Backoffice ได้ แต่แก้ชั้นบัญชีไม่ได้ (ตั้ง MFA ตอนเข้าครั้งแรก)' },
   {

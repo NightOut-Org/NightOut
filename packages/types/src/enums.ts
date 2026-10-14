@@ -47,3 +47,38 @@ export type BillingEventType = z.infer<typeof BillingEventType>;
 /** วิธีคิดค่าคอมมิชชัน */
 export const CommissionCalculation = z.enum(['PERCENTAGE', 'FIXED', 'FIXED_PER_PERSON']);
 export type CommissionCalculation = z.infer<typeof CommissionCalculation>;
+
+/** สายรถไฟฟ้าใกล้ร้าน (bars.transit_line · text + check ใน DB) */
+export const TransitLine = z.enum(['BTS', 'MRT', 'ARL', 'SRT']);
+export type TransitLine = z.infer<typeof TransitLine>;
+
+/** สถานะคำขอแก้ตำแหน่งร้าน (bar_location_requests.status) */
+export const LocationRequestStatus = z.enum(['PENDING', 'APPROVED', 'REJECTED', 'CANCELLED']);
+export type LocationRequestStatus = z.infer<typeof LocationRequestStatus>;
+
+/** ที่มาของแถว: ร้านขอแก้ / แอดมินตั้งแทน (ADMIN = อนุมัติในตัว เก็บเป็นประวัติ) */
+export const LocationRequestSource = z.enum(['MERCHANT', 'ADMIN']);
+export type LocationRequestSource = z.infer<typeof LocationRequestSource>;
+
+/** ผลลงพื้นที่ตรวจ Safety ต่อข้อ — PASS ผ่าน (→ มี) · FAIL ไม่พบ (→ ไม่มี) · NA ไม่ได้ตรวจ (ไม่เปลี่ยนค่า) */
+export const SafetyCheckResult = z.enum(['PASS', 'FAIL', 'NA']);
+export type SafetyCheckResult = z.infer<typeof SafetyCheckResult>;
+
+/**
+ * วิธีที่ทีมงานตรวจข้อ Safety (bar_safety_features.verify_method · enum safety_verify_method · migration 20261013000800)
+ * EVIDENCE = ตรวจหลักฐานจากร้าน (ปุ่ม "ยืนยันแล้ว" · ไม่ลงพื้นที่) · ON_SITE = ลงพื้นที่ตรวจ (มีบันทึกใน safety_inspections)
+ */
+export const SafetyVerifyMethod = z.enum(['EVIDENCE', 'ON_SITE']);
+export type SafetyVerifyMethod = z.infer<typeof SafetyVerifyMethod>;
+
+/** สถานะรายการชำระเงินออนไลน์ (payment_intents.status · migration 20261013001100) */
+export const PaymentIntentStatus = z.enum(['PENDING', 'PAID', 'FAILED', 'EXPIRED', 'CANCELLED']);
+export type PaymentIntentStatus = z.infer<typeof PaymentIntentStatus>;
+
+/** เงินที่ได้รับแล้วแต่ผูกกับการจองไม่ได้ → ต้องคืนเอง (ทำมือที่ระบบผู้ให้บริการ) */
+export const PaymentRefundStatus = z.enum(['NONE', 'REQUIRED', 'REFUNDED']);
+export type PaymentRefundStatus = z.infer<typeof PaymentRefundStatus>;
+
+/** ชนิด event จาก webhook หลัง adapter แปลงแล้ว (payment_events.event_type) */
+export const PaymentEventType = z.enum(['PAID', 'FAILED', 'EXPIRED', 'CANCELLED', 'IGNORED']);
+export type PaymentEventType = z.infer<typeof PaymentEventType>;

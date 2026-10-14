@@ -1,6 +1,7 @@
 import { Phone } from '@phosphor-icons/react';
 import { Alert, Button, Card, Checkbox, Input, Typography } from 'antd';
 import type { BarWithTier } from '@/services/data';
+import { BOOKING_EXTENSION_MINUTES, TABLE_FEE_LABEL } from '@nightout/utils';
 import { baht } from '@/ui/utils/format';
 import type { BookingForm } from '../hooks/useBookingForm';
 
@@ -15,7 +16,7 @@ export function ConfirmStep({ bar, f }: { bar: BarWithTier; f: BookingForm }) {
           type="error"
           showIcon
           title="บัญชีนี้ถูกระงับการจอง"
-          description="ตรวจพบสลิปมัดจำไม่ถูกต้องซ้ำ หากคิดว่าเป็นความผิดพลาด กรุณาติดต่อ NightOut"
+          description={`${f.banReason ? `เหตุผล: ${f.banReason} · ` : ''}หากคิดว่าเป็นความผิดพลาด กรุณาติดต่อ NightOut`}
         />
       )}
       <dl className="grid grid-cols-[120px_1fr] gap-y-2 text-sm">
@@ -30,6 +31,7 @@ export function ConfirmStep({ bar, f }: { bar: BarWithTier; f: BookingForm }) {
         <dt className="text-muted">เก็บโต๊ะให้</dt>
         <dd>
           ถึง {datetime.add(bar.gracePeriodMinutes, 'minute').format('HH:mm น.')} ({bar.gracePeriodMinutes} นาที)
+          <span className="text-muted"> · ขอต่อเวลาได้อีก {BOOKING_EXTENSION_MINUTES} นาที 1 ครั้ง</span>
         </dd>
         {chosenPromo && (
           <>
@@ -42,12 +44,12 @@ export function ConfirmStep({ bar, f }: { bar: BarWithTier; f: BookingForm }) {
             </dd>
           </>
         )}
-        <dt className="text-muted">มัดจำ</dt>
+        <dt className="text-muted">{TABLE_FEE_LABEL}</dt>
         <dd>
           <span className="font-semibold text-gold-text">{baht(f.deposit)}</span>
           <span className="text-muted">
             {' '}
-            ({bar.deposit.unit === 'PER_PERSON' ? 'ต่อคน' : 'ต่อโต๊ะ'}) · โอนเข้า NightOut
+            ({bar.deposit.unit === 'PER_PERSON' ? 'ต่อคน' : 'ต่อโต๊ะ'}) · ชำระเข้า NightOut
           </span>
         </dd>
       </dl>
@@ -55,7 +57,7 @@ export function ConfirmStep({ bar, f }: { bar: BarWithTier; f: BookingForm }) {
         className="mt-4"
         type="info"
         showIcon
-        title="มัดจำเข้า NightOut ไม่ใช่เข้าร้านโดยตรง"
+        title="Table Fee ชำระให้ NightOut ไม่ใช่เข้าร้านโดยตรง"
         description="เราถือเงินไว้ให้จนกว่าคุณจะเช็กอิน แล้วจึงส่งต่อให้ร้าน"
       />
 
@@ -90,7 +92,7 @@ export function ConfirmStep({ bar, f }: { bar: BarWithTier; f: BookingForm }) {
       {f.needsTerms && (
         <section aria-labelledby="deposit-terms" className="mt-5 rounded-lg border border-border bg-surface p-4">
           <h3 id="deposit-terms" className="text-sm font-semibold">
-            เงื่อนไขมัดจำ {baht(f.deposit)}
+            เงื่อนไข Table Fee {baht(f.deposit)}
           </h3>
           <ol className="mt-2 list-decimal space-y-1.5 pl-5 text-sm leading-relaxed text-muted">
             {f.termsLines.map((line) => (
@@ -103,7 +105,7 @@ export function ConfirmStep({ bar, f }: { bar: BarWithTier; f: BookingForm }) {
             onChange={(e) => f.setTermsAccepted(e.target.checked)}
           >
             <span className="text-sm">
-              ฉันได้อ่านและยอมรับเงื่อนไขมัดจำ รวมถึงการริบมัดจำเมื่อยกเลิกช้าหรือไม่มาตามนัด
+              ฉันได้อ่านและยอมรับเงื่อนไข{TABLE_FEE_LABEL} รวมถึงการริบ Table Fee เมื่อยกเลิกช้า หรือมาไม่ทันเวลาเก็บโต๊ะจนถูกปลดโต๊ะ (Forfeited)
             </span>
           </Checkbox>
           <p className="mt-2 text-xs text-muted">ระบบบันทึกเวลาและอุปกรณ์ที่ใช้กดยอมรับไว้เป็นหลักฐานของการจองนี้</p>
@@ -129,7 +131,7 @@ export function ConfirmStep({ bar, f }: { bar: BarWithTier; f: BookingForm }) {
           disabled={!f.canSubmit}
           onClick={() => void f.submit()}
         >
-          {f.needsTerms ? 'ยืนยันและไปโอนมัดจำ' : 'ยืนยันการจอง'}
+          {f.needsTerms ? 'ยืนยันและไปชำระ Table Fee' : 'ยืนยันการจอง'}
         </Button>
       </div>
     </Card>

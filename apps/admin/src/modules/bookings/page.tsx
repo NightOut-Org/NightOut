@@ -3,6 +3,7 @@ import type { Db } from '@nightout/types';
 import { formatThaiPhone } from '@nightout/utils';
 import { Input, Table, Timeline, Typography } from 'antd';
 import { useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router';
 import { PAGE_SIZE } from '@/configs/constants';
 import { LoadError } from '@/ui/components/LoadError';
 import { StatusTag } from '@/ui/components/StatusTag';
@@ -42,10 +43,19 @@ function ConsentEvidence({ c }: { c: Db.AdminDepositConsent | null }) {
   );
 }
 
-/** การจองทั้งระบบ — ค้นด้วยรหัสจอง ชื่อ/อีเมล หรือเบอร์ลูกค้า · กดแถวเพื่อดูประวัติสถานะและหลักฐานการยอมรับเงื่อนไขมัดจำ */
+/** การจองทั้งระบบ — ค้นด้วยรหัสจอง ชื่อ/อีเมล หรือเบอร์ลูกค้า · กดแถวเพื่อดูประวัติสถานะและหลักฐานการยอมรับเงื่อนไขมัดจำ · ?status=<สถานะ> กรองสถานะให้เลย (ลิงก์จากแดชบอร์ด) */
 export function BookingsPage() {
   const [q, setQ] = useState('');
+  const [params, setParams] = useSearchParams();
   const { data, isLoading, error, refetch } = useBookings();
+  // ตัวกรองสถานะผูกกับ URL — เปิดจากการ์ดแดชบอร์ดก็กรองให้ทันที และรีเฟรช/แชร์ลิงก์แล้วตัวกรองยังอยู่
+  const statusFilter = useMemo(() => params.getAll('status').filter((s) => s in BOOKING_STATUS), [params]);
+  const setStatusFilter = (values?: readonly unknown[] | null) => {
+    const next = new URLSearchParams(params);
+    next.delete('status');
+    for (const v of values ?? []) next.append('status', String(v));
+    setParams(next, { replace: true });
+  };
   const rows = useMemo(() => {
     const k = q.trim().toLowerCase();
     return (data ?? []).filter(
@@ -70,6 +80,9 @@ export function BookingsPage() {
         dataSource={rows}
         pagination={{ pageSize: PAGE_SIZE }}
         scroll={{ x: 1000 }}
+        onChange={(_, filters, __, { action }) => {
+          if (action === 'filter') setStatusFilter(filters.status);
+        }}
         expandable={{
           expandedRowRender: (b) => (
             <div className="grid gap-6 py-2 lg:grid-cols-2">
@@ -100,8 +113,10 @@ export function BookingsPage() {
           { title: 'มัดจำ', dataIndex: 'deposit_required', align: 'right', render: (v: number) => (v ? baht(v) : '-') },
           {
             title: 'สถานะ',
+            key: 'status',
             dataIndex: 'status',
             filters: Object.entries(BOOKING_STATUS).map(([value, l]) => ({ text: l.text, value })),
+            filteredValue: statusFilter,
             onFilter: (v, b) => b.status === v,
             render: (s: string) => <StatusTag map={BOOKING_STATUS} value={s} />,
           },

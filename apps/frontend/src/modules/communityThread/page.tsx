@@ -1,3 +1,4 @@
+import { COMMUNITY_SHOP_NEWS_CATEGORY } from '@nightout/contracts';
 import type { CommunityComment, CommunityThreadDetail } from '@nightout/contracts';
 import {
   BookmarkSimple,
@@ -19,11 +20,12 @@ import { Link, useNavigate, useParams } from 'react-router';
 import { getBar } from '@/services/data';
 import { useAuth } from '@/services/auth';
 import { useAuthModal } from '@/ui/components/authModal';
+import { CommunityAuthorBadges } from '@/ui/components/communityAuthorBadges';
 import { CommunityAvatar } from '@/ui/components/communityAvatar';
 import { CommunityMediaView } from '@/ui/components/communityMediaView';
 import { barImage } from '@/ui/utils/barImage';
 import { compactCount } from '@/ui/utils/community';
-import { CROWD, timeAgo } from '@/ui/utils/format';
+import { CROWD, dateTime, timeAgo } from '@/ui/utils/format';
 import {
   addView,
   deleteComment,
@@ -32,10 +34,12 @@ import {
   setPin,
   setSave,
   setThreadLike,
+  useMyCommunityTeam,
   useRelatedThreads,
   useThread,
 } from './api';
 import { CommentList } from './components/commentList';
+import { HistoryModal, type HistoryTarget } from './components/historyModal';
 import { ReplyComposer, type ReplyComposerHandle } from './components/replyComposer';
 import { ReportModal } from './components/reportModal';
 
@@ -49,12 +53,14 @@ export function CommunityThreadPage() {
   const qc = useQueryClient();
   const { data: t, isPending, error, refetch } = useThread(id, user?.id ?? null);
   const related = useRelatedThreads(t?.category);
+  const { data: myTeam = [] } = useMyCommunityTeam(user?.id ?? null);
   const [order, setOrder] = useState<'latest' | 'oldest'>('latest');
   const composer = useRef<ReplyComposerHandle>(null);
   const [reportTarget, setReportTarget] = useState<{
     thread_id?: string;
     comment_id?: string;
   } | null>(null);
+  const [historyOf, setHistoryOf] = useState<HistoryTarget | null>(null);
   const viewed = useRef<string | null>(null);
 
   // นับยอดเข้าชมครั้งเดียวต่อการเปิดกระทู้
@@ -97,6 +103,14 @@ export function CommunityThreadPage() {
       />
     );
   }
+
+  /** กระทู้ที่แท็กร้านที่ฉันอยู่ในทีม → ถูกใจของฉัน (กระทู้ + ความเห็น) ไม่นับในยอด */
+  const ownShopThread = !!t.bar && myTeam.some((b) => b.bar_id === t.bar!.id);
+  const LIKE_NOT_COUNTED = 'ถูกใจแล้ว — ถูกใจจากทีมร้านไม่นับในยอด';
+  const likeThread = guard(async () => {
+    const r = await setThreadLike(t.id, !t.is_liked);
+    if (r.liked && !r.counted) message.info(LIKE_NOT_COUNTED);
+  });
 
   const togglePin = guard(async () => {
     const r = await setPin(t.id, !t.is_pinned);
@@ -160,12 +174,17 @@ export function CommunityThreadPage() {
     ...(t.is_mine
       ? [
           { type: 'divider' as const },
-          {
-            key: 'edit',
-            icon: <PencilSimple size={16} />,
-            label: 'แก้กระทู้',
-            onClick: () => navigate(`/community/t/${t.id}/edit`),
-          },
+          // ข่าวจากร้านแก้ได้เฉพาะทีมของร้านที่แท็ก (ร้านที่แสดงอยู่) — นอกนั้นลบได้อย่างเดียว
+          ...(t.category === COMMUNITY_SHOP_NEWS_CATEGORY && !ownShopThread
+            ? []
+            : [
+                {
+                  key: 'edit',
+                  icon: <PencilSimple size={16} />,
+                  label: 'แก้กระทู้',
+                  onClick: () => navigate(`/community/t/${t.id}/edit`),
+                },
+              ]),
           {
             key: 'delete',
             icon: <Trash size={16} />,
@@ -188,10 +207,15 @@ export function CommunityThreadPage() {
   const commentActions = {
     onReply: (c: CommunityComment) =>
       user ? composer.current?.replyTo(c) : openLogin(`/community/t/${t.id}`),
-    onLike: (c: CommunityComment) => guard(() => setCommentLike(c.id, !c.is_liked))(),
+    onLike: (c: CommunityComment) =>
+      guard(async () => {
+        const r = await setCommentLike(c.id, !c.is_liked);
+        if (r.liked && !r.counted) message.info(LIKE_NOT_COUNTED);
+      })(),
     onDelete: (c: CommunityComment) => guard(() => deleteComment(c.id))(),
     onReport: (c: CommunityComment) =>
       user ? setReportTarget({ comment_id: c.id }) : openLogin(`/community/t/${t.id}`),
+    onHistory: (c: CommunityComment) => setHistoryOf({ kind: 'comment', id: c.id }),
   };
 
   return (
@@ -223,15 +247,17 @@ export function CommunityThreadPage() {
             <Alert
               type="warning"
               showIcon
-              message="กระทู้นี้ถูกซ่อนโดยทีมงาน — คนอื่นมองไม่เห็น แก้ให้ตรงกติกาแล้วติดต่อทีมงานได้"
+              title="กระทู้นี้ถูกซ่อนโดยทีมงาน — คนอื่นมองไม่เห็น แก้ให้ตรงกติกาแล้วติดต่อทีมงานได้"
             />
           )}
           <ThreadArticle
             t={t}
             menu={menu}
-            onLike={guard(() => setThreadLike(t.id, !t.is_liked))}
+            ownShopThread={ownShopThread}
+            onLike={likeThread}
             onSave={toggleSave}
             onPin={togglePin}
+            onHistory={() => setHistoryOf({ kind: 'thread', id: t.id })}
           />
 
           {t.status === 'PUBLISHED' && (
@@ -250,7 +276,12 @@ export function CommunityThreadPage() {
                 ]}
               />
             </div>
-            <CommentList comments={t.comments} order={order} actions={commentActions} />
+            <CommentList
+              threadId={t.id}
+              comments={t.comments}
+              order={order}
+              actions={commentActions}
+            />
           </section>
         </main>
 
@@ -283,6 +314,7 @@ export function CommunityThreadPage() {
       </div>
 
       <ReportModal target={reportTarget} onClose={() => setReportTarget(null)} />
+      <HistoryModal target={historyOf} onClose={() => setHistoryOf(null)} />
     </div>
   );
 }
@@ -290,15 +322,20 @@ export function CommunityThreadPage() {
 function ThreadArticle({
   t,
   menu,
+  ownShopThread,
   onLike,
   onSave,
   onPin,
+  onHistory,
 }: {
   t: CommunityThreadDetail;
   menu: MenuProps['items'];
+  /** กระทู้แท็กร้านที่ฉันอยู่ในทีม → บอกว่าถูกใจของฉันไม่นับ */
+  ownShopThread: boolean;
   onLike: () => void;
   onSave: () => void;
   onPin: () => void;
+  onHistory: () => void;
 }) {
   const pill =
     'inline-flex h-10 touch-manipulation select-none items-center gap-1.5 rounded-full border px-3.5 text-sm font-medium transition-transform active:scale-95';
@@ -310,15 +347,24 @@ function ThreadArticle({
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5 text-sm font-semibold">
             <span className="truncate">{t.author.name}</span>
-            {t.author.is_staff && (
-              <span className="rounded-md bg-gold/15 px-1.5 py-px text-[11px] text-gold-text">
-                ทีมงาน
-              </span>
-            )}
+            <CommunityAuthorBadges author={t.author} />
           </div>
           <div className="text-xs text-muted">
             {timeAgo(t.created_at)}
-            {t.edited_at && ' · แก้ไขแล้ว'} · เข้าชม {compactCount(t.view_count)}
+            {t.edited_at && (
+              <>
+                {' · '}
+                <button
+                  type="button"
+                  onClick={onHistory}
+                  title={`แก้ไขล่าสุด ${dateTime(t.edited_at)} — ดูประวัติการแก้ไข`}
+                  className="touch-manipulation bg-transparent p-0 text-muted underline decoration-dotted underline-offset-2 md:hover:text-text"
+                >
+                  แก้ไขแล้ว
+                </button>
+              </>
+            )}{' '}
+            · เข้าชม {compactCount(t.view_count)}
           </div>
         </div>
         <Dropdown menu={{ items: menu }} trigger={['click']} placement="bottomRight">
@@ -381,6 +427,11 @@ function ThreadArticle({
             {t.is_pinned ? 'ปักหมุดแล้ว' : 'ปักหมุด'}
           </button>
         </div>
+      )}
+      {open && ownShopThread && (
+        <p className="m-0 mt-2 text-xs text-muted">
+          ถูกใจของทีมร้านในกระทู้ที่แท็กร้านตัวเองไม่นับในยอดถูกใจ
+        </p>
       )}
     </article>
   );

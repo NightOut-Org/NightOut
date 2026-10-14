@@ -2,13 +2,16 @@ import { ACCOUNT_ERRORS } from './account';
 import { BAR_ERRORS } from './bar';
 import { BAR_TEAM_ERRORS } from './bar-team';
 import { BOOKING_ERRORS } from './booking';
+import { CATALOG_ERRORS } from './catalog';
 import { COMMON_ERRORS } from './common';
 import { COMMUNITY_ERRORS } from './community';
 import { DEPOSIT_ERRORS } from './deposit';
+import { PAYMENT_ERRORS } from './payment';
 import { PROMOTION_ERRORS } from './promotion';
 import { REVIEW_ERRORS } from './review';
 import { SITE_TEAM_ERRORS } from './site-team';
 import { SITE_CONTENT_ERRORS } from './site-content';
+import { MINI_ADS_ERRORS } from './mini-ads';
 
 /**
  * ข้อความภาษาไทยของรหัส error ทุกโดเมน (รหัสมาจากฟังก์ชันใน DB / NestJS)
@@ -19,6 +22,7 @@ export const ERROR_MESSAGES: Readonly<Record<string, string>> = {
   ...COMMON_ERRORS,
   ...BOOKING_ERRORS,
   ...DEPOSIT_ERRORS,
+  ...PAYMENT_ERRORS,
   ...REVIEW_ERRORS,
   ...COMMUNITY_ERRORS,
   ...BAR_ERRORS,
@@ -27,6 +31,8 @@ export const ERROR_MESSAGES: Readonly<Record<string, string>> = {
   ...PROMOTION_ERRORS,
   ...SITE_TEAM_ERRORS,
   ...SITE_CONTENT_ERRORS,
+  ...MINI_ADS_ERRORS,
+  ...CATALOG_ERRORS,
 };
 export type ErrorCode = keyof typeof ERROR_MESSAGES;
 

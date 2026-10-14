@@ -1,7 +1,7 @@
 import { PageContainer } from '@ant-design/pro-components';
-import { PencilSimple, Trash, UserPlus } from '@phosphor-icons/react';
+import { PencilSimple, Prohibit, Trash, UserPlus } from '@phosphor-icons/react';
 import type { Db } from '@nightout/types';
-import { App, Button, Input, Popconfirm, Select, Space, Table, Tag, Typography } from 'antd';
+import { App, Button, Input, Popconfirm, Select, Space, Table, Tag, Tooltip, Typography } from 'antd';
 import { useMemo, useState } from 'react';
 import { PAGE_SIZE } from '@/configs/constants';
 import { useUnsavedGuard } from '@/hooks/useUnsavedGuard';
@@ -12,21 +12,22 @@ import { SaveBar } from '@/ui/components/SaveBar';
 import { formatThaiPhone } from '@nightout/utils';
 import { dateTime } from '@/ui/utils/format';
 import { STAFF_ROLE, USER_ROLE } from '@/ui/utils/labels';
+import { BanUserModal } from './modal/banUserModal';
 import { CreateUserModal } from './modal/createUserModal';
 import { EditUserModal } from './modal/editUserModal';
+import { UnbanUserModal } from './modal/unbanUserModal';
 import { LEAVES_BARS, roleNotes, useRoleDraft, type Role } from './utils/useRoleDraft';
 import {
   useUsers,
   useAccountRoles,
   deleteUserAction,
   setUsersRoleAction,
-  unbanUserAction,
 } from './api';
 
 /**
  * ผู้ใช้ทั้งหมด — เพิ่มผู้ใช้ (แอดมินสร้างได้แค่ลูกค้า / เจ้าของ / ผู้จัดการ / พนักงานร้าน)
  * แก้ชั้นบัญชีที่สร้างผิดได้เฉพาะซูเปอร์แอดมิน: เลือกในตารางได้หลายคน แล้วกดบันทึกครั้งเดียว (ยืนยันผลกระทบก่อน · ADR 0005 · ลงบันทึก audit)
- * ปลดแบน / ลบบัญชี / เพิ่ม-แก้ผ่าน modal บันทึกทันที
+ * แบน / ปลดแบน (ต้องมีเหตุผล) / ลบบัญชี / เพิ่ม-แก้ผ่าน modal บันทึกทันที
  */
 export function UsersPage() {
   const { modal } = App.useApp();
@@ -34,6 +35,8 @@ export function UsersPage() {
   const [q, setQ] = useState('');
   const [creating, setCreating] = useState(false);
   const [editing, setEditing] = useState<Db.AdminUser | null>(null);
+  const [banning, setBanning] = useState<Db.AdminUser | null>(null);
+  const [unbanning, setUnbanning] = useState<Db.AdminUser | null>(null);
   const { data, isLoading, error, refetch } = useUsers();
   const roles = useAccountRoles();
   const act = useAdminAction();
@@ -65,18 +68,12 @@ export function UsersPage() {
     );
   }, [data, q]);
 
-  const unban = (u: Db.AdminUser) =>
-    modal.confirm({
-      title: `ปลดแบน ${u.display_name}?`,
-      content: `จองโต๊ะได้อีกครั้ง · ปลดเบอร์ ${u.banned_phones.map(formatThaiPhone).join(', ') || '-'} · ล้างธงสลิปปลอม ${u.fake_slip_count} ครั้ง (บันทึกใน Audit Log)`,
-      okText: 'ปลดแบน',
-      cancelText: 'ยกเลิก',
-      onOk: () =>
-        act.mutateAsync({
-          ...unbanUserAction(u.id),
-          success: `${u.display_name} จองโต๊ะได้แล้ว`,
-        }),
-    });
+  /** แบนเองได้เฉพาะบัญชีที่ยังไม่ลบ ไม่ใช่ตัวเอง และไม่ใช่บัญชีทีมงาน NightOut (DB ตรวจซ้ำ) */
+  const canBan = (u: Db.AdminUser) =>
+    !u.deleted_at &&
+    u.id !== auth.session?.user.id &&
+    !!roles.data &&
+    !roles.data.find((r) => r.code === u.role)?.can_enter_backoffice;
 
   /** ยืนยันผลกระทบของทุกคนที่แก้ แล้วบันทึกครั้งเดียว */
   const save = () => {
@@ -212,7 +209,7 @@ export function UsersPage() {
               ),
           },
           {
-            title: 'การจอง',
+            title: 'สถานะบัญชี',
             key: 'ban',
             filters: [
               { text: 'ถูกแบน', value: 'banned' },
@@ -222,17 +219,34 @@ export function UsersPage() {
             render: (_, u) =>
               u.banned_at ? (
                 <Space size={4} wrap>
-                  <Tag color="red" title={u.ban_reason ?? undefined}>
-                    ถูกแบน · {dateTime(u.banned_at)}
-                  </Tag>
-                  <Button disabled={busy} onClick={() => unban(u)}>
+                  <Tooltip title={u.ban_reason ? `เหตุผล: ${u.ban_reason}` : undefined}>
+                    <Tag color="red" className="!m-0 cursor-help">
+                      ถูกแบน · {dateTime(u.banned_at)}
+                    </Tag>
+                  </Tooltip>
+                  <Button size="small" disabled={busy} onClick={() => setUnbanning(u)}>
                     ปลดแบน
                   </Button>
                 </Space>
-              ) : u.fake_slip_count > 0 ? (
-                <Tag color="orange">สลิปปลอม {u.fake_slip_count} ครั้ง</Tag>
               ) : (
-                <Typography.Text type="secondary">ปกติ</Typography.Text>
+                <Space size={4} wrap>
+                  {u.fake_slip_count > 0 ? (
+                    <Tag color="orange">สลิปปลอม {u.fake_slip_count} ครั้ง</Tag>
+                  ) : (
+                    <Typography.Text type="secondary">ปกติ</Typography.Text>
+                  )}
+                  {canBan(u) && (
+                    <Button
+                      danger
+                      size="small"
+                      icon={<Prohibit size={14} />}
+                      disabled={busy}
+                      onClick={() => setBanning(u)}
+                    >
+                      แบน
+                    </Button>
+                  )}
+                </Space>
               ),
           },
           {
@@ -288,6 +302,8 @@ export function UsersPage() {
       />
       <CreateUserModal open={creating} onClose={() => setCreating(false)} />
       <EditUserModal user={editing} open={!!editing} onClose={() => setEditing(null)} />
+      <BanUserModal user={banning} onClose={() => setBanning(null)} />
+      <UnbanUserModal user={unbanning} onClose={() => setUnbanning(null)} />
     </PageContainer>
   );
 }

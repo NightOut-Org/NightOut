@@ -1,23 +1,25 @@
 import { CalendarBlank, MagnifyingGlass } from '@phosphor-icons/react';
 import type { TeamBookingStatusBody } from '@nightout/contracts';
 import type { BookingStatus } from '@nightout/types';
-import { nextStatuses } from '@nightout/utils';
+import { canTeamForfeit, nextStatuses } from '@nightout/utils';
 import { App, Calendar, Drawer, Empty, Segmented } from 'antd';
 import dayjs, { type Dayjs } from 'dayjs';
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
-import { barBookings, type Booking } from '@/services/data';
+import { autoCancelAt, barBookings, type Booking } from '@/services/data';
+import { useConfirmForfeit } from '@/hooks/useConfirmForfeit';
 import { useMerchantBar } from '@/hooks/useMerchantBar';
+import { useNow } from '@/hooks/useNow';
 import { BookingStatusTag } from '@/ui/components/bookingStatusTag';
 import { Chip, Tile } from '@/ui/components/merchantUi';
 import { BOOKING_STATUS } from '@/ui/utils/format';
-import { setBookingStatus } from './api';
+import { forfeitBooking, setBookingStatus } from './api';
 import { MiniCalendar } from './components/miniCalendar';
 
 type TeamAction = TeamBookingStatusBody['to'];
 
 /** ปุ่มท้ายแถว: [ปุ่มหลัก, ปุ่มรอง] ตามสถานะ · 'view' = ไปหน้ารายละเอียด · 'move' = ไปหน้ารายละเอียดแล้วเปิดย้ายโต๊ะ */
-type RowAction = { label: string; to: TeamAction | 'view' | 'move'; primary?: boolean };
+type RowAction = { label: string; to: TeamAction | 'view' | 'move' | 'forfeit'; primary?: boolean; danger?: boolean };
 const ROW_ACTIONS: Partial<Record<BookingStatus, [RowAction, RowAction]>> = {
   PENDING: [{ label: 'รับจอง', to: 'CONFIRMED', primary: true }, { label: 'ปฏิเสธ', to: 'REJECTED' }],
   CONFIRMED: [{ label: 'เช็กอิน', to: 'CHECKED_IN', primary: true }, { label: 'ย้ายโต๊ะ', to: 'move' }],
@@ -25,6 +27,11 @@ const ROW_ACTIONS: Partial<Record<BookingStatus, [RowAction, RowAction]>> = {
   DEPOSIT_SUBMITTED: [{ label: 'ดู', to: 'view' }, { label: 'ย้ายโต๊ะ', to: 'move' }],
   AWAITING_DEPOSIT: [{ label: 'ดู', to: 'view' }, { label: 'ยกเลิก', to: 'CANCELLED_BY_MERCHANT' }],
 };
+/** ยืนยันแล้วแต่เลยเวลาเก็บโต๊ะ (canTeamForfeit) → ปลดโต๊ะเองได้ (ทีมร้านทุกบทบาท) แทนเช็กอิน/ย้ายโต๊ะ */
+const FORFEIT_ACTIONS: [RowAction, RowAction] = [
+  { label: 'ปลดโต๊ะ', to: 'forfeit', danger: true },
+  { label: 'ดู', to: 'view' },
+];
 
 /** สรุปของวัน (คอลัมน์ซ้าย) */
 const DAY_SUMMARY: BookingStatus[] = ['CHECKED_IN', 'CONFIRMED', 'DEPOSIT_SUBMITTED', 'AWAITING_DEPOSIT', 'PENDING'];
@@ -53,6 +60,8 @@ export function MerchantBookingsPage() {
   const [mobileSearch, setMobileSearch] = useState(false);
   const [mobileCalendar, setMobileCalendar] = useState(false);
   const actor = bar.staffRole === 'STAFF' ? 'STAFF' : 'MERCHANT';
+  const confirmForfeit = useConfirmForfeit();
+  const now = useNow(30_000);
 
   const all = barBookings(bar.id);
   const countByDay = useMemo(() => {
@@ -78,6 +87,7 @@ export function MerchantBookingsPage() {
   const run = async (b: Booking, a: RowAction) => {
     if (a.to === 'view') return open(b);
     if (a.to === 'move') return open(b, true);
+    if (a.to === 'forfeit') return confirmForfeit(b, () => forfeitBooking(b.id));
     const to = a.to;
     setBusy(`${b.id}:${to}`);
     try {
@@ -91,9 +101,11 @@ export function MerchantBookingsPage() {
   };
   /** ตัดปุ่มเปลี่ยนสถานะที่บทบาทนี้ทำไม่ได้ (เช่น Staff ยกเลิกแทนร้านไม่ได้) */
   const actionsOf = (b: Booking) =>
-    (ROW_ACTIONS[b.status] ?? []).filter(
-      (a) => a.to === 'view' || a.to === 'move' || nextStatuses(b.status, actor).includes(a.to),
-    );
+    canTeamForfeit({ status: b.status, autoCancelAt: autoCancelAt(b) }, new Date(now))
+      ? FORFEIT_ACTIONS
+      : (ROW_ACTIONS[b.status] ?? []).filter(
+          (a) => a.to === 'view' || a.to === 'move' || (a.to !== 'forfeit' && nextStatuses(b.status, actor).includes(a.to)),
+        );
 
   const actionButtons = (b: Booking) => {
     const acts = actionsOf(b);
@@ -107,7 +119,11 @@ export function MerchantBookingsPage() {
           void run(b, a);
         }}
         className={`merchant-pill inline-flex h-[30px] items-center rounded-[9px] px-2.5 text-[13px] ${
-          a.primary ? 'bg-gold font-semibold text-on-gold' : 'border border-border text-text'
+          a.primary
+            ? 'bg-gold font-semibold text-on-gold'
+            : a.danger
+              ? 'border border-[color-mix(in_srgb,var(--crowd-full)_45%,transparent)] text-(--crowd-full)'
+              : 'border border-border text-text'
         } disabled:opacity-60`}
       >
         {a.label}
@@ -124,7 +140,7 @@ export function MerchantBookingsPage() {
         {short ? 'รอยืนยัน' : 'รอร้านยืนยัน'} {count('PENDING')}
       </Chip>
       <Chip active={filter === 'DEPOSIT'} onClick={() => setFilter('DEPOSIT')}>
-        รอมัดจำ {count('DEPOSIT')}
+        รอ Table Fee {count('DEPOSIT')}
       </Chip>
       <Chip active={filter === 'CONFIRMED'} onClick={() => setFilter('CONFIRMED')}>
         ยืนยันแล้ว {count('CONFIRMED')}

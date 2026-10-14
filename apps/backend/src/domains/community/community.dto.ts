@@ -5,6 +5,7 @@ export class CommunityFeedQueryDto extends createZodDto(C.CommunityFeedQuery) {}
 export class MyCommunityFeedQueryDto extends createZodDto(C.MyCommunityFeedQuery) {}
 export class CommunityThreadDto extends createZodDto(C.CommunityThreadBody) {}
 export class CommunityCommentDto extends createZodDto(C.CommunityCommentBody) {}
+export class UpdateCommunityCommentDto extends createZodDto(C.UpdateCommunityCommentBody) {}
 export class CommunityToggleDto extends createZodDto(C.CommunityToggleBody) {}
 export class CommunityReportDto extends createZodDto(C.CommunityReportBody) {}
 export class SaveCommunityDraftDto extends createZodDto(C.SaveCommunityDraftBody) {}

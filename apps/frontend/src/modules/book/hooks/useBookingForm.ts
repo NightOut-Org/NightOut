@@ -2,7 +2,14 @@ import { App } from 'antd';
 import dayjs, { type Dayjs } from 'dayjs';
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
-import { DEPOSIT_TERMS_VERSION, depositTermsLines, depositTermsText, formatThaiPhone, toThaiE164 } from '@nightout/utils';
+import {
+  DEFAULT_REFUND_BEFORE_HOURS,
+  DEPOSIT_TERMS_VERSION,
+  depositTermsLines,
+  depositTermsText,
+  formatThaiPhone,
+  toThaiE164,
+} from '@nightout/utils';
 import { currentProfile, depositFor, promotionApplies, type BarWithTier } from '@/services/data';
 import { createBooking, useZoneAvailability } from '../api';
 
@@ -24,6 +31,7 @@ export function useBookingForm(bar: BarWithTier | null) {
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const banned = !!currentProfile()?.bannedAt;
+  const banReason = currentProfile()?.banReason?.trim() || null;
 
   const datetime = useMemo(() => {
     const [h, m] = time.split(':').map(Number);
@@ -46,7 +54,7 @@ export function useBookingForm(bar: BarWithTier | null) {
   // ข้อความเดียวกันทั้งที่แสดงข้าง checkbox และที่ส่งไปเก็บเป็นหลักฐาน
   const termsInput = {
     amount: deposit,
-    refundBeforeHours: bar?.deposit.refundBeforeHours ?? 24,
+    refundBeforeHours: bar?.deposit.refundBeforeHours ?? DEFAULT_REFUND_BEFORE_HOURS,
     graceMinutes: bar?.gracePeriodMinutes ?? 30,
     barPolicy: bar?.deposit.policy,
   };
@@ -70,7 +78,7 @@ export function useBookingForm(bar: BarWithTier | null) {
         deposit_terms: needsTerms ? { accepted: true, terms_version: DEPOSIT_TERMS_VERSION, terms_text: depositTermsText(termsInput) } : null,
       });
       if (b.status === 'AWAITING_DEPOSIT') {
-        message.success('สร้างการจองแล้ว โอนมัดจำเพื่อยืนยันโต๊ะ');
+        message.success('สร้างการจองแล้ว ชำระ Table Fee เพื่อยืนยันโต๊ะ');
         navigate(`/bookings/${b.id}/deposit`);
       } else {
         message.success('ส่งคำขอจองแล้ว รอร้านยืนยัน');
@@ -119,6 +127,7 @@ export function useBookingForm(bar: BarWithTier | null) {
     termsAccepted,
     setTermsAccepted,
     banned,
+    banReason,
     canSubmit,
     submitting,
     submit,

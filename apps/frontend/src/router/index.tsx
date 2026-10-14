@@ -5,9 +5,9 @@ import { MerchantLayout } from '@/layouts/merchant';
 import { MerchantOnboardingLayout } from '@/layouts/merchantOnboarding';
 import { RootLayout } from '@/layouts/root';
 import { HomePage } from '@/modules/home/page';
-import { RequireAuth, RequireRole } from './middleware';
+import { RequireAuth, RequireBarRole, RequireRole } from './middleware';
 
-// หมดเวลา / ไม่มาตามนัด: ฐานข้อมูลจัดการเอง (pg_cron → /api/jobs/booking-timeouts · dev: NestJS รันทุก 1 นาที)
+// หมดเวลา / ปลดโต๊ะ (Forfeited) / แจ้งเตือน 15 นาทีก่อนเวลาจอง: ฐานข้อมูลจัดการเอง (pg_cron → run_booking_timeouts() ทุก 1 นาที)
 
 /**
  * route ทั้งหมดตาม docs/SITEMAP.md
@@ -15,7 +15,7 @@ import { RequireAuth, RequireRole } from './middleware';
  */
 const routes: RouteObject[] = [
   // แผนที่เต็มจอ (ไม่มี navbar — มีปุ่มลอยของตัวเอง) ซ่อนไว้ก่อนตอนนี้ไม่ใช้
-  // { path: 'map', lazy: () => import('@/modules/map/page').then((m) => ({ Component: m.MapPage })) },
+  { path: 'map', lazy: () => import('@/modules/map/page').then((m) => ({ Component: m.MapPage })) },
   // /login, /register = redirect ไปหน้าหลักแล้วเปิด modal (ลิงก์เก่า + RequireAuth)
   {
     path: 'login',
@@ -166,6 +166,12 @@ const routes: RouteObject[] = [
               import('@/modules/deposit/page').then((m) => ({ Component: m.DepositPage })),
           },
           {
+            // หน้าชำระเงินจำลอง (PAYMENT_PROVIDER=mock) — ผู้ให้บริการจริงพาออกไปหน้าของเขาแทน
+            path: 'pay/mock/:intentId',
+            lazy: () =>
+              import('@/modules/payMock/page').then((m) => ({ Component: m.PayMockPage })),
+          },
+          {
             path: 'reviews/new',
             lazy: () =>
               import('@/modules/reviewNew/page').then((m) => ({ Component: m.ReviewNewPage })),
@@ -266,6 +272,15 @@ const routes: RouteObject[] = [
                         Component: m.TonightPage,
                       })),
                   },
+                  // ผังโต๊ะ: ทีมร้านทุกบทบาท (ไม่มียอดเงิน) · โพลทุก 10 วิ
+                  {
+                    path: 'floor',
+                    handle: { hideFooter: true },
+                    lazy: () =>
+                      import('@/modules/merchant/floor/page').then((m) => ({
+                        Component: m.MerchantFloorPage,
+                      })),
+                  },
                   {
                     path: 'bookings',
                     handle: { hideFooter: true },
@@ -282,101 +297,109 @@ const routes: RouteObject[] = [
                         Component: m.MerchantBookingDetailPage,
                       })),
                   },
+                  // ตำแหน่งร้าน: ทีมร้านทุกบทบาทดูได้ (Staff/PR ดูอย่างเดียว) · แก้ได้เฉพาะเจ้าของ/ผู้จัดการ
                   {
-                    path: 'deposits',
+                    path: 'location',
                     handle: { hideFooter: true },
                     lazy: () =>
-                      import('@/modules/merchant/deposits/page').then((m) => ({
-                        Component: m.MerchantDepositsPage,
+                      import('@/modules/merchant/location/page').then((m) => ({
+                        Component: m.MerchantLocationPage,
                       })),
                   },
+                  // ร้าน: เจ้าของ / ผู้จัดการ เท่านั้น — Staff/PR เห็นเฉพาะคิว (แดชบอร์ด Lite · คืนนี้ · ผังโต๊ะ · การจอง) ห้ามเห็นเงินของร้าน
+                  // ค่าคอม /merchant/billing ปิดไว้จนถึง Phase 2 (โมดูลยังอยู่ — เปิดคืนด้วยการเพิ่ม route)
                   {
-                    path: 'store',
-                    handle: { hideFooter: true },
-                    lazy: () =>
-                      import('@/modules/merchant/store/page').then((m) => ({
-                        Component: m.MerchantStorePage,
-                      })),
-                  },
-                  {
-                    path: 'menu',
-                    handle: { hideFooter: true },
-                    lazy: () =>
-                      import('@/modules/merchant/menu/page').then((m) => ({
-                        Component: m.MerchantMenuPage,
-                      })),
-                  },
-                  {
-                    path: 'promotions',
-                    handle: { hideFooter: true },
-                    lazy: () =>
-                      import('@/modules/merchant/promotions/page').then((m) => ({
-                        Component: m.MerchantPromotionsPage,
-                      })),
-                  },
-                  {
-                    path: 'tables',
-                    handle: { hideFooter: true },
-                    lazy: () =>
-                      import('@/modules/merchant/tables/page').then((m) => ({
-                        Component: m.MerchantTablesPage,
-                      })),
-                  },
-                  {
-                    path: 'safety',
-                    handle: { hideFooter: true },
-                    lazy: () =>
-                      import('@/modules/merchant/safety/page').then((m) => ({
-                        Component: m.MerchantSafetyPage,
-                      })),
-                  },
-                  {
-                    path: 'settings',
-                    handle: { hideFooter: true },
-                    lazy: () =>
-                      import('@/modules/merchant/settings/page').then((m) => ({
-                        Component: m.MerchantSettingsPage,
-                      })),
-                  },
-                  {
-                    path: 'promote',
-                    handle: { hideFooter: true },
-                    lazy: () =>
-                      import('@/modules/merchant/promote/page').then((m) => ({
-                        Component: m.MerchantPromotePage,
-                      })),
-                  },
-                  {
-                    path: 'reviews',
-                    handle: { hideFooter: true },
-                    lazy: () =>
-                      import('@/modules/merchant/reviews/page').then((m) => ({
-                        Component: m.MerchantReviewsPage,
-                      })),
-                  },
-                  {
-                    path: 'analytics',
-                    handle: { hideFooter: true },
-                    lazy: () =>
-                      import('@/modules/merchant/analytics/page').then((m) => ({
-                        Component: m.MerchantAnalyticsPage,
-                      })),
-                  },
-                  {
-                    path: 'billing',
-                    handle: { hideFooter: true },
-                    lazy: () =>
-                      import('@/modules/merchant/billing/page').then((m) => ({
-                        Component: m.MerchantBillingPage,
-                      })),
-                  },
-                  {
-                    path: 'staff',
-                    handle: { hideFooter: true },
-                    lazy: () =>
-                      import('@/modules/merchant/staff/page').then((m) => ({
-                        Component: m.MerchantStaffPage,
-                      })),
+                    element: <RequireBarRole roles={['OWNER', 'MANAGER']} />,
+                    children: [
+                      {
+                        path: 'deposits',
+                        handle: { hideFooter: true },
+                        lazy: () =>
+                          import('@/modules/merchant/deposits/page').then((m) => ({
+                            Component: m.MerchantDepositsPage,
+                          })),
+                      },
+                      {
+                        path: 'store',
+                        handle: { hideFooter: true },
+                        lazy: () =>
+                          import('@/modules/merchant/store/page').then((m) => ({
+                            Component: m.MerchantStorePage,
+                          })),
+                      },
+                      {
+                        path: 'menu',
+                        handle: { hideFooter: true },
+                        lazy: () =>
+                          import('@/modules/merchant/menu/page').then((m) => ({
+                            Component: m.MerchantMenuPage,
+                          })),
+                      },
+                      {
+                        path: 'promotions',
+                        handle: { hideFooter: true },
+                        lazy: () =>
+                          import('@/modules/merchant/promotions/page').then((m) => ({
+                            Component: m.MerchantPromotionsPage,
+                          })),
+                      },
+                      {
+                        path: 'tables',
+                        handle: { hideFooter: true },
+                        lazy: () =>
+                          import('@/modules/merchant/tables/page').then((m) => ({
+                            Component: m.MerchantTablesPage,
+                          })),
+                      },
+                      {
+                        path: 'safety',
+                        handle: { hideFooter: true },
+                        lazy: () =>
+                          import('@/modules/merchant/safety/page').then((m) => ({
+                            Component: m.MerchantSafetyPage,
+                          })),
+                      },
+                      {
+                        path: 'settings',
+                        handle: { hideFooter: true },
+                        lazy: () =>
+                          import('@/modules/merchant/settings/page').then((m) => ({
+                            Component: m.MerchantSettingsPage,
+                          })),
+                      },
+                      {
+                        path: 'promote',
+                        handle: { hideFooter: true },
+                        lazy: () =>
+                          import('@/modules/merchant/promote/page').then((m) => ({
+                            Component: m.MerchantPromotePage,
+                          })),
+                      },
+                      {
+                        path: 'reviews',
+                        handle: { hideFooter: true },
+                        lazy: () =>
+                          import('@/modules/merchant/reviews/page').then((m) => ({
+                            Component: m.MerchantReviewsPage,
+                          })),
+                      },
+                      {
+                        path: 'analytics',
+                        handle: { hideFooter: true },
+                        lazy: () =>
+                          import('@/modules/merchant/analytics/page').then((m) => ({
+                            Component: m.MerchantAnalyticsPage,
+                          })),
+                      },
+                      {
+                        path: 'staff',
+                        handle: { hideFooter: true },
+                        lazy: () =>
+                          import('@/modules/merchant/staff/page').then((m) => ({
+                            Component: m.MerchantStaffPage,
+                          })),
+                      },
+                    ],
                   },
                 ],
               },

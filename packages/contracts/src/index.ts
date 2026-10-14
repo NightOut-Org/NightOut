@@ -7,6 +7,7 @@
 export * from './common';
 export * from './booking';
 export * from './deposit';
+export * from './payment';
 export * from './review';
 export * from './community';
 export * from './bar';
@@ -16,7 +17,9 @@ export * from './promotion';
 export * from './billing';
 export * from './site-team';
 export * from './site-content';
+export * from './mini-ads';
 export * from './storage';
 export * from './pricing';
 export * from './backoffice';
+export * from './catalog';
 export * from './errors';

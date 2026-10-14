@@ -27,8 +27,13 @@ export class BookingPublicController {
   @Get('share-cards/:token')
   @ApiDoc({
     summary: 'บัตรจองจากลิงก์แชร์',
-    description: 'ข้อมูลการจองสำหรับเพื่อนที่ได้ลิงก์ (ไม่มีข้อมูลส่วนตัว) (rpc get_share_card)',
-    returns: '`booking_datetime` · `pax` · `status` · `zone_name` · `bar_name` · `bar_slug` · `address` · `lat` · `lng` · `host_first_name` · `going_count` หรือ `null` ถ้าไม่พบ',
+    description:
+      'ข้อมูลการจองสำหรับเพื่อนที่ได้ลิงก์ (rpc get_share_card) — คนทั่วไป/ไม่ล็อกอินไม่เห็นข้อมูลส่วนตัว · ' +
+      'ส่ง JWT ของผู้เรียกต่อ (bearerOf → rpcAs) เพื่อให้ DB รู้ว่าเป็นสมาชิกกลุ่มไหม: ผู้จองหรือเพื่อนที่กด "ไปด้วย" แล้ว ได้ QR เช็กอินเดียวกับผู้จอง (ใครถึงร้านก่อนสแกนได้เลย)',
+    returns:
+      '`booking_datetime` · `pax` · `status` · `zone_name` · `bar_name` · `bar_slug` · `address` · `lat` · `lng` · `host_first_name` · `going_count` · `deposit_required` (Table Fee ของการจอง ใช้หารต่อหัว) · ' +
+      '`is_member` (ผู้เรียกเป็นผู้จองหรือกด "ไปด้วย" ในลิงก์นี้แล้ว · ไม่ล็อกอิน = false) · ' +
+      '`checkin_qr` (`NIGHTOUT:<booking id>` เฉพาะสมาชิก + การจอง CONFIRMED · นอกนั้น null) หรือ `null` ถ้าไม่พบ',
     auth: false,
   })
   async shareCard(@Req() req: Request, @Param('token') token: string) {

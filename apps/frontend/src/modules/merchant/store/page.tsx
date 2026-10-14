@@ -3,6 +3,7 @@ import { InstagramLogo, TiktokLogo } from '@phosphor-icons/react';
 import { App, Form, Input, Select, Switch, TimePicker } from 'antd';
 import dayjs from 'dayjs';
 import { useState } from 'react';
+import { Link } from 'react-router';
 import { MASTER, type Bar } from '@/services/data';
 import { useFormDirty } from '@/hooks/useFormDirty';
 import { useMerchantBar } from '@/hooks/useMerchantBar';
@@ -41,7 +42,6 @@ function StyleChips({ value = [], onChange }: { value?: string[]; onChange?: (v:
 type StoreForm = {
   name: string;
   description?: string;
-  address: string;
   district?: string;
   styles?: string[];
   instagram?: string;
@@ -49,11 +49,13 @@ type StoreForm = {
   hours: { closed: boolean; range?: [dayjs.Dayjs, dayjs.Dayjs] | null }[];
 };
 
-/** ค่าในฟอร์ม → `info` ของ PUT /merchant/bars/:barId/store (ลิงก์อื่นที่ร้านมีอยู่แล้ว — Facebook / เว็บไซต์ — ไม่หาย) */
+/**
+ * ค่าในฟอร์ม → `info` ของ PUT /merchant/bars/:barId/store (ลิงก์อื่นที่ร้านมีอยู่แล้ว — Facebook / เว็บไซต์ — ไม่หาย)
+ * ที่อยู่/หมุดไม่อยู่ในนี้แล้ว — แก้ที่ /merchant/location (PUT …/location · รอทีม NightOut ตรวจ)
+ */
 const toInfo = (v: StoreForm, links: Bar['links']): C.BarInfoBody => ({
   name: v.name,
   description: v.description || null,
-  address: v.address,
   district_id: v.district ?? null,
   style_keys: v.styles ?? [],
   links: [
@@ -73,7 +75,6 @@ const toInfo = (v: StoreForm, links: Bar['links']): C.BarInfoBody => ({
 const toForm = (bar: Bar): StoreForm => ({
   name: bar.name,
   description: bar.description,
-  address: bar.address,
   district: bar.districtId,
   styles: MASTER.styles.filter((st) => bar.styles.includes(st.label)).map((st) => st.key),
   instagram: bar.links.find((l) => l.type === 'INSTAGRAM')?.url,
@@ -196,9 +197,15 @@ export function MerchantStorePage() {
               <Form.Item name="district" label="ย่าน">
                 <Select allowClear options={MASTER.districts.map((d) => ({ label: d.name, value: d.id }))} />
               </Form.Item>
-              <Form.Item name="address" label="ที่อยู่">
-                <Input />
-              </Form.Item>
+              {/* ที่อยู่ดูอย่างเดียว — แก้พร้อมหมุดที่หน้าตำแหน่งร้าน (ต้องรอทีม NightOut ตรวจ) */}
+              <div className="mb-6 flex min-w-0 flex-col gap-1">
+                <span className="text-sm">ที่อยู่</span>
+                <span className="break-words text-sm text-muted">{bar.address || '-'}</span>
+                <Link to="/merchant/location" className="text-[13px] text-link">
+                  แก้ที่อยู่/หมุดที่หน้า ตำแหน่งร้าน →
+                </Link>
+                <span className="text-xs text-muted">ต้องรอทีม NightOut ตรวจก่อนแสดง</span>
+              </div>
             </div>
 
             <Form.Item label="เวลาเปิด-ปิด" extra="รองรับปิดข้ามเที่ยงคืน เช่น 18:00–02:00">

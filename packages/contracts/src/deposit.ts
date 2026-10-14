@@ -16,7 +16,7 @@ export const SubmitDepositBody = z.object({
 export type SubmitDepositBody = z.infer<typeof SubmitDepositBody>;
 
 /** POST /merchant/bookings/:id/refund */
-export const RefundDepositBody = z.object({ reason: z.string().trim().min(3).max(300).describe('เหตุผลที่คืนมัดจำ เช่น ไม่มีโต๊ะให้ลูกค้า') });
+export const RefundDepositBody = z.object({ reason: z.string().trim().min(3).max(300).describe('เหตุผลที่คืน Table Fee เช่น ไม่มีโต๊ะให้ลูกค้า') });
 export type RefundDepositBody = z.infer<typeof RefundDepositBody>;
 export interface RefundDepositResult {
   id: string;
@@ -74,16 +74,17 @@ export interface DepositLedgerRow {
 
 export const DEPOSIT_ERRORS = {
   BOOKING_NOT_AWAITING_DEPOSIT: 'การจองนี้ไม่ต้องส่งสลิปแล้ว',
-  NO_DEPOSIT_REQUIRED: 'การจองนี้ไม่ต้องจ่ายมัดจำ',
+  NO_DEPOSIT_REQUIRED: 'การจองนี้ไม่ต้องชำระ Table Fee',
   INVALID_SLIP_PATH: 'อัปโหลดสลิปไม่สำเร็จ ลองเลือกไฟล์ใหม่',
   SLIP_ALREADY_USED: 'สลิปนี้ถูกใช้ไปแล้ว',
-  DEPOSIT_NOT_FOUND: 'ไม่พบรายการมัดจำนี้แล้ว',
+  DEPOSIT_NOT_FOUND: 'ไม่พบรายการ Table Fee นี้แล้ว',
   DEPOSIT_ALREADY_REVIEWED: 'สลิปนี้มีคนตรวจไปแล้ว',
   DEPOSIT_NOT_PAYOUT_PENDING: 'รายการนี้ยังไม่ถึงขั้นโอนให้ร้าน',
   DEPOSIT_NOT_REFUND_PENDING: 'รายการนี้ยังไม่ถึงขั้นคืนเงินลูกค้า',
   REJECT_REASON_REQUIRED: 'เลือกเหตุผลที่ปฏิเสธสลิป (ถ้าเลือก "อื่น ๆ" ต้องพิมพ์รายละเอียด)',
   INVALID_REJECT_REASON: 'เหตุผลที่ปฏิเสธสลิปไม่ถูกต้อง',
-  REFUND_REASON_REQUIRED: 'ระบุเหตุผลที่คืนมัดจำ (อย่างน้อย 3 ตัวอักษร)',
-  REFUND_ALREADY_REQUESTED: 'การจองนี้อนุมัติคืนมัดจำไปแล้ว',
-  NO_REFUNDABLE_DEPOSIT: 'ยังไม่มีมัดจำที่คืนได้ (สลิปยังไม่ผ่านการตรวจ หรือโอนให้ร้านไปแล้ว)',
+  REFUND_REASON_REQUIRED: 'ระบุเหตุผลที่คืน Table Fee (อย่างน้อย 3 ตัวอักษร)',
+  REFUND_ALREADY_REQUESTED: 'การจองนี้อนุมัติคืน Table Fee ไปแล้ว',
+  NO_REFUNDABLE_DEPOSIT: 'ยังไม่มี Table Fee ที่คืนได้ (ยังไม่ผ่านการตรวจ หรือโอนให้ร้านไปแล้ว)',
+  SLIP_FLOW_DISABLED: 'ปิดการโอนและแนบสลิปแล้ว — ชำระ Table Fee ผ่านหน้าชำระเงินออนไลน์',
 } as const satisfies Record<string, string>;

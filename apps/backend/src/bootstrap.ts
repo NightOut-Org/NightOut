@@ -8,7 +8,8 @@ import { AppModule } from './app.module';
 
 /** สร้างแอป (ใช้ทั้ง local server และ Vercel Function) */
 export async function createApp(): Promise<INestApplication> {
-  const app = await NestFactory.create(AppModule, { bufferLogs: true });
+  // rawBody: webhook ของผู้ให้บริการชำระเงินตรวจลายเซ็นจาก body ดิบ (req.rawBody)
+  const app = await NestFactory.create(AppModule, { bufferLogs: true, rawBody: true });
   const config = app.get(ConfigService);
 
   app.setGlobalPrefix('api'); // public path บน Vercel: /api/*
@@ -33,6 +34,7 @@ export async function createApp(): Promise<INestApplication> {
       .addTag('catalog', 'ข้อมูลสาธารณะตอนเปิดเว็บ: ร้าน รีวิว ย่าน สไตล์ ตั้งค่า แพ็กเกจโปรโมท')
       .addTag('booking', 'การจอง: จอง ยกเลิก สถานะ เช็กอิน ย้ายโต๊ะ โซนว่าง บัตรแชร์')
       .addTag('deposit', 'มัดจำ: ส่งสลิป ตรวจสลิป ปิดยอด คืนมัดจำ สมุดมัดจำของร้าน')
+      .addTag('payment', 'ชำระ Table Fee ออนไลน์: ช่องทางที่เปิด หน้าชำระเงิน สถานะ webhook ของผู้ให้บริการ คืนเงิน (Backoffice)')
       .addTag('review', 'รีวิว: เขียน รายงาน จัดการ')
       .addTag('bar', 'ร้าน: สมัครลงร้าน ข้อมูล เมนู โปร ค่าธรรมเนียม โซน ความปลอดภัย ตั้งค่าการจอง บัญชีรับเงิน ความแน่น อนุมัติ')
       .addTag('bar-team', 'ทีมร้าน: สมาชิก เชิญ นำออก คำเชิญของฉัน')
