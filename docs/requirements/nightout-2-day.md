@@ -1,6 +1,6 @@
 <!-- สร้างจาก /sync-requirements (scripts/gdoc-to-md.mjs) — ห้ามแก้มือ -->
 <!-- source: https://docs.google.com/document/d/1GQ3ilsu_y_dzTulZS9_UEtNH7ygOLkaM-YkqdFm3UUI/edit -->
-<!-- revisionId: AHj4eMRvhFXDpn2inmF0AMM10FC7T1x_LlxgoQIlN0ohDm--yRrfB8Ykh3GKxKCbthTh4FwWnrJJ7OQTfVQ-aocsm-zKlbwd34D0vEZP5c0 -->
+<!-- revisionId: AHj4eMSSoFOaasknKrPfmyvsPBEbJ_oH9pL2SLzBZ5jIjb-NkEZFkVS21JM06OC9Cosa_m4cNlr0Qt5jgpDkdAqqIemGoE0XJeLQxh4VUMA -->
 <!-- synced: 2026-10-14 -->
 
 # Nightout_2.day
@@ -1097,3 +1097,39 @@ Situation: แพลตฟอร์ม Nightout เป็นเพียง "ค
 - Party Set และกฎยกเลิก 24 ชั่วโมงของกลุ่ม (รอเคาะตัวเลข)
 - การเชื่อมผู้ให้บริการชำระเงินจริง
 - ฟีเจอร์ของ Phase 2 เป็นต้นไป เช่น Fast-Track ค่าคอมอัตโนมัติ แต้มสะสม และแชทกับร้าน
+
+# แท็บ: แจ้ง Test UX/UI
+
+แจ้ง Test UX/UIฝั่ง customer/merchant
+
+| ปัญหา/สาเหตุ | รูปภาพปัญหา | url | ทดสอบโดย |
+| --- | --- | --- | --- |
+| TypeError: Cannot read properties of undefined (reading 'id') |  | /merchant/deposits | Third |
+| React Router caught the following error during render TypeError: Cannot read properties of undefined (reading 'id') |  | /merchant/store | Third |
+| TypeError: Failed to fetch dynamically imported module: http://localhost:5173/src/modules/merchant/tonight/page.tsx |  | /merchant/tonight | Got |
+| TypeError: Failed to fetch dynamically imported module: http://localhost:5173/src/modules/merchant/floor/page.tsx |  | /merchant/floor | Got |
+| TypeError: Cannot read properties of undefined (reading 'id') |  | /merchant/menu | Got |
+| TypeError: Cannot read properties of undefined (reading 'id') |  | /merchant/tables | Got |
+| TypeError: Cannot read properties of undefined (reading 'id') |  | /merchant/safety | Got |
+| TypeError: Cannot read properties of undefined (reading 'id') |  | /merchant/promotions | Got |
+| TypeError: Cannot read properties of undefined (reading 'id') |  | /merchant/settings | Got |
+| TypeError: Cannot read properties of undefined (reading 'id') |  | /merchant/promote | Got |
+| TypeError: Cannot read properties of undefined (reading 'id') |  | /merchant/reviews | Got |
+| TypeError: Cannot read properties of undefined (reading 'id') |  | /merchant/analytics | Got |
+| TypeError: Cannot read properties of undefined (reading 'id') |  | /merchant/staff | Got |
+
+ฝั่ง Admin
+
+| ปัญหา/สาเหตุ | รูปภาพปัญหา | url | ทดสอบโดย |
+| --- | --- | --- | --- |
+| หน้าจอ ui ดูไม่รู้เรื่อง ต้อง re-design ใหม่ |  | /admin/payments | third |
+| Failed to resolve import "leaflet" from "src/ui/components/PinMap.tsx". Does the file exist?Failed to load resource: the server responded with a status of 500 (Internal Server Error) |  | /admin | Got |
+
+# แท็บ: แท็บ 15
+
+- เอาทั้งหมด
+- เอาแค่แผนที่ กับ ฟิลเตอร์
+      5. เอาแค่รายการ
+      6. เอาแค่ตัวกรอง
+      9. รายการ
+      10. เอาตัวกรอง

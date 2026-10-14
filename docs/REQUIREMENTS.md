@@ -1,7 +1,7 @@
 # NightOut — Requirements (แหล่งความต้องการหลัก)
 
 > **แหล่งจริง:** Google Doc [Nightout_2.day](https://docs.google.com/document/d/1GQ3ilsu_y_dzTulZS9_UEtNH7ygOLkaM-YkqdFm3UUI/edit) — แก้ requirement ที่นั่นเท่านั้น
-> **snapshot:** revisionId `AHj4eMRvhFXDpn2inmF0AMM10FC7T1x_LlxgoQIlN0ohDm--yRrfB8Ykh3GKxKCbthTh4FwWnrJJ7OQTfVQ-aocsm-zKlbwd34D0vEZP5c0` · sync 2026-10-14 (เพิ่มแท็บ "สรุปงาน Phase 1" — รายงานสถานะ ไม่มี requirement ใหม่) · ฉบับเต็มทุกแท็บ: [`requirements/nightout-2-day.md`](requirements/nightout-2-day.md)
+> **snapshot:** revisionId `AHj4eMSSoFOaasknKrPfmyvsPBEbJ_oH9pL2SLzBZ5jIjb-NkEZFkVS21JM06OC9Cosa_m4cNlr0Qt5jgpDkdAqqIemGoE0XJeLQxh4VUMA` · sync 2026-10-14 (เพิ่มแท็บ "แจ้ง Test UX/UI" — รายการบั๊กจากการทดสอบ หน้า `/merchant/*` error `reading 'id'` + Backoffice `/payments` ต้อง re-design + import `leaflet` ไม่เจอ · แท็บ "แท็บ 15" เป็นโน้ตร่าง — ไม่มี requirement ใหม่) · ฉบับเต็มทุกแท็บ: [`requirements/nightout-2-day.md`](requirements/nightout-2-day.md)
 > **อัปเดต:** agent รัน skill `sync-requirements` เองก่อนเริ่มงานแก้โค้ด (`.claude/skills/sync-requirements/SKILL.md`)
 
 **ลำดับความสำคัญเมื่อขัดกัน:** ไฟล์นี้ (ข้อ "ตัดสินแล้ว" > เนื้อหาเอกสาร) → "กฎธุรกิจที่ตกลงแล้ว" ใน `CLAUDE.md` → `docs/PROMPT.md`
