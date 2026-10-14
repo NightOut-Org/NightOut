@@ -103,7 +103,7 @@ function SearchView() {
   };
 
   return (
-    <div className="embers-glass relative isolate min-w-0">
+    <div className="embers-glass relative isolate min-w-0 has-[[data-map-fullscreen]]:isolation-auto">
       {/* พื้นหลัง Golden Embers (เหมือน /merchant) — การ์ด bg-card ในหน้านี้เป็นกระจกผ่าน embers-glass */}
       <EmbersBackdrop />
 

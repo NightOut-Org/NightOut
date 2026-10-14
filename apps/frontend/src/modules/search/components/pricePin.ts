@@ -23,3 +23,11 @@ export function pricePin(bar: BarWithTier, active: boolean) {
     iconAnchor: [PIN_W / 2, PIN_H / 2],
   });
 }
+
+/** จุดฟ้า "ตำแหน่งของฉัน" — สไตล์ `.nl-me-dot` อยู่ styles/index.css (ใช้ร่วมกับ /map) */
+export const meIcon = divIcon({
+  className: '',
+  html: '<div class="nl-me-dot"></div>',
+  iconSize: [22, 22],
+  iconAnchor: [11, 11],
+});
