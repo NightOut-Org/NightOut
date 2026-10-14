@@ -1,5 +1,10 @@
 # site-content — ประวัติการแก้ไข
 
+## 2026-10-14 — เปลี่ยนชื่อ NightList ที่ค้างในข้อมูลเป็น NightOut
+- ชื่อบัญชีใต้ QR PromptPay ยังขึ้น "NightList Co., Ltd." เพราะ migration เปลี่ยนชื่อแบรนด์ (`…20261005000100`) แก้แค่โค้ด ไม่ได้แก้ข้อมูลในตาราง
+- migration `20261014000200_site_content_rename_nightout_data`: แทน NightList → NightOut ใน `platform_settings` (`deposit_promptpay` / `promotion_promptpay`) · `bars.perks` ร้านเดโม · `bar_promotions.description` · `notifications.title/body` เก่า (เฉพาะแถวที่มีคำนี้ · รันซ้ำได้)
+- ไฟล์: `supabase/migrations/20261014000200_site_content_rename_nightout_data.sql`
+
 ## 2026-10-12 — บันทึกหน้าแรกครั้งเดียว
 - ใหม่ `PUT /admin/home-page` `{ content?, categories?, popular? }` (`admin_save_home_page`) · ลบ `PATCH /admin/home-content` · `PATCH /admin/home-categories/:slot` · `PUT /admin/home-popular`
 - migration `20261012000600_site_content_save_home_page` · ไฟล์: `site-content.admin.controller.ts` · `site-content.dto.ts` (`SaveHomePageDto`) · เทสต์ `test/app.test.ts`
