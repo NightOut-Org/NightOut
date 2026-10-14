@@ -1,4 +1,6 @@
+import { NavigationArrow, ShieldCheck, Users } from '@phosphor-icons/react';
 import { CATEGORY_LABELS, safetyScore, type BarWithTier } from '@/services/data';
+import type { MouseEvent, ReactNode } from 'react';
 import { Link } from 'react-router';
 import { BarRating } from '@/ui/components/barRating';
 import { CrowdBadge } from '@/ui/components/crowdBadge';
@@ -11,7 +13,7 @@ import { baht } from '@/ui/utils/format';
 /** ความจุโซนที่ใหญ่ที่สุด = กลุ่มใหญ่สุดที่ร้านรับได้ในโต๊ะเดียว */
 const maxGroup = (bar: BarWithTier) => Math.max(0, ...bar.zones.map((z) => z.capacityPax));
 
-/** บรรทัดใต้แถบราคา: ระบุคนแล้ว = ยอดกลุ่ม · ตั้งงบแล้ว = งบที่เหลือต่อคน · ไม่ระบุ = ชวนให้ระบุคน */
+/** มุมขวาล่าง: ระบุคนแล้ว = ยอดกลุ่ม · ตั้งงบแล้ว = งบที่เหลือต่อคน · ไม่ระบุ = ชวนให้ระบุคน */
 function budgetNote(avg: number, people?: number, maxBudget?: number) {
   if (avg <= 0) return 'ร้านยังไม่ระบุราคา';
   if (people) return `กลุ่ม ≈ ${baht(avg * people)}`;
@@ -19,30 +21,39 @@ function budgetNote(avg: number, people?: number, maxBudget?: number) {
   return 'ระบุคนเพื่อดูยอดกลุ่ม';
 }
 
+function Chip({ children }: { children: ReactNode }) {
+  return (
+    <span className="inline-flex h-6 items-center gap-1 rounded-full bg-surface px-[9px] [&_.text-sm]:text-xs">
+      {children}
+    </span>
+  );
+}
+
 /**
- * แถวร้านแบบ "Budget Planner" (ดีไซน์ Search Combined · รายการจาก 05)
- * รูป + หัวใจ · ป้ายโฆษณา · ชื่อ · ดาว/ย่าน/ประเภท · ความแน่น/Safety/PR/ความจุ · ดีลวันนี้
- * ขวา: ราคาต่อคนตัวใหญ่ + แถบเทียบราคา (เทียบร้านแพงสุด) + ยอดกลุ่ม/งบคงเหลือ
- * ทั้งแถวเป็นลิงก์ไปหน้าร้าน · ชี้/โฟกัสแถว = ไฮไลต์หมุดบนแผนที่ (onActivate)
+ * แถวร้าน (ดีไซน์ Search Combined v2) — รูปใหญ่ซ้าย + หัวใจ/ป้ายโฆษณา
+ * ขวา: ชื่อ · ดาว/ย่าน/ประเภท | ราคาต่อคนตัวใหญ่ → ชิป ความแน่น · ระยะทาง (เมื่อรู้ตำแหน่ง) · Safety · PR · รับได้ถึง N คน
+ * แถวล่าง: ดีลวันนี้ | ยอดกลุ่ม/งบคงเหลือ
+ * ทั้งแถวเป็นลิงก์ไปหน้าร้าน (onClick ให้หน้าเปลี่ยนเป็นเลือกร้านบนแผนที่ได้) · ชี้/โฟกัส = ไฮไลต์หมุด (onActivate)
  */
 export function BudgetRow({
   bar,
   active,
-  priceMax,
   people,
   maxBudget,
+  distanceKm,
   onActivate,
+  onClick,
 }: {
   bar: BarWithTier;
   active: boolean;
-  /** ราคาต่อหัวสูงสุดของทุกร้าน — ใช้คิดความยาวแถบราคา */
-  priceMax: number;
   people?: number;
   maxBudget?: number;
+  /** ระยะจากตำแหน่งผู้ใช้ (รู้เมื่อกด "ตำแหน่งของฉัน" บนแผนที่) */
+  distanceKm?: number;
   onActivate: () => void;
+  onClick?: (e: MouseEvent<HTMLAnchorElement>) => void;
 }) {
   const avg = bar.avgPerPerson;
-  const pct = avg > 0 && priceMax > 0 ? Math.round((avg / priceMax) * 100) : 0;
   const group = maxGroup(bar);
 
   return (
@@ -51,56 +62,78 @@ export function BudgetRow({
       id={`search-row-${bar.id}`}
       onMouseEnter={onActivate}
       onFocus={onActivate}
-      className={`grid w-full min-w-0 scroll-mt-28 grid-cols-[84px_minmax(0,1fr)_92px] items-center gap-2.5 rounded-[18px] border p-2.5 !text-text transition-colors hover:border-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold sm:grid-cols-[104px_minmax(0,1fr)_128px] sm:gap-3.5 ${
+      onClick={onClick}
+      className={`grid w-full min-w-0 scroll-mt-28 grid-cols-[96px_minmax(0,1fr)] items-stretch gap-3 rounded-[18px] border p-2.5 !text-text transition-colors hover:border-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold sm:grid-cols-[136px_minmax(0,1fr)] sm:gap-4 ${
         active ? 'border-gold bg-gold/[0.08]' : 'border-border bg-card'
       }`}
     >
-      <div className="relative">
+      <div className="relative min-h-[104px] sm:min-h-28">
         <img
           src={barImage(bar)}
           alt=""
           loading="lazy"
           decoding="async"
-          className="block h-[76px] w-[84px] rounded-xl object-cover sm:h-[88px] sm:w-[104px]"
+          className="absolute inset-0 block size-full rounded-xl object-cover"
         />
         <FavoriteButton
           barId={bar.id}
-          className="!absolute right-1 top-1 !size-7 !min-w-0 !border-0 !bg-black/50 !text-white backdrop-blur"
+          className="!absolute right-1.5 top-1.5 !size-[30px] !min-w-0 !border-0 !bg-black/55 !text-white backdrop-blur"
         />
-      </div>
-
-      <div className="flex min-w-0 flex-col gap-0.5 leading-snug">
         {bar.promoted && (
-          <span className="self-start whitespace-nowrap rounded-md border border-gold/40 px-1.5 text-[10px] text-gold-text">
+          <span className="absolute bottom-1.5 left-1.5 rounded-md bg-gold px-1.5 text-[10px] font-semibold text-on-gold">
             แนะนำ · โฆษณา
           </span>
         )}
-        <b className="truncate text-base">{bar.name}</b>
-        <p className="flex min-w-0 items-center gap-1.5 truncate text-xs text-muted">
-          <BarRating bar={bar} compact />
-          <span aria-hidden>·</span>
-          <span className="truncate">
-            {bar.district} · {CATEGORY_LABELS[bar.category]}
-          </span>
-        </p>
-        <p className="flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-xs text-muted [&_.text-sm]:text-xs">
-          <CrowdBadge crowd={bar.crowd} updatedAt={bar.crowdUpdatedAt} />
-          <span>Safety {safetyScore(bar)}/100</span>
-          <PRBadge pr={bar.pr} compact />
-          {group > 0 && <span className="hidden sm:inline">รับได้ถึง {group} คน</span>}
-        </p>
-        <DealBadge bar={bar} className="mt-0.5" />
       </div>
 
-      <div className="text-right">
-        <p className="text-[11px] text-muted">ต่อคนประมาณ</p>
-        <p className="text-lg font-bold leading-tight text-gold-text sm:text-[22px] dark:text-gold-highlight">
-          {avg > 0 ? baht(avg) : '—'}
-        </p>
-        <div className="my-1.5 h-[5px] overflow-hidden rounded-full bg-border">
-          <div className="h-full bg-linear-to-r from-gold to-gold-highlight" style={{ width: `${pct}%` }} />
+      <div className="flex min-w-0 flex-col gap-2 py-0.5 pr-1">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <b className="block truncate text-[17px] leading-snug">{bar.name}</b>
+            <p className="mt-0.5 flex min-w-0 items-center gap-1.5 truncate text-xs text-muted">
+              <BarRating bar={bar} compact />
+              <span aria-hidden>·</span>
+              <span className="truncate">
+                {bar.district} · {CATEGORY_LABELS[bar.category]}
+              </span>
+            </p>
+          </div>
+          <div className="shrink-0 text-right leading-tight">
+            <b className="text-lg text-gold-text sm:text-xl dark:text-gold-highlight">
+              {avg > 0 ? baht(avg) : '—'}
+            </b>
+            <p className="mt-0.5 text-[11px] text-muted">ต่อคน</p>
+          </div>
         </div>
-        <p className="text-[11px] text-muted">{budgetNote(avg, people, maxBudget)}</p>
+
+        <div className="flex flex-wrap gap-1.5 text-xs">
+          <Chip>
+            <CrowdBadge crowd={bar.crowd} updatedAt={bar.crowdUpdatedAt} />
+          </Chip>
+          {distanceKm !== undefined && (
+            <Chip>
+              <NavigationArrow size={12} aria-hidden />
+              {distanceKm.toFixed(1)} กม.
+            </Chip>
+          )}
+          <Chip>
+            <ShieldCheck size={12} aria-hidden />
+            Safety {safetyScore(bar)}/100
+          </Chip>
+          {/* PR ประจำร้าน (กฎธุรกิจ: แสดงบนการ์ด) — ไม่มี PR = ไม่แสดง */}
+          <PRBadge pr={bar.pr} compact />
+          {group > 0 && (
+            <Chip>
+              <Users size={12} aria-hidden />
+              ถึง {group} คน
+            </Chip>
+          )}
+        </div>
+
+        <div className="mt-auto flex items-center justify-between gap-2.5 border-t border-border pt-2 text-xs">
+          <DealBadge bar={bar} className="flex-1" />
+          <span className="ml-auto shrink-0 text-muted">{budgetNote(avg, people, maxBudget)}</span>
+        </div>
       </div>
     </Link>
   );

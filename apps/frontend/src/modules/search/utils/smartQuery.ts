@@ -54,6 +54,3 @@ export function parseSmartQuery(
   patch.q = rest.replace(/\s+/g, ' ').trim();
   return patch;
 }
-
-/** ตัวอย่างใต้ช่องค้นหา (แสดงตอนยังไม่มีตัวกรอง) */
-export const SMART_EXAMPLES = ['ทองหล่อ 4 คน 800', 'rooftop 2 คน', 'live music ว่าง', 'สีลม 6 คน 500'] as const;

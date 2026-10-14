@@ -1,9 +1,9 @@
 import { ListBullets, MapTrifold, MoonStars } from '@phosphor-icons/react';
 import { DISTRICTS, listBars, STYLES, type BarFilter } from '@/services/data';
 import type { CrowdStatus } from '@nightout/types';
-import { parseBudgetSearch } from '@nightout/utils';
+import { distanceMeters, parseBudgetSearch } from '@nightout/utils';
 import { Segmented, Select } from 'antd';
-import { Fragment, useState } from 'react';
+import { Fragment, useCallback, useState, type MouseEvent } from 'react';
 import { useLocation, useSearchParams } from 'react-router';
 import { useDemo } from '@/hooks/useDemo';
 import { EmbersBackdrop } from '@/ui/components/embersBackdrop';
@@ -11,7 +11,7 @@ import { MINI_AD_SEARCH_AFTER, MiniAdSlot } from '@/ui/components/miniAdSlot';
 import { baht } from '@/ui/utils/format';
 import { BudgetRow } from './components/budgetRow';
 import { CommandBar } from './components/commandBar';
-import { SearchMap } from './components/searchMap';
+import { SearchMap, type LatLng } from './components/searchMap';
 import { parseSmartQuery } from './utils/smartQuery';
 
 /** จอกว้างตั้งแต่นี้: รายการกับแผนที่วางคู่กัน · แคบกว่า: แผนที่อยู่บน รายการอยู่ล่าง */
@@ -39,9 +39,9 @@ export function SearchPage() {
 }
 
 /**
- * ดีไซน์ Search Combined: ตัวกรองแบบ Command (10) + รายการแบบ Budget Planner (05) + แผนที่หมุดทอง (01)
+ * ดีไซน์ Search Combined v2: ช่องพิมพ์แบบที่พูด + ลิ้นชักตัวกรอง (layout C) + แถวร้านรูปใหญ่ + แผนที่หมุดรูปร้าน
  * อ่าน ?q=&district=&budget=&people= จาก Hero หน้าแรก (requirement "ค้นหาตามงบ") + ?category= / ?style=
- * พื้นหลัง Golden Embers + การ์ดกระจกแบบเดียวกับหน้าร้าน (/merchant) — ธีมมืดเท่านั้น
+ * พื้นหลัง Golden Embers + การ์ดกระจกแบบเดียวกับหน้าร้าน (/merchant) — ธีมมืดเท่านั้น (ไม่เปลี่ยนตามดีไซน์ v2)
  */
 function SearchView() {
   useDemo();
@@ -65,9 +65,12 @@ function SearchView() {
   const [view, setView] = useState<'map' | 'list'>('map');
   const [activeId, setActiveId] = useState<string | null>(null);
   const [cardOpen, setCardOpen] = useState(false);
+  /** ตำแหน่งผู้ใช้ — รู้เมื่อกด "ตำแหน่งของฉัน" บนแผนที่ (ไม่ขอสิทธิ์ตอนเปิดหน้า) → แสดงระยะทางในรายการ/การ์ด */
+  const [me, setMe] = useState<LatLng | null>(null);
 
   const set = (patch: Partial<BarFilter>) => setF((prev) => ({ ...prev, ...patch }));
-  const smartPatch = (text: string) => parseSmartQuery(text, { districts: DISTRICTS, styles: STYLES });
+  const smartPatch = (text: string) =>
+    parseSmartQuery(text, { districts: DISTRICTS, styles: STYLES });
 
   const bars = listBars(f);
   // จำนวนข้างปุ่มประเภท/ความแน่น = ผลถ้าเลือกค่านั้น (ตัวกรองอื่นคงเดิม)
@@ -80,12 +83,22 @@ function SearchView() {
   };
   const anyCrowd = listBars({ ...f, crowd: [] });
   const crowdCounts = Object.fromEntries(
-    (['AVAILABLE', 'ALMOST_FULL', 'FULL'] as const).map((c) => [c, anyCrowd.filter((b) => b.crowd === c).length]),
+    (['AVAILABLE', 'ALMOST_FULL', 'FULL'] as const).map((c) => [
+      c,
+      anyCrowd.filter((b) => b.crowd === c).length,
+    ]),
   ) as Record<CrowdStatus, number>;
-  const priceMax = Math.max(0, ...listBars().map((b) => b.avgPerPerson));
+  const distanceKm = useCallback(
+    (b: { lat: number; lng: number }) =>
+      me ? distanceMeters({ lat: me[0], lng: me[1] }, b) / 1000 : undefined,
+    [me],
+  );
 
   const adAfter = Math.min(MINI_AD_SEARCH_AFTER, bars.length) - 1;
-  const groupBudget = f.people && f.maxBudget ? ` · ${f.people} คน · งบรวมไม่เกิน ${baht(f.people * f.maxBudget)}` : '';
+  const groupBudget =
+    f.people && f.maxBudget
+      ? ` · ${f.people} คน · งบรวมไม่เกิน ${baht(f.people * f.maxBudget)}`
+      : '';
   const isMap = view === 'map';
 
   const resetAll = () => {
@@ -94,12 +107,27 @@ function SearchView() {
   };
 
   /** กดหมุด → ไฮไลต์แถว + การ์ดบนแผนที่ · จอกว้างเลื่อนรายการไปหาแถวนั้น (แผนที่ sticky อยู่ข้าง ๆ) */
-  const selectFromMap = (id: string) => {
+  const selectFromMap = useCallback((id: string) => {
     setActiveId(id);
     setCardOpen(true);
     if (window.matchMedia(WIDE_QUERY).matches) {
-      document.getElementById(`search-row-${id}`)?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      document
+        .getElementById(`search-row-${id}`)
+        ?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
     }
+  }, []);
+  const closeCard = useCallback(() => setCardOpen(false), []);
+
+  /**
+   * โหมดแผนที่บนจอกว้าง (แผนที่อยู่ข้างรายการ): กดแถว = เลือกร้านบนแผนที่ + เปิดการ์ด (ไปหน้าร้านจากการ์ด)
+   * จอแคบ / โหมดรายการ / กดพร้อม Ctrl·⌘·Shift / ปุ่มกลาง = ไปหน้าร้านตามปกติ
+   */
+  const rowClick = (id: string) => (e: MouseEvent<HTMLAnchorElement>) => {
+    if (!isMap || e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+    if (!window.matchMedia(WIDE_QUERY).matches) return;
+    e.preventDefault();
+    setActiveId(id);
+    setCardOpen(true);
   };
 
   return (
@@ -119,11 +147,8 @@ function SearchView() {
           setSmart(text);
           set(smartPatch(text));
         }}
-        onExample={(text) => {
-          setSmart(text);
-          setF((prev) => ({ ...CLEARED, sort: prev.sort, ...smartPatch(text) }));
-        }}
         onReset={resetAll}
+        count={bars.length}
         categoryCounts={categoryCounts}
         crowdCounts={crowdCounts}
       />
@@ -188,10 +213,11 @@ function SearchView() {
                   <BudgetRow
                     bar={b}
                     active={isMap && b.id === activeId}
-                    priceMax={priceMax}
                     people={f.people}
                     maxBudget={f.maxBudget}
+                    distanceKm={distanceKm(b)}
                     onActivate={() => setActiveId(b.id)}
+                    onClick={rowClick(b.id)}
                   />
                   {/* โฆษณาเล็กหลังร้านลำดับที่ 6 (หรือร้านสุดท้าย) — ไม่นับรวมใน bars / ไม่เปลี่ยนลำดับผลค้นหา */}
                   {i === adAfter && <MiniAdSlot placement="SEARCH" />}
@@ -206,9 +232,12 @@ function SearchView() {
             bars={bars}
             activeId={activeId}
             cardOpen={cardOpen}
+            me={me}
+            distanceKm={distanceKm}
             onSelect={selectFromMap}
-            onCloseCard={() => setCardOpen(false)}
-            className="order-first h-[300px] w-full min-[1100px]:sticky min-[1100px]:top-24 min-[1100px]:order-none min-[1100px]:h-[calc(100dvh-7.5rem)] min-[1100px]:min-w-0 min-[1100px]:flex-1"
+            onCloseCard={closeCard}
+            onLocate={setMe}
+            className="order-first h-[400px] w-full min-[1100px]:sticky min-[1100px]:top-24 min-[1100px]:order-none min-[1100px]:h-[calc(100dvh-7.5rem)] min-[1100px]:min-w-0 min-[1100px]:flex-1"
           />
         )}
       </div>
