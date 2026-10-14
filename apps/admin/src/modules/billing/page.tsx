@@ -8,7 +8,7 @@ import { baht, dateTime } from '@/ui/utils/format';
 import { BILLING_STATUS } from '@/ui/utils/labels';
 import { useBillingEvents } from './api';
 
-/** ค่าคอมมิชชันที่เกิดจากการจอง (เช็กอิน = คิดค่าคอม · ไม่มาตามนัด = ยกเว้น) */
+/** ค่าคอมมิชชันที่เกิดจากการจอง (เช็กอิน = คิดค่าคอม · ปลดโต๊ะ (Forfeited) = ยกเว้น) */
 export function BillingPage() {
   const { data, isLoading, error, refetch } = useBillingEvents();
   const total = (data ?? []).filter((r) => r.status !== 'WAIVED').reduce((s, r) => s + r.amount, 0);
@@ -29,7 +29,7 @@ export function BillingPage() {
             title: 'เหตุการณ์',
             dataIndex: 'event_type',
             render: (t: string) =>
-              t === 'CHECK_IN' ? <Tag color="green">เช็กอิน</Tag> : <Tag>ไม่มาตามนัด</Tag>,
+              t === 'CHECK_IN' ? <Tag color="green">เช็กอิน</Tag> : <Tag>ปลดโต๊ะ (Forfeited)</Tag>,
           },
           { title: 'ยอดฐาน', dataIndex: 'base_amount', align: 'right', render: (v: number) => baht(v) },
           { title: 'ค่าคอม', dataIndex: 'amount', align: 'right', render: (v: number) => baht(v) },

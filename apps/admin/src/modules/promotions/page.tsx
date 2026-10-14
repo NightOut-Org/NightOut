@@ -1,6 +1,8 @@
 import { PageContainer } from '@ant-design/pro-components';
 import type { Db } from '@nightout/types';
-import { Button, Space, Table, Tabs, Tag } from 'antd';
+import { ALCOHOL_WARNING_TEXT, alcoholWordsIn } from '@nightout/utils';
+import { Warning } from '@phosphor-icons/react';
+import { Button, Space, Table, Tabs, Tag, Tooltip } from 'antd';
 import { PAGE_SIZE } from '@/configs/constants';
 import { useAdminAction } from '@/services/adminData';
 import { LoadError } from '@/ui/components/LoadError';
@@ -12,6 +14,19 @@ import { PLACEMENT, PROMO_STATUS } from '@/ui/utils/labels';
 import { usePendingBarPromotions, usePromotedListings, moderateBarPromotionAction, reviewPromotionAction } from './api';
 
 const DAYS = ['อา.', 'จ.', 'อ.', 'พ.', 'พฤ.', 'ศ.', 'ส.'];
+
+/** ป้ายเตือน (ไม่บล็อก) เมื่อถ้อยคำโปรมีคำที่อาจเกี่ยวกับแอลกอฮอล์ — ช่วยแอดมินตรวจ ไม่ปฏิเสธอัตโนมัติ */
+function AlcoholHint({ promotion }: { promotion: Db.AdminBarPromotion }) {
+  const words = alcoholWordsIn([promotion.title, promotion.description].filter(Boolean).join(' '));
+  if (words.length === 0) return null;
+  return (
+    <Tooltip title={`พบคำ: ${words.join(', ')} — ${ALCOHOL_WARNING_TEXT}`}>
+      <Tag color="warning" icon={<Warning size={12} weight="bold" />} className="mt-1 cursor-help">
+        อาจเกี่ยวกับแอลกอฮอล์
+      </Tag>
+    </Tooltip>
+  );
+}
 
 /** ถ้อยคำโปรโมชันที่ร้านตั้ง (ลูกค้าเลือกตอนจอง) — ตรวจก่อนแสดง ห้ามชักชวนให้ดื่ม */
 function BarPromotionReview() {
@@ -45,6 +60,7 @@ function BarPromotionReview() {
               <div>
                 <p className="font-semibold">{p.title}</p>
                 <p className="text-xs text-muted">{p.description ?? '-'}</p>
+                <AlcoholHint promotion={p} />
               </div>
             ),
           },

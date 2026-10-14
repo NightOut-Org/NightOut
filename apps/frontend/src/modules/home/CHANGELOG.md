@@ -1,5 +1,22 @@
 # home — ประวัติการแก้ไข
 
+## 2026-10-13 — ป้ายดีลวันนี้
+- การ์ดร้านยอดนิยมแสดงป้าย "ดีลวันนี้" เมื่อร้านมีโปรที่ใช้ได้วันนี้ · ไฟล์: `components/popularGrid.tsx`
+
+## 2026-10-13 — Native Mini-Ads (โฆษณาแบนเนอร์เล็ก)
+- ช่องโฆษณาแบนเนอร์เล็ก 1 ชิ้น ใต้ "ร้านยอดนิยม" ก่อนข่าวสาร (ป้าย "โฆษณา" · กด × ซ่อน 24 ชม.) — ไม่มีโฆษณา/โหลดไม่ได้ = ไม่แสดง · ไม่กระทบร้านยอดนิยม/อันดับ
+- คอมโพเนนต์กลาง `ui/components/miniAdSlot.tsx` (`GET /public/mini-ads` · นับเห็นเมื่อโผล่ ≥ 50% ครั้งเดียวต่อการเปิดเว็บ · นับคลิก) · `services/sync.ts` เพิ่ม `/public/mini-ads/` ใน `NO_REFRESH` (นับแล้วไม่โหลด store ใหม่)
+- ไฟล์: `page.tsx` · `ui/components/miniAdSlot.tsx` · `services/sync.ts`
+
+## 2026-10-13 — อันดับประจำสัปดาห์จากข้อมูลจริง
+- `api.ts` + `useWeeklyTop3()` → `GET /public/ranking` (`period=WEEKLY`, `limit=3` · ประกาศซ้ำตาม ADR 0007) · `page.tsx` ใช้ `toRankedBars()` (`ui/utils/ranking.ts`) แทน mock `rankingByPeriod('WEEK')` · ยังไม่มีข้อมูล = ไม่แสดงส่วนนี้
+- ไฟล์: `api.ts`, `page.tsx`
+
+## 2026-10-13 — Hero ค้นหาตามงบ
+- ช่องค้นหาใน Hero เพิ่มปุ่มเลือก **งบต่อหัว** (ไม่จำกัด / ไม่เกิน ฿200 … ฿1,500 ต่อคน) และ **จำนวนคน** (1–12) ข้างย่าน → `/search?q=&district=&budget=&people=` (`budgetSearchQuery` จาก `@nightout/utils`) · เลือกทั้งงบและคนแล้วบอกงบรวมของกลุ่ม เช่น "8 คน · ไม่เกินคนละ ฿400 · รวมประมาณ ฿3,200" (requirement "ค้นหาตามงบ")
+- มือถือ: แถวล่าง 3 ช่อง (ย่าน · งบ · คน) ปุ่มสูง ≥ 44px · เมนูยาวเลื่อนในตัว · ไม่เลือกอะไร = ทำงานเหมือนเดิม
+- ไฟล์: `components/hero.tsx`
+
 ## 2026-10-12 — พื้นหลังใต้ Hero เป็น Golden Embers (แทน AuroraBackdrop)
 - ลบ `components/auroraBackdrop.tsx` + `.css` (ม่านแสงนิ่ง) → ใช้ `<EmbersBackdrop />` ตัวกลาง (`ui/components/embersBackdrop.tsx`) แบบเดียวกับหน้าร้าน: canvas แสงม่วง/ทอง + ประกายทองลอยขึ้น หลบเมาส์ · ธีมมืดเท่านั้น
 - Hero ทึบ: เพิ่มแถบไล่ `#07070d` สูง 160px ที่ขอบล่าง (ธีมมืด) · `<EmbersBackdrop />` อยู่ชั้นล่างสุดของหน้า (`layouts/main.tsx` ให้ Layout หน้าแรกเป็น `isolate`) Hero บังไว้ แสงไม่ล้นเข้า Hero · แถบไล่ `#07070d → ใส` 280px เริ่มที่ขอบล่าง Hero ให้แสงค่อย ๆ โผล่ ไม่มีรอยตัด

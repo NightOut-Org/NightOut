@@ -1,4 +1,14 @@
-import type { BarCategory, BookingStatus, CrowdStatus, Tier, UserRole } from '@nightout/types';
+import type {
+  BarCategory,
+  BookingStatus,
+  CrowdStatus,
+  LocationRequestSource,
+  LocationRequestStatus,
+  SafetyVerifyMethod,
+  Tier,
+  TransitLine,
+  UserRole,
+} from '@nightout/types';
 
 export type SafetyKey =
   | 'SECURITY'
@@ -17,6 +27,10 @@ export interface SafetyFeature {
   key: SafetyKey;
   value: SafetyValue;
   source: 'SELF_DECLARED' | 'ADMIN_VERIFIED';
+  /** วันที่ทีมงานตรวจล่าสุด (ADMIN_VERIFIED) — ป้าย Safety แสดงวันที่นี้ */
+  verifiedAt?: string | null;
+  /** วิธีตรวจของ ADMIN_VERIFIED — EVIDENCE ตรวจหลักฐาน ("ตรวจหลักฐานแล้ว") · ON_SITE ลงพื้นที่ ("ทีมงานลงพื้นที่ตรวจ") · ไม่มี = ถือเป็นตรวจหลักฐาน */
+  verifyMethod?: SafetyVerifyMethod | null;
 }
 
 export interface MenuItem {
@@ -54,7 +68,7 @@ export interface Zone {
   defaultDurationMinutes: number;
 }
 
-/** โปรโมชันของร้านที่ลูกค้าเลือกได้ตอนจองโต๊ะ (เช่น โปรเบียร์ก่อน 2 ทุ่ม) */
+/** โปรโมชันของร้านที่ลูกค้าเลือกได้ตอนจองโต๊ะ (เช่น มาก่อน 2 ทุ่ม มิกเซอร์ 4 จ่าย 3 — ห้ามโปรแอลกอฮอล์) */
 export interface BarPromotion {
   id: string;
   title: string;
@@ -66,6 +80,9 @@ export interface BarPromotion {
   active: boolean;
   /** ถ้อยคำโปรรอแอดมินตรวจ (เฉพาะหน้าร้านค้า — ลูกค้าเห็นแค่ APPROVED) */
   moderationStatus?: 'PENDING' | 'APPROVED' | 'REJECTED';
+  /** วันเริ่ม/วันสุดท้ายที่ใช้ได้ (YYYY-MM-DD · ว่าง = ไม่จำกัด) — ร้านยังตั้งเองไม่ได้ */
+  validFrom?: string;
+  validTo?: string;
 }
 
 /** PR ประจำร้าน (ร้านกรอกเอง) */
@@ -140,6 +157,39 @@ export interface Bar {
   statusReason?: string;
   /** id ย่านใน DB (ใช้ตอนแก้ข้อมูลร้าน) */
   districtId?: string;
+  /** ที่จอดรถ (ร้านกรอก · ไม่มี = ไม่ระบุ) */
+  parkingNote?: string;
+  /** รถไฟฟ้าใกล้สุด (ไม่มี = ไม่ระบุ) */
+  transit?: BarTransit;
+  /** เฉพาะร้านของฉัน: หมุดผ่านการตรวจล่าสุดเมื่อไร (ไม่มี = ยังไม่เคยตรวจ) */
+  locationReviewedAt?: string;
+  /** เฉพาะร้านของฉัน: คำขอแก้ตำแหน่งล่าสุด (ทุกสถานะ) */
+  locationRequest?: BarLocationRequest;
+}
+
+/** รถไฟฟ้าใกล้ร้าน (bars.transit_* · migration 20261013000600) */
+export interface BarTransit {
+  line: TransitLine;
+  station: string;
+  walkMinutes?: number;
+}
+
+/** คำขอแก้ตำแหน่งร้าน (my_bar_detail.location_request) — ค่าที่ร้านขอ · ADMIN = ทีม NightOut ตั้งแทน */
+export interface BarLocationRequest {
+  id: string;
+  status: LocationRequestStatus;
+  source: LocationRequestSource;
+  lat: number;
+  lng: number;
+  address: string;
+  parkingNote?: string;
+  transit?: BarTransit;
+  /** เหตุผลตีกลับ / ยกเลิก / หมายเหตุแอดมิน */
+  reason?: string;
+  /** แอดมินปรับหมุด/ข้อมูลก่อนอนุมัติ */
+  adminEdited: boolean;
+  createdAt: string;
+  reviewedAt?: string;
 }
 
 /** รูป/วิดีโอแนบรีวิว — ของจริงอยู่ Supabase Storage bucket `review-media` */
@@ -201,6 +251,10 @@ export interface Booking {
     /** เงินอยู่ที่ไหน: HELD = แพลตฟอร์มถือไว้ · PAYOUT_PENDING = รอโอนให้ร้าน · PAID_OUT = โอนแล้ว · CREDIT = เก็บเป็นเครดิตร้าน · REFUND_PENDING = รอคืนลูกค้า · REFUNDED = คืนลูกค้า */
     settlement?: DepositSettlement;
     settledAt?: string;
+    /** SLIP = โอน + สลิป · ONLINE = ชำระผ่านผู้ให้บริการ */
+    method?: 'SLIP' | 'ONLINE';
+    /** payment_intents.provider (mock / beam …) */
+    provider?: string;
   };
   note?: string;
   createdAt: string;
@@ -208,6 +262,10 @@ export interface Booking {
   checkedInAt?: string;
   shareToken: string;
   reviewed?: boolean;
+  /** เวลาปลดโต๊ะ (bookings.auto_cancel_at · รวมเวลาที่ต่อแล้ว) — ไม่มี = คำนวณจาก grace ของร้าน */
+  autoCancelAt?: string;
+  /** เวลาที่ลูกค้ากด "ขอต่อเวลา 15 นาที" (ได้ 1 ครั้ง) */
+  extendedAt?: string;
 }
 
 export interface AppNotification {

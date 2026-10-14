@@ -6,6 +6,7 @@ import { useAuth } from '@/services/auth';
 import { useMerchantBar } from '@/hooks/useMerchantBar';
 import { Tile } from '@/ui/components/merchantUi';
 import { inviteStaff, removeStaff, useBarTeam, type BarTeamMember } from './api';
+import { StaffQrCard } from './components/staffQrCard';
 
 const ROLE = {
   OWNER: { label: 'เจ้าของ', cls: 'border-gold/40 text-gold-text' },
@@ -15,7 +16,10 @@ const ROLE = {
 
 type InviteForm = { email: string; role: 'MANAGER' | 'STAFF' };
 
-/** /merchant/staff — สมาชิกทีม (ซ้าย) · เชิญพนักงาน + คำเชิญที่รอตอบรับ (ขวา) · เชิญด้วยอีเมลบัญชี NightOut */
+/**
+ * /merchant/staff — สมาชิกทีม (ซ้าย) · เชิญพนักงาน + QR เข้าหน้าคืนนี้ + คำเชิญที่รอตอบรับ (ขวา) · เชิญด้วยอีเมลบัญชี NightOut
+ * มือถือ: สมาชิก → QR → คำเชิญ (คอลัมน์ขวาต่อท้ายรายชื่อ)
+ */
 export function MerchantStaffPage() {
   const bar = useMerchantBar();
   const { user } = useAuth();
@@ -155,7 +159,7 @@ export function MerchantStaffPage() {
         <div>
           <h1 className="text-[17px] font-bold lg:font-display lg:text-[30px]">พนักงาน</h1>
           <p className="mt-1 hidden text-sm text-muted lg:block">
-            {members.length} คน · Staff เห็นเฉพาะ คืนนี้ + การจอง · ผู้จัดการแก้ข้อมูลร้านได้
+            {members.length} คน · Staff เห็นเฉพาะ คืนนี้ · ผังโต๊ะ · การจอง · ผู้จัดการแก้ข้อมูลร้านได้
           </p>
         </div>
         <button type="button" aria-label="เชิญพนักงาน" onClick={() => setInviteOpen(true)} className="grid size-10 place-items-center text-xl text-gold lg:hidden">
@@ -177,6 +181,7 @@ export function MerchantStaffPage() {
               </span>
               {!inviteOpen && inviteForm}
             </div>
+            <StaffQrCard barName={bar.name} barSlug={bar.slug} />
             <Tile className="flex flex-col gap-2.5">
               <b className="text-sm font-semibold">คำเชิญที่ยังไม่ตอบรับ ({pending.length})</b>
               {pendingList}

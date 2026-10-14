@@ -22,7 +22,6 @@ export {
   myReviews,
   promotionApplies,
   promptPayPayload,
-  rankingByPeriod,
   reviewableBooking,
   safetyScore,
   SAFETY_LABELS,

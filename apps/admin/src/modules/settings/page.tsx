@@ -1,10 +1,11 @@
 import { PageContainer } from '@ant-design/pro-components';
 import type { Db } from '@nightout/types';
 import { Card, Space, Table, Tag } from 'antd';
+import { Link } from 'react-router';
 import { LoadError } from '@/ui/components/LoadError';
 import { useMasterTable } from './api';
 
-/** ข้อมูลตั้งต้นของระบบ (อ่านอย่างเดียว — แก้ผ่าน migration/seed) */
+/** ข้อมูลตั้งต้นของระบบ (อ่านอย่างเดียว — แก้ผ่าน migration/seed) · สไตล์ร้านจัดการที่ /styles */
 export function SettingsPage() {
   const styles = useMasterTable<Db.Tables<'styles'>>('styles', 'sort_order');
   const safety = useMasterTable<Db.Tables<'safety_features'>>('safety_features', 'sort_order');
@@ -12,10 +13,10 @@ export function SettingsPage() {
   return (
     <PageContainer
       title="ตั้งค่าระบบ"
-      content="ข้อมูลในหน้านี้แก้ผ่าน migration / seed ของทีม (ยังไม่เปิดให้แก้จากหน้านี้)"
+      content="ค่าระบบและมาตรการ Safety แก้ผ่าน migration / seed ของทีม · สไตล์ร้านจัดการที่หน้าสไตล์ร้าน"
     >
       <Space orientation="vertical" size="large" className="w-full">
-        <Card title="สไตล์ร้าน">
+        <Card title="สไตล์ร้าน" extra={<Link to="/styles">จัดการสไตล์ร้าน</Link>}>
           <LoadError error={styles.error} onRetry={() => void styles.refetch()} />
           <Space size={[8, 8]} wrap>
             {(styles.data ?? []).map((s) => (

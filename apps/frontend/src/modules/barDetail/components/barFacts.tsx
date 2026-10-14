@@ -1,3 +1,4 @@
+import { BOOKING_EXTENSION_MINUTES } from '@nightout/utils';
 import { Descriptions } from 'antd';
 import type { BarWithTier } from '@/services/data';
 import { baht } from '@/ui/utils/format';
@@ -16,10 +17,14 @@ export function BarFacts({ bar }: { bar: BarWithTier }) {
           children: `${bar.fees.serviceChargeRate}% / ${bar.fees.vatRate}%`,
         },
         { key: 'o', label: 'ค่าอื่นๆ', children: bar.fees.otherFees ? baht(bar.fees.otherFees) : 'ไม่มี' },
-        { key: 'g', label: 'เก็บโต๊ะให้', children: `${bar.gracePeriodMinutes} นาทีหลังเวลาจอง` },
+        {
+          key: 'g',
+          label: 'เก็บโต๊ะให้',
+          children: `${bar.gracePeriodMinutes} นาทีหลังเวลาจอง · ขอต่อได้อีก ${BOOKING_EXTENSION_MINUTES} นาที 1 ครั้ง`,
+        },
         {
           key: 'd',
-          label: 'มัดจำ',
+          label: 'Table Fee',
           children: `${baht(bar.deposit.amount)} / ${bar.deposit.unit === 'PER_PERSON' ? 'คน' : 'โต๊ะ'} · โอนเข้า NightOut`,
         },
       ]}

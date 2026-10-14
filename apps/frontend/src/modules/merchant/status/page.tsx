@@ -1,4 +1,5 @@
-import { CaretRight, Check, ForkKnife, ShieldCheck, Storefront, Table as TableIcon } from '@phosphor-icons/react';
+import { CaretRight, Check, ForkKnife, MapPin, ShieldCheck, Storefront, Table as TableIcon } from '@phosphor-icons/react';
+import { isLegacyDefaultPin } from '@nightout/utils';
 import { Button, Empty, Result } from 'antd';
 import type { ReactNode } from 'react';
 import { Link } from 'react-router';
@@ -28,12 +29,15 @@ function prepTiles(bar: BarWithTier): Prep[] {
   const zones = bar.zones.length;
   const safetyYes = bar.safety.filter((s) => s.value === 'YES').length;
   const safetyTotal = Math.max(bar.safety.length, 9);
+  // หมุดค่าเริ่มต้นของระบบเดิม = ยังไม่ได้ปักหมุดจริง (อนุมัติร้านไม่ได้จนกว่าจะปัก)
+  const legacy = isLegacyDefaultPin(bar.lat, bar.lng);
   const state = (done: boolean, started: boolean, text: string) => ({
     state: done ? 'ครบแล้ว' : started ? text : 'ยังไม่เริ่ม',
     stateCls: done ? 'text-(--crowd-available)' : started ? 'text-gold-text' : 'text-muted',
   });
   return [
     { to: '/merchant/store', icon: <Storefront />, title: 'ข้อมูลร้าน', sub: 'รูปปก + แกลเลอรี, เวลาเปิด-ปิด', ...state(infoDone === info.length, infoDone > 0, `${infoDone} / ${info.length} ส่วน`), pct: (infoDone / info.length) * 100, cta: 'แก้ไข' },
+    { to: '/merchant/location', icon: <MapPin />, title: 'ตำแหน่งร้าน', sub: 'หมุด ที่อยู่ ที่จอดรถ รถไฟฟ้า', ...state(!legacy, false, ''), pct: legacy ? 0 : 100, cta: legacy ? 'ปักหมุด' : 'แก้ไข' },
     { to: '/merchant/menu', icon: <ForkKnife />, title: 'เมนู', sub: 'ใช้ประเมินราคาก่อนลูกค้าไป', ...state(menu >= 20, menu > 0, `${menu} รายการ`), pct: Math.min(menu / 20, 1) * 100, cta: 'เพิ่มเมนู' },
     { to: '/merchant/tables', icon: <TableIcon />, title: 'โซน / โต๊ะ', sub: 'ต้องมีอย่างน้อย 1 โซนเพื่อรับจอง', ...state(zones > 0, false, ''), pct: zones > 0 ? 100 : 0, cta: 'ตั้งค่าโต๊ะ' },
     { to: '/merchant/safety', icon: <ShieldCheck />, title: 'ความปลอดภัย', sub: 'มีผลต่อดาวของร้าน', ...state(safetyYes >= safetyTotal, safetyYes > 0, `${safetyYes} / ${safetyTotal} ข้อ`), pct: (safetyYes / safetyTotal) * 100, cta: 'กรอก checklist' },
@@ -135,22 +139,25 @@ export function MerchantStatusPage() {
             {CATEGORY_LABELS[bar.category]} · {bar.district}
           </span>
         </Link>
-        {tiles.map((t) => (
-          <Link
-            key={t.to}
-            to={t.to}
-            className="merchant-pill flex min-w-0 flex-col gap-2.5 rounded-[20px] border border-border bg-card p-5 text-inherit hover:border-gold"
-          >
-            <span className="flex items-center justify-between">
-              <span className="grid size-10 place-items-center rounded-xl bg-surface text-xl text-gold">{t.icon}</span>
-              <span className={`text-xs ${t.stateCls}`}>{t.state}</span>
-            </span>
-            <b className="text-[17px] font-semibold">{t.title}</b>
-            <span className="text-[13px] leading-normal text-muted">{t.sub}</span>
-            <Meter pct={t.pct} className="mt-auto" />
-            <span className="text-[13px] text-link">{t.cta} →</span>
-          </Link>
-        ))}
+        {/* แถวการ์ดเตรียมร้าน 5 ใบ (ข้อมูลร้าน · ตำแหน่ง · เมนู · โต๊ะ · ความปลอดภัย) */}
+        <div className="col-span-4 grid grid-cols-5 gap-4">
+          {tiles.map((t) => (
+            <Link
+              key={t.to}
+              to={t.to}
+              className="merchant-pill flex min-w-0 flex-col gap-2.5 rounded-[20px] border border-border bg-card p-5 text-inherit hover:border-gold"
+            >
+              <span className="flex items-center justify-between">
+                <span className="grid size-10 place-items-center rounded-xl bg-surface text-xl text-gold">{t.icon}</span>
+                <span className={`text-xs ${t.stateCls}`}>{t.state}</span>
+              </span>
+              <b className="text-[17px] font-semibold">{t.title}</b>
+              <span className="text-[13px] leading-normal text-muted">{t.sub}</span>
+              <Meter pct={t.pct} className="mt-auto" />
+              <span className="text-[13px] text-link">{t.cta} →</span>
+            </Link>
+          ))}
+        </div>
       </div>
 
       {/* ---------- มือถือ ---------- */}

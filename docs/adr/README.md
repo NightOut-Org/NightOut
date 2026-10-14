@@ -12,3 +12,5 @@
 | [0006](0006-domain-sliced-api-and-shared-contracts.md) | จัดโค้ด API ตามโดเมน + สัญญา API ชุดเดียวใน `packages/contracts` | Accepted |
 | [0007](0007-module-api-file.md) | API ของหน้าอยู่ใน `modules/<หน้า>/api.ts` ของโมดูลนั้น (Supersede บางส่วนของ 0006) | Accepted |
 | [0008](0008-api-response-envelope.md) | ทุกคำตอบของ API เป็น `ApiResponse` { status, status_code, data, code, err_msg } · Rest แกะให้ | Accepted |
+| [0009](0009-geocoding-backend-proxy.md) | ค้นหาที่อยู่ (ปักหมุดร้าน) ผ่าน backend `GET /geocode/*` → OSM Nominatim เฉพาะไทย · กดค้นหาเท่านั้น · เปลี่ยนผู้ให้บริการด้วย `GEOCODER_URL` | Accepted |
+| [0010](0010-provider-agnostic-payment-layer.md) | ชั้นชำระเงินกลางไม่ผูกผู้ให้บริการ: `payment_intents` + adapter + webhook (`/payments/webhook/:provider`) + mock สำหรับ dev · ไม่ตั้ง `PAYMENT_PROVIDER` = flow สลิปเดิม · คืนเงินทำมือ | Accepted |

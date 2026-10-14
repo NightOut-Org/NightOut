@@ -1,10 +1,10 @@
-import { App, Alert, Input, Modal, Tag, Typography } from 'antd';
+import { App, Alert, Modal, Typography } from 'antd';
 import { useState } from 'react';
 import { type Booking } from '@/services/data';
-import { refundDeposit } from '../api';
+import { refundDeposit, reportNoTable } from '../api';
+import { ReasonPicker } from '../components/reasonPicker';
+import { isReasonValid, noTableDoneText, reasonText, type MerchantCancelReason } from '../utils/cancelReasons';
 import { baht } from '@/ui/utils/format';
-
-const QUICK_REASONS = ['ไม่มีโต๊ะให้ลูกค้า', 'ร้านปิดกะทันหัน', 'ลูกค้ามาแล้วแต่ร้านรับไม่ได้', 'ร้านยกเลิกเอง'];
 
 /** มัดจำที่ร้านอนุมัติคืนได้: ตรวจสลิปแล้ว และยังไม่โอนให้ร้าน */
 export const canRefund = (b: Booking) =>
@@ -13,25 +13,33 @@ export const canRefund = (b: Booking) =>
 /**
  * ยืนยันการคืนเงินมัดจำ — ร้านอนุมัติ → NightOut โอนคืนลูกค้า (เงินอยู่ที่ NightOut ร้านไม่ต้องโอนเอง)
  * การจองที่ยังไม่เช็กอินจะถูกยกเลิกฝั่งร้านและปล่อยโต๊ะ · ทีมร้านทุกบทบาทใช้ได้
+ * เหตุ "ร้านไม่มีโต๊ะให้ลูกค้า" (ยืนยันแล้ว / เช็กอินแล้ว) → reportNoTable: คืนเต็ม + บันทึกประวัติร้าน + แจ้งทีม NightOut
  */
 export function RefundModal({ booking, onClose }: { booking: Booking | null; onClose: () => void }) {
   const { message } = App.useApp();
-  const [reason, setReason] = useState('');
+  const [reason, setReason] = useState<MerchantCancelReason>();
+  const [detail, setDetail] = useState('');
   const [saving, setSaving] = useState(false);
   const cancels = booking?.status === 'CONFIRMED' || booking?.status === 'PENDING';
-  const valid = reason.trim().length >= 3;
+  const allowNoTable = booking?.status === 'CONFIRMED' || booking?.status === 'CHECKED_IN';
+  const valid = isReasonValid(reason, detail);
 
   const close = () => {
-    setReason('');
+    setReason(undefined);
+    setDetail('');
     onClose();
   };
 
   const submit = async () => {
-    if (!booking || !valid) return;
+    if (!booking || !isReasonValid(reason, detail)) return;
     setSaving(true);
     try {
-      const r = await refundDeposit(booking.id, reason);
-      message.success(`ยืนยันคืนมัดจำ ${baht(r.amount)} แล้ว — NightOut จะโอนคืนลูกค้า`);
+      if (reason === 'NO_TABLE') {
+        message.success(noTableDoneText(await reportNoTable(booking.id, detail)));
+      } else {
+        const r = await refundDeposit(booking.id, reasonText(reason, detail));
+        message.success(`ยืนยันคืน Table Fee ${baht(r.amount)} แล้ว — NightOut จะโอนคืนลูกค้า`);
+      }
       close();
     } catch (e) {
       message.error((e as Error).message);
@@ -43,7 +51,7 @@ export function RefundModal({ booking, onClose }: { booking: Booking | null; onC
   return (
     <Modal
       open={!!booking}
-      title="ยืนยันการคืนเงินมัดจำ"
+      title="ยืนยันการคืน Table Fee"
       okText={booking?.deposit ? `ยืนยันคืน ${baht(booking.deposit.amount)}` : 'ยืนยันคืนเงิน'}
       cancelText="ยกเลิก"
       onOk={() => void submit()}
@@ -62,28 +70,15 @@ export function RefundModal({ booking, onClose }: { booking: Booking | null; onC
             type="warning"
             showIcon
             title={cancels ? 'การจองนี้จะถูกยกเลิกและปล่อยโต๊ะ' : 'สถานะการจองคงเดิม'}
-            description={`มัดจำ ${baht(booking.deposit?.amount ?? 0)} จะไม่ถูกโอนให้ร้าน NightOut จะโอนคืนลูกค้าโดยตรง และแจ้งลูกค้าให้ทันที · ทำแล้วย้อนกลับไม่ได้`}
+            description={`Table Fee ${baht(booking.deposit?.amount ?? 0)} จะไม่ถูกโอนให้ร้าน NightOut จะโอนคืนลูกค้าโดยตรง และแจ้งลูกค้าให้ทันที · ทำแล้วย้อนกลับไม่ได้`}
           />
-          <div>
-            <label htmlFor="refund-reason" className="mb-1.5 block text-sm font-medium">
-              เหตุผลที่คืนเงิน
-            </label>
-            <div className="mb-2 flex flex-wrap gap-1.5">
-              {QUICK_REASONS.map((r) => (
-                <Tag.CheckableTag key={r} checked={reason === r} onChange={() => setReason(r)}>
-                  {r}
-                </Tag.CheckableTag>
-              ))}
-            </div>
-            <Input.TextArea
-              id="refund-reason"
-              rows={2}
-              maxLength={300}
-              placeholder="อธิบายสั้น ๆ ให้ทีม NightOut เข้าใจเคสนี้"
-              value={reason}
-              onChange={(e) => setReason(e.target.value)}
-            />
-          </div>
+          <ReasonPicker
+            value={reason}
+            detail={detail}
+            onChange={setReason}
+            onDetail={setDetail}
+            allowNoTable={allowNoTable}
+          />
         </div>
       )}
     </Modal>

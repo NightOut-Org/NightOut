@@ -1,4 +1,5 @@
 import type * as C from '@nightout/contracts';
+import { BOOKING_EXTENSION_MINUTES, CHECK_IN_EARLY_HOURS, DEFAULT_REFUND_BEFORE_HOURS } from '@nightout/utils';
 import { Bank, ClockCountdown, MinusCircle, PlusCircle, UserSound, Wallet } from '@phosphor-icons/react';
 import { Alert, App, Form, Input, InputNumber, Segmented, Select } from 'antd';
 import { useState, type ReactNode } from 'react';
@@ -93,7 +94,7 @@ function Section({ icon, title, children }: { icon: ReactNode; title: string; ch
 }
 
 /**
- * /merchant/settings — มัดจำ · บัญชีรับเงินจาก NightOut · เช็กอินและยกเลิกอัตโนมัติ · PR (Bento 2×2)
+ * /merchant/settings — มัดจำ · บัญชีรับเงินจาก NightOut · เช็กอินและปลดโต๊ะอัตโนมัติ · PR (Bento 2×2)
  * แก้ทั้งหน้าแล้วกดบันทึกครั้งเดียว: PUT /merchant/bars/:barId/settings (ส่งเฉพาะส่วนที่แก้ · ธุรกรรมเดียว)
  */
 export function MerchantSettingsPage() {
@@ -188,9 +189,9 @@ export function MerchantSettingsPage() {
         initialValues={initial}
       >
         <div className="grid gap-3 lg:grid-cols-2 lg:gap-4">
-          <Section icon={<Wallet />} title="มัดจำ (เก็บทุกการจอง)">
+          <Section icon={<Wallet />} title="Table Fee (เก็บทุกการจอง)">
             <div className="grid grid-cols-2 gap-3">
-              <Form.Item name="amount" label="ยอดมัดจำ" rules={[{ required: true, message: 'กรอกยอดมัดจำ' }]} className="!mb-0">
+              <Form.Item name="amount" label="ยอด Table Fee" rules={[{ required: true, message: 'กรอกยอด Table Fee' }]} className="!mb-0">
                 <InputNumber className="!w-full" min={100} step={100} suffix="฿" inputMode="numeric" />
               </Form.Item>
               <Form.Item name="unit" label="คิดต่อ" className="!mb-0">
@@ -202,8 +203,14 @@ export function MerchantSettingsPage() {
                 />
               </Form.Item>
             </div>
-            <Form.Item name="policy" label="นโยบายคืนมัดจำ (ลูกค้าเห็นก่อนโอน)" rules={[{ max: 500 }]} className="!mb-0">
-              <Input.TextArea rows={2} placeholder="เช่น ยกเลิกก่อน 24 ชม. คืนเต็มจำนวน · หลังจากนั้นเก็บเป็นเครดิตร้าน" />
+            <Form.Item
+              name="policy"
+              label="เงื่อนไขเพิ่มเติมของร้าน (ลูกค้าเห็นก่อนชำระ)"
+              rules={[{ max: 500 }]}
+              className="!mb-0"
+              extra={`เวลาคืน Table Fee NightOut กำหนดเหมือนกันทุกร้าน: ยกเลิกล่วงหน้าอย่างน้อย ${DEFAULT_REFUND_BEFORE_HOURS} ชม. คืนเต็มจำนวน หลังจากนั้นริบ — ไม่ต้องเขียนซ้ำ`}
+            >
+              <Input.TextArea rows={2} placeholder="เช่น Table Fee หักเป็นค่าอาหาร/มิกเซอร์ในวันที่มา" />
             </Form.Item>
           </Section>
 
@@ -232,7 +239,7 @@ export function MerchantSettingsPage() {
                 </button>
               </div>
             ) : (
-              <Alert type="warning" showIcon title="ยังไม่มีบัญชีรับเงิน — กรอกให้ครบเพื่อให้ NightOut โอนมัดจำให้ร้านได้" />
+              <Alert type="warning" showIcon title="ยังไม่มีบัญชีรับเงิน — กรอกให้ครบเพื่อให้ NightOut โอน Table Fee ให้ร้านได้" />
             )}
             <div className={editAccount ? 'grid gap-3 sm:grid-cols-2' : 'hidden'}>
               <Form.Item
@@ -258,16 +265,16 @@ export function MerchantSettingsPage() {
               </Form.Item>
             </div>
             <span className="text-[13px] text-muted">
-              ลูกค้าโอนมัดจำเข้า NightOut · เมื่อลูกค้าเช็กอินหรือไม่มาตามนัด NightOut โอนเข้าบัญชีนี้ หรือเก็บเป็นเครดิตร้าน
+              ลูกค้าชำระ Table Fee ให้ NightOut · เมื่อลูกค้าเช็กอินหรือถูกปลดโต๊ะ (Forfeited) NightOut โอนเข้าบัญชีนี้ หรือเก็บเป็นเครดิตร้าน
             </span>
           </Section>
 
-          <Section icon={<ClockCountdown />} title="เช็กอินและยกเลิกอัตโนมัติ">
+          <Section icon={<ClockCountdown />} title="เช็กอินและปลดโต๊ะอัตโนมัติ">
             <Form.Item
               name="gracePeriodMinutes"
               label="Grace period หลังเวลานัด"
               className="!mb-0"
-              extra="เลยเวลานี้ไม่มาเช็กอิน → ระบบเปลี่ยนเป็นไม่มาตามนัดอัตโนมัติ และมัดจำตกเป็นของร้าน"
+              extra={`เลยเวลานี้ไม่มาเช็กอิน → ระบบปลดโต๊ะ (Forfeited) อัตโนมัติ และ Table Fee ตกเป็นของร้าน · ลูกค้าขอต่อเวลาได้อีก ${BOOKING_EXTENSION_MINUTES} นาที 1 ครั้ง · เช็กอินได้ตั้งแต่ ${CHECK_IN_EARLY_HOURS} ชม. ก่อนเวลานัด`}
             >
               <Segmented block options={GRACE.map((m) => ({ label: `${m} นาที`, value: m }))} />
             </Form.Item>

@@ -60,6 +60,21 @@ export class BarMediaService {
     );
   }
 
+  /**
+   * rpc admin_save_bar_details — แอดมินแก้ข้อมูลร้าน และ/หรือ เมนูทั้งชุดแทนร้าน ในธุรกรรมเดียว
+   * (ไม่ส่งรูปเมนู → รูปของรายการที่คงอยู่ไม่เปลี่ยน · รายการที่เอาออก → ลบไฟล์รูป)
+   */
+  async saveAdminDetails(actor: string, bar: string, b: C.AdminBarDetailsBody): Promise<C.AdminBarDetailsResult> {
+    return this.cleanup(
+      await this.db.rpc<WithRemoved<C.AdminBarDetailsResult>>('admin_save_bar_details', {
+        p_actor: actor,
+        p_bar: bar,
+        p_info: b.info ?? null,
+        p_menu: b.menu ?? null,
+      }),
+    );
+  }
+
   /** rpc app_set_menu — เมนูทั้งชุด (รูปที่ถูกแทน/ลบ → ลบไฟล์) */
   async setMenu(
     actor: string,

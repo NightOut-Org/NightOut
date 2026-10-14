@@ -26,7 +26,7 @@ export class AccountMeController {
     summary: 'โปรไฟล์ของฉัน',
     description: 'แถวของผู้ใช้ใน public.users — ชั้นบัญชีอ่านจาก DB (ไม่ใช่ user_metadata) พร้อมชื่อไทยจากตาราง roles · เปลี่ยนชั้นตัวเองไม่ได้',
     returns:
-      '`id` · `display_name` · `role` รหัสชั้นบัญชี · `role_label` ชื่อไทยของชั้น · `can_enter_backoffice` เข้าหลังบ้านได้ไหม (ยังต้องผ่าน MFA) · `phone_e164` เบอร์ล่าสุดที่ใช้จอง (หน้า Checkout เติมให้) · `banned_at` ถูกระงับการจองเมื่อ (null = ปกติ)',
+      '`id` · `display_name` · `role` รหัสชั้นบัญชี · `role_label` ชื่อไทยของชั้น · `can_enter_backoffice` เข้าหลังบ้านได้ไหม (ยังต้องผ่าน MFA) · `phone_e164` เบอร์ล่าสุดที่ใช้จอง (หน้า Checkout เติมให้) · `banned_at` ถูกระงับเมื่อ (null = ปกติ · ถูกแบน = จองไม่ได้ + ชุมชนอ่านได้อย่างเดียว) · `ban_reason` เหตุผลที่ถูกระงับ',
     validates: false,
   })
   async profile(@Req() req: AuthedRequest, @CurrentUser() me: AuthUser) {
@@ -37,9 +37,10 @@ export class AccountMeController {
         role: string;
         phone_e164: string | null;
         banned_at: string | null;
+        ban_reason: string | null;
         roles: { label_th: string; can_enter_backoffice: boolean } | null;
       }[]
-    >(bearerOf(req), `users?select=id,display_name,role,phone_e164,banned_at,roles(label_th,can_enter_backoffice)&id=eq.${me.id}`);
+    >(bearerOf(req), `users?select=id,display_name,role,phone_e164,banned_at,ban_reason,roles(label_th,can_enter_backoffice)&id=eq.${me.id}`);
     if (!rows[0]) throw new NotFoundException('USER_NOT_FOUND');
     const { roles, ...u } = rows[0];
     return { ...u, role_label: roles?.label_th ?? u.role, can_enter_backoffice: roles?.can_enter_backoffice ?? false };

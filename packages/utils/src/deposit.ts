@@ -1,10 +1,20 @@
+import { BOOKING_EXTENSION_MINUTES } from './booking-time';
+
 /**
  * มัดจำ: ข้อความเงื่อนไขริบมัดจำ (หน้า Checkout) · เหตุผลปฏิเสธสลิป (Backoffice) · เบอร์โทรไทย
  * ใช้ร่วม frontend / admin / backend — DB เก็บข้อความที่ลูกค้าเห็นจริงไว้เป็นหลักฐาน (booking_deposit_consents)
  */
 
-/** เปลี่ยนเนื้อหาเงื่อนไขเมื่อไหร่ ให้ขึ้นเวอร์ชันใหม่ (หลักฐานเก่าอ้างเวอร์ชันเดิม) */
-export const DEPOSIT_TERMS_VERSION = 'deposit-v1';
+/**
+ * ชื่อเงินที่ลูกค้าจ่ายผ่านแอป — ข้อกฎหมาย (พ.ร.บ.ควบคุมเครื่องดื่มแอลกอฮอล์) ให้เรียกว่า Table Fee เท่านั้น
+ * ข้อความที่ลูกค้า/ร้านเห็นใช้ 2 ตัวนี้ (ห้ามเขียน "มัดจำ") · โค้ด/ตารางยังชื่อ deposit ตามเดิม
+ */
+export const TABLE_FEE_LABEL = 'ค่าธรรมเนียมจองโต๊ะ (Table Fee)';
+/** ป้ายสั้น (สถานะ / แท็ก) */
+export const TABLE_FEE_SHORT = 'Table Fee';
+
+/** เปลี่ยนเนื้อหาเงื่อนไขเมื่อไหร่ ให้ขึ้นเวอร์ชันใหม่ (หลักฐานเก่าอ้างเวอร์ชันเดิม) · v2 = เรียก Table Fee แทนมัดจำ · v3 = ต่อเวลา 15 นาที + ปลดโต๊ะ (Forfeited) */
+export const DEPOSIT_TERMS_VERSION = 'deposit-v3';
 
 export interface DepositTermsInput {
   /** ยอดมัดจำของการจองนี้ (บาท) */
@@ -21,14 +31,16 @@ const baht = (n: number) => `฿${n.toLocaleString('th-TH', { maximumFractionDig
 
 /** ข้อ ๆ ของเงื่อนไข (หน้าเว็บแสดงเป็นรายการ) */
 export function depositTermsLines({ amount, refundBeforeHours, graceMinutes, barPolicy }: DepositTermsInput): string[] {
+  const fee = `${TABLE_FEE_SHORT} ${baht(amount)}`;
   const lines = [
     refundBeforeHours > 0
-      ? `ยกเลิกล่วงหน้าอย่างน้อย ${refundBeforeHours} ชั่วโมงก่อนเวลาจอง ได้รับมัดจำคืนเต็มจำนวน`
-      : 'ยกเลิกก่อนถึงเวลาจอง ได้รับมัดจำคืนเต็มจำนวน',
-    refundBeforeHours > 0
-      ? `ยกเลิกภายใน ${refundBeforeHours} ชั่วโมงก่อนเวลาจอง หรือไม่มาถึงร้านภายใน ${graceMinutes} นาทีหลังเวลาจอง มัดจำ ${baht(amount)} จะถูกริบและโอนให้ร้าน`
-      : `ไม่มาถึงร้านภายใน ${graceMinutes} นาทีหลังเวลาจอง มัดจำ ${baht(amount)} จะถูกริบและโอนให้ร้าน`,
-    'ถ้าร้านยกเลิกหรือไม่มีโต๊ะให้ ได้รับมัดจำคืนเต็มจำนวน',
+      ? `ยกเลิกล่วงหน้าอย่างน้อย ${refundBeforeHours} ชั่วโมงก่อนเวลาจอง ได้รับ ${TABLE_FEE_SHORT} คืนเต็มจำนวน`
+      : `ยกเลิกก่อนถึงเวลาจอง ได้รับ ${TABLE_FEE_SHORT} คืนเต็มจำนวน`,
+    ...(refundBeforeHours > 0
+      ? [`ยกเลิกภายใน ${refundBeforeHours} ชั่วโมงก่อนเวลาจอง ${fee} จะถูกริบและโอนให้ร้าน`]
+      : []),
+    `ไม่มาถึงร้านภายใน ${graceMinutes} นาทีหลังเวลาจอง (ขอต่อเวลาได้อีก ${BOOKING_EXTENSION_MINUTES} นาที 1 ครั้ง) ระบบจะปลดโต๊ะ (Forfeited) และ ${fee} จะถูกริบและโอนให้ร้าน`,
+    `ถ้าร้านยกเลิกหรือไม่มีโต๊ะให้ ได้รับ ${TABLE_FEE_SHORT} คืนเต็มจำนวน`,
   ];
   const policy = barPolicy?.trim();
   if (policy) lines.push(`เงื่อนไขของร้าน: ${policy}`);
@@ -38,7 +50,7 @@ export function depositTermsLines({ amount, refundBeforeHours, graceMinutes, bar
 /** ข้อความเต็มที่ลูกค้ายอมรับ (ส่งไปเก็บเป็นหลักฐาน — ต้องตรงกับที่แสดงข้าง checkbox) */
 export function depositTermsText(input: DepositTermsInput): string {
   return [
-    `ฉันได้อ่านและยอมรับเงื่อนไขมัดจำ ${baht(input.amount)} ของการจองนี้`,
+    `ฉันได้อ่านและยอมรับเงื่อนไข${TABLE_FEE_LABEL} ${baht(input.amount)} ของการจองนี้`,
     ...depositTermsLines(input).map((l, i) => `${i + 1}. ${l}`),
   ].join('\n');
 }

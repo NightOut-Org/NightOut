@@ -14,15 +14,24 @@ import {
   VideoCamera,
   XCircle,
 } from '@phosphor-icons/react';
+import { SAFETY_CHECK_LABELS } from '@nightout/utils';
 import { App, Upload } from 'antd';
-import { useState, type ReactNode } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { SAFETY_LABELS, type SafetyValue } from '@/services/data';
 
 type SafetyKey = keyof typeof SAFETY_LABELS;
 import { useMerchantBar } from '@/hooks/useMerchantBar';
 import { useUnsavedGuard } from '@/hooks/useUnsavedGuard';
 import { Ring, Tile } from '@/ui/components/merchantUi';
-import { saveSafety } from './api';
+import { saveSafety, useInspectionPhotoUrls, useLatestInspection } from './api';
+import {
+  InspectionPhotos,
+  inspectionItemOf,
+  LastInspectionTile,
+  shortDate,
+  VERIFIED_BY_LABEL,
+  verifyMethodOf,
+} from './components/lastInspection';
 import { useSafetyDraft } from './utils/useSafetyDraft';
 
 const ICON: Record<SafetyKey, ReactNode> = {
@@ -44,8 +53,9 @@ const OPTIONS: { value: SafetyValue; label: string; on: string }[] = [
 ];
 
 /**
- * /merchant/safety — Safety Score (ซ้าย) + checklist มี/ไม่มี/ไม่ระบุ + แนบหลักฐาน (ขวา)
+ * /merchant/safety — Safety Score + ผลลงพื้นที่ตรวจล่าสุด (ซ้าย) + checklist มี/ไม่มี/ไม่ระบุ + แนบหลักฐาน (ขวา)
  * แก้ทั้งหน้าในเครื่องก่อน (คะแนนคิดจากค่าที่แก้) แล้วกดบันทึกครั้งเดียว: อัปโหลดหลักฐาน → PUT /merchant/bars/:barId/safety
+ * ทีมงานตรวจได้ 2 วิธี แยกให้เห็นทุกแถว: ตรวจหลักฐานแล้ว (EVIDENCE) · ทีมงานลงพื้นที่ตรวจ (ON_SITE — ผลต่อข้อจาก GET …/safety/inspection)
  */
 export function MerchantSafetyPage() {
   const bar = useMerchantBar();
@@ -54,11 +64,17 @@ export function MerchantSafetyPage() {
   const [progress, setProgress] = useState<string | null>(null);
   const saving = progress !== null;
   const { confirmDiscard } = useUnsavedGuard(draft.count > 0);
+  const inspectionQuery = useLatestInspection(bar.id);
+  const inspection = inspectionQuery.data;
+  const photoPaths = useMemo(() => inspection?.items.flatMap((i) => (i.result === 'NA' ? [] : i.photo_paths)) ?? [], [inspection]);
+  const { data: photoUrls } = useInspectionPhotoUrls(photoPaths);
   const total = bar.safety.length;
   const yes = bar.safety.filter((s) => draft.valueOf(s) === 'YES').length;
   const no = bar.safety.filter((s) => draft.valueOf(s) === 'NO').length;
-  // เปลี่ยนค่า = กลับเป็นร้านแจ้งเอง (ไม่นับว่ายืนยันแล้ว)
-  const verified = bar.safety.filter((s) => s.source === 'ADMIN_VERIFIED' && s.value === 'YES' && !draft.valueChanged(s)).length;
+  // เปลี่ยนค่า = กลับเป็นร้านแจ้งเอง (ไม่นับว่าตรวจแล้ว)
+  const verifiedRows = bar.safety.filter((s) => s.source === 'ADMIN_VERIFIED' && s.value === 'YES' && !draft.valueChanged(s));
+  const verified = verifiedRows.length;
+  const verifiedOnSite = verifiedRows.filter((s) => verifyMethodOf(s) === 'ON_SITE').length;
 
   const save = async () => {
     setProgress('กำลังบันทึก…');
@@ -92,15 +108,26 @@ export function MerchantSafetyPage() {
     </button>
   );
 
-  /** บรรทัดใต้ชื่อ: ยืนยันแล้ว (เขียว) · ร้านแจ้ง รอตรวจ (เหลือง) · ยังไม่มีข้อมูล */
-  const evidence = (s: (typeof bar.safety)[number]) =>
-    draft.valueOf(s) === 'YES'
-      ? s.source === 'ADMIN_VERIFIED' && !draft.valueChanged(s)
-        ? { text: 'ยืนยันแล้วโดย NightOut', cls: 'text-(--crowd-available)' }
+  /**
+   * บรรทัดใต้ชื่อ: ผู้ตรวจ + วิธี + วันที่ (ทีมงาน NightOut ตรวจหลักฐานแล้ว / ลงพื้นที่ตรวจ · เขียว) · ร้านแจ้ง รอตรวจ (เหลือง) · ลงพื้นที่แล้วไม่พบ (แดง) · ยังไม่มีข้อมูล
+   * วันที่ต่อท้ายเฉพาะเมื่อแถว "ลงพื้นที่ …" ด้านล่างไม่ได้บอกวันเดียวกันอยู่แล้ว
+   */
+  const evidence = (s: (typeof bar.safety)[number]) => {
+    const method = verifyMethodOf(s);
+    // ลงพื้นที่ + ครั้งล่าสุดมีผลข้อนี้ = วันที่เดียวกับแถว "ลงพื้นที่ …" (ผลใหม่กว่าจะทับ verified_at เสมอ)
+    const sameVisit = method === 'ON_SITE' && !!inspectionItemOf(inspection, s.key);
+    const when = s.verifiedAt && !sameVisit ? ` ${shortDate(s.verifiedAt)}` : '';
+    const checked = method !== null && !draft.valueChanged(s);
+    return draft.valueOf(s) === 'YES'
+      ? checked
+        ? { text: `${VERIFIED_BY_LABEL[method ?? 'EVIDENCE']}${when}`, cls: 'text-(--crowd-available)' }
         : { text: 'ร้านแจ้ง · แนบหลักฐานให้ทีมตรวจ', cls: 'text-(--crowd-almost-full)' }
       : draft.valueOf(s) === 'NO'
-        ? { text: 'ลูกค้าเห็นว่า "ไม่มี"', cls: 'text-muted' }
+        ? checked && method === 'ON_SITE'
+          ? { text: 'ทีมงานลงพื้นที่แล้วไม่พบ · ลูกค้าเห็นว่า "ไม่มี"', cls: 'text-(--crowd-full)' }
+          : { text: 'ลูกค้าเห็นว่า "ไม่มี"', cls: 'text-muted' }
         : { text: 'ยังไม่มีข้อมูล', cls: 'text-muted' };
+  };
 
   const statusIcon = (v: SafetyValue) =>
     v === 'YES' ? (
@@ -117,7 +144,7 @@ export function MerchantSafetyPage() {
         <div>
           <h1 className="text-[17px] font-bold lg:font-display lg:text-[30px]">ความปลอดภัย</h1>
           <p className="mt-1 hidden text-sm text-muted lg:block">
-            ลูกค้าเห็นทุกข้อ · มีผลต่อดาวของร้าน · ทีม NightOut ยืนยันจากหลักฐาน · แก้ได้หลายข้อแล้วกดบันทึกครั้งเดียว
+            ลูกค้าเห็นทุกข้อในชื่อ "ข้อมูลอ้างอิงจากร้านค้า (Merchant Declared)" · มีผลต่อดาวของร้าน · ทีมงาน NightOut ตรวจหลักฐานที่แนบหรือลงพื้นที่ตรวจ แล้วผลตรวจจะแสดงที่นี่ · แก้ได้หลายข้อแล้วกดบันทึกครั้งเดียว
           </p>
         </div>
         <div className="flex items-center gap-1 lg:gap-3">
@@ -162,10 +189,21 @@ export function MerchantSafetyPage() {
             <span className="flex flex-col gap-0.5 lg:items-center">
               <b className="text-[15px] lg:hidden">Safety Score</b>
               <span className="inline-flex items-center gap-1.5 text-[13px] text-(--crowd-available) lg:rounded-full lg:border lg:border-(--crowd-available)/40 lg:bg-(--crowd-available)/10 lg:px-3 lg:py-1">
-                <SealCheck weight="fill" /> ยืนยันโดย NightOut {verified} ข้อ
+                <SealCheck weight="fill" /> ทีมงานตรวจแล้ว {verified} ข้อ
               </span>
+              {verified > 0 && (
+                <span className="text-xs text-muted">
+                  ลงพื้นที่ {verifiedOnSite} · ตรวจหลักฐาน {verified - verifiedOnSite}
+                </span>
+              )}
             </span>
           </Tile>
+          <LastInspectionTile
+            bar={bar}
+            inspection={inspection}
+            loading={inspectionQuery.isPending}
+            error={inspectionQuery.isError}
+          />
           <Tile className="hidden flex-col gap-2.5 !p-[18px] text-sm lg:flex">
             <span className="flex items-center gap-2.5">
               <CheckCircle weight="fill" size={18} className="text-(--crowd-available)" />
@@ -187,6 +225,7 @@ export function MerchantSafetyPage() {
             const ev = evidence(s);
             const value = draft.valueOf(s);
             const file = draft.fileOf(s);
+            const checked = inspectionItemOf(inspection, s.key);
             return (
               <li
                 key={s.key}
@@ -196,6 +235,17 @@ export function MerchantSafetyPage() {
                 <span className="flex min-w-0 flex-1 flex-col text-sm">
                   <b className="font-medium">{SAFETY_LABELS[s.key]}</b>
                   <span className={`text-[11px] lg:text-xs ${ev.cls}`}>{ev.text}</span>
+                  {checked && inspection && (
+                    <>
+                      <span
+                        className={`break-words text-[11px] lg:text-xs ${checked.result === 'PASS' ? 'text-(--crowd-available)' : 'text-(--crowd-full)'}`}
+                      >
+                        ลงพื้นที่ {shortDate(inspection.inspected_at)}: {SAFETY_CHECK_LABELS[checked.result]}
+                        {checked.note ? ` · ${checked.note}` : ''}
+                      </span>
+                      <InspectionPhotos paths={checked.photo_paths} urls={photoUrls} />
+                    </>
+                  )}
                   {(draft.valueChanged(s) || file) && (
                     <span className="text-[11px] text-gold-text lg:text-xs">
                       ยังไม่บันทึก{file ? ` · หลักฐาน ${file}` : ''}

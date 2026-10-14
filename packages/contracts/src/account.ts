@@ -20,6 +20,8 @@ export interface MyProfile {
   phone_e164: string | null;
   /** ถูกระงับการจองเมื่อ (null = ปกติ) */
   banned_at: string | null;
+  /** เหตุผลที่ถูกระงับ (null = ปกติ) */
+  ban_reason: string | null;
 }
 
 /** PATCH /me/profile — ส่งเฉพาะ field ที่แก้ */
@@ -128,8 +130,21 @@ export interface SetUsersRoleResult {
   bars_detached: number;
 }
 
+/** POST /admin/users/:id/ban — แบนบัญชีเอง (ลูกค้า / ทีมร้าน) · แบน = จองไม่ได้ + ชุมชนอ่านได้อย่างเดียว */
+export const BanUserBody = z.object({
+  reason: z.string().trim().min(3).max(300).describe('เหตุผล — เจ้าของบัญชีเห็นในแจ้งเตือน · บันทึกใน audit log'),
+  ban_phones: z.boolean().default(false).describe('แบนทุกเบอร์ที่บัญชีนี้เคยใช้ด้วย (สมัครบัญชีใหม่ด้วยเบอร์เดิมก็จองไม่ได้)'),
+});
+export type BanUserBody = z.input<typeof BanUserBody>;
+export interface BanUserResult {
+  id: string;
+  banned: true;
+  banned_at: string;
+  phones_banned: number;
+}
+
 /** POST /admin/users/:id/unban */
-export const UnbanUserBody = z.object({ reason: z.string().trim().max(300).optional().describe('เหตุผลที่ปลดแบน (บันทึกใน audit log)') });
+export const UnbanUserBody = z.object({ reason: z.string().trim().min(3).max(300).describe('เหตุผลที่ปลดแบน (บันทึกใน audit log)') });
 export type UnbanUserBody = z.infer<typeof UnbanUserBody>;
 export interface UnbanUserResult {
   id: string;
@@ -160,4 +175,8 @@ export const ACCOUNT_ERRORS = {
   INVALID_ACCOUNT: 'ข้อมูลบัญชีไม่ถูกต้องหรือไม่สามารถเปลี่ยนแปลงได้',
   INVALID_ROLE_CHANGES: 'ข้อมูลชั้นบัญชีไม่ถูกต้อง — รีเฟรชหน้าแล้วลองใหม่',
   LAST_SUPER_ADMIN: 'ต้องมีซูเปอร์แอดมินอย่างน้อย 1 คน — ตั้งคนอื่นเป็นซูเปอร์แอดมินก่อน',
+  BAN_REASON_REQUIRED: 'ใส่เหตุผล 3–300 ตัวอักษร',
+  CANNOT_BAN_SELF: 'แบนบัญชีของตัวเองไม่ได้',
+  CANNOT_BAN_ADMIN: 'แบนบัญชีทีมงาน NightOut (แอดมิน / ซูเปอร์แอดมิน) ไม่ได้ — ให้ซูเปอร์แอดมินลดชั้นบัญชีก่อน',
+  USER_ALREADY_BANNED: 'บัญชีนี้ถูกแบนอยู่แล้ว',
 } as const satisfies Record<string, string>;

@@ -1,7 +1,7 @@
 <!-- สร้างจาก /sync-requirements (scripts/gdoc-to-md.mjs) — ห้ามแก้มือ -->
 <!-- source: https://docs.google.com/document/d/1GQ3ilsu_y_dzTulZS9_UEtNH7ygOLkaM-YkqdFm3UUI/edit -->
-<!-- revisionId: AHj4eMQuEeGZmRk9CMU-_ChyvYwltALxooyTg-Fd80G7OyjWOnSxR-mfbP7DHFkW8e16VjzoPXwAlmVV3MnF2Sze2X3s31hK3qXMnsj1FIY -->
-<!-- synced: 2026-10-12 -->
+<!-- revisionId: AHj4eMRk1NcMRw-E8Ar4HVpzLJL2UDvL4FwAbdgMEg0qlUhSIMpyfvr-JK5qAfCRnsApSsUQP7ADW_UGFXjXZRcXEVFTfg1ZrknFUXkyyPs -->
+<!-- synced: 2026-10-14 -->
 
 # Nightout_2.day
 
@@ -982,13 +982,13 @@ KPI ยังขาดตัวชี้วัดการกลับมาใ�
 # แท็บ: สมาชิก
 
 ทีม
-แสน Founder,Full
-เติร์ด Co-Founder,Full
-ก็อต Co-Founder,Full
+แสน Founder,Full (เล่าปี่)
+เติร์ด Co-Founder,Full (ซุนเซ็ก)
+ก็อต Co-Founder,Full (กวนอู)
 เนวิน Project Manager
 พี UXUI, fontend
-บิว UXUI, fontend
 บอล Tester
+
 แพ็คกี้ Content
 พี่ต้น Content
 วิน devops, ที่ปาค Tester

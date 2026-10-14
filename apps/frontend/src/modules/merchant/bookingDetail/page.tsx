@@ -1,18 +1,21 @@
-import { ArrowLeft, ArrowUUpLeft, ArrowsLeftRight, Check, CheckCircle, Clock, Wallet, XCircle } from '@phosphor-icons/react';
+import { ArrowLeft, ArrowUUpLeft, ArrowsLeftRight, Check, CheckCircle, Clock, LinkBreak, Wallet, XCircle } from '@phosphor-icons/react';
 import type { TeamBookingStatusBody } from '@nightout/contracts';
 import type { BookingStatus } from '@nightout/types';
-import { nextStatuses } from '@nightout/utils';
+import { canTeamForfeit, nextStatuses } from '@nightout/utils';
 import { App, Button, Result } from 'antd';
 import dayjs from 'dayjs';
 import { useState, type ReactNode } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router';
-import { barBookings } from '@/services/data';
+import { autoCancelAt, barBookings } from '@/services/data';
+import { useConfirmForfeit } from '@/hooks/useConfirmForfeit';
 import { useMerchantBar } from '@/hooks/useMerchantBar';
+import { useNow } from '@/hooks/useNow';
 import { BookingStatusTag } from '@/ui/components/bookingStatusTag';
 import { SETTLEMENT_LABEL } from '@/ui/components/depositCard';
 import { Tile } from '@/ui/components/merchantUi';
 import { BOOKING_STATUS, baht } from '@/ui/utils/format';
-import { setBookingStatus, useTableOptions } from './api';
+import { forfeitBooking, setBookingStatus, useTableOptions } from './api';
+import { CancelModal } from './modal/cancelModal';
 import { MoveTableModal } from './modal/moveTableModal';
 import { canRefund, RefundModal } from './modal/refundModal';
 
@@ -60,6 +63,9 @@ export function MerchantBookingDetailPage() {
   const [busy, setBusy] = useState<TeamAction | null>(null);
   const [moving, setMoving] = useState(() => params.get('move') === '1');
   const [refunding, setRefunding] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
+  const confirmForfeit = useConfirmForfeit();
+  const now = useNow(30_000);
 
   const all = barBookings(bar.id);
   const booking = all.find((b) => b.id === id);
@@ -93,7 +99,7 @@ export function MerchantBookingDetailPage() {
   const visits = mine.filter((b) => ['CHECKED_IN', 'COMPLETED'].includes(b.status)).length;
   const noShows = mine.filter((b) => b.status === 'NO_SHOW').length;
   const visitLabel = `${visits ? `ครั้งที่ ${visits + (['CHECKED_IN', 'COMPLETED'].includes(booking.status) ? 0 : 1)}` : 'ครั้งแรก'}${
-    noShows ? ` · ไม่มา ${noShows} ครั้ง` : visits ? ' · ไม่เคยไม่มา' : ''
+    noShows ? ` · ถูกปลดโต๊ะ ${noShows} ครั้ง` : visits ? ' · ไม่เคยถูกปลดโต๊ะ' : ''
   }`;
 
   const promo = booking.promotionId ? bar.promotions.find((p) => p.id === booking.promotionId) : undefined;
@@ -105,7 +111,9 @@ export function MerchantBookingDetailPage() {
   const depositAmount = d?.amount ?? booking.depositRequired ?? 0;
   const slip =
     d?.status === 'VERIFIED'
-      ? { icon: <CheckCircle weight="fill" />, text: 'NightOut ตรวจสลิปแล้ว', short: 'ตรวจสลิปแล้ว', cls: 'text-(--crowd-available)' }
+      ? d.method === 'ONLINE'
+        ? { icon: <CheckCircle weight="fill" />, text: 'ลูกค้าชำระ Table Fee แล้ว (ออนไลน์)', short: 'ชำระแล้ว', cls: 'text-(--crowd-available)' }
+        : { icon: <CheckCircle weight="fill" />, text: 'NightOut ตรวจสลิปแล้ว', short: 'ตรวจสลิปแล้ว', cls: 'text-(--crowd-available)' }
       : d?.status === 'SUBMITTED'
         ? { icon: <Clock />, text: 'รอ NightOut ตรวจสลิป', short: 'รอตรวจสลิป', cls: 'text-link' }
         : d?.status === 'REJECTED'
@@ -121,9 +129,16 @@ export function MerchantBookingDetailPage() {
   const actions = ORDER.filter((s) => allowed.includes(s) && ACTION[s]);
   const primary = actions.find((s) => ACTION[s]!.primary);
   const refundable = canRefund(booking);
+  // เลยเวลาเก็บโต๊ะแล้วยังไม่เช็กอิน → ทีมร้านทุกบทบาทกดปลดโต๊ะ (Forfeited) เองได้ ไม่ต้องรอ job
+  const forfeitable = canTeamForfeit({ status: booking.status, autoCancelAt: autoCancelAt(booking) }, new Date(now));
   const freeTables = tableOptions?.filter((o) => o.available && !o.is_current && o.table_id).length;
 
   const act = async (to: TeamAction) => {
+    // ยกเลิกต้องเลือกเหตุผลก่อน (มีเหตุ "ร้านไม่มีโต๊ะให้ลูกค้า" ที่บันทึกประวัติร้าน)
+    if (to === 'CANCELLED_BY_MERCHANT') {
+      setCancelling(true);
+      return;
+    }
     setBusy(to);
     try {
       await setBookingStatus(booking.id, to);
@@ -160,6 +175,16 @@ export function MerchantBookingDetailPage() {
       </button>
     );
   };
+
+  const forfeitButton = (cls: string) => (
+    <button
+      type="button"
+      onClick={() => confirmForfeit(booking, () => forfeitBooking(booking.id))}
+      className={`merchant-pill inline-flex items-center justify-center gap-2 rounded-xl border border-[color-mix(in_srgb,var(--crowd-full)_45%,transparent)] text-sm text-(--crowd-full) ${cls}`}
+    >
+      <LinkBreak aria-hidden /> ปลดโต๊ะ (Forfeited)
+    </button>
+  );
 
   const history = [...booking.history].reverse().map((h, i) => (
     <li key={i} className="flex items-center gap-3 text-sm">
@@ -207,7 +232,12 @@ export function MerchantBookingDetailPage() {
               {booking.code} · {start.format('dddd D MMM HH:mm')} · {place}
             </p>
           </div>
-          {actions.length > 0 && <div className="flex shrink-0 gap-2">{actions.map((s) => actionButton(s))}</div>}
+          {(actions.length > 0 || forfeitable) && (
+            <div className="flex shrink-0 gap-2">
+              {forfeitable && forfeitButton('h-10 px-4')}
+              {actions.map((s) => actionButton(s))}
+            </div>
+          )}
         </div>
 
         <Tile className="col-span-2 !p-[22px]">
@@ -235,7 +265,7 @@ export function MerchantBookingDetailPage() {
 
         <Tile className="flex flex-col gap-2.5 !p-[22px]">
           <span className="flex justify-between text-sm font-semibold">
-            เงินมัดจำ <Wallet className="text-gold" />
+            Table Fee <Wallet className="text-gold" />
           </span>
           <span className="text-[30px] font-semibold text-gold-text">{baht(depositAmount)}</span>
           <span className={`flex items-center gap-1.5 text-[13px] ${slip.cls}`}>
@@ -287,7 +317,7 @@ export function MerchantBookingDetailPage() {
             {onsiteTile(
               <ArrowUUpLeft className="text-link" />,
               'ยืนยันการคืนเงิน',
-              refundable ? 'มัดจำเข้าคิวให้ NightOut โอนคืน' : 'คืนได้เมื่อ NightOut ตรวจสลิปแล้วและยังถือเงินอยู่',
+              refundable ? 'Table Fee เข้าคิวให้ NightOut โอนคืน' : 'คืนได้เมื่อ NightOut ได้รับ Table Fee แล้วและยังถือเงินอยู่',
               refundable,
               () => setRefunding(true),
             )}
@@ -312,7 +342,7 @@ export function MerchantBookingDetailPage() {
         </div>
         <div className="grid grid-cols-2 gap-2.5">
           <Tile className="flex flex-col gap-1 !rounded-2xl !p-3.5">
-            <span className="text-xs text-muted">มัดจำ</span>
+            <span className="text-xs text-muted">Table Fee</span>
             <b className="text-xl text-gold-text">{baht(depositAmount)}</b>
             <span className={`text-[11px] ${slip.cls}`}>{slip.short}</span>
           </Tile>
@@ -347,8 +377,9 @@ export function MerchantBookingDetailPage() {
           <b className="text-sm font-semibold">ประวัติสถานะ</b>
           <ul className="m-0 grid list-none gap-2.5 p-0 [&_li]:text-[13px]">{history}</ul>
         </Tile>
-        {actions.filter((s) => !ACTION[s]!.primary).length > 0 && (
+        {(actions.filter((s) => !ACTION[s]!.primary).length > 0 || forfeitable) && (
           <div className="flex flex-wrap gap-2">
+            {forfeitable && forfeitButton('h-11 flex-1 px-4')}
             {actions.filter((s) => !ACTION[s]!.primary).map((s) => actionButton(s, 'h-11 flex-1 px-4'))}
           </div>
         )}
@@ -383,6 +414,7 @@ export function MerchantBookingDetailPage() {
 
       <MoveTableModal barId={bar.id} booking={moving ? booking : null} onClose={closeMove} />
       <RefundModal booking={refunding ? booking : null} onClose={() => setRefunding(false)} />
+      <CancelModal booking={cancelling ? booking : null} onClose={() => setCancelling(false)} />
     </>
   );
 }

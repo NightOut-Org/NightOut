@@ -10,6 +10,15 @@
  * ชื่อ key เป็น snake_case ตามหลังบ้าน (ไม่มีชั้นแปลงชื่อ)
  */
 import type { Database, Json } from './database.generated';
+import type {
+  LocationRequestSource,
+  LocationRequestStatus,
+  PaymentEventType,
+  PaymentIntentStatus,
+  PaymentRefundStatus,
+  SafetyCheckResult,
+  TransitLine,
+} from './enums';
 
 export type { Database, Json };
 
@@ -149,6 +158,33 @@ export interface SafetyEntry {
   value: Enums<'safety_value'>;
   source: Enums<'safety_source'> | null;
   verified_at: ISODateTime | null;
+  /** วิธีตรวจของ ADMIN_VERIFIED — EVIDENCE ตรวจหลักฐาน · ON_SITE ลงพื้นที่ (ไม่มี/null = ข้อมูลเก่า → ถือเป็นตรวจหลักฐาน) */
+  verify_method?: Enums<'safety_verify_method'> | null;
+}
+
+/** ตำแหน่งร้าน (bars / bar_location_requests / jsonb snapshot) — migration 20261013000600 */
+export interface BarLocationFields {
+  lat: number;
+  lng: number;
+  address: string;
+  parking_note: string | null;
+  transit_line: TransitLine | null;
+  transit_station: string | null;
+  transit_walk_minutes: number | null;
+}
+
+/** my_bar_detail.location_request — คำขอล่าสุดของร้าน (ทุกสถานะ) · null = ไม่เคยขอ */
+export interface MyBarLocationRequest extends BarLocationFields {
+  id: UUID;
+  status: LocationRequestStatus;
+  source: LocationRequestSource;
+  /** ค่าที่ใช้จริงตอนอนุมัติ (แอดมินอาจปรับ) · null = ยังไม่อนุมัติ */
+  applied: BarLocationFields | null;
+  admin_edited: boolean;
+  /** เหตุผลตีกลับ / ยกเลิก / หมายเหตุแอดมิน */
+  reason: string | null;
+  created_at: ISODateTime;
+  reviewed_at: ISODateTime | null;
 }
 
 // ---------------------------------------------------------------------
@@ -178,6 +214,11 @@ export type BarDetail = Override<
     promotions: PromotionEntry[];
     zones: ZoneEntry[];
     safety: SafetyEntry[];
+    /** ที่จอดรถ + รถไฟฟ้าใกล้สุด (migration 20261013000600) · null = ไม่ระบุ */
+    parking_note: string | null;
+    transit_line: TransitLine | null;
+    transit_station: string | null;
+    transit_walk_minutes: number | null;
   }
 >;
 
@@ -332,8 +373,69 @@ export type AdminDeposit = Override<
     customer: UserRef | null;
     /** บัญชีรับเงินหลักของร้าน (เลขบัญชีแสดงแค่ 4 ตัวท้าย) */
     payout_account: { bank_code: string; account_name: string; account_no_last4: string } | null;
+    payment_intent_id: UUID | null;
+    /** ชำระออนไลน์ผ่านผู้ให้บริการไหน · null = โอน + สลิป */
+    payment_provider: string | null;
   }
 >;
+
+/** payment_events ที่ผูกกับรายการ (ใหม่สุดก่อน · สูงสุด 20) */
+export interface PaymentEventRow {
+  id: number;
+  event_type: PaymentEventType;
+  raw_type: string | null;
+  /** CONFIRMED / REFUND_REQUIRED / FAILED / EXPIRED / CANCELLED / IGNORED / NOT_FOUND (PENDING = ค่าเริ่มต้นก่อนฟังก์ชันตั้งผล) */
+  result: string;
+  amount: number | null;
+  received_at: ISODateTime;
+}
+
+/** admin_payment_intents (migration 20261013001100) — รายการชำระ Table Fee ผ่านผู้ให้บริการ · Backoffice "การชำระเงิน" */
+export interface AdminPaymentIntent {
+  id: UUID;
+  provider: string;
+  provider_ref: string | null;
+  amount: number;
+  currency: 'THB';
+  /** PENDING ที่เลย expires_at แสดงเป็น EXPIRED */
+  status: PaymentIntentStatus;
+  /** ค่าในตารางจริง */
+  raw_status: PaymentIntentStatus;
+  checkout_created: boolean;
+  expires_at: ISODateTime;
+  paid_at: ISODateTime | null;
+  paid_amount: number | null;
+  closed_at: ISODateTime | null;
+  failure_code: string | null;
+  failure_message: string | null;
+  deposit_id: UUID | null;
+  deposit_settlement: Enums<'deposit_settlement'> | null;
+  /** ชำระแล้วและผูกกับการจองแล้ว (มีแถว deposits) */
+  applied: boolean;
+  refund_status: PaymentRefundStatus;
+  refund_reason: string | null;
+  refund_note: string | null;
+  refund_ref: string | null;
+  refunded_at: ISODateTime | null;
+  refunded_by_name: string | null;
+  created_at: ISODateTime;
+  updated_at: ISODateTime;
+  booking: { id: UUID; code: string; status: Enums<'booking_status'>; booking_datetime: ISODateTime; pax: number };
+  bar: IdName;
+  customer: UserRef | null;
+  events: PaymentEventRow[];
+}
+
+/** admin_payment_unmatched (migration 20261013001100) — webhook "ชำระสำเร็จ" ที่หารายการชำระไม่เจอ → แอดมินตรวจ/คืนเงินที่ระบบผู้ให้บริการเอง */
+export interface AdminPaymentUnmatched {
+  id: number;
+  provider: string;
+  event_id: string;
+  raw_type: string | null;
+  provider_ref: string | null;
+  amount: number | null;
+  received_at: ISODateTime;
+}
 
 export type AdminReview = Override<
   ViewRow<'admin_reviews'>,
@@ -346,8 +448,33 @@ export type AdminReview = Override<
 
 export type AdminSafetyItem = Override<
   ViewRow<'admin_safety_queue'>,
-  'id' | 'feature_key' | 'name_th' | 'value' | 'source' | 'updated_at' | 'open_inaccurate_reports',
-  { bar: IdName }
+  'id' | 'bar_id' | 'feature_key' | 'name_th' | 'value' | 'source' | 'updated_at' | 'open_inaccurate_reports' | 'awaiting_visit',
+  { bar: IdName; last_result: SafetyCheckResult | null }
+>;
+
+/** 1 ข้อในผลลงพื้นที่ตรวจ (admin_safety_inspections.items) */
+export interface SafetyInspectionItem {
+  feature_key: string;
+  name_th: string;
+  result: SafetyCheckResult;
+  note: string | null;
+  photo_paths: string[];
+  value_before: Enums<'safety_value'> | null;
+  value_after: Enums<'safety_value'> | null;
+}
+
+/** admin_bar_safety — checklist ทุกข้อของร้าน (ร้านยังไม่แจ้ง = UNKNOWN) สำหรับ Drawer ลงพื้นที่ตรวจ · verify_method + verified_by_name + verified_at = ตรวจด้วยวิธีไหน โดยใคร เมื่อไร */
+export type AdminBarSafety = Override<
+  ViewRow<'admin_bar_safety'>,
+  'bar_id' | 'feature_key' | 'name_th' | 'icon' | 'weight' | 'sort_order' | 'value' | 'open_inaccurate_reports',
+  { last_result: SafetyCheckResult | null }
+>;
+
+/** admin_safety_inspections — ประวัติการลงพื้นที่ตรวจ */
+export type AdminSafetyInspection = Override<
+  ViewRow<'admin_safety_inspections'>,
+  'id' | 'bar_id' | 'inspector_name' | 'inspected_at' | 'pass_count' | 'fail_count' | 'na_count' | 'created_at',
+  { bar: IdName; items: SafetyInspectionItem[] }
 >;
 
 export type AdminPromotedListing = Override<
@@ -401,6 +528,15 @@ export type MyBarDetail = Override<
     payout_account: { bank_code: string; account_name: string; account_no_last4: string; verified_at: ISODateTime | null } | null;
     /** รูปแกลเลอรีของร้าน (migration 20261009000100) — ปก = cover_image_url */
     media: MediaItem[];
+    /** ที่จอดรถ + รถไฟฟ้าใกล้สุด (migration 20261013000600) · null = ไม่ระบุ */
+    parking_note: string | null;
+    transit_line: TransitLine | null;
+    transit_station: string | null;
+    transit_walk_minutes: number | null;
+    /** หมุดผ่านการตรวจล่าสุดเมื่อไร · null = ยังไม่เคยตรวจ */
+    location_reviewed_at: ISODateTime | null;
+    /** คำขอแก้ตำแหน่งล่าสุด (ทุกสถานะ) · null = ไม่เคยขอ */
+    location_request: MyBarLocationRequest | null;
   }
 >;
 
@@ -463,6 +599,43 @@ export interface AdminBarMedia {
   updated_at: ISODateTime;
 }
 
+/** admin_bar_locations (migration 20261013000600) — 1 แถวต่อร้าน (ทุกสถานะ) · Backoffice /bar-locations + /merchants */
+export interface AdminBarLocation extends BarLocationFields {
+  id: UUID;
+  slug: string;
+  name: string;
+  status: Enums<'bar_status'>;
+  district: DistrictRef | null;
+  owner: UserRef | null;
+  location_reviewed_at: ISODateTime | null;
+  location_reviewed_by: { id: UUID; display_name: string } | null;
+  /** หมุดค่าเริ่มต้นที่ระบบเดิมใส่ให้ (ร้านไม่ได้ปักเอง) */
+  is_default_pin: boolean;
+  location_pending: boolean;
+  pending_request: (BarLocationFields & { id: UUID; created_at: ISODateTime; requested_by: UserRef | null }) | null;
+  pending_since: ISODateTime | null;
+  updated_at: ISODateTime;
+}
+
+/** admin_bar_location_requests (migration 20261013000600) — ประวัติคำขอ/การตั้งแทนทุกครั้ง */
+export interface AdminBarLocationRequest extends BarLocationFields {
+  id: UUID;
+  bar_id: UUID;
+  bar: { id: UUID; slug: string; name: string; status: Enums<'bar_status'> };
+  source: LocationRequestSource;
+  status: LocationRequestStatus;
+  /** ค่าใน bars ตอนส่ง */
+  previous: BarLocationFields;
+  /** ค่าที่ใช้จริงตอนอนุมัติ · null = ยังไม่อนุมัติ */
+  applied: BarLocationFields | null;
+  admin_edited: boolean;
+  reason: string | null;
+  requested_by: UserRef | null;
+  reviewed_by: { id: UUID; display_name: string } | null;
+  created_at: ISODateTime;
+  reviewed_at: ISODateTime | null;
+}
+
 /** สถานะกระทู้/ความเห็นชุมชน (migration 20261010000100) · DELETED = เจ้าของลบ (ไม่ขึ้นใน view แอดมิน) */
 export type CommunityStatus = 'PUBLISHED' | 'HIDDEN' | 'REMOVED' | 'DELETED';
 /** ไฟล์แนบ (migration 20261011000100) — path ใน bucket community-media (private · Backoffice ขอ signed URL เอง) */
@@ -490,8 +663,14 @@ export interface CommunityRevisionRow {
   /** ถูกแก้ทับเมื่อไร */
   replaced_at: ISODateTime;
 }
+/** ร้านของผู้เขียนตอนโพสต์ (ป้าย "ทีมร้าน · <ชื่อร้าน>" · migration 20261013000900) */
+export interface CommunityTeamBarRef {
+  id: UUID;
+  slug: string;
+  name: string;
+}
 
-/** admin_community_threads (migration 20261012000800) — กระทู้ทุกสถานะยกเว้นที่เจ้าของลบ · Backoffice "ชุมชน" */
+/** admin_community_threads (migration 20261013000900) — กระทู้ทุกสถานะยกเว้นที่เจ้าของลบ · Backoffice "ชุมชน" */
 export interface AdminCommunityThread {
   id: UUID;
   title: string;
@@ -511,9 +690,12 @@ export interface AdminCommunityThread {
   reports: CommunityReportRow[];
   media: CommunityMediaRow[];
   revisions: CommunityRevisionRow[];
+  team_bar: CommunityTeamBarRef | null;
+  /** ถูกใจจากทีมร้านของร้านที่แท็ก (ไม่นับใน like_count) */
+  excluded_like_count: number;
 }
 
-/** admin_community_comments (migration 20261012000800) — ความเห็นทุกสถานะยกเว้นที่เจ้าของลบ */
+/** admin_community_comments (migration 20261013000900) — ความเห็นทุกสถานะยกเว้นที่เจ้าของลบ */
 export interface AdminCommunityComment {
   id: UUID;
   thread_id: UUID;
@@ -530,6 +712,138 @@ export interface AdminCommunityComment {
   media: CommunityMediaRow[];
   edited_at: ISODateTime | null;
   revisions: CommunityRevisionRow[];
+  team_bar: CommunityTeamBarRef | null;
+  /** ถูกใจจากทีมร้านของร้านที่แท็ก (ไม่นับใน like_count) */
+  excluded_like_count: number;
+}
+
+/** admin_mini_ads (migration 20261013001300) — โฆษณาแบนเนอร์ทุกสถานะ + ยอดเห็น/คลิกรวม · Backoffice "โฆษณา (Mini-Ads)" */
+export interface AdminMiniAd {
+  id: UUID;
+  advertiser_name: string;
+  title: string;
+  description: string;
+  cta_label: string;
+  /** URL เต็ม (site-media/ads/…) หรือ path ใน public/ */
+  image_url: string;
+  link_url: string;
+  placements: ('HOME' | 'SEARCH')[];
+  starts_at: ISODateTime;
+  /** ไม่รวม (หยุดแสดงตั้งแต่เวลานี้) */
+  ends_at: ISODateTime;
+  active: boolean;
+  note: string | null;
+  no_alcohol_confirmed_at: ISODateTime;
+  confirmed_by: { id: UUID; display_name: string | null; email: string | null } | null;
+  impressions: number;
+  clicks: number;
+  created_at: ISODateTime;
+  updated_at: ISODateTime;
+}
+
+/** แถวในประวัติ "ร้านไม่มีโต๊ะให้ลูกค้า" (bar_strikes · migration 20261013000700) ใหม่สุดก่อน · สูงสุด 50 */
+export interface AdminBarStrike {
+  id: UUID;
+  booking_id: UUID;
+  booking_code: string;
+  booking_datetime: ISODateTime;
+  pax: number;
+  booking_status: Enums<'booking_status'>;
+  note: string | null;
+  /** TEAM = ทีมร้านเลือกเหตุนี้เอง · ADMIN = แอดมินบันทึกจากข้อร้องเรียนของลูกค้า */
+  source: 'TEAM' | 'ADMIN';
+  /** ชื่อคนที่กดแจ้ง (ทีมร้าน หรือแอดมิน) */
+  reported_by: string | null;
+  created_at: ISODateTime;
+}
+
+/** admin_bar_blacklist (migration 20261013000700): ร้านที่แสดง/ระงับ หรือมีประวัติ + สถานะ Blacklist · Backoffice "Blacklist ร้าน" */
+export interface AdminBarBlacklist {
+  id: UUID;
+  slug: string;
+  name: string;
+  status: Enums<'bar_status'>;
+  status_reason: string | null;
+  is_blacklisted: boolean;
+  blacklisted_at: ISODateTime | null;
+  blacklist_reason: string | null;
+  blacklisted_by: UserRef | null;
+  strike_count: number;
+  strike_count_90d: number;
+  last_strike_at: ISODateTime | null;
+  strikes: AdminBarStrike[];
+}
+
+// ---------------------------------------------------------------------
+// G6 เครื่องมือแอดมิน: แก้ข้อมูลร้านแทน · สไตล์ร้าน · อันดับร้าน (migration 20261013001010–001030)
+// ---------------------------------------------------------------------
+
+/** admin_bar_details (migration 20261013001010) — ข้อมูลร้าน 1 แถวต่อร้าน (ทุกสถานะ) · Drawer "แก้ข้อมูลร้าน" ใน /bars */
+export interface AdminBarDetails {
+  id: UUID;
+  slug: string;
+  name: string;
+  status: Enums<'bar_status'>;
+  category: Enums<'bar_category'>;
+  description: string | null;
+  /** แสดงอย่างเดียว — แก้ที่หน้าตรวจตำแหน่งร้าน */
+  address: string;
+  phone: string | null;
+  district_id: UUID | null;
+  district: DistrictRef | null;
+  /** key ของสไตล์ที่ร้านเลือก (รวมสไตล์ที่ถูกซ่อน) */
+  style_keys: string[];
+  hours: OpeningHour[];
+  links: BarLinkItem[];
+  menu: { id: UUID; category: string | null; name: string; price: number; available: boolean; image_path: string | null }[];
+  owner: UserRef | null;
+  updated_at: ISODateTime;
+}
+
+/** admin_styles (migration 20261013001020) — สไตล์ร้านทั้งหมด (รวมที่ซ่อน) + จำนวนร้านที่แสดงอยู่ที่ใช้ + ลูกค้าที่ตั้งเป็นสไตล์ที่ชอบ */
+export interface AdminStyle {
+  id: UUID;
+  key: string;
+  name_th: string;
+  icon: string;
+  sort_order: number;
+  active: boolean;
+  bar_count: number;
+  fan_count: number;
+  created_at: ISODateTime;
+  updated_at: ISODateTime;
+}
+
+/**
+ * admin_ranking (migration 20261013001030) — ร้านที่แสดงอยู่ + คะแนนรอบสัปดาห์ล่าสุด (แยกส่วน) + โหวตสัปดาห์/เดือน · null = ยังไม่เคยคำนวณ
+ * checkin_score = 0 → ร้านยังไม่มีเช็กอินในช่วง: total_score = (รีวิว + Safety) ขยายจากเต็ม 70 เป็น 100 (rankingScore().rescaled)
+ */
+export interface AdminRanking {
+  id: UUID;
+  slug: string;
+  name: string;
+  category: Enums<'bar_category'>;
+  district_id: UUID | null;
+  district: DistrictRef | null;
+  rating_avg: number | null;
+  rating_count: number;
+  safety_percent: number | null;
+  review_score: number | null;
+  checkin_score: number | null;
+  safety_score: number | null;
+  total_score: number | null;
+  stars: number | null;
+  tier: Enums<'tier_letter'> | null;
+  is_new: boolean;
+  /** อันดับในประเภทร้าน / ในย่าน ของรอบสัปดาห์ล่าสุด (null = ร้านใหม่ / ยังไม่เคยคำนวณ / ไม่มีย่าน) */
+  rank_in_category: number | null;
+  rank_in_district: number | null;
+  prev_stars: number | null;
+  votes_week: number;
+  votes_month: number;
+  computed_at: ISODateTime | null;
+  /** แสดงอย่างเดียว — โฆษณาไม่มีผลกับคะแนน */
+  is_promoted: boolean;
 }
 
 // ---------------------------------------------------------------------
@@ -538,7 +852,7 @@ export interface AdminCommunityComment {
 export type BookingStatus = Enums<'booking_status'>;
 export type TransitionActor = 'SYSTEM' | 'CUSTOMER' | 'MERCHANT' | 'STAFF' | 'ADMIN';
 
-/** ต้องตรงกับ booking_transition_allowed() ใน migration 20261002000600 (TS บอกเพิ่มว่าใครทำได้) */
+/** ต้องตรงกับ booking_transition_allowed() ใน migration 20261013001100 (TS บอกเพิ่มว่าใครทำได้) */
 export const BOOKING_TRANSITIONS: Record<BookingStatus, Partial<Record<BookingStatus, TransitionActor[]>>> = {
   PENDING: {
     AWAITING_DEPOSIT: ['SYSTEM'],
@@ -548,6 +862,7 @@ export const BOOKING_TRANSITIONS: Record<BookingStatus, Partial<Record<BookingSt
     EXPIRED: ['SYSTEM'],
   },
   AWAITING_DEPOSIT: {
+    CONFIRMED: ['SYSTEM'], // ชำระผ่านผู้ให้บริการสำเร็จ (webhook · migration 20261013001100)
     DEPOSIT_SUBMITTED: ['CUSTOMER'],
     CANCELLED_BY_CUSTOMER: ['CUSTOMER'],
     EXPIRED: ['SYSTEM'],

@@ -1,6 +1,7 @@
 import { PageContainer } from '@ant-design/pro-components';
 import type { Db } from '@nightout/types';
-import { Button, Popconfirm, Space, Statistic, Table, Tabs, Tag, Typography } from 'antd';
+import { paymentProviderLabel } from '@nightout/utils';
+import { Alert, Button, Popconfirm, Space, Statistic, Table, Tabs, Tag, Typography } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { useMemo } from 'react';
 import { PAGE_SIZE } from '@/configs/constants';
@@ -11,18 +12,20 @@ import { StatusTag } from '@/ui/components/StatusTag';
 import { baht, dateTime } from '@/ui/utils/format';
 import { BOOKING_STATUS, SETTLEMENT } from '@/ui/utils/labels';
 import { RejectSlipButton } from './components/rejectSlipButton';
-import { useDeposits, reviewDepositAction, settleDepositAction } from './api';
+import { useDeposits, usePaymentConfig, reviewDepositAction, settleDepositAction } from './api';
 
 type Row = Db.AdminDeposit;
 
 /**
  * /deposits — เงินมัดจำทั้งระบบ (เงินเข้า NightOut)
  * 1) ตรวจสลิปที่ลูกค้าโอนเข้า PromptPay ของเรา → ยืนยันโต๊ะ
+ *    ชำระออนไลน์ผ่านผู้ให้บริการ (PAYMENT_PROVIDER) เข้ามาเป็น VERIFIED/HELD ทันที ไม่ต้องตรวจสลิป — ดูรายการชำระที่ /payments
  * 2) หลังลูกค้าเช็กอิน/ไม่มา → โอนให้ร้านตามบัญชีที่ร้านตั้งไว้ หรือเก็บเป็นเครดิตร้าน · ยกเลิกทันเวลา → คืนลูกค้า
  */
 export function DepositsPage() {
   const { data, isLoading, error, refetch } = useDeposits();
   const act = useAdminAction();
+  const { data: payment } = usePaymentConfig();
 
   const g = useMemo(() => {
     const all = data ?? [];
@@ -61,6 +64,16 @@ export function DepositsPage() {
     },
     { title: 'วันที่จอง', key: 'at', render: (_, d) => dateTime(d.booking.booking_datetime) },
     { title: 'ยอด', dataIndex: 'amount', align: 'right', render: (v: number) => baht(v) },
+    {
+      title: 'ช่องทาง',
+      key: 'channel',
+      render: (_, d) =>
+        d.payment_provider ? (
+          <Tag color="green">ออนไลน์ · {paymentProviderLabel(d.payment_provider)}</Tag>
+        ) : (
+          <Tag>สลิป</Tag>
+        ),
+    },
   ];
   const table = (rows: Row[], extra: ColumnsType<Row>, empty: string) => (
     <Table<Row>
@@ -85,7 +98,7 @@ export function DepositsPage() {
   return (
     <PageContainer
       title="เงินมัดจำ"
-      subTitle="ลูกค้าโอนเข้า PromptPay ของ NightOut · เราถือไว้จนเช็กอิน แล้วส่งต่อให้ร้าน"
+      subTitle="ลูกค้าโอนเข้า PromptPay ของ NightOut หรือชำระออนไลน์ · เราถือไว้จนเช็กอิน แล้วส่งต่อให้ร้าน"
       extra={
         <Space size="large">
           <Statistic title="รอตรวจสลิป" value={g.toVerify.length} suffix="รายการ" />
@@ -95,6 +108,15 @@ export function DepositsPage() {
       }
     >
       <LoadError error={error} onRetry={() => void refetch()} />
+      {payment?.mode === 'PROVIDER' && (
+        <Alert
+          className="!mb-4"
+          type="info"
+          showIcon
+          title={`เปิดชำระออนไลน์แล้ว (${payment.provider_label ?? payment.provider}) — ลูกค้าส่งสลิปใหม่ไม่ได้`}
+          description="แท็บตรวจสลิปเหลือเฉพาะสลิปที่ส่งมาก่อนเปิด · การชำระออนไลน์เข้า “ถือไว้” ทันที"
+        />
+      )}
       <Tabs
         items={[
           {
@@ -216,7 +238,16 @@ export function DepositsPage() {
                       </Typography.Text>
                     ) : (
                       <Popconfirm
-                        title={`คืน ${baht(d.amount)} ให้ลูกค้าแล้ว?`}
+                        title={
+                          d.payment_provider
+                            ? `คืน ${baht(d.amount)} ผ่านระบบ ${paymentProviderLabel(d.payment_provider)} แล้ว?`
+                            : `คืน ${baht(d.amount)} ให้ลูกค้าแล้ว?`
+                        }
+                        description={
+                          d.payment_provider
+                            ? 'ระบบยังไม่คืนเงินอัตโนมัติ — คืนที่หน้าระบบผู้ให้บริการก่อน แล้วค่อยกดบันทึก'
+                            : undefined
+                        }
                         okText="บันทึกว่าคืนแล้ว"
                         cancelText="ยกเลิก"
                         onConfirm={() => settle(d, 'REFUNDED', 'บันทึกว่าคืนเงินลูกค้าแล้ว')}

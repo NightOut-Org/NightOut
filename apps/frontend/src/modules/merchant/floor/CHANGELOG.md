@@ -1,0 +1,8 @@
+## 2026-10-13 — ผังโต๊ะ /merchant/floor
+- หน้าใหม่ `/merchant/floor` (ทีมร้านทุกบทบาท รวม Staff/PR · **Dark เสมอ** · ไม่มียอดเงิน/เบอร์โทร): การ์ดโต๊ะแยกตามโซน สีตามสถานะ ว่าง / จองแล้ว / กำลังใช้ + "จองถัดไป HH:mm" · ชิป "ยังไม่ระบุโต๊ะ" ต่อโซน + "โซนที่ปิดใช้แล้ว" · กรองสถานะ (กรองแล้วไม่เหลือ = "ไม่มีโต๊ะสถานะนี้" + ปุ่มดูทั้งหมด)
+- มุมมองไทม์ไลน์คืนนี้ (แถวละโต๊ะ · เส้น "ตอนนี้" · เลื่อนแนวนอนบนมือถือ · แถว "ยังไม่ระบุโต๊ะ" และ "โซนที่ปิดใช้แล้ว" ลากไปโต๊ะว่างได้ · แถบสูง 44px กว้างอย่างน้อย 28px ให้แตะง่าย)
+- ย้ายโต๊ะ: ลาก (เมาส์ / นิ้วกดค้าง / คีย์บอร์ด — `@dnd-kit/core`) หรือแตะ "ย้ายโต๊ะ" แล้วแตะโต๊ะปลายทาง → ยืนยัน → `POST merchant/bookings/:id/move` · วางไม่ได้บอกเหตุผลก่อนส่ง (`boardDropBlock`)
+- แผงโต๊ะ: เช็กอิน / ลูกค้ากลับแล้ว (ตามช่วงเช็กอิน) · ตั้งกำลังใช้ / ตั้งเป็นว่าง (ไม่มีการจอง) · โพลทุก 10 วิ (หยุดตอนแท็บซ่อน/กำลังลาก · ไม่ใช้ Realtime)
+- a11y: ชิป/แถบที่ลากไม่ได้เป็นปุ่มธรรมดา (ไม่มี aria-disabled / คำอธิบายการลาก) · ป้ายบทบาทภาษาไทย · บรรทัดเวลา "ถึงเวลานัด" แทน "สาย 0 นาที"
+- route `router/index.tsx` (`floor` ใต้ `/merchant` ทุกบทบาท) · เมนู `layouts/merchant.tsx` (แถบบน desktop · แท็บล่างของ Staff · "เพิ่มเติม" ของเจ้าของ — หา Table Fee ด้วย key ไม่ใช้ index) · ข้อความ 403 `router/middleware.tsx`
+- ไฟล์: `page.tsx`, `api.ts`, `floor.css`, `components/{bookingChip,floorGrid,floorLegend,floorTimeline,tableCard,tableDrawer}.tsx`, `modal/{moveConfirmModal,occupancyModal}.tsx`, `utils/{board,timeline,useBoardMove}.ts` · dependency `@dnd-kit/core@^6.3.1` (`apps/frontend/package.json`)

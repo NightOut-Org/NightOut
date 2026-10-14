@@ -1,6 +1,7 @@
 import { PageContainer } from '@ant-design/pro-components';
+import { communityTeamBadge } from '@nightout/contracts';
 import type { Db } from '@nightout/types';
-import { Button, Popconfirm, Space, Table, Tabs, Tag, Typography } from 'antd';
+import { Alert, Button, Space, Table, Tabs, Tag, Tooltip, Typography } from 'antd';
 import { useMemo, useState } from 'react';
 import { PAGE_SIZE } from '@/configs/constants';
 import { useAdminAction } from '@/services/adminData';
@@ -17,9 +18,9 @@ import {
 } from './api';
 import { HistoryModal } from './components/historyModal';
 import { MediaCell } from './components/mediaCell';
+import { ModerateModal, type ModerateTarget, type Row } from './components/moderateModal';
 
 type Action = 'KEEP' | 'HIDE' | 'REMOVE' | 'RESTORE';
-type Row = Db.AdminCommunityThread | Db.AdminCommunityComment;
 type Mode = 'reported' | 'live' | 'hidden';
 const isThread = (r: Row): r is Db.AdminCommunityThread => 'title' in r;
 /** ความกว้างคอลัมน์ปุ่ม ตามจำนวนปุ่มของแต่ละแท็บ */
@@ -31,20 +32,26 @@ const DONE: Record<Action, string> = {
   RESTORE: 'แสดงอีกครั้งแล้ว',
 };
 
-/** ชุมชน — กระทู้/ความเห็นที่ถูกรายงาน · ซ่อน / ลบ / แสดงอีกครั้ง (audit log + แจ้งเจ้าของ) */
+/** ชุมชน — กระทู้/ความเห็นที่ถูกรายงาน · โพสต์ทีมร้าน · ซ่อน / ลบ (ต้องมีเหตุผล) / แสดงอีกครั้ง (audit log + แจ้งเจ้าของ) */
 export function CommunityPage() {
   const threads = useCommunityThreads();
   const comments = useCommunityComments();
   const act = useAdminAction();
   const [history, setHistory] = useState<Row | null>(null);
+  /** ซ่อน/ลบที่รอเลือกเหตุผลใน ModerateModal */
+  const [pending, setPending] = useState<ModerateTarget | null>(null);
 
-  const moderate = (r: Row, action: Action) =>
-    act.mutate({
-      ...(isThread(r)
-        ? moderateThreadAction(r.id, { action })
-        : moderateCommentAction(r.id, { action })),
-      success: DONE[action],
-    });
+  /** KEEP / RESTORE ไม่ต้องมีเหตุผล · HIDE / REMOVE ต้องมี (API บังคับ) → ผ่าน ModerateModal เท่านั้น */
+  const moderate = (r: Row, action: Action, reason?: string, onSuccess?: () => void) =>
+    act.mutate(
+      {
+        ...(isThread(r)
+          ? moderateThreadAction(r.id, { action, reason })
+          : moderateCommentAction(r.id, { action, reason })),
+        success: DONE[action],
+      },
+      { onSuccess },
+    );
 
   const t = useMemo(() => split(threads.data ?? []), [threads.data]);
   // ไฟล์แนบทุกแถว (รวมฉบับก่อนแก้) ขอ signed URL ครั้งเดียว
@@ -84,20 +91,16 @@ export function CommunityPage() {
               เก็บไว้
             </Button>
           )}
-          <Button loading={act.isPending} onClick={() => moderate(r, 'HIDE')}>
+          <Button loading={act.isPending} onClick={() => setPending({ row: r, action: 'HIDE' })}>
             ซ่อน
           </Button>
-          <Popconfirm
-            title="ลบถาวรจากชุมชน?"
-            okText="ลบ"
-            cancelText="ยกเลิก"
-            okButtonProps={{ danger: true }}
-            onConfirm={() => moderate(r, 'REMOVE')}
+          <Button
+            danger
+            loading={act.isPending}
+            onClick={() => setPending({ row: r, action: 'REMOVE' })}
           >
-            <Button danger loading={act.isPending}>
-              ลบ
-            </Button>
-          </Popconfirm>
+            ลบ
+          </Button>
         </Space>
       ),
   });
@@ -111,9 +114,18 @@ export function CommunityPage() {
     },
     {
       title: 'ผู้เขียน',
-      dataIndex: 'author_name',
-      width: 140,
-      render: (v: string | null) => v ?? 'บัญชีถูกลบ',
+      key: 'author',
+      width: 200,
+      render: (_: unknown, r: Row) => (
+        <>
+          <div>{r.author_name ?? 'บัญชีถูกลบ'}</div>
+          {r.team_bar && (
+            <Tag color="gold" className="!me-0 !mt-1 max-w-full truncate">
+              {communityTeamBadge(r.team_bar.name)}
+            </Tag>
+          )}
+        </>
+      ),
     },
     {
       title: 'ถูกรายงาน',
@@ -169,7 +181,12 @@ export function CommunityPage() {
       key: 'stats',
       width: 120,
       align: 'center' as const,
-      render: (_: unknown, r: Db.AdminCommunityThread) => `${r.reply_count} / ${r.like_count}`,
+      render: (_: unknown, r: Db.AdminCommunityThread) => (
+        <>
+          <div>{`${r.reply_count} / ${r.like_count}`}</div>
+          <ExcludedLikes count={r.excluded_like_count} />
+        </>
+      ),
     },
     ...common,
     actions(mode),
@@ -188,6 +205,12 @@ export function CommunityPage() {
           <Typography.Text type="secondary" ellipsis className="block !text-xs">
             ในกระทู้: {r.thread_title}
           </Typography.Text>
+          <Space size={8}>
+            <Typography.Text type="secondary" className="!text-xs">
+              ถูกใจ {r.like_count}
+            </Typography.Text>
+            <ExcludedLikes count={r.excluded_like_count} />
+          </Space>
           {editedLink(r)}
         </>
       ),
@@ -245,6 +268,29 @@ export function CommunityPage() {
             children: table(t.live, threadColumns('live'), threads.isLoading, 'ยังไม่มีกระทู้'),
           },
           {
+            key: 'team',
+            label: `โพสต์ทีมร้าน (${t.team.length + c.team.length})`,
+            children: (
+              <>
+                <Alert
+                  type="info"
+                  showIcon
+                  className="!mb-4"
+                  title="ตรวจโฆษณา/โปรโมชันเครื่องดื่มแอลกอฮอล์ (พ.ร.บ.ควบคุมเครื่องดื่มแอลกอฮอล์ ม.30/32) และการพูดถึงร้านอื่นในทางเสีย — ซ่อนหรือลบพร้อมเหตุผล เจ้าของโพสต์ได้รับแจ้งเตือน"
+                />
+                <Typography.Title level={5}>กระทู้</Typography.Title>
+                {table(t.team, threadColumns('live'), threads.isLoading, 'ไม่มีกระทู้จากทีมร้าน')}
+                <Typography.Title level={5}>ความคิดเห็น</Typography.Title>
+                {table(
+                  c.team,
+                  commentColumns('live'),
+                  comments.isLoading,
+                  'ไม่มีความเห็นจากทีมร้าน',
+                )}
+              </>
+            ),
+          },
+          {
             key: 'hidden',
             label: `ซ่อน / ลบแล้ว (${t.hidden.length + c.hidden.length})`,
             children: (
@@ -269,15 +315,36 @@ export function CommunityPage() {
         ]}
       />
       <HistoryModal row={history} urls={urls} onClose={() => setHistory(null)} />
+      <ModerateModal
+        target={pending}
+        busy={act.isPending}
+        onSubmit={(reason) =>
+          pending && moderate(pending.row, pending.action, reason, () => setPending(null))
+        }
+        onCancel={() => setPending(null)}
+      />
     </PageContainer>
   );
 }
 
-/** แยกแถวตามแท็บ: ถูกรายงาน (ยังแสดงอยู่ + มีรายงานค้าง) · แสดงอยู่ทั้งหมด · ซ่อน/ลบแล้ว */
+/** "+N ทีมร้าน (ไม่นับ)" — ถูกใจจากทีมของร้านที่แท็กกระทู้ ไม่นับใน like_count */
+function ExcludedLikes({ count }: { count: number }) {
+  if (count <= 0) return null;
+  return (
+    <Tooltip title="ถูกใจจากทีมของร้านที่แท็ก — ไม่นับในยอดถูกใจและร้านมาแรง">
+      <Typography.Text type="secondary" className="!text-xs">
+        +{count} ทีมร้าน (ไม่นับ)
+      </Typography.Text>
+    </Tooltip>
+  );
+}
+
+/** แยกแถวตามแท็บ: ถูกรายงาน (ยังแสดงอยู่ + มีรายงานค้าง) · แสดงอยู่ทั้งหมด · โพสต์ทีมร้าน (แสดงอยู่) · ซ่อน/ลบแล้ว */
 function split<T extends Row>(rows: T[]) {
   return {
     reported: rows.filter((r) => r.open_report_count > 0 && r.status === 'PUBLISHED'),
     live: rows.filter((r) => r.status === 'PUBLISHED'),
+    team: rows.filter((r) => !!r.team_bar && r.status === 'PUBLISHED'),
     hidden: rows.filter((r) => r.status === 'HIDDEN' || r.status === 'REMOVED'),
   };
 }

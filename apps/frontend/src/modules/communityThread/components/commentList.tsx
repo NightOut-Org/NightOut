@@ -2,6 +2,7 @@ import type { CommunityComment } from '@nightout/contracts';
 import { Heart } from '@phosphor-icons/react';
 import { Popconfirm } from 'antd';
 import { useMemo, useState, type ReactNode } from 'react';
+import { CommunityAuthorBadges } from '@/ui/components/communityAuthorBadges';
 import { CommunityAvatar } from '@/ui/components/communityAvatar';
 import { CommunityMediaView } from '@/ui/components/communityMediaView';
 import { dateTime, timeAgo } from '@/ui/utils/format';
@@ -100,11 +101,7 @@ function CommentBubble({
         >
           <div className="text-[13px] font-semibold">
             {c.author.name}
-            {c.author.is_staff && (
-              <span className="ml-1.5 rounded-md bg-gold/15 px-1.5 py-px text-[11px] font-semibold text-gold-text">
-                ทีมงาน
-              </span>
-            )}
+            <CommunityAuthorBadges author={c.author} className="ml-1.5 align-middle" />
             <span className="font-normal text-muted"> · {timeAgo(c.created_at)}</span>
             {c.edited_at && (
               <>

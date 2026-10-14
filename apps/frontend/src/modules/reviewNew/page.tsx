@@ -21,7 +21,7 @@ export function ReviewNewPage() {
   const bar = b ? getBar(b.barId) : null;
   if (!b || !bar) return <NotFoundResult title="ไม่พบการจอง" kind="booking" />;
   if (!isReviewableStatus(b.status))
-    return <Result status="warning" title="รีวิวได้หลังจองและมัดจำผ่านแล้วเท่านั้น" />;
+    return <Result status="warning" title="รีวิวได้หลังจองและชำระ Table Fee แล้วเท่านั้น" />;
   if (b.reviewed) return <Result status="success" title="คุณรีวิวการจองนี้แล้ว ขอบคุณครับ" />;
 
   return (

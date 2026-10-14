@@ -1,9 +1,9 @@
 import { PageContainer } from '@ant-design/pro-components';
-import { Images, Star } from '@phosphor-icons/react';
+import { Images, MapPin, PencilSimple, Star } from '@phosphor-icons/react';
 import type { Db } from '@nightout/types';
 import { Button, Input, Space, Table, Tag, Tooltip } from 'antd';
 import { useMemo, useState } from 'react';
-import { Link, useNavigate } from 'react-router';
+import { Link, useNavigate, useSearchParams } from 'react-router';
 import { PAGE_SIZE } from '@/configs/constants';
 import { useUnsavedGuard } from '@/hooks/useUnsavedGuard';
 import { useAdminAction } from '@/services/adminData';
@@ -12,22 +12,45 @@ import { LoadError } from '@/ui/components/LoadError';
 import { StatusTag } from '@/ui/components/StatusTag';
 import { date } from '@/ui/utils/format';
 import { BAR_STATUS } from '@/ui/utils/labels';
+import { BarDetailsDrawer } from './components/barDetailsDrawer';
 import { ShowSwitch } from './components/showSwitch';
 import { isToggleable, useBarStatusDraft } from './utils/useBarStatusDraft';
-import { barsStatusAction, useBars } from './api';
+import { barsStatusAction, useBars, useBlacklistedBars } from './api';
 
 /**
  * ร้านทั้งหมด — เปิด/ปิดการแสดงบนเว็บ (สลับได้หลายร้าน แล้วกดบันทึกครั้งเดียว) · ป้าย "แนะนำ" (โฆษณา) ดูอย่างเดียว จัดการที่ /promotions
- * รูปร้านจัดการที่ /bar-media
+ * รูปร้านจัดการที่ /bar-media · ตำแหน่งร้าน (หมุด) ที่ /bar-locations
+ * แก้ข้อมูลร้าน + เมนูและราคาแทนร้าน: ปุ่ม "แก้ข้อมูล" → Drawer (?edit=<id>) บันทึกครั้งเดียว (audit + แจ้งทีมร้าน)
+ * ร้านติด Blacklist: ป้าย "Blacklist" + ไม่มีสวิตช์แสดง (เปลี่ยนสถานะไม่ได้จนกว่าจะปลดที่ /bar-blacklist)
  */
 export function BarsPage() {
   const [q, setQ] = useState('');
   const navigate = useNavigate();
+  const [params, setParams] = useSearchParams();
+  const editId = params.get('edit');
+  /** Drawer แก้ข้อมูลร้านมีการแก้ค้าง — หน้านี้ถือ useUnsavedGuard ตัวเดียว (router มี useBlocker ได้ตัวเดียว) */
+  const [detailsDirty, setDetailsDirty] = useState(false);
   const { data, isLoading, error, refetch } = useBars();
+  const blacklist = useBlacklistedBars();
+  const blacklisted = useMemo(
+    () => new Set((blacklist.data ?? []).map((b) => b.id)),
+    [blacklist.data],
+  );
   const act = useAdminAction();
   const status = useBarStatusDraft(data ?? []);
   const saving = act.isPending;
-  const { confirmDiscard } = useUnsavedGuard(status.changes.length > 0);
+  const { confirmDiscard } = useUnsavedGuard(status.changes.length > 0 || detailsDirty);
+
+  const setEdit = (id: string | null) => {
+    const next = new URLSearchParams(params);
+    if (id) next.set('edit', id);
+    else next.delete('edit');
+    setParams(next, { replace: true });
+  };
+  const closeDrawer = () => {
+    setEdit(null);
+    setDetailsDirty(false);
+  };
 
   const save = async () => {
     const n = status.changes.length;
@@ -68,7 +91,7 @@ export function BarsPage() {
         loading={isLoading}
         dataSource={rows}
         pagination={{ pageSize: PAGE_SIZE }}
-        scroll={{ x: 1100 }}
+        scroll={{ x: 1320 }}
         columns={[
           {
             title: 'ร้าน',
@@ -76,6 +99,16 @@ export function BarsPage() {
             render: (name: string, b) => (
               <span className="flex min-w-0 flex-wrap items-center gap-2">
                 <span className="truncate">{name}</span>
+                {blacklisted.has(b.id) && (
+                  <Link
+                    to={`/bar-blacklist?bar=${b.id}`}
+                    title="ดูประวัติ / ปลด Blacklist ที่หน้า Blacklist ร้าน"
+                  >
+                    <Tag color="red" className="!m-0">
+                      Blacklist
+                    </Tag>
+                  </Link>
+                )}
                 {b.is_promoted && (
                   <Link to="/promotions" title="ร้านซื้อแพ็กเกจโปรโมท — จัดการที่หน้าโปรโมท">
                     <Tag color="gold" className="!m-0">
@@ -125,7 +158,11 @@ export function BarsPage() {
             width: 150,
             // ร่าง / รอตรวจ / ไม่อนุมัติ ยังไม่เคยขึ้นเว็บ — จัดการที่หน้า /merchants
             render: (_, b) =>
-              isToggleable(b) ? (
+              blacklisted.has(b.id) ? (
+                <Tooltip title="ติด Blacklist — ปลดที่หน้า Blacklist ร้าน">
+                  <span className="cursor-help text-muted">ติด Blacklist</span>
+                </Tooltip>
+              ) : isToggleable(b) ? (
                 <span className="inline-flex items-center gap-2">
                   <ShowSwitch
                     name={b.name}
@@ -151,17 +188,33 @@ export function BarsPage() {
           {
             title: '',
             key: 'media',
-            width: 110,
+            width: 330,
             render: (_, b) => (
-              <Button
-                icon={<Images size={14} />}
-                onClick={() => void navigate(`/bar-media?bar=${b.id}`)}
-              >
-                รูปร้าน
-              </Button>
+              <Space size={4} wrap>
+                <Button icon={<PencilSimple size={14} />} onClick={() => setEdit(b.id)}>
+                  แก้ข้อมูล
+                </Button>
+                <Button
+                  icon={<Images size={14} />}
+                  onClick={() => void navigate(`/bar-media?bar=${b.id}`)}
+                >
+                  รูปร้าน
+                </Button>
+                <Button
+                  icon={<MapPin size={14} />}
+                  onClick={() => void navigate(`/bar-locations?tab=all&bar=${b.id}`)}
+                >
+                  ตำแหน่ง
+                </Button>
+              </Space>
             ),
           },
         ]}
+      />
+      <BarDetailsDrawer
+        barId={editId}
+        onClose={() => (detailsDirty ? confirmDiscard(closeDrawer) : closeDrawer())}
+        onDirtyChange={setDetailsDirty}
       />
     </PageContainer>
   );

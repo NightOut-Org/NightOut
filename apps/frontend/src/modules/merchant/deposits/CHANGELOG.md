@@ -3,6 +3,11 @@
 - มือถือ: การ์ดถือไว้ใหญ่ + 3 ใบเล็ก + รายการ
 - ไฟล์หลัก: `page.tsx`
 
+## 2026-10-13 — เฉพาะเจ้าของ/ผู้จัดการ · เรียก Table Fee
+- route อยู่ใต้ `<RequireBarRole roles={['OWNER','MANAGER']}>` — Staff เข้าเองเจอ 403 · DB คืนแถวว่างให้ Staff (`bar_deposit_ledger` → `is_bar_manager`)
+- หัวหน้า/เมนู "Table Fee" แทน "เงินมัดจำ"
+- ไฟล์: `page.tsx`, `router/index.tsx`, `router/middleware.tsx`, `layouts/merchant.tsx`
+
 ## 2026-10-09 — ย้าย API เข้า `api.ts` ของโมดูล (ADR 0007)
 - เพิ่ม `api.ts`: `useBarLedger` (`GET /merchant/bars/:barId/deposit-ledger`) — ย้ายมาจาก `services/api/<domain>.ts` / `services/queries/<domain>.ts` (ลบแล้ว) · เรียก `Rest` ตรง
 - หน้าในโมดูล import จาก `./api` แทน `@/services/data` · พฤติกรรมเดิม (ชื่อฟังก์ชัน, query key)

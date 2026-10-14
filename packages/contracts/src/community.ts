@@ -12,6 +12,15 @@ export const COMMUNITY_BODY_MAX = 5000;
 export const COMMUNITY_COMMENT_MAX = 2000;
 /** ไฟล์แนบต่อกระทู้/ความเห็น (กติกาเดียวกับรีวิว — DB ตรวจซ้ำใน community_media_norm) */
 export const COMMUNITY_MEDIA_LIMITS = { maxFiles: 6, imageMB: 15, videoMB: 60, videoSeconds: 60 } as const;
+/** หมวด "ข่าวจากร้าน" — ตั้งได้เฉพาะทีมร้าน (community_categories.team_only) ต้องแท็กร้านตัวเอง */
+export const COMMUNITY_SHOP_NEWS_CATEGORY = 'shop-news';
+/** ข่าวจากร้านได้กี่กระทู้ต่อร้าน ภายใน COMMUNITY_SHOP_NEWS_WINDOW_DAYS วันล่าสุด (นับรวมทั้งทีม · รวมที่ลบ/ถูกซ่อน — DB ตรวจใน community_team_rules) */
+export const COMMUNITY_SHOP_NEWS_WEEKLY_MAX = 3;
+export const COMMUNITY_SHOP_NEWS_WINDOW_DAYS = 7;
+/** ป้ายผู้เขียน: บัญชีหลังบ้าน (is_staff) */
+export const COMMUNITY_STAFF_BADGE = 'ทีม NightOut';
+/** ป้ายผู้เขียนที่เป็นทีมร้าน (ใช้ทั้งหน้าเว็บและ Backoffice) */
+export const communityTeamBadge = (barName: string) => `ทีมร้าน · ${barName}`;
 
 /** ไฟล์ 1 ชิ้น (อัปโหลดเข้า bucket community-media/<user_id>/… ก่อน แล้วส่ง path) */
 export const CommunityMediaItem = z.object({
@@ -53,7 +62,7 @@ export const CommunityThreadBody = z.object({
   body: z.string().trim().max(COMMUNITY_BODY_MAX).default(''),
   bar_id: uuid.nullish(),
   media: mediaList.default([]).describe('ไฟล์ทั้งชุดของกระทู้ (แก้กระทู้ = แทนที่ทั้งชุด)'),
-});
+}).refine((b) => b.category !== COMMUNITY_SHOP_NEWS_CATEGORY || !!b.bar_id, { message: 'ข่าวจากร้านต้องแท็กร้านของคุณ', path: ['bar_id'] });
 export type CommunityThreadBody = z.input<typeof CommunityThreadBody>;
 
 /** POST /community/threads/:id/comments */
@@ -136,7 +145,7 @@ export type DeleteCommunityDraftQuery = z.infer<typeof DeleteCommunityDraftQuery
 export const ModerateCommunityBody = z.object({
   action: z.enum(['KEEP', 'HIDE', 'REMOVE', 'RESTORE']),
   reason: z.string().trim().min(1).max(500).optional(),
-});
+}).refine((b) => !['HIDE', 'REMOVE'].includes(b.action) || !!b.reason, { message: 'ซ่อนหรือลบต้องระบุเหตุผล (ส่งถึงเจ้าของโพสต์)', path: ['reason'] });
 export type ModerateCommunityBody = z.infer<typeof ModerateCommunityBody>;
 
 // ---------------------------------------------------------------------
@@ -150,7 +159,16 @@ export interface CommunityCategory {
   sort_order: number;
   /** ตั้งกระทู้ได้เฉพาะทีม NightOut (เช่น ประกาศ) */
   staff_only: boolean;
+  /** ตั้งกระทู้ได้เฉพาะทีมร้าน (ข่าวจากร้าน) */
+  team_only: boolean;
   thread_count: number;
+}
+
+/** ร้านของผู้เขียนตอนโพสต์ (ป้าย "ทีมร้าน · <ชื่อร้าน>") · slug = null เมื่อร้านไม่แสดงแล้ว (ไม่ทำลิงก์) */
+export interface CommunityTeamBadge {
+  id: string;
+  slug: string | null;
+  name: string;
 }
 
 export interface CommunityAuthor {
@@ -158,6 +176,8 @@ export interface CommunityAuthor {
   name: string;
   /** ทีม NightOut (บัญชีที่เข้า Backoffice ได้) */
   is_staff: boolean;
+  /** ทีมร้าน ณ ตอนโพสต์ (null = ไม่ใช่ทีมร้าน) */
+  team: CommunityTeamBadge | null;
 }
 
 export interface CommunityBarRef {
@@ -267,6 +287,8 @@ export interface AddCommunityCommentResult {
 export interface CommunityLikeResult {
   liked: boolean;
   like_count: number;
+  /** ถูกใจของฉันนับในยอดไหม (false = ทีมร้านถูกใจในกระทู้ที่แท็กร้านตัวเอง / เลิกถูกใจแล้ว) */
+  counted: boolean;
 }
 export interface CommunityPinResult {
   thread_id: string;
@@ -278,13 +300,28 @@ export interface CommunitySaveResult {
   saved: boolean;
 }
 
+/** ร้านที่ฉันอยู่ในทีม (ร้านที่แสดงอยู่ + ร้านที่ถูกระงับ) + โควตาข่าวจากร้าน — รายการว่าง = ไม่ใช่ทีมร้าน */
+export interface CommunityTeamBar {
+  bar_id: string;
+  slug: string;
+  name: string;
+  role: 'OWNER' | 'MANAGER' | 'STAFF';
+  /** ร้านแสดงอยู่ (APPROVED) = ตั้งข่าวจากร้านได้ · false = ร้านถูกระงับ ยังมีป้ายทีมร้าน แต่คอมเมนต์/ตอบได้อย่างเดียว */
+  can_post: boolean;
+  /** ข่าวจากร้านที่ร้านนี้ตั้งใน 7 วันล่าสุด (ทุกสถานะ) */
+  shop_news_used: number;
+  shop_news_limit: number;
+  /** โพสต์ข่าวได้อีกเมื่อไร (null = ยังเหลือโควตา) */
+  next_slot_at: string | null;
+}
+
 export const COMMUNITY_ERRORS = {
   THREAD_NOT_FOUND: 'ไม่พบกระทู้นี้ หรือกระทู้ถูกลบไปแล้ว',
   COMMENT_NOT_FOUND: 'ไม่พบความคิดเห็นนี้ หรือถูกลบไปแล้ว',
   NOT_THREAD_OWNER: 'แก้หรือลบได้เฉพาะกระทู้ของตัวเอง',
   NOT_COMMENT_OWNER: 'แก้หรือลบได้เฉพาะความคิดเห็นของตัวเอง',
   NOT_AUTHENTICATED: 'เข้าสู่ระบบก่อน',
-  COMMUNITY_BANNED: 'บัญชีนี้ถูกระงับ ตั้งกระทู้หรือแสดงความคิดเห็นไม่ได้',
+  COMMUNITY_BANNED: 'บัญชีนี้ถูกระงับ — อ่านชุมชนได้อย่างเดียว (ตั้งกระทู้ ตอบ ถูกใจ บันทึก ปักหมุด หรือรายงานไม่ได้)',
   COMMUNITY_CATEGORY_STAFF_ONLY: 'หมวดนี้ตั้งกระทู้ได้เฉพาะทีม NightOut',
   INVALID_COMMUNITY_CATEGORY: 'เลือกหมวดหมู่ก่อนโพสต์',
   INVALID_COMMUNITY_THREAD: 'หัวข้อ 3–120 ตัวอักษร และรายละเอียดไม่เกิน 5,000 ตัวอักษร',
@@ -295,4 +332,10 @@ export const COMMUNITY_ERRORS = {
   INVALID_COMMUNITY_DRAFT: 'บันทึกร่างไม่สำเร็จ — ข้อมูลร่างไม่ถูกต้อง',
   INVALID_COMMUNITY_MODERATION: 'คำสั่งจัดการกระทู้ไม่ถูกต้อง',
   COMMUNITY_PIN_LIMIT: `ปักหมุดได้สูงสุด ${COMMUNITY_PIN_MAX} กระทู้ — เลิกปักกระทู้อื่นก่อน`,
+  COMMUNITY_CATEGORY_TEAM_ONLY: 'หมวด "ข่าวจากร้าน" ตั้งกระทู้ได้เฉพาะทีมร้าน',
+  COMMUNITY_SHOP_NEWS_OWN_BAR: 'ข่าวจากร้านต้องแท็กร้านที่คุณอยู่ในทีม (ร้านที่แสดงอยู่)',
+  COMMUNITY_SHOP_NEWS_LIMIT: `ร้านนี้โพสต์ข่าวครบ ${COMMUNITY_SHOP_NEWS_WEEKLY_MAX} กระทู้ใน ${COMMUNITY_SHOP_NEWS_WINDOW_DAYS} วันแล้ว — โพสต์ได้อีกเมื่อกระทู้เก่าครบ ${COMMUNITY_SHOP_NEWS_WINDOW_DAYS} วัน`,
+  COMMUNITY_TEAM_CATEGORY: 'บัญชีทีมร้านตั้งกระทู้ได้เฉพาะหมวด "ข่าวจากร้าน" — คอมเมนต์และตอบได้ทุกกระทู้',
+  COMMUNITY_SHOP_NEWS_LOCKED: 'ข่าวจากร้านเปลี่ยนหมวดหรือร้านที่แท็กหลังโพสต์ไม่ได้ และย้ายกระทู้อื่นมาเป็นข่าวจากร้านไม่ได้',
+  COMMUNITY_TEAM_OWN_TAG: 'แท็กร้านที่คุณอยู่ในทีมได้เฉพาะในหมวด "ข่าวจากร้าน"',
 } as const satisfies Record<string, string>;

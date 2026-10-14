@@ -128,13 +128,13 @@ export const PLATFORM = {
   promptpayId: '0812345678',
 } as const;
 
-/** โปรโมชันตัวอย่างต่อร้าน — โปรเบียร์ก่อน 2 ทุ่ม + โปรอื่นสลับกัน */
+/** โปรโมชันตัวอย่างต่อร้าน (ไม่ใช่แอลกอฮอล์ — พ.ร.บ.ควบคุมเครื่องดื่มแอลกอฮอล์ ม.30) — มาก่อน 2 ทุ่มมิกเซอร์ 4 จ่าย 3 + โปรอื่นสลับกัน */
 function promotionsFor(barId: string, i: number): BarPromotion[] {
   const list: BarPromotion[] = [
     {
       id: `${barId}-pr1`,
-      title: 'โปรเบียร์ก่อน 2 ทุ่ม',
-      description: 'เบียร์สด/ขวด ราคาพิเศษ เมื่อเช็กอินก่อน 20:00 น.',
+      title: 'มาก่อน 2 ทุ่ม มิกเซอร์ 4 จ่าย 3',
+      description: 'สั่งมิกเซอร์ 4 ชุด จ่ายเพียง 3 เมื่อเช็กอินก่อน 20:00 น.',
       cutoffTime: '20:00',
       active: true,
     },
@@ -143,7 +143,7 @@ function promotionsFor(barId: string, i: number): BarPromotion[] {
     list.push({
       id: `${barId}-pr2`,
       title: 'Ladies Night พุธ',
-      description: 'ค็อกเทลแก้วแรกฟรีสำหรับสุภาพสตรี ทุกวันพุธ',
+      description: 'ของทานเล่นฟรี 1 จานสำหรับโต๊ะที่มีสุภาพสตรี ทุกวันพุธ',
       days: [3],
       active: true,
     });
@@ -429,7 +429,7 @@ export function createSeed(): DemoState {
     mkBooking(1, 'Demo Customer', at(21, 0), 4, 'CONFIRMED', {
       deposit: held(0.5),
       promotionId: 'bar-1-pr1',
-      promotionTitle: 'โปรเบียร์ก่อน 2 ทุ่ม',
+      promotionTitle: 'มาก่อน 2 ทุ่ม มิกเซอร์ 4 จ่าย 3',
     }),
     mkBooking(2, 'คุณต้น', at(20, 30), 3, 'CONFIRMED', { deposit: held(0.8) }),
     mkBooking(3, 'คุณเมย์', at(22, 0), 6, 'DEPOSIT_SUBMITTED', {

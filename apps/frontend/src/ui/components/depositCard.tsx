@@ -1,5 +1,6 @@
 import type { Booking } from '@/services/data';
 import { Tag } from 'antd';
+import { paymentProviderLabel } from '@nightout/utils';
 import { baht, dateTime } from '@/ui/utils/format';
 
 export const SETTLEMENT_LABEL: Record<
@@ -17,18 +18,29 @@ export const SETTLEMENT_LABEL: Record<
 /** สรุปมัดจำของการจอง 1 รายการ — ใช้ทั้งฝั่งลูกค้าและร้าน */
 export function DepositSummary({ booking: b }: { booking: Booking }) {
   const d = b.deposit;
-  if (!d) return <p className="text-sm text-muted">ยังไม่ได้โอนมัดจำ</p>;
+  if (!d) return <p className="text-sm text-muted">ยังไม่ได้ชำระ Table Fee</p>;
   return (
     <dl className="grid grid-cols-[110px_1fr] gap-y-1.5 text-sm">
       <dt className="text-muted">ยอด</dt>
       <dd className="font-semibold text-gold-text">{baht(d.amount)}</dd>
-      <dt className="text-muted">โอนเข้า</dt>
-      <dd>NightOut (แพลตฟอร์มถือเงินไว้ให้ก่อน)</dd>
-      <dt className="text-muted">สลิป</dt>
-      <dd>
-        {d.status === 'VERIFIED' ? 'ตรวจแล้ว' : d.status === 'REJECTED' ? 'ไม่ผ่าน' : 'รอตรวจ'} ·{' '}
-        {dateTime(d.verifiedAt ?? d.submittedAt)}
-      </dd>
+      {d.method === 'ONLINE' ? (
+        <>
+          <dt className="text-muted">ชำระผ่าน</dt>
+          <dd>{paymentProviderLabel(d.provider)} (NightOut ถือเงินไว้ให้ก่อน)</dd>
+          <dt className="text-muted">สถานะ</dt>
+          <dd>ชำระสำเร็จ · {dateTime(d.verifiedAt ?? d.submittedAt)}</dd>
+        </>
+      ) : (
+        <>
+          <dt className="text-muted">โอนเข้า</dt>
+          <dd>NightOut (แพลตฟอร์มถือเงินไว้ให้ก่อน)</dd>
+          <dt className="text-muted">สลิป</dt>
+          <dd>
+            {d.status === 'VERIFIED' ? 'ตรวจแล้ว' : d.status === 'REJECTED' ? 'ไม่ผ่าน' : 'รอตรวจ'} ·{' '}
+            {dateTime(d.verifiedAt ?? d.submittedAt)}
+          </dd>
+        </>
+      )}
       {d.settlement && (
         <>
           <dt className="text-muted">สถานะเงิน</dt>

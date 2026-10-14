@@ -1,5 +1,77 @@
 # CHANGELOG — @nightout/contracts
 
+## 2026-10-13 — ทีมร้านกดปลดโต๊ะเอง (คอมเมนต์ #76)
+- `src/booking.ts`: `TeamForfeitResult` (`{ id, status: 'NO_SHOW' }`) ของ `POST /merchant/bookings/:id/forfeit` · error ใหม่ `BOOKING_NOT_OVERDUE` ใน `BOOKING_ERRORS` (ยังไม่เลยเวลาเก็บโต๊ะ)
+- เทสต์ใน `src/contracts.test.ts`
+
+## 2026-10-13 — ยอดขายเฉลี่ย (Performance Analytics)
+- `src/booking.ts`: `SalesStatsQuery` (`days` 1–366 ค่าเริ่มต้น 30) · `SalesStatsPeriod` · `SalesStatsResult` (`current` / `previous`) ของ `GET /merchant/bars/:barId/sales-stats` · error ใหม่ `INVALID_STATS_RANGE` ใน `BOOKING_ERRORS`
+- เทสต์ใน `src/contracts.test.ts`
+
+## 2026-10-13 — Native Mini-Ads (โฆษณาแบนเนอร์เล็ก)
+- ใหม่ `src/mini-ads.ts` (โดเมน `mini-ads`): `MiniAdPlacement` (HOME / SEARCH) · `MiniAdBody` (สร้าง · ต้อง `confirm_no_alcohol: true` ข้อความ ม.32) · `UpdateMiniAdBody` (ส่งเฉพาะที่แก้) · `MiniAdsQuery` · `PublicMiniAd` · `TrackMiniAdBody` (IMPRESSION / CLICK) · `SaveMiniAdResult` / `DeleteMiniAdResult` / `TrackMiniAdResult` · `image_url` รับเฉพาะ `site-media/ads/…` หรือ `/images/…` · `link_url` เฉพาะ `https://` หรือ path ในเว็บ (ห้าม `//` และ backslash)
+- `MINI_ADS_ERRORS` (`MINI_AD_NOT_FOUND` · `INVALID_MINI_AD` · `MINI_AD_NO_ALCOHOL_CONFIRM_REQUIRED` · `MINI_AD_INVALID_EVENT`) รวมใน `ERROR_MESSAGES` · `backoffice.ts`: `ADMIN_VIEWS` + `admin_mini_ads`
+- เทสต์ใน `src/contracts.test.ts` · ไฟล์: `src/mini-ads.ts`, `src/errors.ts`, `src/backoffice.ts`, `src/index.ts`
+
+## 2026-10-13 — ผังโต๊ะ /merchant/floor
+- `booking.ts`: `TableBoardQuery` (`night?` YYYY-MM-DD) · type `TableBoard` / `TableBoardZone` / `TableBoardTable` / `TableBoardOccupancy` / `TableBoardBooking` (ไม่มียอดเงิน/เบอร์) · `TableOccupancyBody` / `TableOccupancyResult`
+- error ใหม่ใน `BOOKING_ERRORS`: `TABLE_NOT_ON_BOARD` · `TABLE_ALREADY_IN_USE` · `TABLE_NOT_IN_USE` · `TABLE_HAS_GUEST`
+- เทสต์ใน `src/contracts.test.ts` · ไฟล์: `src/booking.ts`
+
+## 2026-10-13 — ชั้นชำระเงินกลาง (payment intents + mock)
+- ใหม่ `src/payment.ts` (โดเมน `payment`): `PaymentConfig` (`GET /payments/config` · mode SLIP / PROVIDER) · `CheckoutResult` (`POST /bookings/:id/checkout`) · `PaymentIntentView` · `MockCompleteBody` / `PaymentApplyResult` / `PaymentWebhookResult` · `MarkPaymentRefundedBody` / `MarkPaymentRefundedResult` (`POST /admin/payments/:id/refunded`) · `PAYMENT_ERRORS` (ไม่ได้เปิด / ยังไม่พร้อม / ลายเซ็นผิด / หมดเวลาชำระ / ไม่ต้องคืนเงิน …) รวมใน `ERROR_MESSAGES`
+- `deposit.ts`: error `SLIP_FLOW_DISABLED` (เปิดชำระออนไลน์แล้ว ส่งสลิปไม่ได้ → 409)
+- `backoffice.ts`: `ADMIN_VIEWS` + `admin_payment_intents` · `admin_payment_unmatched`
+- เทสต์ใน `src/contracts.test.ts` · ไฟล์: `src/payment.ts`, `src/deposit.ts`, `src/backoffice.ts`, `src/errors.ts`, `src/index.ts`
+
+## 2026-10-13 — เครื่องมือแอดมิน: แบนบัญชี · แก้ข้อมูลร้านแทน · สไตล์ร้าน · อันดับร้าน
+- ใหม่ `src/catalog.ts` (โดเมน `catalog`): `RankPeriod` · `RankingQuery` / `RankingRow` (`GET /public/ranking`) · `STYLE_ICONS` / `StyleIconName` · `SaveStylesBody` / `SaveStylesResult` (`PUT /admin/styles` — ชื่อ/ id ห้ามซ้ำ · ไม่มี id = สไตล์ใหม่) · `RecomputeRankingResult` (`POST /admin/ranking/recompute` · `/jobs/tier`) · `CATALOG_ERRORS` (`INVALID_STYLES`, `DUPLICATE_STYLE_NAME`) รวมใน `ERROR_MESSAGES`
+- `account.ts`: `BanUserBody` / `BanUserResult` (`POST /admin/users/:id/ban` · เหตุผล 3–300 + `ban_phones`) · `UnbanUserBody.reason` บังคับ 3–300 · `MyProfile.ban_reason` · error `BAN_REASON_REQUIRED` · `CANNOT_BAN_SELF` · `CANNOT_BAN_ADMIN` · `USER_ALREADY_BANNED`
+- `bar.ts`: `AdminBarInfoBody` (ข้อมูลร้านที่แอดมินแก้ได้ — ไม่มีที่อยู่) · `AdminMenuItem` · `AdminBarDetailsBody` / `AdminBarDetailsResult` (`PUT /admin/bars/:id/details` · อย่างน้อย 1 ส่วน) · error `INVALID_BAR_DETAILS` · `INVALID_STYLE`
+- `backoffice.ts`: `ADMIN_VIEWS` + `admin_bar_details` · `admin_styles` · `admin_ranking` · `ADMIN_MASTER_TABLES` + `districts`
+- เทสต์ใน `src/contracts.test.ts` · ไฟล์: `src/catalog.ts`, `src/account.ts`, `src/bar.ts`, `src/backoffice.ts`, `src/errors.ts`, `src/index.ts`
+
+## 2026-10-13 — ชุมชน: สิทธิ์ทีมร้าน (ป้ายทีมร้าน · ข่าวจากร้าน · ไม่นับไลก์/ร้านมาแรง)
+- `community.ts`: `COMMUNITY_SHOP_NEWS_CATEGORY` (`shop-news`) · `COMMUNITY_SHOP_NEWS_WEEKLY_MAX` (3) · `COMMUNITY_SHOP_NEWS_WINDOW_DAYS` (7) · `COMMUNITY_STAFF_BADGE` ("ทีม NightOut") · `communityTeamBadge()` · `CommunityTeamBadge` · `CommunityTeamBar` (`GET /me/community/team`) · `CommunityAuthor.team` · `CommunityCategory.team_only` · `CommunityLikeResult.counted`
+- `CommunityThreadBody`: ข่าวจากร้านต้องมี `bar_id` · `ModerateCommunityBody`: HIDE / REMOVE ต้องมี `reason` (KEEP / RESTORE ไม่ต้อง)
+- `COMMUNITY_ERRORS` + `COMMUNITY_CATEGORY_TEAM_ONLY` / `COMMUNITY_SHOP_NEWS_OWN_BAR` / `COMMUNITY_SHOP_NEWS_LIMIT` / `COMMUNITY_TEAM_CATEGORY` / `COMMUNITY_SHOP_NEWS_LOCKED` / `COMMUNITY_TEAM_OWN_TAG` (migration `…20261013000900`)
+- เทสต์ใน `contracts.test.ts`
+
+## 2026-10-13 — ลงพื้นที่ตรวจ Safety (Inspector) + วิธีตรวจ
+- `bar.ts`: `SafetyInspectionBody` (items 1–50 · key ไม่ซ้ำ · ผล PASS / FAIL / NA · ต้องมี PASS หรือ FAIL ≥ 1 · หมายเหตุต่อข้อ ≤ 500 · รูป ≤ 3 ไม่ซ้ำ · หมายเหตุรวม ≤ 1000 · `inspected_at` ISO ไม่บังคับ) + `SafetyInspectionResult` · `SafetyInspectionSummary` / `SafetyInspectionItemView` (ผลล่าสุดที่ร้านเห็น · ไม่มีชื่อผู้ตรวจ) · `VerifySafetyResult` (`verify_method: 'EVIDENCE'`) · `BAR_ERRORS` + `INVALID_INSPECTION` / `INVALID_INSPECTION_PHOTO` / `INVALID_INSPECTION_TIME` / `INSPECTOR_IS_BAR_MEMBER` / `SAFETY_ALREADY_VERIFIED` / `SAFETY_EVIDENCE_REQUIRED`
+- `backoffice.ts`: `ADMIN_VIEWS` + `admin_bar_safety` · `admin_safety_inspections`
+- endpoint ที่ใช้: `POST /admin/bars/:id/safety-inspections` · `GET /merchant/bars/:barId/safety/inspection` · `POST /admin/safety/:id/verify` (migration `…20261013000800`)
+- เทสต์ใน `contracts.test.ts`
+
+## 2026-10-13 — ยืนยันก่อนเช็กอิน · ร้านไม่มีโต๊ะ · Blacklist ร้าน
+- `booking.ts`: `CheckInPreviewQuery` (`code` 3–120) + `CheckInPreview` (ชื่อ/จำนวนคน/โซน/โต๊ะ/เวลา/โปร/หมายเหตุ + `can_check_in` / `block_reason` / `server_now` · **ไม่มียอดเงิน/เบอร์**) + `CheckInBlockReason` · `ReportNoTableBody` (`note` ≤ 300 ไม่บังคับ) + `ReportNoTableResult` (`refund_amount` · `strikes_90d`) · `BOOKING_ERRORS` + `NO_TABLE_NOT_ALLOWED` / `NO_TABLE_ALREADY_REPORTED`
+- `bar.ts`: `BarBlacklistBody` (เหตุผล 3–500) + `BarBlacklistResult` (`upcoming_bookings`) · `AdminReportNoTableBody` (`booking_code` + `note` 3–300) + `AdminReportNoTableResult` · `BAR_ERRORS` + `BLACKLIST_REASON_REQUIRED` / `BAR_ALREADY_BLACKLISTED` / `BAR_NOT_BLACKLISTED` / `BAR_NOT_BLACKLISTABLE` / `BAR_BLACKLISTED` / `NO_TABLE_NOTE_REQUIRED` / `NO_TABLE_ADMIN_NOT_ALLOWED`
+- `backoffice.ts`: `ADMIN_VIEWS` + `admin_bar_blacklist` (แอดมินทุกคน)
+- endpoint ที่ใช้: `GET /merchant/bars/:barId/check-in/preview` · `POST /merchant/bookings/:bookingId/no-table` · `POST /admin/bars/:id/blacklist` · `POST /admin/bars/:id/blacklist/lift` · `POST /admin/bar-strikes` (migration `…20261013000700` / `…20261013000710`)
+- เทสต์ใน `src/contracts.test.ts`
+
+## 2026-10-13 — ตำแหน่งร้าน (หมุด) + แอดมินตรวจหมุด
+- ตำแหน่งร้าน (`bar.ts`): `BarLocationBody` (หมุด `lat`/`lng` · `address` 3–300 · `parking_note` · `transit_line` / `transit_station` / `transit_walk_minutes`) + 3 ข้อตรวจ (หมุดต้องอยู่ในไทย · สายกับสถานีต้องมาคู่กัน · เวลาเดินต้องมีสถานี) · `BarLocationResult` (`PENDING` รอตรวจ / `APPLIED` บันทึกแล้ว) · `CancelBarLocationResult`
+- แอดมิน: `ReviewBarLocationBody` (`{approve, location?, reason?}` — object เดียว + refine เพราะ `createZodDto(union)` คอมไพล์ไม่ผ่าน · ตีกลับต้องมีเหตุผล) · `ReviewBarLocationResult` · `AdminSetBarLocationBody` (+ `note` ถึงร้าน) · `AdminSetBarLocationResult`
+- ค้นหาที่อยู่: `GeocodeSearchQuery` (`q` 2–120 · `limit` ≤ 8) · `GeocodePlace` · `GeocodeSearchResult` · `GeocodeReverseQuery` (พิกัดในไทย) · `GeocodeReverseResult`
+- `MerchantJoinBody` ต้องมีหมุด + ที่อยู่ (+ ที่จอดรถ/รถไฟฟ้า) · `BarInfoBody` ไม่มี `address` แล้ว (แก้ผ่าน `PUT …/location` เท่านั้น · zod ตัด key ทิ้ง)
+- `BAR_ERRORS` + `INVALID_BAR_LOCATION` · `LOCATION_OUTSIDE_THAILAND` · `LOCATION_UNCHANGED` · `LOCATION_REQUEST_NOT_FOUND` · `LOCATION_REQUEST_ALREADY_REVIEWED` · `LOCATION_REJECT_REASON_REQUIRED` · `BAR_LOCATION_NOT_SET` · `GEOCODER_UNAVAILABLE` · `GEOCODER_BUSY` (ข้อความไทย) · `INVALID_BAR_INFO` เหลือเรื่องชื่อร้าน
+- `ADMIN_VIEWS` + `admin_bar_locations` · `admin_bar_location_requests` (`backoffice.ts`)
+- เทสต์ใหม่ `src/bar-location.test.ts` · ไฟล์: `src/bar.ts`, `src/backoffice.ts` · migration `20261013000600_bar_location_pins`
+
+## 2026-10-13 — กติกาเวลาการจอง: ต่อเวลา · ไปด้วย · QR ของกลุ่ม
+- `ShareCard` + `is_member` (ผู้เรียกเป็นผู้จอง/เพื่อนที่กด "ไปด้วย" · ไม่ล็อกอิน = false) + `checkin_qr` (`NIGHTOUT:<booking id>` เฉพาะสมาชิก + CONFIRMED)
+- ใหม่ `JoinShareResult` `{joined, going_count}` (`POST /share-cards/:token/join`) · `ExtendBookingResult` `{id, auto_cancel_at, extended_at}` (`POST /bookings/:id/extend`)
+- `BOOKING_ERRORS` + `BOOKING_ALREADY_EXTENDED` · `BOOKING_EXTEND_NOT_AVAILABLE` · `CHECK_IN_TOO_EARLY` · `CHECK_IN_TOO_LATE` · `SHARE_NOT_FOUND` · `SHARE_CLOSED` (ข้อความไทย)
+- ไฟล์: `src/booking.ts` · migration `20261013000500_booking_timing_rules`
+
+## 2026-10-13 — Table Fee · ยอดหารต่อหัวในบัตรแชร์ · view ค่าคอมเฉพาะ Super Admin
+- ข้อความ error ที่ลูกค้า/ร้านเห็นเปลี่ยน "มัดจำ" → "Table Fee" (`DEPOSIT_ERRORS`, `BOOKING_ERRORS.DEPOSIT_TERMS_REQUIRED`, `REVIEW_ERRORS.REVIEW_REQUIRES_BOOKING`)
+- `ShareCard` เพิ่ม `deposit_required` (Table Fee ของการจอง — หน้าแชร์หารต่อหัว)
+- ใหม่ `SUPER_ADMIN_VIEWS = ['admin_billing_events']` — `GET /admin/views/:view` ตอบ 403 ให้ ADMIN
+- ตัวอย่างใน `.describe()` ไม่ใช้ชื่อเครื่องดื่มแอลกอฮอล์ (`pricing.ts`)
+- ไฟล์: `src/booking.ts`, `src/deposit.ts`, `src/review.ts`, `src/backoffice.ts`, `src/pricing.ts`, `src/contracts.test.ts`
+
 ## 2026-10-12 — ชุมชน: แก้ไขความเห็น + ประวัติการแก้ไข
 - `community.ts`: `UpdateCommunityCommentBody` (PATCH /community/comments/:id — ข้อความหรือไฟล์อย่างน้อย 1 อย่าง) · `UpdateCommunityCommentResult` · `CommunityRevision` (1 เวอร์ชันในประวัติ) · `CommunityComment.edited_at`
 - ร่างชนิดใหม่ `EDIT_COMMENT` + `payload.comment_id` (ต้องมีเมื่อเป็นร่างแก้ความเห็น) · ข้อความ `NOT_COMMENT_OWNER` = แก้หรือลบได้เฉพาะของตัวเอง

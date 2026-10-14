@@ -5,6 +5,7 @@ import { useAdminDashboard } from './api';
 
 const CARDS = [
   { key: 'bookings_today', title: 'การจองวันนี้', to: '/bookings' },
+  { key: 'forfeited_today', title: 'ปลดโต๊ะวันนี้ (Forfeited)', to: '/bookings?status=NO_SHOW' },
   { key: 'bars_pending', title: 'ร้านรออนุมัติ', to: '/merchants' },
   { key: 'deposits_to_verify', title: 'สลิปมัดจำรอตรวจ', to: '/deposits' },
   { key: 'payouts_pending', title: 'มัดจำรอโอนให้ร้าน', to: '/deposits' },

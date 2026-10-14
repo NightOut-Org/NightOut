@@ -1,4 +1,5 @@
 import { Info, Plus } from '@phosphor-icons/react';
+import { BOOKING_EXTENSION_MINUTES } from '@nightout/utils';
 import { App, Empty, Form, Input, InputNumber, Modal, Popconfirm } from 'antd';
 import { useState } from 'react';
 import { Link } from 'react-router';
@@ -200,7 +201,7 @@ export function MerchantTablesPage() {
                     draft.setDuration(z, v),
                   )}
                   <span className="flex min-w-0 flex-col gap-0.5 rounded-xl bg-surface p-2.5">
-                    <span className="text-[11px] text-muted">มัดจำ</span>
+                    <span className="text-[11px] text-muted">Table Fee</span>
                     <b className="truncate text-base text-gold-text">{deposit}</b>
                   </span>
                 </div>
@@ -262,7 +263,7 @@ export function MerchantTablesPage() {
         <Info size={18} className="shrink-0 text-link" />
         <span className="flex-1">
           ลูกค้าเลือกได้ทั้งโซนหรือโต๊ะ · ถ้าไม่มาเช็กอินเกิน grace period ({bar.gracePeriodMinutes}{' '}
-          นาที) ระบบยกเลิกโต๊ะอัตโนมัติ
+          นาที) ระบบปลดโต๊ะ (Forfeited) อัตโนมัติ · ลูกค้าขอต่อเวลาได้อีก {BOOKING_EXTENSION_MINUTES} นาที 1 ครั้ง
         </span>
         <Link to="/merchant/settings" className="hidden shrink-0 lg:inline">
           ตั้งค่าการจอง →

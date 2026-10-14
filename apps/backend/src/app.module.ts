@@ -14,6 +14,8 @@ import { BookingModule } from './domains/booking/booking.module';
 import { CatalogModule } from './domains/catalog/catalog.module';
 import { CommunityModule } from './domains/community/community.module';
 import { DepositModule } from './domains/deposit/deposit.module';
+import { MiniAdsModule } from './domains/mini-ads/mini-ads.module';
+import { PaymentModule } from './domains/payment/payment.module';
 import { PricingModule } from './domains/pricing/pricing.module';
 import { PromotionModule } from './domains/promotion/promotion.module';
 import { ReviewModule } from './domains/review/review.module';
@@ -37,6 +39,7 @@ import { SupabaseModule } from './supabase/supabase.module';
     CatalogModule,
     BookingModule,
     DepositModule,
+    PaymentModule,
     ReviewModule,
     CommunityModule,
     BarModule,
@@ -46,6 +49,7 @@ import { SupabaseModule } from './supabase/supabase.module';
     BillingModule,
     SiteTeamModule,
     SiteContentModule,
+    MiniAdsModule,
     StorageModule,
     PricingModule,
     BackofficeModule,

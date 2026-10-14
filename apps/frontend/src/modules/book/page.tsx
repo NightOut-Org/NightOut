@@ -28,7 +28,7 @@ export function BookPage() {
         subtitle={bar.district}
         extra={<Link to={`/bars/${bar.slug}`}>← กลับหน้าร้าน</Link>}
       />
-      <Steps current={f.step} className="mb-8" items={[{ title: 'วันเวลา & โซน' }, { title: 'ยืนยัน & มัดจำ' }]} />
+      <Steps current={f.step} className="mb-8" items={[{ title: 'วันเวลา & โซน' }, { title: 'ยืนยัน & ชำระ' }]} />
       {f.step === 0 ? <ScheduleStep f={f} /> : <ConfirmStep bar={bar} f={f} />}
     </div>
   );

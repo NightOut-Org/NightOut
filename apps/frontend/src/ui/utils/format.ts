@@ -12,6 +12,14 @@ export const dateTime = (iso: string) =>
     minute: '2-digit',
   });
 
+/** เวลา HH:mm (เวลาไทย) เช่น "ชำระภายใน 21:30 น." */
+export const timeHHmm = (iso: string) =>
+  new Date(iso).toLocaleTimeString('th-TH', {
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZone: 'Asia/Bangkok',
+  });
+
 export const timeAgo = (iso: string) => {
   const m = Math.round((Date.now() - new Date(iso).getTime()) / 60_000);
   if (m < 1) return 'เมื่อสักครู่';
@@ -24,7 +32,7 @@ export const timeAgo = (iso: string) => {
 /** label + สี Tag ของ antd · dot = สีหลักของ Tag นั้น (ใช้กับจุดสถานะ/เส้นประวัติ) */
 export const BOOKING_STATUS: Record<BookingStatus, { label: string; color: string; dot: string }> = {
   PENDING: { label: 'รอร้านยืนยัน', color: 'gold', dot: '#d89614' },
-  AWAITING_DEPOSIT: { label: 'รอจ่ายมัดจำ', color: 'orange', dot: '#d87a16' },
+  AWAITING_DEPOSIT: { label: 'รอชำระ Table Fee', color: 'orange', dot: '#d87a16' },
   DEPOSIT_SUBMITTED: { label: 'รอตรวจสลิป', color: 'purple', dot: '#854eca' },
   CONFIRMED: { label: 'ยืนยันแล้ว', color: 'green', dot: '#49aa19' },
   REJECTED: { label: 'ร้านปฏิเสธ', color: 'red', dot: '#d32029' },
@@ -32,7 +40,7 @@ export const BOOKING_STATUS: Record<BookingStatus, { label: string; color: strin
   CANCELLED_BY_MERCHANT: { label: 'ร้านยกเลิก', color: 'red', dot: '#d32029' },
   CHECKED_IN: { label: 'เช็กอินแล้ว', color: 'cyan', dot: '#13a8a8' },
   COMPLETED: { label: 'เสร็จสิ้น', color: 'blue', dot: '#1668dc' },
-  NO_SHOW: { label: 'ไม่มาตามนัด', color: 'volcano', dot: '#d84a1b' },
+  NO_SHOW: { label: 'ปลดโต๊ะ (Forfeited)', color: 'volcano', dot: '#d84a1b' },
   EXPIRED: { label: 'หมดเวลา', color: 'default', dot: '#a7a1b3' },
 };
 

@@ -28,6 +28,15 @@ export const useMyDrafts = () =>
     refetchOnMount: 'always',
   });
 
+/** GET /me/community/team — ร้านที่ฉันอยู่ในทีม + โควตาข่าวจากร้าน (ทีมร้านตั้งได้เฉพาะหมวดข่าวจากร้าน) */
+export const useMyCommunityTeam = (userId: string | null) =>
+  useQuery({
+    queryKey: ['community', 'team', userId],
+    queryFn: () => Rest.get<C.CommunityTeamBar[]>('/me/community/team'),
+    enabled: !!userId,
+    staleTime: 60_000,
+  });
+
 /** POST /community/threads */
 export const createThread = (body: C.CommunityThreadBody) =>
   Rest.post<C.CreateCommunityThreadResult>(

@@ -32,7 +32,7 @@ export function MerchantBillingPage() {
   const checkIns = (list: BillingEventRow[]) => list.filter((r) => r.event_type === 'CHECK_IN').length;
   const outstanding = data.filter((r) => r.status === 'PENDING' || r.status === 'INVOICED').reduce((s, r) => s + Number(r.amount), 0);
 
-  const label = (r: BillingEventRow) => (r.event_type === 'CHECK_IN' ? 'เช็กอิน' : 'ไม่มาตามนัด');
+  const label = (r: BillingEventRow) => (r.event_type === 'CHECK_IN' ? 'เช็กอิน' : 'ปลดโต๊ะ (Forfeited)');
   const amountCls = (r: BillingEventRow) => (r.status === 'WAIVED' ? 'text-muted line-through' : 'text-text');
 
   const monthCard = (m: string, compact: boolean) => {
@@ -66,7 +66,7 @@ export function MerchantBillingPage() {
       <div>
         <h1 className="text-[17px] font-bold lg:font-display lg:text-[30px]">ค่าคอม</h1>
         <p className="mt-1 text-xs text-muted lg:text-sm">
-          คิดต่อการจองที่ลูกค้าเช็กอินจริง (ยอดประเมินต่อหัว × จำนวนคน) · ไม่มาตามนัดไม่คิดค่าคอม · ค้างชำระ{' '}
+          คิดต่อการจองที่ลูกค้าเช็กอินจริง (ยอดประเมินต่อหัว × จำนวนคน) · ปลดโต๊ะ (Forfeited) ไม่คิดค่าคอม ·ค้างชำระ{' '}
           <b className="text-gold-text">{baht(outstanding)}</b>
         </p>
       </div>

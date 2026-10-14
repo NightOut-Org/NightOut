@@ -1264,6 +1264,7 @@ export type Database = {
           value: Database["public"]["Enums"]["safety_value"]
           verified_at: string | null
           verified_by: string | null
+          verify_method: Database["public"]["Enums"]["safety_verify_method"] | null
         }
         Insert: {
           bar_id: string
@@ -1277,6 +1278,7 @@ export type Database = {
           value?: Database["public"]["Enums"]["safety_value"]
           verified_at?: string | null
           verified_by?: string | null
+          verify_method?: Database["public"]["Enums"]["safety_verify_method"] | null
         }
         Update: {
           bar_id?: string
@@ -1290,6 +1292,7 @@ export type Database = {
           value?: Database["public"]["Enums"]["safety_value"]
           verified_at?: string | null
           verified_by?: string | null
+          verify_method?: Database["public"]["Enums"]["safety_verify_method"] | null
         }
         Relationships: [
           {
@@ -5776,6 +5779,135 @@ export type Database = {
         }
         Relationships: []
       }
+      safety_inspection_items: {
+        Row: {
+          feature_key: string
+          id: string
+          inspection_id: string
+          note: string | null
+          photo_paths: string[]
+          result: string
+          value_after: Database["public"]["Enums"]["safety_value"] | null
+          value_before: Database["public"]["Enums"]["safety_value"] | null
+        }
+        Insert: {
+          feature_key: string
+          id?: string
+          inspection_id: string
+          note?: string | null
+          photo_paths?: string[]
+          result: string
+          value_after?: Database["public"]["Enums"]["safety_value"] | null
+          value_before?: Database["public"]["Enums"]["safety_value"] | null
+        }
+        Update: {
+          feature_key?: string
+          id?: string
+          inspection_id?: string
+          note?: string | null
+          photo_paths?: string[]
+          result?: string
+          value_after?: Database["public"]["Enums"]["safety_value"] | null
+          value_before?: Database["public"]["Enums"]["safety_value"] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "safety_inspection_items_feature_key_fkey"
+            columns: ["feature_key"]
+            isOneToOne: false
+            referencedRelation: "safety_features"
+            referencedColumns: ["key"]
+          },
+          {
+            foreignKeyName: "safety_inspection_items_inspection_id_fkey"
+            columns: ["inspection_id"]
+            isOneToOne: false
+            referencedRelation: "admin_safety_inspections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "safety_inspection_items_inspection_id_fkey"
+            columns: ["inspection_id"]
+            isOneToOne: false
+            referencedRelation: "safety_inspections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      safety_inspections: {
+        Row: {
+          bar_id: string
+          created_at: string
+          fail_count: number
+          id: string
+          inspected_at: string
+          inspector_id: string | null
+          inspector_name: string
+          na_count: number
+          note: string | null
+          pass_count: number
+          safety_score_after: number | null
+          safety_score_before: number | null
+        }
+        Insert: {
+          bar_id: string
+          created_at?: string
+          fail_count?: number
+          id?: string
+          inspected_at?: string
+          inspector_id?: string | null
+          inspector_name: string
+          na_count?: number
+          note?: string | null
+          pass_count?: number
+          safety_score_after?: number | null
+          safety_score_before?: number | null
+        }
+        Update: {
+          bar_id?: string
+          created_at?: string
+          fail_count?: number
+          id?: string
+          inspected_at?: string
+          inspector_id?: string | null
+          inspector_name?: string
+          na_count?: number
+          note?: string | null
+          pass_count?: number
+          safety_score_after?: number | null
+          safety_score_before?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "safety_inspections_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
+            referencedRelation: "admin_bars"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "safety_inspections_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
+            referencedRelation: "bars"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "safety_inspections_inspector_id_fkey"
+            columns: ["inspector_id"]
+            isOneToOne: false
+            referencedRelation: "admin_users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "safety_inspections_inspector_id_fkey"
+            columns: ["inspector_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       safety_reports: {
         Row: {
           bar_id: string
@@ -6673,6 +6805,28 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_bar_safety: {
+        Row: {
+          bar_id: string | null
+          evidence_path: string | null
+          feature_key: string | null
+          icon: string | null
+          last_inspected_at: string | null
+          last_result: string | null
+          name_th: string | null
+          note: string | null
+          open_inaccurate_reports: number | null
+          sort_order: number | null
+          source: Database["public"]["Enums"]["safety_source"] | null
+          updated_at: string | null
+          value: Database["public"]["Enums"]["safety_value"] | null
+          verified_at: string | null
+          verified_by_name: string | null
+          verify_method: Database["public"]["Enums"]["safety_verify_method"] | null
+          weight: number | null
+        }
+        Relationships: []
+      }
       admin_bars: {
         Row: {
           address: string | null
@@ -7034,12 +7188,35 @@ export type Database = {
         }
         Relationships: []
       }
-      admin_safety_queue: {
+      admin_safety_inspections: {
         Row: {
           bar: Json | null
+          bar_id: string | null
+          created_at: string | null
+          fail_count: number | null
+          id: string | null
+          inspected_at: string | null
+          inspector_id: string | null
+          inspector_name: string | null
+          items: Json | null
+          na_count: number | null
+          note: string | null
+          pass_count: number | null
+          safety_score_after: number | null
+          safety_score_before: number | null
+        }
+        Relationships: []
+      }
+      admin_safety_queue: {
+        Row: {
+          awaiting_visit: boolean | null
+          bar: Json | null
+          bar_id: string | null
           evidence_path: string | null
           feature_key: string | null
           id: string | null
+          last_inspected_at: string | null
+          last_result: string | null
           name_th: string | null
           note: string | null
           open_inaccurate_reports: number | null
@@ -7047,6 +7224,8 @@ export type Database = {
           updated_at: string | null
           value: Database["public"]["Enums"]["safety_value"] | null
           verified_at: string | null
+          verified_by_name: string | null
+          verify_method: Database["public"]["Enums"]["safety_verify_method"] | null
         }
         Relationships: [
           {
@@ -7827,6 +8006,7 @@ export type Database = {
           bars_pending: number
           bookings_today: number
           deposits_to_verify: number
+          forfeited_today: number
           payouts_pending: number
           promo_slips_pending: number
           reviews_reported: number
@@ -7847,6 +8027,16 @@ export type Database = {
           p_bar_role?: Database["public"]["Enums"]["bar_staff_role"]
           p_role: Database["public"]["Enums"]["user_role"]
           p_user: string
+        }
+        Returns: Json
+      }
+      admin_inspect_safety: {
+        Args: {
+          p_actor: string
+          p_bar: string
+          p_inspected_at?: string
+          p_items: Json
+          p_note?: string
         }
         Returns: Json
       }
@@ -8435,6 +8625,12 @@ export type Database = {
         Args: { p_bar: string; p_paths: string[] }
         Returns: Json
       }
+      bar_safety_inspection_latest: { Args: { p_bar: string }; Returns: Json }
+      bar_sales_period: {
+        Args: { p_bar: string; p_from: string; p_to: string }
+        Returns: Json
+      }
+      bar_sales_stats: { Args: { p_bar: string; p_days?: number }; Returns: Json }
       bar_team: {
         Args: { p_bar: string }
         Returns: {
@@ -8620,6 +8816,10 @@ export type Database = {
       }
       run_booking_timeouts: { Args: never; Returns: Json }
       run_retention_jobs: { Args: never; Returns: Json }
+      safety_inspection_photo_ok: {
+        Args: { p_bar: string; p_path: string }
+        Returns: boolean
+      }
       search_bars: {
         Args: {
           p_category?: Database["public"]["Enums"]["bar_category"]
@@ -8778,6 +8978,7 @@ export type Database = {
       safety_report_status: "OPEN" | "CONFIRMED" | "DISMISSED"
       safety_source: "SELF_DECLARED" | "ADMIN_VERIFIED"
       safety_value: "YES" | "NO" | "UNKNOWN"
+      safety_verify_method: "EVIDENCE" | "ON_SITE"
       slip_status: "SUBMITTED" | "VERIFIED" | "REJECTED"
       theme_mode: "LIGHT" | "DARK" | "SYSTEM"
       tier_letter: "S" | "A" | "B" | "C"
@@ -8999,6 +9200,7 @@ export const Constants = {
       safety_report_status: ["OPEN", "CONFIRMED", "DISMISSED"],
       safety_source: ["SELF_DECLARED", "ADMIN_VERIFIED"],
       safety_value: ["YES", "NO", "UNKNOWN"],
+      safety_verify_method: ["EVIDENCE", "ON_SITE"],
       slip_status: ["SUBMITTED", "VERIFIED", "REJECTED"],
       theme_mode: ["LIGHT", "DARK", "SYSTEM"],
       tier_letter: ["S", "A", "B", "C"],

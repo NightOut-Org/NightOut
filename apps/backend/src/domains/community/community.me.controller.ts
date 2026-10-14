@@ -8,6 +8,7 @@ import {
   type CommunityLikeResult,
   type CommunityPinResult,
   type CommunitySaveResult,
+  type CommunityTeamBar,
   type CreateCommunityThreadResult,
   type UpdateCommunityCommentResult,
 } from '@nightout/contracts';
@@ -34,7 +35,7 @@ import { CommunityService } from './community.service';
 
 /**
  * community · ลูกค้า (ล็อกอินแล้ว) — ตั้ง/แก้/ลบกระทู้ · ความเห็น · ถูกใจ · บันทึก · ปักหมุดส่วนตัว · ฉบับร่าง · รายงาน
- * rpc app_community_* · อ่าน: community_feed (scope) · my_community_drafts
+ * rpc app_community_* · อ่าน: community_feed (scope) · my_community_drafts · my_community_team (สิทธิ์ทีมร้าน)
  */
 @ApiTags('community')
 @ApiBearerAuth()
@@ -66,6 +67,19 @@ export class CommunityMeController {
   })
   drafts(@Req() req: Request) {
     return this.db.rpcAs<CommunityDraft[]>(bearerOf(req), 'my_community_drafts', {});
+  }
+
+  @Get('me/community/team')
+  @ApiDoc({
+    summary: 'ร้านที่ฉันอยู่ในทีม (สิทธิ์ชุมชน)',
+    description:
+      'ทีมร้าน = รับคำเชิญแล้วและยังไม่ถูกถอด ของร้านที่แสดงอยู่หรือถูกระงับ (ทุกบทบาท) · ทีมร้านตั้งกระทู้ได้เฉพาะหมวด "ข่าวจากร้าน" ต้องแท็กร้านตัวเองที่แสดงอยู่ ไม่เกิน 3 กระทู้ต่อร้านใน 7 วันล่าสุด (นับรวมทั้งทีม รวมกระทู้ที่ลบ/ถูกซ่อน) · ร้านถูกระงับ = มีป้ายแต่ตั้งข่าวไม่ได้ · รายการว่าง = ไม่ใช่ทีมร้าน (rpc my_community_team)',
+    returns:
+      'รายการ `bar_id` · `slug` · `name` · `role` · `can_post` (ร้านแสดงอยู่ = ตั้งข่าวได้) · `shop_news_used` · `shop_news_limit` · `next_slot_at` (โพสต์ข่าวได้อีกเมื่อไร · null = ยังเหลือโควตา) — ร้านที่แสดงอยู่ก่อน',
+    validates: false,
+  })
+  team(@Req() req: Request) {
+    return this.db.rpcAs<CommunityTeamBar[]>(bearerOf(req), 'my_community_team', {});
   }
 
   @Put('me/community/drafts')
@@ -103,9 +117,11 @@ export class CommunityMeController {
   @ApiDoc({
     summary: 'ตั้งกระทู้',
     description:
-      'หมวด staff_only (ประกาศ) ตั้งได้เฉพาะทีม NightOut · แท็กร้านได้ 1 ร้าน (ร้านที่แสดงอยู่) · `media` ≤ 6 ไฟล์ (อัปโหลดเข้า community-media/<user_id>/ ก่อน · วิดีโอ ≤ 60 วิ) · สำเร็จแล้วร่าง NEW ถูกลบ (rpc app_community_create_thread)',
+      'หมวด staff_only (ประกาศ) ตั้งได้เฉพาะทีม NightOut · หมวด "ข่าวจากร้าน" (shop-news · team_only) ตั้งได้เฉพาะทีมร้าน ต้องแท็กร้านตัวเองที่แสดงอยู่ (APPROVED) ร้านละไม่เกิน 3 กระทู้ใน 7 วันล่าสุด (นับรวมทั้งทีม · ทุกสถานะ) เกิน = 409 COMMUNITY_SHOP_NEWS_LIMIT · บัญชีทีมร้าน (รวมทีมของร้านที่ถูกระงับ) ตั้งกระทู้หมวดอื่นไม่ได้ · โพสต์ตอนอยู่ทีมร้านได้ป้าย `author.team` · แท็กร้านได้ 1 ร้าน (ร้านที่แสดงอยู่) · `media` ≤ 6 ไฟล์ (อัปโหลดเข้า community-media/<user_id>/ ก่อน · วิดีโอ ≤ 60 วิ) · สำเร็จแล้วร่าง NEW ถูกลบ (rpc app_community_create_thread)',
     returns: '`id` รหัสกระทู้ใหม่',
     status: 201,
+    forbidden:
+      'หมวดประกาศ = ทีม NightOut (COMMUNITY_CATEGORY_STAFF_ONLY) · ข่าวจากร้าน = ทีมร้านแท็กร้านตัวเอง (COMMUNITY_CATEGORY_TEAM_ONLY / COMMUNITY_SHOP_NEWS_OWN_BAR) · ทีมร้านตั้งหมวดอื่นไม่ได้ (COMMUNITY_TEAM_CATEGORY) · บัญชีถูกระงับ (COMMUNITY_BANNED)',
   })
   create(@CurrentUser() me: AuthUser, @Body() b: CommunityThreadDto) {
     return this.community.write<CreateCommunityThreadResult>('app_community_create_thread', {
@@ -121,9 +137,11 @@ export class CommunityMeController {
   @Patch('community/threads/:id')
   @ApiDoc({
     summary: 'แก้กระทู้',
-    description: 'เฉพาะเจ้าของกระทู้ · ส่งครบทุกช่อง (`media` = ไฟล์ทั้งชุด · ไฟล์ที่เอาออกถูกลบจาก Storage) · บันทึก edited_at · ร่าง EDIT ของกระทู้นี้ถูกลบ (rpc app_community_update_thread)',
+    description:
+      'เฉพาะเจ้าของกระทู้ · ส่งครบทุกช่อง (`media` = ไฟล์ทั้งชุด · ไฟล์ที่เอาออกถูกลบจาก Storage) · บันทึก edited_at · ร่าง EDIT ของกระทู้นี้ถูกลบ · ข่าวจากร้านเปลี่ยนหมวด/ร้านที่แท็กไม่ได้ และย้ายกระทู้อื่นมาเป็นข่าวจากร้านไม่ได้ (400 COMMUNITY_SHOP_NEWS_LOCKED · แก้ไม่กินโควตา) · ทีมร้านแท็กร้านตัวเองเพิ่มในกระทู้นอกหมวดข่าวไม่ได้ (403 COMMUNITY_TEAM_OWN_TAG) · ร้านที่แท็กเปลี่ยน = นับยอดถูกใจใหม่ (rpc app_community_update_thread)',
     returns: '`id`',
-    forbidden: 'ไม่ใช่เจ้าของกระทู้ (NOT_THREAD_OWNER)',
+    forbidden:
+      'ไม่ใช่เจ้าของกระทู้ (NOT_THREAD_OWNER) · ข่าวจากร้านแก้ได้เฉพาะทีมของร้านที่แท็ก (COMMUNITY_CATEGORY_TEAM_ONLY / COMMUNITY_SHOP_NEWS_OWN_BAR) · ทีมร้านย้ายหมวด/แท็กร้านตัวเองนอกหมวดข่าวไม่ได้ (COMMUNITY_TEAM_CATEGORY / COMMUNITY_TEAM_OWN_TAG)',
   })
   update(@CurrentUser() me: AuthUser, @Id() id: string, @Body() b: CommunityThreadDto) {
     return this.community.write<CreateCommunityThreadResult>('app_community_update_thread', {
@@ -152,7 +170,8 @@ export class CommunityMeController {
   @ApiDoc({
     summary: 'ถูกใจกระทู้',
     description: '`on` = true ถูกใจ / false เลิก (rpc app_community_set_like)',
-    returns: '`thread_id` · `liked` · `like_count`',
+    returns:
+      '`thread_id` · `liked` · `like_count` · `counted` (false = ทีมร้านถูกใจในกระทู้ที่แท็กร้านตัวเอง — ไม่นับใน like_count · เลิกถูกใจแล้วก็ false)',
   })
   like(@CurrentUser() me: AuthUser, @Id() id: string, @Body() b: CommunityToggleDto) {
     return this.db.rpc<CommunityLikeResult>('app_community_set_like', { p_actor: me.id, p_thread: id, p_on: b.on });
@@ -184,7 +203,7 @@ export class CommunityMeController {
   @ApiDoc({
     summary: 'แสดงความคิดเห็น / ตอบกลับ',
     description:
-      '`parent_id` = ความเห็นที่ตอบ (ตอบกลับซ้อนได้ชั้นเดียว) · `media` ≤ 6 ไฟล์ (มีไฟล์แล้วไม่ต้องพิมพ์ข้อความ) · แจ้งเตือนเจ้าของกระทู้และเจ้าของความเห็นที่ถูกตอบ · ร่าง REPLY ของกระทู้นี้ถูกลบ (rpc app_community_add_comment)',
+      '`parent_id` = ความเห็นที่ตอบ (ตอบกลับซ้อนได้ชั้นเดียว) · `media` ≤ 6 ไฟล์ (มีไฟล์แล้วไม่ต้องพิมพ์ข้อความ) · แจ้งเตือนเจ้าของกระทู้และเจ้าของความเห็นที่ถูกตอบ · ความเห็นจากบัญชีทีมร้านได้ป้าย `author.team` และแจ้งเตือนแสดง "(ทีมร้าน · ชื่อร้าน)" · ร่าง REPLY ของกระทู้นี้ถูกลบ (rpc app_community_add_comment)',
     returns: '`id` · `thread_id` · `parent_id` (ความเห็นหลักที่ผูกจริง)',
     status: 201,
   })
@@ -230,7 +249,8 @@ export class CommunityMeController {
   @ApiDoc({
     summary: 'ถูกใจความคิดเห็น',
     description: '`on` = true / false (rpc app_community_set_comment_like)',
-    returns: '`comment_id` · `liked` · `like_count`',
+    returns:
+      '`comment_id` · `liked` · `like_count` · `counted` (false = ทีมร้านถูกใจความเห็นในกระทู้ที่แท็กร้านตัวเอง — ไม่นับใน like_count · เลิกถูกใจแล้วก็ false)',
   })
   likeComment(@CurrentUser() me: AuthUser, @Id() id: string, @Body() b: CommunityToggleDto) {
     return this.db.rpc<CommunityLikeResult>('app_community_set_comment_like', { p_actor: me.id, p_comment: id, p_on: b.on });

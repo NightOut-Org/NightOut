@@ -15,7 +15,9 @@ import {
   submitDeposit,
   tierList,
   transition,
+  verifySafety,
 } from './index';
+import { getState, mutate } from './index';
 
 beforeEach(() => resetDemo());
 
@@ -57,5 +59,55 @@ describe('demo data', () => {
     expect(p.startsWith('000201')).toBe(true);
     expect(p).toMatch(/6304[0-9A-F]{4}$/);
     expect(p).toContain('5406500.00');
+  });
+});
+
+describe('listBars — budget search (Hero ?budget=&people=)', () => {
+  const biggestZone = (barId: string) => Math.max(0, ...getBar(barId)!.zones.map((z) => z.capacityPax));
+
+  it('people: only bars with a zone that seats the whole group', () => {
+    const all = listBars();
+    expect(listBars({ people: 999 })).toHaveLength(0);
+    expect(listBars({ people: 1 })).toHaveLength(all.length);
+    const bar = all[0]!;
+    const max = biggestZone(bar.id);
+    expect(listBars({ people: max }).some((b) => b.id === bar.id)).toBe(true);
+    expect(listBars({ people: max + 1 }).some((b) => b.id === bar.id)).toBe(false);
+  });
+
+  it('a bar without price data is hidden once a budget is set', () => {
+    const id = getState().bars.find((b) => b.status === 'APPROVED')!.id;
+    mutate((s) => {
+      s.bars.find((b) => b.id === id)!.avgPerPerson = 0;
+    });
+    expect(listBars().some((b) => b.id === id)).toBe(true);
+    expect(listBars({ maxBudget: 2000 }).some((b) => b.id === id)).toBe(false);
+  });
+
+  it('budget keeps bars priced at or under the limit', () => {
+    const prices = listBars().map((b) => b.avgPerPerson);
+    const limit = [...prices].sort((a, b) => a - b)[Math.floor(prices.length / 2)]!;
+    const within = listBars({ maxBudget: limit });
+    expect(within.length).toBeGreaterThan(0);
+    expect(within.every((b) => b.avgPerPerson > 0 && b.avgPerPerson <= limit)).toBe(true);
+    expect(within).toHaveLength(prices.filter((p) => p > 0 && p <= limit).length);
+  });
+});
+
+describe('safety verify (evidence only)', () => {
+  it('marks the item ADMIN_VERIFIED by EVIDENCE with a date, never as an on-site visit', () => {
+    const bar = getState().bars[0]!;
+    const key = bar.safety[0]!.key;
+    mutate((s) => {
+      const f = s.bars[0]!.safety[0]!;
+      f.source = 'SELF_DECLARED';
+      f.verifyMethod = null;
+      f.verifiedAt = null;
+    });
+    verifySafety(bar.id, key, 'admin');
+    const f = getState().bars[0]!.safety.find((x) => x.key === key)!;
+    expect(f.source).toBe('ADMIN_VERIFIED');
+    expect(f.verifyMethod).toBe('EVIDENCE');
+    expect(f.verifiedAt).toBeTruthy();
   });
 });

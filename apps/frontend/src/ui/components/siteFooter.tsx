@@ -71,7 +71,7 @@ export function SiteFooter({ className = '' }: { className?: string }) {
             <Link to="/" className="inline-flex" aria-label="NightOut หน้าแรก">
               <BrandLogo surface="dark" alt="" lazy className="h-10 md:h-12" />
             </Link>
-            <p className="mt-4 text-white/85">ค้นหาร้านเหล้า บาร์ และสถานที่นั่งชิล ใกล้คุณ</p>
+            <p className="mt-4 text-white/85">ค้นหาบาร์ ร้านดนตรีสด และที่นั่งชิลยามค่ำ ใกล้คุณ</p>
             <p className="mt-1 text-xs text-white/55">Discover night vibes arround you.</p>
             <ul className="mt-5 flex gap-3">
               {SOCIAL.map((s) => (

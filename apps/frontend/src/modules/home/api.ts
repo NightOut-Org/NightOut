@@ -1,9 +1,22 @@
-import type { PublicHomeResult } from '@nightout/contracts';
+import type { PublicHomeResult, RankingQuery, RankingRow } from '@nightout/contracts';
 import { Rest } from '@nightout/utils/rest';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect } from 'react';
 
-/** API ของหน้าแรก (เนื้อหาที่แอดมินแก้ได้ — Hero + การ์ดหมวด + ร้านยอดนิยม) · backend: domains/site-content */
+/**
+ * API ของหน้าแรก (เนื้อหาที่แอดมินแก้ได้ — Hero + การ์ดหมวด + ร้านยอดนิยม) · backend: domains/site-content
+ * + อันดับประจำสัปดาห์ 3 อันดับแรก · backend: domains/catalog
+ */
+
+/** GET /public/ranking — 3 อันดับแรกของรอบสัปดาห์ล่าสุด (เส้นเดียวกับหน้า /ranking · ประกาศซ้ำตาม ADR 0007) */
+export function useWeeklyTop3() {
+  return useQuery({
+    queryKey: ['catalog', 'ranking', 'WEEKLY', 'ALL', 3],
+    queryFn: () =>
+      Rest.get<RankingRow[]>('/public/ranking', { params: { period: 'WEEKLY', limit: 3 } satisfies RankingQuery }),
+    staleTime: 5 * 60_000,
+  });
+}
 
 /** GET /public/home */
 const fetchSiteHome = () => Rest.get<PublicHomeResult>('/public/home');

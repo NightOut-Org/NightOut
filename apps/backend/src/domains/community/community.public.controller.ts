@@ -10,7 +10,7 @@ import { CommunityFeedQueryDto, feedArgs } from './community.dto';
 import { CommunityService } from './community.service';
 
 const THREAD_FIELDS =
-  '`id` · `title` · `excerpt` · `category` · `category_name` · `author` {id, name, is_staff} · `bar` {id, slug, name} | null · `reply_count` · `like_count` · `view_count` · `created_at` · `last_activity_at` · `edited_at` · `is_mine` · `is_pinned` · `is_saved` · `is_liked`';
+  '`id` · `title` · `excerpt` · `category` · `category_name` · `author` {id, name, is_staff, team: {id, slug | null, name} | null} · `bar` {id, slug, name} | null · `reply_count` · `like_count` · `view_count` · `created_at` · `last_activity_at` · `edited_at` · `is_mine` · `is_pinned` · `is_saved` · `is_liked`';
 
 /** community · สาธารณะ — ฟีด / อ่านกระทู้ / หมวด (อ่านในนามผู้เรียก: ล็อกอินแล้วได้ is_pinned / is_saved / is_liked ของตัวเอง) */
 @ApiTags('community')
@@ -25,7 +25,7 @@ export class CommunityPublicController {
   @ApiDoc({
     summary: 'หมวดกระทู้',
     description: 'หมวดที่เปิดใช้ เรียงตามลำดับ + จำนวนกระทู้ที่แสดงอยู่ (rpc community_categories_list)',
-    returns: 'รายการ `slug` · `name` · `sort_order` · `staff_only` (ตั้งได้เฉพาะทีม NightOut) · `thread_count`',
+    returns: 'รายการ `slug` · `name` · `sort_order` · `staff_only` (ตั้งได้เฉพาะทีม NightOut) · `team_only` (ตั้งได้เฉพาะทีมร้าน — ข่าวจากร้าน) · `thread_count`',
     auth: false,
     validates: false,
   })
@@ -96,7 +96,8 @@ export class CommunityPublicController {
   @Get('trending-bars')
   @ApiDoc({
     summary: 'ร้านที่ถูกพูดถึงสัปดาห์นี้',
-    description: 'ร้านที่ถูกแท็กในกระทู้มากที่สุด 7 วันล่าสุด (rpc community_trending_bars)',
+    description:
+      'ร้านที่ถูกแท็กในกระทู้มากที่สุด 7 วันล่าสุด · ไม่นับกระทู้ที่ทีมร้านแท็กร้านตัวเอง (รวมข่าวจากร้านทั้งหมด) · จำนวนเท่ากันเรียงตามยอดถูกใจ (rpc community_trending_bars)',
     returns: 'รายการ `id` · `slug` · `name` · `thread_count` (สูงสุด 3 ร้าน)',
     auth: false,
     validates: false,

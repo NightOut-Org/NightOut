@@ -54,7 +54,7 @@ export function BarReviewsPage() {
             </Button>
           </Link>
         ) : (
-          <span className="text-xs text-muted">รีวิวได้หลังจองและมัดจำผ่านแล้ว</span>
+          <span className="text-xs text-muted">รีวิวได้หลังจองและชำระ Table Fee แล้ว</span>
         )}
       </div>
       {reviews.length ? (

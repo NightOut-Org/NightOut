@@ -10,9 +10,9 @@ import { ApiDoc } from '../../common/api-doc';
 import { ADMIN_FORBIDDEN, Id } from '../../common/params';
 import { SupabaseService } from '../../supabase/supabase.service';
 import { AccountUsersService } from './account-users.service';
-import { CreateUserDto, SetUsersRoleDto, UnbanUserDto, UpdateUserAccountDto } from './account.dto';
+import { BanUserDto, CreateUserDto, SetUsersRoleDto, UnbanUserDto, UpdateUserAccountDto } from './account.dto';
 
-/** account · Backoffice — ผู้ใช้ ชั้นบัญชี (ADR 0005) แบน/ปลดแบน · audit log ในธุรกรรมเดียว */
+/** account · Backoffice — ผู้ใช้ ชั้นบัญชี (ADR 0005) · แบน/ปลดแบนพร้อมเหตุผล (แบนเอง + แบนอัตโนมัติจากสลิปปลอม) · audit log ในธุรกรรมเดียว */
 @ApiTags('account')
 @ApiBearerAuth()
 @UseGuards(SupabaseJwtGuard, AdminGuard)
@@ -97,15 +97,32 @@ export class AccountAdminController {
     return result;
   }
 
+  @Post('users/:id/ban')
+  @HttpCode(200)
+  @ApiDoc({
+    summary: 'แบนบัญชี',
+    description:
+      'แบนลูกค้าหรือบัญชีทีมร้านเอง (ต้องมีเหตุผล 3–300 ตัวอักษร — เจ้าของบัญชีเห็นในแจ้งเตือน) · ถูกแบน = จองโต๊ะไม่ได้ + ชุมชนอ่านได้อย่างเดียว · ' +
+      'การจองเดิมและร้านไม่ถูกแตะ (ระงับร้านที่ PATCH /admin/bars/status) · `ban_phones` = แบนทุกเบอร์ที่บัญชีนี้เคยใช้ · ' +
+      'แบนตัวเอง/บัญชีทีมงานไม่ได้ · audit log + แจ้งเจ้าของบัญชี (rpc admin_ban_user)',
+    returns: '`id` · `banned` = true · `banned_at` · `phones_banned` จำนวนเบอร์ที่แบนเพิ่ม',
+    forbidden: ADMIN_FORBIDDEN + ' · `CANNOT_BAN_SELF` / `CANNOT_BAN_ADMIN`',
+  })
+  ban(@CurrentUser() me: AuthUser, @Id() id: string, @Body() b: BanUserDto) {
+    return this.db.rpc('admin_ban_user', { p_actor: me.id, p_user: id, p_reason: b.reason, p_ban_phones: b.ban_phones ?? false });
+  }
+
   @Post('users/:id/unban')
   @HttpCode(200)
   @ApiDoc({
     summary: 'ปลดแบนผู้ใช้',
-    description: 'ปลดแบนบัญชีที่โดนแบนจากสลิปปลอม + ปลดเบอร์โทรที่โดนแบนเพราะบัญชีนี้ + ล้างธงสลิปปลอมที่นับอยู่ (rpc admin_unban_user · audit log)',
+    description:
+      'ปลดแบนทั้งที่แบนเองและแบนอัตโนมัติจากสลิปปลอม · ต้องมีเหตุผล 3–300 ตัวอักษร (บันทึกใน audit log) · ' +
+      'ปลดเบอร์โทรที่โดนแบนเพราะบัญชีนี้ + ล้างธงสลิปปลอมที่นับอยู่ · แจ้งเจ้าของบัญชี (rpc admin_unban_user · audit log)',
     returns: '`id` · `banned` = false · `phones_unbanned` จำนวนเบอร์ที่ปลด · `flags_cleared` จำนวนธงที่ล้าง',
     forbidden: ADMIN_FORBIDDEN,
   })
   unban(@CurrentUser() me: AuthUser, @Id() id: string, @Body() b: UnbanUserDto) {
-    return this.db.rpc('admin_unban_user', { p_actor: me.id, p_user: id, p_reason: b.reason || null });
+    return this.db.rpc('admin_unban_user', { p_actor: me.id, p_user: id, p_reason: b.reason });
   }
 }

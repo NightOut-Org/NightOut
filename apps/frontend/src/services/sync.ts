@@ -202,8 +202,10 @@ export interface SessionProfile {
   role: UserRole;
   /** เบอร์ล่าสุดที่ใช้จอง (E.164) — หน้า Checkout เติมให้ */
   phoneE164?: string | null;
-  /** ถูกระงับการจอง (สลิปปลอมซ้ำ) */
+  /** ถูกระงับ (แอดมินแบน / สลิปปลอมซ้ำ) — จองไม่ได้ + ชุมชนอ่านอย่างเดียว */
   bannedAt?: string | null;
+  /** เหตุผลที่ถูกระงับ */
+  banReason?: string | null;
 }
 export interface UserPrefs {
   styleIds: string[];
@@ -234,8 +236,10 @@ export async function loadUser(p: SessionProfile): Promise<{ barId?: string }> {
   lastUserSignature = signature;
   const urls = await signReviewPaths(mediaPaths(myReviewRows));
   const pr = o.preferences;
+  // สไตล์ที่แอดมินซ่อน (/styles) ไม่อยู่ใน MASTER.styles → ตัดออก ไม่ให้โผล่เป็น id ดิบในโปรไฟล์/onboarding
+  const visibleStyleIds = new Set(MASTER.styles.map((s) => s.id));
   myPrefs = {
-    styleIds: pr?.preferred_style_ids ?? [],
+    styleIds: (pr?.preferred_style_ids ?? []).filter((id) => visibleStyleIds.has(id)),
     districtIds: pr?.preferred_district_ids ?? [],
     budget: pr?.budget_per_person ? Number(pr.budget_per_person) : undefined,
     pax: pr?.usual_pax ?? undefined,
@@ -304,8 +308,8 @@ export async function refresh(opts: { public?: boolean } = {}) {
 }
 
 /** การเขียนที่ไม่ต้องโหลด store ใหม่ — POST ที่จริงเป็นการขอ URL ไฟล์ / ลบบัญชี (เข้าสู่ระบบไม่ได้แล้ว) */
-// ชุมชน: หน้าใช้ TanStack Query ของตัวเอง (store ไม่มีข้อมูลกระทู้) — ร่างบันทึกทุกวินาทีที่หยุดพิมพ์ ไม่ต้องโหลด store ใหม่
-const NO_REFRESH = /^\/storage\/|^\/me\/delete$|^\/(public\/|me\/)?community\//;
+// ชุมชน: หน้าใช้ TanStack Query ของตัวเอง (store ไม่มีข้อมูลกระทู้) — ร่างบันทึกทุกวินาทีที่หยุดพิมพ์ ไม่ต้องโหลด store ใหม่ · นับเห็น/คลิกโฆษณา (mini-ads) ไม่ต้องโหลด store ใหม่
+const NO_REFRESH = /^\/storage\/|^\/me\/delete$|^\/(public\/|me\/)?community\/|^\/public\/mini-ads\//;
 /** การเขียนที่เปลี่ยนข้อมูลหน้าร้าน → โหลด `/public/catalog` ใหม่ด้วย */
 const PUBLIC_WRITES = /^\/merchant\/bars\/[^/]+\/(crowd|info|media|menu|promotions|fees|zones|safety|booking-settings)|^\/bookings\/[^/]+\/review$/;
 

@@ -7,7 +7,7 @@ import { compactCount } from '@/ui/utils/community';
 import { useTrendingBars } from '../api';
 
 export const COMMUNITY_RULES =
-  'เคารพกัน ไม่โฆษณาแฝง ห้ามแชร์ข้อมูลส่วนตัวของคนอื่น · 20+ · ดื่มไม่ขับ';
+  'เคารพกัน ไม่โฆษณาแฝง ห้ามแชร์ข้อมูลส่วนตัวของคนอื่น · ทีมร้านมีป้าย "ทีมร้าน" ห้ามโปรแอลกอฮอล์และห้ามพูดถึงร้านอื่นในทางเสีย · 20+ · ดื่มไม่ขับ';
 
 /** คอลัมน์ซ้าย (จอใหญ่): หมวดหมู่ + จำนวนกระทู้ */
 export function CategoryAside({
@@ -49,7 +49,10 @@ export function FeedSideRail() {
     <aside className="sticky top-24 hidden w-72 shrink-0 flex-col gap-4 self-start xl:flex">
       {bars.length > 0 && (
         <section className="rounded-2xl border border-border bg-surface p-4">
-          <h2 className="m-0 mb-3 text-[15px] font-semibold">ร้านที่ถูกพูดถึงสัปดาห์นี้</h2>
+          <h2 className="m-0 text-[15px] font-semibold">ร้านที่ถูกพูดถึงสัปดาห์นี้</h2>
+          <p className="m-0 mb-3 mt-0.5 text-xs text-muted">
+            ไม่นับกระทู้ที่ทีมร้านโพสต์ถึงร้านตัวเอง
+          </p>
           <ul className="m-0 flex list-none flex-col gap-3 p-0">
             {bars.map((b) => {
               const bar = getBar(b.id);

@@ -5,15 +5,20 @@ import { PAGE_SIZE } from '@/configs/constants';
 import { LoadError } from '@/ui/components/LoadError';
 import { dateTime } from '@/ui/utils/format';
 import { AUDIT_ACTION } from '@/ui/utils/labels';
+import { useAdminAuth } from '@/services/adminAuth';
 import { useAuditLogs } from './api';
 
 const json = (v: unknown) => (v == null ? '-' : JSON.stringify(v, null, 2));
 
-/** ทุกการกระทำของแอดมิน/ระบบ (500 รายการล่าสุด) · กดแถวเพื่อดูค่าก่อน–หลัง */
+/**
+ * ทุกการกระทำของแอดมิน/ระบบ (500 รายการล่าสุด) · กดแถวเพื่อดูค่าก่อน–หลัง
+ * แอดมินไม่เห็นรายการที่ซูเปอร์แอดมินเป็นคนทำ — DB กรองให้ (admin_audit_logs · …20261013000200)
+ */
 export function AuditLogsPage() {
+  const { isSuperAdmin } = useAdminAuth();
   const { data, isLoading, error, refetch } = useAuditLogs();
   return (
-    <PageContainer title="Audit Log">
+    <PageContainer title="Audit Log" subTitle={isSuperAdmin ? undefined : 'ไม่แสดงรายการที่ซูเปอร์แอดมินเป็นคนทำ'}>
       <LoadError error={error} onRetry={() => void refetch()} />
       <Table<Db.AdminAuditLog>
         rowKey="id"

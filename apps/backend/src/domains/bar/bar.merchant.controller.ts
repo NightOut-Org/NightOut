@@ -1,17 +1,32 @@
-import { Body, Controller, HttpCode, Patch, Post, Put, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Patch, Post, Put, Req, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import type * as C from '@nightout/contracts';
+import { bearerOf } from '../../auth/bearer';
 import { CurrentUser } from '../../auth/current-user.decorator';
-import { SupabaseJwtGuard, type AuthUser } from '../../auth/supabase-jwt.guard';
+import { SupabaseJwtGuard, type AuthedRequest, type AuthUser } from '../../auth/supabase-jwt.guard';
 import { ApiDoc } from '../../common/api-doc';
 import { BarId, TEAM_FORBIDDEN } from '../../common/params';
 import { SupabaseService } from '../../supabase/supabase.service';
 import { BarMediaService } from './bar-media.service';
-import { BarInfoDto, BarMediaDto, BarPromotionsDto, BarStoreDto, CrowdDto, FeesDto, MenuDto, PromotionsPageDto, SaveSafetyDto, SettingsPageDto, ZonesDto } from './bar.dto';
+import {
+  BarInfoDto,
+  BarLocationDto,
+  BarMediaDto,
+  BarPromotionsDto,
+  BarStoreDto,
+  CrowdDto,
+  FeesDto,
+  MenuDto,
+  PromotionsPageDto,
+  SaveSafetyDto,
+  SettingsPageDto,
+  ZonesDto,
+} from './bar.dto';
 import { PayoutCryptoService } from './payout-crypto.service';
 
 /**
- * bar · ทีมร้าน — ข้อมูลร้าน รูปร้าน เมนู โปร ค่าธรรมเนียม โซน ความปลอดภัย ตั้งค่าการจอง บัญชีรับเงิน ความแน่น
- * ฟังก์ชันใน DB ตรวจ bar_staff + บทบาท: STAFF ทำได้แค่ความแน่น · เจ้าของ/ผู้จัดการ ทุกอย่าง · บัญชีรับเงินเฉพาะเจ้าของ
+ * bar · ทีมร้าน — ข้อมูลร้าน ตำแหน่งร้าน (หมุด) รูปร้าน เมนู โปร ค่าธรรมเนียม โซน ความปลอดภัย ตั้งค่าการจอง บัญชีรับเงิน ความแน่น
+ * ฟังก์ชันใน DB ตรวจ bar_staff + บทบาท: STAFF ทำได้แค่ความแน่น · เจ้าของ/ผู้จัดการ ทุกอย่าง (รวมบัญชีรับเงิน — requirement "Owner/Manager")
  */
 @ApiTags('bar')
 @ApiBearerAuth()
@@ -39,7 +54,7 @@ export class BarMerchantController {
   @Patch('info')
   @ApiDoc({
     summary: 'แก้ข้อมูลร้าน',
-    description: 'แก้ชื่อ คำอธิบาย ที่อยู่ เบอร์โทร ย่าน สไตล์ เวลาเปิด-ปิด และลิงก์โซเชียล · ส่งเฉพาะ field ที่ต้องการแก้ · เจ้าของ/ผู้จัดการเท่านั้น (rpc app_update_bar_info)',
+    description: 'แก้ชื่อ คำอธิบาย เบอร์โทร ย่าน สไตล์ เวลาเปิด-ปิด และลิงก์โซเชียล (ที่อยู่/หมุดแก้ที่ PUT …/location) · ส่งเฉพาะ field ที่ต้องการแก้ · เจ้าของ/ผู้จัดการเท่านั้น (rpc app_update_bar_info)',
     returns: '`id` รหัสร้าน',
     forbidden: TEAM_FORBIDDEN,
   })
@@ -63,12 +78,37 @@ export class BarMerchantController {
   @ApiDoc({
     summary: 'บันทึกหน้าข้อมูลร้าน (ข้อมูลร้าน + รูปร้าน)',
     description:
-      'หน้า /merchant/store แก้ในหน้าแล้วบันทึกครั้งเดียว · `info` = ชื่อ คำอธิบาย ที่อยู่ เบอร์โทร ย่าน สไตล์ เวลาเปิด-ปิด ลิงก์โซเชียล (ส่งเฉพาะ field ที่แก้) · `media` = แกลเลอรีทั้งชุดตามลำดับ (สูงสุด 10 รูป · อัปโหลดเข้า bucket bar-media/<bar_id>/gallery/ ก่อนด้วย POST /storage/upload-url แล้วส่ง path) + `cover_path` (ต้องอยู่ในแกลเลอรี · null = ใช้รูปแทน) · ส่งเฉพาะส่วนที่แก้ อย่างน้อย 1 ส่วน · ธุรกรรมเดียว (พลาด = ไม่บันทึกทั้งคู่) · ไฟล์ที่เอาออกถูกลบจาก Storage · เจ้าของ/ผู้จัดการเท่านั้น (rpc app_save_bar_store → app_update_bar_info + app_set_bar_media)',
+      'หน้า /merchant/store แก้ในหน้าแล้วบันทึกครั้งเดียว · `info` = ชื่อ คำอธิบาย เบอร์โทร ย่าน สไตล์ เวลาเปิด-ปิด ลิงก์โซเชียล (ส่งเฉพาะ field ที่แก้ · ที่อยู่/หมุดแก้ที่ PUT …/location) · `media` = แกลเลอรีทั้งชุดตามลำดับ (สูงสุด 10 รูป · อัปโหลดเข้า bucket bar-media/<bar_id>/gallery/ ก่อนด้วย POST /storage/upload-url แล้วส่ง path) + `cover_path` (ต้องอยู่ในแกลเลอรี · null = ใช้รูปแทน) · ส่งเฉพาะส่วนที่แก้ อย่างน้อย 1 ส่วน · ธุรกรรมเดียว (พลาด = ไม่บันทึกทั้งคู่) · ไฟล์ที่เอาออกถูกลบจาก Storage · เจ้าของ/ผู้จัดการเท่านั้น (rpc app_save_bar_store → app_update_bar_info + app_set_bar_media)',
     returns: '`bar_id` · `info_updated` · `gallery` = { `bar_id`, `count`, `cover_image_url`, `paths` } หรือ null ถ้าไม่ได้ส่ง media',
     forbidden: TEAM_FORBIDDEN,
   })
   saveStore(@CurrentUser() me: AuthUser, @BarId() bar: string, @Body() b: BarStoreDto) {
     return this.media.saveStore(me.id, bar, b);
+  }
+
+  @Put('location')
+  @ApiDoc({
+    summary: 'ส่งตำแหน่งร้าน (หมุด · ที่อยู่ · ที่จอดรถ · รถไฟฟ้า)',
+    description:
+      'หน้า /merchant/location · ร้านที่แสดง/ระงับอยู่ → สร้างคำขอรอแอดมินตรวจ (ระหว่างรอลูกค้าเห็นหมุดเดิม · ส่งใหม่ = แทนคำขอเดิม · แจ้งแอดมิน) · ร้านที่ยังไม่เคยแสดง → บันทึกทันที (ตรวจพร้อมการอนุมัติร้าน) · เหมือนเดิมทุกช่อง = `LOCATION_UNCHANGED` · เจ้าของ/ผู้จัดการเท่านั้น (rpc app_request_bar_location)',
+    returns: '`bar_id` · `status` PENDING (รอตรวจ) / APPLIED (บันทึกแล้ว) · `request_id` (null ถ้า APPLIED)',
+    forbidden: TEAM_FORBIDDEN,
+  })
+  requestLocation(@CurrentUser() me: AuthUser, @BarId() bar: string, @Body() b: BarLocationDto) {
+    return this.db.rpc('app_request_bar_location', { p_actor: me.id, p_bar: bar, p: b });
+  }
+
+  @Delete('location-request')
+  @ApiDoc({
+    summary: 'ยกเลิกคำขอแก้ตำแหน่งที่รอตรวจ',
+    description:
+      'หน้า /merchant/location ปุ่ม "ยกเลิกคำขอ" · ลูกค้ายังเห็นหมุดเดิมต่อ · ไม่มีคำขอรอตรวจ = `LOCATION_REQUEST_NOT_FOUND` · เจ้าของ/ผู้จัดการเท่านั้น (rpc app_cancel_bar_location_request)',
+    returns: '`bar_id` · `request_id` · `cancelled` = true',
+    validates: false,
+    forbidden: TEAM_FORBIDDEN,
+  })
+  cancelLocationRequest(@CurrentUser() me: AuthUser, @BarId() bar: string) {
+    return this.db.rpc('app_cancel_bar_location_request', { p_actor: me.id, p_bar: bar });
   }
 
   @Put('menu')
@@ -86,7 +126,7 @@ export class BarMerchantController {
   @Put('promotions')
   @ApiDoc({
     summary: 'ตั้งโปรโมชันของร้าน',
-    description: 'แทนที่โปรทั้งหมด (เช่น เบียร์ราคาพิเศษก่อน 2 ทุ่ม) · โปรใหม่/แก้ไขต้องรอแอดมินตรวจก่อนแสดง (rpc app_set_bar_promotions)',
+    description: 'แทนที่โปรทั้งหมด (เช่น มาก่อน 2 ทุ่ม มิกเซอร์ 4 จ่าย 3 · ห้ามโปรแอลกอฮอล์) · โปรใหม่/แก้ไขต้องรอแอดมินตรวจก่อนแสดง (rpc app_set_bar_promotions)',
     returns: '`bar_id` · `count` จำนวนโปร · `pending` จำนวนที่รอตรวจ',
     forbidden: TEAM_FORBIDDEN,
   })
@@ -138,6 +178,18 @@ export class BarMerchantController {
   })
   saveSafety(@CurrentUser() me: AuthUser, @BarId() bar: string, @Body() b: SaveSafetyDto) {
     return this.db.rpc('app_save_safety', { p_actor: me.id, p_bar: bar, p_items: b.items });
+  }
+
+  @Get('safety/inspection')
+  @ApiDoc({
+    summary: 'ผลลงพื้นที่ตรวจ Safety ครั้งล่าสุด',
+    description:
+      'หน้า /merchant/safety — วันที่ทีมงานลงพื้นที่ · ผล ผ่าน/ไม่พบ/ไม่ได้ตรวจ ต่อข้อ + หมายเหตุ + รูป (bucket bar-verifications) · ไม่มีชื่อผู้ตรวจ · เฉพาะการลงพื้นที่ (ON_SITE — การยืนยันจากหลักฐานไม่อยู่ในนี้) · เจ้าของ/ผู้จัดการเท่านั้น (บทบาทอื่น/ไม่ใช่ทีมได้ null) (rpc bar_safety_inspection_latest)',
+    returns:
+      'object `id` · `inspected_at` · `note` · `pass_count` · `fail_count` · `na_count` · `safety_score` · `items[]` (`feature_key`, `name_th`, `result`, `note`, `photo_paths`) หรือ `null` ถ้ายังไม่เคยตรวจ หรือผู้เรียกไม่ใช่เจ้าของ/ผู้จัดการ',
+  })
+  latestInspection(@Req() req: AuthedRequest, @BarId() bar: string) {
+    return this.db.rpcAs<C.SafetyInspectionSummary | null>(bearerOf(req), 'bar_safety_inspection_latest', { p_bar: bar });
   }
 
   /** เลขบัญชีเข้ารหัสที่นี่ก่อนส่งลง DB — DB/หน้าเว็บเห็นแค่ 4 ตัวท้าย */

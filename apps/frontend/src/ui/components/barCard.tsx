@@ -5,6 +5,7 @@ import { baht } from '@/ui/utils/format';
 import { barImage } from '@/ui/utils/barImage';
 import { BarRating } from './barRating';
 import { CrowdBadge } from './crowdBadge';
+import { DealBadge } from './dealBadge';
 import { FavoriteButton } from './favoriteButton';
 import { PRBadge } from './prBadge';
 
@@ -42,7 +43,7 @@ export function BarCard({ bar }: { bar: BarWithTier }) {
   return (
     <Link
       to={`/bars/${bar.slug}`}
-      className="group flex h-full flex-col rounded-2xl border border-border bg-card p-3 !text-text transition-colors hover:border-purple/70 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
+      className="group flex h-full min-w-0 flex-col rounded-2xl border border-border bg-card p-3 !text-text transition-colors hover:border-purple/70 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
     >
       <div className="relative">
         <BarCover bar={bar} className="aspect-[16/10] rounded-xl" />
@@ -71,6 +72,7 @@ export function BarCard({ bar }: { bar: BarWithTier }) {
         <p className="mt-1 text-sm text-muted">
           ประมาณ {baht(bar.avgPerPerson)} ต่อคน · ความปลอดภัย {safetyScore(bar)}/100
         </p>
+        <DealBadge bar={bar} className="mt-2" />
         <div className="mt-auto pt-4">
           <span className="inline-flex items-center gap-1.5 rounded-full border border-gold px-4 py-1.5 text-sm font-medium text-gold-text transition-colors group-hover:bg-gold group-hover:text-on-gold">
             ดูรายละเอียด <ArrowRight size={14} />

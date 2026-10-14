@@ -2,12 +2,17 @@ import { App, Button, Card, Form, InputNumber, Select } from 'antd';
 import { useState } from 'react';
 import { MASTER, myPrefs } from '@/services/data';
 import { updateProfile } from './api';
-import { useNavigate } from 'react-router';
+import { useNavigate, useSearchParams } from 'react-router';
 import { PageHeader } from '@/ui/components/pageHeader';
 
-/** /onboarding — ความชอบ ใช้กับ rule-based recommendation */
+/** `?next=` จากหน้าสมัคร (เช่น ลิงก์แชร์ที่กด "ไปด้วย") — รับเฉพาะ path ในเว็บเรา กันพาออกไปเว็บอื่น */
+const safeNext = (v: string | null) => (v && /^\/(?![/\\])/.test(v) ? v : '/');
+
+/** /onboarding — ความชอบ ใช้กับ rule-based recommendation · เสร็จ/ข้าม → ไป `?next=` (ไม่มี = หน้าแรก) */
 export function OnboardingPage() {
   const navigate = useNavigate();
+  const [params] = useSearchParams();
+  const next = safeNext(params.get('next'));
   const { message } = App.useApp();
   const [saving, setSaving] = useState(false);
   return (
@@ -31,7 +36,7 @@ export function OnboardingPage() {
                 usual_pax: v.pax ?? null,
                 onboarded: true,
               });
-              navigate('/');
+              navigate(next);
             } catch (e) {
               message.error((e as Error).message);
             } finally {
@@ -54,7 +59,7 @@ export function OnboardingPage() {
             <Select mode="multiple" options={MASTER.districts.map((d) => ({ label: d.name, value: d.id }))} />
           </Form.Item>
           <div className="flex gap-3">
-            <Button block onClick={() => navigate('/')}>
+            <Button block onClick={() => navigate(next)}>
               ข้าม
             </Button>
             <Button block type="primary" htmlType="submit" loading={saving}>

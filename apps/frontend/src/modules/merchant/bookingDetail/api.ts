@@ -31,3 +31,13 @@ export const moveBooking = (bookingId: string, zoneId: string, tableId: string |
 /** POST /merchant/bookings/:id/refund — ร้านยืนยันคืนมัดจำลูกค้า → NightOut โอนคืน (ทีมร้านทุกบทบาท) */
 export const refundDeposit = (bookingId: string, reason: string) =>
   Rest.post<C.RefundDepositResult>(`/merchant/bookings/${bookingId}/refund`, { reason: reason.trim() } satisfies C.RefundDepositBody);
+
+/** POST /merchant/bookings/:id/no-table — ร้านไม่มีโต๊ะให้ลูกค้า: คืน Table Fee + ยกเลิก (ถ้ายังไม่เช็กอิน) + บันทึกประวัติร้าน (ทีมร้านทุกบทบาท) */
+export const reportNoTable = (bookingId: string, note?: string) =>
+  Rest.post<C.ReportNoTableResult>(`/merchant/bookings/${bookingId}/no-table`, {
+    note: note?.trim() || null,
+  } satisfies C.ReportNoTableBody);
+
+/** POST /merchant/bookings/:id/forfeit — ปลดโต๊ะ (Forfeited) เองเมื่อเลยเวลาเก็บโต๊ะ (ทีมร้านทุกบทบาท · ผลเหมือน job ปลดโต๊ะอัตโนมัติ) */
+export const forfeitBooking = (bookingId: string) =>
+  Rest.post<C.TeamForfeitResult>(`/merchant/bookings/${bookingId}/forfeit`);

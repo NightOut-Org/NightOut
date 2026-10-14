@@ -1,5 +1,11 @@
 # CHANGELOG — backend · community
 
+## 2026-10-13 — ชุมชน: สิทธิ์ทีมร้าน (ป้ายทีมร้าน · ข่าวจากร้าน · ไม่นับไลก์/ร้านมาแรง)
+- migration `20261013000900_community_shop_team.sql`: "ทีมร้าน" = `bar_staff` ที่รับเชิญแล้ว/ยังไม่ถูกถอด ของร้าน APPROVED หรือ SUSPENDED (ทุกบทบาท) · หมวดใหม่ `shop-news` "ข่าวจากร้าน" (`community_categories.team_only`) · ป้ายทีมร้านเก็บ snapshot ตอนโพสต์ `community_threads.team_bar_id` / `community_comments.team_bar_id` (backfill จากทีมปัจจุบัน) · ถูกใจ `counted` (ทีมร้านถูกใจในกระทู้ที่แท็กร้านตัวเอง = ไม่นับใน `like_count`)
+- กติกาใน `community_team_rules`: ทีมร้านตั้งกระทู้ได้เฉพาะข่าวจากร้าน แท็กร้านตัวเองที่แสดงอยู่ ≤ 3 กระทู้/ร้าน/7 วันล่าสุด (นับทุกสถานะ) · ข่าวจากร้านเปลี่ยนหมวด/ร้านไม่ได้ · แท็กร้านตัวเองนอกหมวดข่าวไม่ได้ (`COMMUNITY_TEAM_OWN_TAG`) · `community_trending_bars` ไม่นับกระทู้ที่ทีมร้านแท็กร้านตัวเอง · view `admin_community_threads` / `admin_community_comments` + `team_bar` / `excluded_like_count`
+- endpoint ใหม่: `GET /me/community/team` (rpc `my_community_team` — ร้านที่ฉันอยู่ในทีม + โควตาข่าวจากร้าน) · ApiDoc ของ `POST/PATCH community/threads` · `PUT community/{threads,comments}/:id/like` (คืน `counted`) · `POST community/threads/:id/comments` · `moderate` (HIDE/REMOVE ต้องมี `reason` — 400 ถ้าไม่ส่ง) · public `categories` (+ `team_only`) / `trending-bars` / `THREAD_FIELDS` (+ `author.team`)
+- ไฟล์: `community.me.controller.ts` · `community.public.controller.ts` · `community.admin.controller.ts` · `community.module.ts` · เทสต์ `test/community-team.test.ts` (ใหม่)
+
 ## 2026-10-12 — ชุมชน: แก้ไขความเห็น + ประวัติการแก้ไข
 - migration `20261012000800_community_edit_history.sql`: ตาราง `community_revisions` (เวอร์ชันที่ถูกแก้ทับ · แก้/ลบไม่ได้) · `community_comments.edited_at` · `app_community_update_comment` · `community_history` · `app_community_update_thread` เก็บเวอร์ชันเดิมเฉพาะเมื่อเนื้อหาเปลี่ยนจริง · ร่าง `EDIT_COMMENT` · ไฟล์ของเวอร์ชันเดิมเก็บไว้ (ลบเมื่อเจ้าของลบกระทู้/ความเห็น) และทุกคนที่เห็นกระทู้อ่านได้ · view admin + `revisions`
 - endpoint ใหม่: `PATCH /community/comments/:id` (me) · `GET /public/community/threads/:id/history` · `GET /public/community/comments/:id/history` (เติม signed URL ของไฟล์ทุกเวอร์ชันใน `CommunityService.history`)

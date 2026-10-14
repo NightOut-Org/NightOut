@@ -3,6 +3,9 @@ import { useState } from 'react';
 import { barBookings, type Booking } from '@/services/data';
 import { useMerchantBar } from '@/hooks/useMerchantBar';
 import { Tile } from '@/ui/components/merchantUi';
+import { KpiTile } from './components/kpiTile';
+import { SalesSection } from './components/salesSection';
+import { delta } from './utils/delta';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const RANGES = [7, 14, 30, 90] as const;
@@ -30,19 +33,7 @@ function stats(rows: Booking[]) {
   return { bookings: live.length, checkIns: checked.length, noShow, pax: checked.reduce((a, b) => a + b.pax, 0) };
 }
 
-/** ▲/▼ เทียบช่วงก่อนหน้า · lowerIsBetter = No-show (ลดลงเป็นสีเขียว) */
-function delta(cur: number, prev: number, unit: '%' | 'pt', lowerIsBetter = false) {
-  if (unit === '%' && prev === 0) return null;
-  const d = unit === '%' ? Math.round(((cur - prev) / prev) * 100) : cur - prev;
-  if (d === 0) return { text: 'เท่าเดิม', cls: 'text-muted' };
-  const good = lowerIsBetter ? d < 0 : d > 0;
-  return {
-    text: `${d > 0 ? '▲' : '▼'} ${Math.abs(d)}${unit === '%' ? '%' : ' จุด'}`,
-    cls: good ? 'text-(--crowd-available)' : 'text-(--crowd-full)',
-  };
-}
-
-/** /merchant/analytics — KPI เทียบช่วงก่อนหน้า · การจองรายสัปดาห์ · ช่วงเวลายอดนิยม (วัน × ชั่วโมง) */
+/** /merchant/analytics — KPI เทียบช่วงก่อนหน้า · ยอดขายเฉลี่ย (ประมาณการ · API) · การจองรายสัปดาห์ · ช่วงเวลายอดนิยม (วัน × ชั่วโมง) */
 export function MerchantAnalyticsPage() {
   const bar = useMerchantBar();
   const [range, setRange] = useState<Range>(30);
@@ -60,7 +51,7 @@ export function MerchantAnalyticsPage() {
   const kpis = [
     { title: 'การจอง', value: cur.bookings.toLocaleString('th-TH'), d: delta(cur.bookings, prev.bookings, '%') },
     { title: 'เช็กอิน', value: cur.checkIns.toLocaleString('th-TH'), d: delta(cur.checkIns, prev.checkIns, '%') },
-    { title: 'No-show', value: `${cur.noShow}%`, d: delta(cur.noShow, prev.noShow, 'pt', true) },
+    { title: 'ปลดโต๊ะ (Forfeited)', value: `${cur.noShow}%`, d: delta(cur.noShow, prev.noShow, 'pt', true) },
     { title: 'ลูกค้าที่มาจริง', value: `${cur.pax.toLocaleString('th-TH')} คน`, d: delta(cur.pax, prev.pax, '%') },
   ];
 
@@ -109,15 +100,17 @@ export function MerchantAnalyticsPage() {
 
       <div className="grid grid-cols-2 gap-2.5 lg:grid-cols-4 lg:gap-4">
         {kpis.map((k) => (
-          <Tile key={k.title} className="flex flex-col gap-1 !rounded-2xl !p-3 lg:!rounded-[20px] lg:!p-[18px]">
-            <span className="text-xs text-muted lg:text-[13px]">{k.title}</span>
-            <b className="text-xl font-semibold lg:text-[26px]">{k.value}</b>
-            <span className={`text-[11px] lg:text-xs ${k.d?.cls ?? 'text-muted'}`}>
-              {k.d ? `${k.d.text} จาก ${range} วันก่อน` : 'ยังไม่มีข้อมูลช่วงก่อนหน้า'}
-            </span>
-          </Tile>
+          <KpiTile
+            key={k.title}
+            title={k.title}
+            value={k.value}
+            sub={k.d ? `${k.d.text} จาก ${range} วันก่อน` : 'ยังไม่มีข้อมูลช่วงก่อนหน้า'}
+            subClass={k.d?.cls ?? 'text-muted'}
+          />
         ))}
       </div>
+
+      <SalesSection barId={bar.id} days={range} />
 
       <div className="grid gap-2.5 lg:grid-cols-2 lg:gap-4">
         <Tile className="flex flex-col gap-3 !rounded-[18px] lg:!rounded-[20px]">

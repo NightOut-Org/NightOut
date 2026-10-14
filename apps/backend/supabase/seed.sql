@@ -115,8 +115,8 @@ insert into price_package_items (package_id, menu_item_id, name_snapshot, quanti
   ('f0c4c1ae-8c7b-579b-baaa-b87bc5ef7301', '7a788b4c-71d9-52ed-a784-3ad9ed798b56', 'น้ำแข็ง (ถัง)', 5, 40, 2),
   ('f0c4c1ae-8c7b-579b-baaa-b87bc5ef7301', 'e7a0af46-2322-5837-b9db-f8268d7641cc', 'เฟรนช์ฟรายส์', 2, 150, 3);
 insert into bar_promotions (id, bar_id, title, description, perk_type, days_of_week, cutoff_time, moderation_status, active, sort_order) values
-  ('85c66737-b561-5cdc-a815-2efbcc8db3ae', '96e5917b-2acc-5f7f-b4ca-fc9a3b00f07d', 'โปรเบียร์ก่อน 2 ทุ่ม', 'เบียร์สด/ขวด ราคาพิเศษ เมื่อเช็กอินก่อน 20:00 น.', 'OTHER', '{0,1,2,3,4,5,6}', '20:00', 'APPROVED', true, 0),
-  ('76c6d972-0df6-5344-a9b5-62585f7f68ff', '96e5917b-2acc-5f7f-b4ca-fc9a3b00f07d', 'Ladies Night พุธ', 'ค็อกเทลแก้วแรกฟรีสำหรับสุภาพสตรี ทุกวันพุธ', 'OTHER', '{3}', null, 'APPROVED', true, 1);
+  ('85c66737-b561-5cdc-a815-2efbcc8db3ae', '96e5917b-2acc-5f7f-b4ca-fc9a3b00f07d', 'มาก่อน 2 ทุ่ม มิกเซอร์ 4 จ่าย 3', 'สั่งมิกเซอร์ 4 ชุด จ่ายเพียง 3 เมื่อเช็กอินก่อน 20:00 น.', 'OTHER', '{0,1,2,3,4,5,6}', '20:00', 'APPROVED', true, 0),
+  ('76c6d972-0df6-5344-a9b5-62585f7f68ff', '96e5917b-2acc-5f7f-b4ca-fc9a3b00f07d', 'Ladies Night พุธ', 'ของทานเล่นฟรี 1 จานสำหรับโต๊ะที่มีสุภาพสตรี ทุกวันพุธ', 'OTHER', '{3}', null, 'APPROVED', true, 1);
 insert into table_zones (id, bar_id, name, capacity_pax, default_duration_minutes, sort_order) values ('786b8848-090f-50da-b21a-90cc60073677', '96e5917b-2acc-5f7f-b4ca-fc9a3b00f07d', 'โซนหน้าเวที', 20, 180, 0);
 insert into tables (id, zone_id, name, seats) values
   ('6c202aef-721b-58e5-a18b-9f9a12630c54', '786b8848-090f-50da-b21a-90cc60073677', 'A1', 4),
@@ -214,7 +214,7 @@ insert into price_package_items (package_id, menu_item_id, name_snapshot, quanti
   ('8ad1cc11-cf0b-54e2-91b9-e5c6518b8599', '6ddd3be5-05cf-5eec-bd02-85039ccd99b5', 'น้ำแข็ง (ถัง)', 5, 50, 2),
   ('8ad1cc11-cf0b-54e2-91b9-e5c6518b8599', 'f532718a-3975-5f65-b202-58974f26f147', 'เฟรนช์ฟรายส์', 2, 180, 3);
 insert into bar_promotions (id, bar_id, title, description, perk_type, days_of_week, cutoff_time, moderation_status, active, sort_order) values
-  ('d289c411-ae57-5cdc-8ad0-bd909fe55b4e', '0cccc294-d9b5-501e-bf33-a900f1188f90', 'โปรเบียร์ก่อน 2 ทุ่ม', 'เบียร์สด/ขวด ราคาพิเศษ เมื่อเช็กอินก่อน 20:00 น.', 'OTHER', '{0,1,2,3,4,5,6}', '20:00', 'APPROVED', true, 0),
+  ('d289c411-ae57-5cdc-8ad0-bd909fe55b4e', '0cccc294-d9b5-501e-bf33-a900f1188f90', 'มาก่อน 2 ทุ่ม มิกเซอร์ 4 จ่าย 3', 'สั่งมิกเซอร์ 4 ชุด จ่ายเพียง 3 เมื่อเช็กอินก่อน 20:00 น.', 'OTHER', '{0,1,2,3,4,5,6}', '20:00', 'APPROVED', true, 0),
   ('58f7fbec-2b77-5664-90dd-96bb881c4aa8', '0cccc294-d9b5-501e-bf33-a900f1188f90', 'มา 6 คนขึ้นไป ฟรีของทานเล่น 1 จาน', 'จองผ่าน NightOut และเช็กอินครบตามจำนวน', 'FREE_APPETIZER', '{0,1,2,3,4,5,6}', null, 'APPROVED', true, 1);
 insert into table_zones (id, bar_id, name, capacity_pax, default_duration_minutes, sort_order) values ('0169e01a-fbfe-5a2a-89bf-9a56ec69d8ec', '0cccc294-d9b5-501e-bf33-a900f1188f90', 'โซนหน้าเวที', 16, 180, 0);
 insert into tables (id, zone_id, name, seats) values
@@ -308,7 +308,7 @@ insert into price_package_items (package_id, menu_item_id, name_snapshot, quanti
   ('596a448d-e374-55f4-8558-0f80b4fe5db1', 'f34d250e-a061-5e39-bd93-9d395986ce5d', 'น้ำแข็ง (ถัง)', 5, 40, 2),
   ('596a448d-e374-55f4-8558-0f80b4fe5db1', '4e27718f-4933-5397-b103-c6b91a1334cb', 'เฟรนช์ฟรายส์', 2, 150, 3);
 insert into bar_promotions (id, bar_id, title, description, perk_type, days_of_week, cutoff_time, moderation_status, active, sort_order) values
-  ('2c6eaeaf-5000-51e2-9710-7ed0ac0a309f', 'fdbadfd4-d389-5cef-aee5-e622cc607bdf', 'โปรเบียร์ก่อน 2 ทุ่ม', 'เบียร์สด/ขวด ราคาพิเศษ เมื่อเช็กอินก่อน 20:00 น.', 'OTHER', '{0,1,2,3,4,5,6}', '20:00', 'APPROVED', true, 0);
+  ('2c6eaeaf-5000-51e2-9710-7ed0ac0a309f', 'fdbadfd4-d389-5cef-aee5-e622cc607bdf', 'มาก่อน 2 ทุ่ม มิกเซอร์ 4 จ่าย 3', 'สั่งมิกเซอร์ 4 ชุด จ่ายเพียง 3 เมื่อเช็กอินก่อน 20:00 น.', 'OTHER', '{0,1,2,3,4,5,6}', '20:00', 'APPROVED', true, 0);
 insert into table_zones (id, bar_id, name, capacity_pax, default_duration_minutes, sort_order) values ('3277d9ca-2d11-53e8-b492-f28175212ba1', 'fdbadfd4-d389-5cef-aee5-e622cc607bdf', 'โซนหน้าเวที', 20, 180, 0);
 insert into tables (id, zone_id, name, seats) values
   ('3ccbe2af-48e0-5bbc-9afe-59fdcbf2f50e', '3277d9ca-2d11-53e8-b492-f28175212ba1', 'A1', 4),
@@ -405,8 +405,8 @@ insert into price_package_items (package_id, menu_item_id, name_snapshot, quanti
   ('4d95e9a5-4bd6-5d6d-9e8c-a2f8073b23b8', '74a4fb3c-af72-5048-835c-a20cd33de2c3', 'น้ำแข็ง (ถัง)', 5, 30, 2),
   ('4d95e9a5-4bd6-5d6d-9e8c-a2f8073b23b8', 'a5d0c9ab-f746-5353-a525-c9cc3820ee72', 'เฟรนช์ฟรายส์', 2, 130, 3);
 insert into bar_promotions (id, bar_id, title, description, perk_type, days_of_week, cutoff_time, moderation_status, active, sort_order) values
-  ('a1140b8e-c157-5333-95bd-fcef0fbc8262', 'f19f3694-3757-500b-a54a-71bd7bd1d616', 'โปรเบียร์ก่อน 2 ทุ่ม', 'เบียร์สด/ขวด ราคาพิเศษ เมื่อเช็กอินก่อน 20:00 น.', 'OTHER', '{0,1,2,3,4,5,6}', '20:00', 'APPROVED', true, 0),
-  ('66b9705c-d90a-52ba-a19a-4cdccc05b013', 'f19f3694-3757-500b-a54a-71bd7bd1d616', 'Ladies Night พุธ', 'ค็อกเทลแก้วแรกฟรีสำหรับสุภาพสตรี ทุกวันพุธ', 'OTHER', '{3}', null, 'APPROVED', true, 1);
+  ('a1140b8e-c157-5333-95bd-fcef0fbc8262', 'f19f3694-3757-500b-a54a-71bd7bd1d616', 'มาก่อน 2 ทุ่ม มิกเซอร์ 4 จ่าย 3', 'สั่งมิกเซอร์ 4 ชุด จ่ายเพียง 3 เมื่อเช็กอินก่อน 20:00 น.', 'OTHER', '{0,1,2,3,4,5,6}', '20:00', 'APPROVED', true, 0),
+  ('66b9705c-d90a-52ba-a19a-4cdccc05b013', 'f19f3694-3757-500b-a54a-71bd7bd1d616', 'Ladies Night พุธ', 'ของทานเล่นฟรี 1 จานสำหรับโต๊ะที่มีสุภาพสตรี ทุกวันพุธ', 'OTHER', '{3}', null, 'APPROVED', true, 1);
 insert into table_zones (id, bar_id, name, capacity_pax, default_duration_minutes, sort_order) values ('5ceb3258-ebef-5ad2-8f7a-02360f116fc9', 'f19f3694-3757-500b-a54a-71bd7bd1d616', 'โซนหน้าเวที', 16, 180, 0);
 insert into tables (id, zone_id, name, seats) values
   ('428d8c36-4c8b-546e-8e01-5a2d882683d7', '5ceb3258-ebef-5ad2-8f7a-02360f116fc9', 'A1', 4),
@@ -503,7 +503,7 @@ insert into price_package_items (package_id, menu_item_id, name_snapshot, quanti
   ('98ae48c3-915c-50f0-9257-06143f482499', '04c0ebce-64b8-533c-b360-0d6fadf2d9d4', 'น้ำแข็ง (ถัง)', 5, 50, 2),
   ('98ae48c3-915c-50f0-9257-06143f482499', 'ec7b6553-30fd-5e09-8a37-18016621249a', 'เฟรนช์ฟรายส์', 2, 170, 3);
 insert into bar_promotions (id, bar_id, title, description, perk_type, days_of_week, cutoff_time, moderation_status, active, sort_order) values
-  ('c15c68d9-71dd-5d4c-85be-6f70c26608b0', 'ca9df1a8-3a56-5dc6-849e-ea71be97f004', 'โปรเบียร์ก่อน 2 ทุ่ม', 'เบียร์สด/ขวด ราคาพิเศษ เมื่อเช็กอินก่อน 20:00 น.', 'OTHER', '{0,1,2,3,4,5,6}', '20:00', 'APPROVED', true, 0);
+  ('c15c68d9-71dd-5d4c-85be-6f70c26608b0', 'ca9df1a8-3a56-5dc6-849e-ea71be97f004', 'มาก่อน 2 ทุ่ม มิกเซอร์ 4 จ่าย 3', 'สั่งมิกเซอร์ 4 ชุด จ่ายเพียง 3 เมื่อเช็กอินก่อน 20:00 น.', 'OTHER', '{0,1,2,3,4,5,6}', '20:00', 'APPROVED', true, 0);
 insert into table_zones (id, bar_id, name, capacity_pax, default_duration_minutes, sort_order) values ('f0e458ed-0a9e-521c-b582-912d913ffea5', 'ca9df1a8-3a56-5dc6-849e-ea71be97f004', 'โซนหน้าเวที', 12, 180, 0);
 insert into tables (id, zone_id, name, seats) values
   ('26621fe6-d9cc-5adc-8961-d1c3a8d6c57c', 'f0e458ed-0a9e-521c-b582-912d913ffea5', 'A1', 4),
@@ -594,7 +594,7 @@ insert into price_package_items (package_id, menu_item_id, name_snapshot, quanti
   ('bdcc7d76-47ca-5e5c-a3dc-23323c35c095', '651c57ce-74e6-5d8a-8c10-8ae0bafad666', 'น้ำแข็ง (ถัง)', 5, 50, 2),
   ('bdcc7d76-47ca-5e5c-a3dc-23323c35c095', '0184d419-b40f-500f-8369-278464d8faae', 'เฟรนช์ฟรายส์', 2, 180, 3);
 insert into bar_promotions (id, bar_id, title, description, perk_type, days_of_week, cutoff_time, moderation_status, active, sort_order) values
-  ('600cd729-1359-5716-a734-f67512162d92', '98fd3a61-0a2d-5fea-85d3-8c305d39e6b4', 'โปรเบียร์ก่อน 2 ทุ่ม', 'เบียร์สด/ขวด ราคาพิเศษ เมื่อเช็กอินก่อน 20:00 น.', 'OTHER', '{0,1,2,3,4,5,6}', '20:00', 'APPROVED', true, 0),
+  ('600cd729-1359-5716-a734-f67512162d92', '98fd3a61-0a2d-5fea-85d3-8c305d39e6b4', 'มาก่อน 2 ทุ่ม มิกเซอร์ 4 จ่าย 3', 'สั่งมิกเซอร์ 4 ชุด จ่ายเพียง 3 เมื่อเช็กอินก่อน 20:00 น.', 'OTHER', '{0,1,2,3,4,5,6}', '20:00', 'APPROVED', true, 0),
   ('0d283975-6f16-5046-b156-3de511b40b8f', '98fd3a61-0a2d-5fea-85d3-8c305d39e6b4', 'มา 6 คนขึ้นไป ฟรีของทานเล่น 1 จาน', 'จองผ่าน NightOut และเช็กอินครบตามจำนวน', 'FREE_APPETIZER', '{0,1,2,3,4,5,6}', null, 'APPROVED', true, 1);
 insert into table_zones (id, bar_id, name, capacity_pax, default_duration_minutes, sort_order) values ('ddc289d5-2456-512d-81a8-e9afdc48aef3', '98fd3a61-0a2d-5fea-85d3-8c305d39e6b4', 'โซนหน้าเวที', 12, 180, 0);
 insert into tables (id, zone_id, name, seats) values
@@ -688,8 +688,8 @@ insert into price_package_items (package_id, menu_item_id, name_snapshot, quanti
   ('29426d4e-3891-5468-b1aa-283fe0e6be41', '5ede4a1e-0413-5ef9-b62e-b2112770a11f', 'น้ำแข็ง (ถัง)', 5, 50, 2),
   ('29426d4e-3891-5468-b1aa-283fe0e6be41', '1d755378-934f-5438-b257-63f7373fa666', 'เฟรนช์ฟรายส์', 2, 180, 3);
 insert into bar_promotions (id, bar_id, title, description, perk_type, days_of_week, cutoff_time, moderation_status, active, sort_order) values
-  ('985ca551-3703-5531-8ac0-690349bed435', '2c455e74-6029-52ae-b878-4df21dfc9c16', 'โปรเบียร์ก่อน 2 ทุ่ม', 'เบียร์สด/ขวด ราคาพิเศษ เมื่อเช็กอินก่อน 20:00 น.', 'OTHER', '{0,1,2,3,4,5,6}', '20:00', 'APPROVED', true, 0),
-  ('af8fd4ec-8edb-5f11-853e-5da2bb5040cd', '2c455e74-6029-52ae-b878-4df21dfc9c16', 'Ladies Night พุธ', 'ค็อกเทลแก้วแรกฟรีสำหรับสุภาพสตรี ทุกวันพุธ', 'OTHER', '{3}', null, 'APPROVED', true, 1);
+  ('985ca551-3703-5531-8ac0-690349bed435', '2c455e74-6029-52ae-b878-4df21dfc9c16', 'มาก่อน 2 ทุ่ม มิกเซอร์ 4 จ่าย 3', 'สั่งมิกเซอร์ 4 ชุด จ่ายเพียง 3 เมื่อเช็กอินก่อน 20:00 น.', 'OTHER', '{0,1,2,3,4,5,6}', '20:00', 'APPROVED', true, 0),
+  ('af8fd4ec-8edb-5f11-853e-5da2bb5040cd', '2c455e74-6029-52ae-b878-4df21dfc9c16', 'Ladies Night พุธ', 'ของทานเล่นฟรี 1 จานสำหรับโต๊ะที่มีสุภาพสตรี ทุกวันพุธ', 'OTHER', '{3}', null, 'APPROVED', true, 1);
 insert into table_zones (id, bar_id, name, capacity_pax, default_duration_minutes, sort_order) values ('c219f0e4-06c3-5fd4-bba2-da0a502a6b39', '2c455e74-6029-52ae-b878-4df21dfc9c16', 'โซนหน้าเวที', 16, 180, 0);
 insert into tables (id, zone_id, name, seats) values
   ('322e62eb-a559-57b4-8daa-0f82b7ba1c45', 'c219f0e4-06c3-5fd4-bba2-da0a502a6b39', 'A1', 4),
@@ -782,7 +782,7 @@ insert into price_package_items (package_id, menu_item_id, name_snapshot, quanti
   ('784b7968-74b6-5946-841d-f0eb19ce07c8', '119b21f0-48f0-5da8-9cc3-cef9f39cdf7b', 'น้ำแข็ง (ถัง)', 5, 40, 2),
   ('784b7968-74b6-5946-841d-f0eb19ce07c8', '175f35cb-e601-5c25-bebb-010e0cc2f15b', 'เฟรนช์ฟรายส์', 2, 150, 3);
 insert into bar_promotions (id, bar_id, title, description, perk_type, days_of_week, cutoff_time, moderation_status, active, sort_order) values
-  ('46c6a801-7097-5c76-9c01-fe6b22d01410', '772f1a13-43d3-520b-9812-8e9bda5a9b07', 'โปรเบียร์ก่อน 2 ทุ่ม', 'เบียร์สด/ขวด ราคาพิเศษ เมื่อเช็กอินก่อน 20:00 น.', 'OTHER', '{0,1,2,3,4,5,6}', '20:00', 'APPROVED', true, 0);
+  ('46c6a801-7097-5c76-9c01-fe6b22d01410', '772f1a13-43d3-520b-9812-8e9bda5a9b07', 'มาก่อน 2 ทุ่ม มิกเซอร์ 4 จ่าย 3', 'สั่งมิกเซอร์ 4 ชุด จ่ายเพียง 3 เมื่อเช็กอินก่อน 20:00 น.', 'OTHER', '{0,1,2,3,4,5,6}', '20:00', 'APPROVED', true, 0);
 insert into table_zones (id, bar_id, name, capacity_pax, default_duration_minutes, sort_order) values ('65d0df28-3786-50b4-bd4c-23b68a2e15bd', '772f1a13-43d3-520b-9812-8e9bda5a9b07', 'โซนหน้าเวที', 20, 180, 0);
 insert into tables (id, zone_id, name, seats) values
   ('c40cbde5-6987-59e5-b39a-867af43e77cf', '65d0df28-3786-50b4-bd4c-23b68a2e15bd', 'A1', 4),
@@ -877,7 +877,7 @@ insert into price_package_items (package_id, menu_item_id, name_snapshot, quanti
   ('0c9e8314-39f8-56d5-a334-948b20b4b08b', 'ee893404-a03d-5eda-babc-b8aee5d66642', 'น้ำแข็ง (ถัง)', 5, 50, 2),
   ('0c9e8314-39f8-56d5-a334-948b20b4b08b', '6e3c636a-a50d-5fd1-b3be-f5b8948440a8', 'เฟรนช์ฟรายส์', 2, 180, 3);
 insert into bar_promotions (id, bar_id, title, description, perk_type, days_of_week, cutoff_time, moderation_status, active, sort_order) values
-  ('d42e7f04-3d56-5e38-82e2-4c0ee4c338f1', 'e3a93acf-3717-55d8-a6b4-76d56644db42', 'โปรเบียร์ก่อน 2 ทุ่ม', 'เบียร์สด/ขวด ราคาพิเศษ เมื่อเช็กอินก่อน 20:00 น.', 'OTHER', '{0,1,2,3,4,5,6}', '20:00', 'APPROVED', true, 0);
+  ('d42e7f04-3d56-5e38-82e2-4c0ee4c338f1', 'e3a93acf-3717-55d8-a6b4-76d56644db42', 'มาก่อน 2 ทุ่ม มิกเซอร์ 4 จ่าย 3', 'สั่งมิกเซอร์ 4 ชุด จ่ายเพียง 3 เมื่อเช็กอินก่อน 20:00 น.', 'OTHER', '{0,1,2,3,4,5,6}', '20:00', 'APPROVED', true, 0);
 insert into table_zones (id, bar_id, name, capacity_pax, default_duration_minutes, sort_order) values ('4e9edcf5-6810-5309-9d77-609d22012ac9', 'e3a93acf-3717-55d8-a6b4-76d56644db42', 'โซนหน้าเวที', 20, 180, 0);
 insert into tables (id, zone_id, name, seats) values
   ('b7452968-8d53-58db-8973-c2b654c781a6', '4e9edcf5-6810-5309-9d77-609d22012ac9', 'A1', 4),
@@ -977,8 +977,8 @@ insert into price_package_items (package_id, menu_item_id, name_snapshot, quanti
   ('1ae87b60-896f-5b93-98dd-338b0b7e1f8b', '514dce7e-4f87-5632-82fc-acc6d8a54a41', 'น้ำแข็ง (ถัง)', 5, 50, 2),
   ('1ae87b60-896f-5b93-98dd-338b0b7e1f8b', 'f9d6a3eb-1784-5290-b52f-3fac9a4b603e', 'เฟรนช์ฟรายส์', 2, 180, 3);
 insert into bar_promotions (id, bar_id, title, description, perk_type, days_of_week, cutoff_time, moderation_status, active, sort_order) values
-  ('e191f610-d1d4-5468-a305-0d329a189f38', '072a70ba-33a2-567f-b2c4-013b61da514f', 'โปรเบียร์ก่อน 2 ทุ่ม', 'เบียร์สด/ขวด ราคาพิเศษ เมื่อเช็กอินก่อน 20:00 น.', 'OTHER', '{0,1,2,3,4,5,6}', '20:00', 'APPROVED', true, 0),
-  ('1cda097e-f89c-5421-b645-f7b54d02350b', '072a70ba-33a2-567f-b2c4-013b61da514f', 'Ladies Night พุธ', 'ค็อกเทลแก้วแรกฟรีสำหรับสุภาพสตรี ทุกวันพุธ', 'OTHER', '{3}', null, 'APPROVED', true, 1),
+  ('e191f610-d1d4-5468-a305-0d329a189f38', '072a70ba-33a2-567f-b2c4-013b61da514f', 'มาก่อน 2 ทุ่ม มิกเซอร์ 4 จ่าย 3', 'สั่งมิกเซอร์ 4 ชุด จ่ายเพียง 3 เมื่อเช็กอินก่อน 20:00 น.', 'OTHER', '{0,1,2,3,4,5,6}', '20:00', 'APPROVED', true, 0),
+  ('1cda097e-f89c-5421-b645-f7b54d02350b', '072a70ba-33a2-567f-b2c4-013b61da514f', 'Ladies Night พุธ', 'ของทานเล่นฟรี 1 จานสำหรับโต๊ะที่มีสุภาพสตรี ทุกวันพุธ', 'OTHER', '{3}', null, 'APPROVED', true, 1),
   ('9c8b205d-0150-58b7-a277-de02eb6dd982', '072a70ba-33a2-567f-b2c4-013b61da514f', 'มา 6 คนขึ้นไป ฟรีของทานเล่น 1 จาน', 'จองผ่าน NightOut และเช็กอินครบตามจำนวน', 'FREE_APPETIZER', '{0,1,2,3,4,5,6}', null, 'APPROVED', true, 2);
 insert into table_zones (id, bar_id, name, capacity_pax, default_duration_minutes, sort_order) values ('660e45bc-ffee-5614-88b7-653b7bd80ed0', '072a70ba-33a2-567f-b2c4-013b61da514f', 'โซนหน้าเวที', 12, 180, 0);
 insert into tables (id, zone_id, name, seats) values
@@ -1071,7 +1071,7 @@ insert into price_package_items (package_id, menu_item_id, name_snapshot, quanti
   ('86a37ad8-1c84-527c-add5-f0cc22b72dd3', 'a0a73f3d-df33-590d-b72e-1344aaf2c56b', 'น้ำแข็ง (ถัง)', 5, 40, 2),
   ('86a37ad8-1c84-527c-add5-f0cc22b72dd3', '544a6f93-ccce-5737-8359-268ff516a5e1', 'เฟรนช์ฟรายส์', 2, 150, 3);
 insert into bar_promotions (id, bar_id, title, description, perk_type, days_of_week, cutoff_time, moderation_status, active, sort_order) values
-  ('a95fd8b9-3fa0-5f86-a9e6-7d4be04e77c4', '287feeb2-dd55-5c27-9ba4-9909a6e80247', 'โปรเบียร์ก่อน 2 ทุ่ม', 'เบียร์สด/ขวด ราคาพิเศษ เมื่อเช็กอินก่อน 20:00 น.', 'OTHER', '{0,1,2,3,4,5,6}', '20:00', 'APPROVED', true, 0);
+  ('a95fd8b9-3fa0-5f86-a9e6-7d4be04e77c4', '287feeb2-dd55-5c27-9ba4-9909a6e80247', 'มาก่อน 2 ทุ่ม มิกเซอร์ 4 จ่าย 3', 'สั่งมิกเซอร์ 4 ชุด จ่ายเพียง 3 เมื่อเช็กอินก่อน 20:00 น.', 'OTHER', '{0,1,2,3,4,5,6}', '20:00', 'APPROVED', true, 0);
 insert into table_zones (id, bar_id, name, capacity_pax, default_duration_minutes, sort_order) values ('4dd68c4d-ad4c-59fa-afeb-89722dc44bc2', '287feeb2-dd55-5c27-9ba4-9909a6e80247', 'โซนหน้าเวที', 12, 180, 0);
 insert into tables (id, zone_id, name, seats) values
   ('72cd0a60-1a7a-55cf-b518-dd84fe15f668', '4dd68c4d-ad4c-59fa-afeb-89722dc44bc2', 'A1', 4),
@@ -1162,7 +1162,7 @@ insert into price_package_items (package_id, menu_item_id, name_snapshot, quanti
   ('fb87a190-3e25-5925-8e16-f97afe479c87', '52434d4d-1417-5578-969c-60259386204a', 'น้ำแข็ง (ถัง)', 5, 50, 2),
   ('fb87a190-3e25-5925-8e16-f97afe479c87', 'abf7af68-1885-5f7b-9b54-f74b940fef47', 'เฟรนช์ฟรายส์', 2, 180, 3);
 insert into bar_promotions (id, bar_id, title, description, perk_type, days_of_week, cutoff_time, moderation_status, active, sort_order) values
-  ('f863b432-b13f-5514-b648-05f2ee401df2', 'bf05155c-d15b-54ae-a9b3-52b5efb784e9', 'โปรเบียร์ก่อน 2 ทุ่ม', 'เบียร์สด/ขวด ราคาพิเศษ เมื่อเช็กอินก่อน 20:00 น.', 'OTHER', '{0,1,2,3,4,5,6}', '20:00', 'APPROVED', true, 0);
+  ('f863b432-b13f-5514-b648-05f2ee401df2', 'bf05155c-d15b-54ae-a9b3-52b5efb784e9', 'มาก่อน 2 ทุ่ม มิกเซอร์ 4 จ่าย 3', 'สั่งมิกเซอร์ 4 ชุด จ่ายเพียง 3 เมื่อเช็กอินก่อน 20:00 น.', 'OTHER', '{0,1,2,3,4,5,6}', '20:00', 'APPROVED', true, 0);
 insert into table_zones (id, bar_id, name, capacity_pax, default_duration_minutes, sort_order) values ('4f5e30ca-271a-5645-b56e-577b883fd8cc', 'bf05155c-d15b-54ae-a9b3-52b5efb784e9', 'โซนหน้าเวที', 16, 180, 0);
 insert into tables (id, zone_id, name, seats) values
   ('b52a351d-bb48-5f54-afe4-f2fd44312d6c', '4f5e30ca-271a-5645-b56e-577b883fd8cc', 'A1', 4),
@@ -1257,8 +1257,8 @@ insert into price_package_items (package_id, menu_item_id, name_snapshot, quanti
   ('87963a0d-df74-5d8e-8d44-743d63e790ae', 'adb5379c-c17e-519b-871c-639ee0a571e2', 'น้ำแข็ง (ถัง)', 5, 50, 2),
   ('87963a0d-df74-5d8e-8d44-743d63e790ae', 'f5da0946-530b-548b-99b9-a81464a19370', 'เฟรนช์ฟรายส์', 2, 170, 3);
 insert into bar_promotions (id, bar_id, title, description, perk_type, days_of_week, cutoff_time, moderation_status, active, sort_order) values
-  ('6bb34619-d5e4-59d7-8d9b-2b9faa1c9add', '5746aa2f-136a-52ad-87dd-eb8ff90fb5e7', 'โปรเบียร์ก่อน 2 ทุ่ม', 'เบียร์สด/ขวด ราคาพิเศษ เมื่อเช็กอินก่อน 20:00 น.', 'OTHER', '{0,1,2,3,4,5,6}', '20:00', 'APPROVED', true, 0),
-  ('0b12cf86-8409-56c9-a00f-9f7447cc9456', '5746aa2f-136a-52ad-87dd-eb8ff90fb5e7', 'Ladies Night พุธ', 'ค็อกเทลแก้วแรกฟรีสำหรับสุภาพสตรี ทุกวันพุธ', 'OTHER', '{3}', null, 'APPROVED', true, 1);
+  ('6bb34619-d5e4-59d7-8d9b-2b9faa1c9add', '5746aa2f-136a-52ad-87dd-eb8ff90fb5e7', 'มาก่อน 2 ทุ่ม มิกเซอร์ 4 จ่าย 3', 'สั่งมิกเซอร์ 4 ชุด จ่ายเพียง 3 เมื่อเช็กอินก่อน 20:00 น.', 'OTHER', '{0,1,2,3,4,5,6}', '20:00', 'APPROVED', true, 0),
+  ('0b12cf86-8409-56c9-a00f-9f7447cc9456', '5746aa2f-136a-52ad-87dd-eb8ff90fb5e7', 'Ladies Night พุธ', 'ของทานเล่นฟรี 1 จานสำหรับโต๊ะที่มีสุภาพสตรี ทุกวันพุธ', 'OTHER', '{3}', null, 'APPROVED', true, 1);
 insert into table_zones (id, bar_id, name, capacity_pax, default_duration_minutes, sort_order) values ('de80de9f-fd2e-5ea6-9fce-904bb87887fa', '5746aa2f-136a-52ad-87dd-eb8ff90fb5e7', 'โซนหน้าเวที', 20, 180, 0);
 insert into tables (id, zone_id, name, seats) values
   ('9c468dc8-f980-5db8-857b-7b8abfff5d1b', 'de80de9f-fd2e-5ea6-9fce-904bb87887fa', 'A1', 4),
@@ -1353,7 +1353,7 @@ insert into price_package_items (package_id, menu_item_id, name_snapshot, quanti
   ('89b748d1-806d-5aa8-bd4d-6c59c91cf584', 'a9075781-ec43-5de7-b095-ff6abd7db9db', 'น้ำแข็ง (ถัง)', 5, 30, 2),
   ('89b748d1-806d-5aa8-bd4d-6c59c91cf584', '21978534-113f-511b-986f-4653a91851d3', 'เฟรนช์ฟรายส์', 2, 130, 3);
 insert into bar_promotions (id, bar_id, title, description, perk_type, days_of_week, cutoff_time, moderation_status, active, sort_order) values
-  ('38767b58-dd59-5a79-9e93-97d08f28ee7f', '5bcdb1a4-bb22-5884-8fb1-bc0a0266cde3', 'โปรเบียร์ก่อน 2 ทุ่ม', 'เบียร์สด/ขวด ราคาพิเศษ เมื่อเช็กอินก่อน 20:00 น.', 'OTHER', '{0,1,2,3,4,5,6}', '20:00', 'APPROVED', true, 0),
+  ('38767b58-dd59-5a79-9e93-97d08f28ee7f', '5bcdb1a4-bb22-5884-8fb1-bc0a0266cde3', 'มาก่อน 2 ทุ่ม มิกเซอร์ 4 จ่าย 3', 'สั่งมิกเซอร์ 4 ชุด จ่ายเพียง 3 เมื่อเช็กอินก่อน 20:00 น.', 'OTHER', '{0,1,2,3,4,5,6}', '20:00', 'APPROVED', true, 0),
   ('4100e175-b3e6-5b52-aef4-04c277af10bc', '5bcdb1a4-bb22-5884-8fb1-bc0a0266cde3', 'มา 6 คนขึ้นไป ฟรีของทานเล่น 1 จาน', 'จองผ่าน NightOut และเช็กอินครบตามจำนวน', 'FREE_APPETIZER', '{0,1,2,3,4,5,6}', null, 'APPROVED', true, 1);
 insert into table_zones (id, bar_id, name, capacity_pax, default_duration_minutes, sort_order) values ('9c1434bd-1e2b-58b8-ad30-65203546860f', '5bcdb1a4-bb22-5884-8fb1-bc0a0266cde3', 'โซนหน้าเวที', 20, 180, 0);
 insert into tables (id, zone_id, name, seats) values
@@ -1449,7 +1449,7 @@ insert into price_package_items (package_id, menu_item_id, name_snapshot, quanti
   ('5b1be085-3f2c-5e62-8fc3-7c7b8569deb5', '931cd160-f614-5323-a127-ca203cfaca5c', 'น้ำแข็ง (ถัง)', 5, 40, 2),
   ('5b1be085-3f2c-5e62-8fc3-7c7b8569deb5', '79ca098c-0480-5d30-b99d-3634011ef609', 'เฟรนช์ฟรายส์', 2, 150, 3);
 insert into bar_promotions (id, bar_id, title, description, perk_type, days_of_week, cutoff_time, moderation_status, active, sort_order) values
-  ('f72c4196-4b81-5663-ae46-52dadf732fb6', '26924211-46cf-50a1-8642-65323dc4c0b3', 'โปรเบียร์ก่อน 2 ทุ่ม', 'เบียร์สด/ขวด ราคาพิเศษ เมื่อเช็กอินก่อน 20:00 น.', 'OTHER', '{0,1,2,3,4,5,6}', '20:00', 'APPROVED', true, 0);
+  ('f72c4196-4b81-5663-ae46-52dadf732fb6', '26924211-46cf-50a1-8642-65323dc4c0b3', 'มาก่อน 2 ทุ่ม มิกเซอร์ 4 จ่าย 3', 'สั่งมิกเซอร์ 4 ชุด จ่ายเพียง 3 เมื่อเช็กอินก่อน 20:00 น.', 'OTHER', '{0,1,2,3,4,5,6}', '20:00', 'APPROVED', true, 0);
 insert into table_zones (id, bar_id, name, capacity_pax, default_duration_minutes, sort_order) values ('aa59e12a-906e-543d-a9b7-d430ace3deef', '26924211-46cf-50a1-8642-65323dc4c0b3', 'โซนหน้าเวที', 16, 180, 0);
 insert into tables (id, zone_id, name, seats) values
   ('c9ee0cfc-1b58-57d2-869c-c5038bbb5d2a', 'aa59e12a-906e-543d-a9b7-d430ace3deef', 'A1', 4),
@@ -1541,7 +1541,7 @@ insert into price_package_items (package_id, menu_item_id, name_snapshot, quanti
   ('9a41ebc1-f652-5635-89f9-2c084232a490', '377bca2d-fde9-56af-8706-9f1a8597be32', 'น้ำแข็ง (ถัง)', 5, 50, 2),
   ('9a41ebc1-f652-5635-89f9-2c084232a490', '78530701-f3b1-5765-981a-09bbc6d74c0a', 'เฟรนช์ฟรายส์', 2, 180, 3);
 insert into bar_promotions (id, bar_id, title, description, perk_type, days_of_week, cutoff_time, moderation_status, active, sort_order) values
-  ('c6ffe8f9-28b1-558a-90e2-78b8a5a85504', '2238849e-de7d-56f9-b430-273d0b9b82f6', 'โปรเบียร์ก่อน 2 ทุ่ม', 'เบียร์สด/ขวด ราคาพิเศษ เมื่อเช็กอินก่อน 20:00 น.', 'OTHER', '{0,1,2,3,4,5,6}', '20:00', 'APPROVED', true, 0),
+  ('c6ffe8f9-28b1-558a-90e2-78b8a5a85504', '2238849e-de7d-56f9-b430-273d0b9b82f6', 'มาก่อน 2 ทุ่ม มิกเซอร์ 4 จ่าย 3', 'สั่งมิกเซอร์ 4 ชุด จ่ายเพียง 3 เมื่อเช็กอินก่อน 20:00 น.', 'OTHER', '{0,1,2,3,4,5,6}', '20:00', 'APPROVED', true, 0),
   ('6bfb55b1-b04f-5b20-8ebd-6db594b858d7', '2238849e-de7d-56f9-b430-273d0b9b82f6', 'มา 6 คนขึ้นไป ฟรีของทานเล่น 1 จาน', 'จองผ่าน NightOut และเช็กอินครบตามจำนวน', 'FREE_APPETIZER', '{0,1,2,3,4,5,6}', null, 'APPROVED', true, 1);
 insert into table_zones (id, bar_id, name, capacity_pax, default_duration_minutes, sort_order) values ('4ddc891a-88ba-55c6-b7ac-e032c6011ab6', '2238849e-de7d-56f9-b430-273d0b9b82f6', 'โซนหน้าเวที', 16, 180, 0);
 insert into tables (id, zone_id, name, seats) values

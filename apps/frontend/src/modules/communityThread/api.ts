@@ -32,6 +32,15 @@ export const useMyDrafts = (enabled: boolean) =>
     refetchOnMount: 'always',
   });
 
+/** GET /me/community/team — ร้านที่ฉันอยู่ในทีม (บอกว่าถูกใจของฉันในกระทู้ร้านตัวเองไม่นับ) */
+export const useMyCommunityTeam = (userId: string | null) =>
+  useQuery({
+    queryKey: ['community', 'team', userId],
+    queryFn: () => Rest.get<C.CommunityTeamBar[]>('/me/community/team'),
+    enabled: !!userId,
+    staleTime: 60_000,
+  });
+
 /** POST /public/community/threads/:id/view */
 export const addView = (id: string) => Rest.post(`/public/community/threads/${id}/view`);
 

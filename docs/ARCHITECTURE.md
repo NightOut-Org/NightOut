@@ -65,7 +65,7 @@ flowchart LR
 | Shared UI / DB types | `packages/ui`, `packages/types` | theme tokens, คอมโพเนนต์ร่วม, enum กลาง, type ของแถว view/ตาราง (`Db.*`) |
 | Domain logic (pure) | `packages/utils` | price calculator, star → tier, status transition map |
 | Client cache | `packages/mock` | store ในเบราว์เซอร์ที่ `services/sync.ts` เติมข้อมูลจาก API (ชื่อเดิมจากยุคเดโม — ไม่มีโหมดเดโมแล้ว) + model ที่หน้าเว็บใช้ |
-| Map | `react-leaflet` + OpenStreetMap | แผนที่ร้าน (หน้าร้าน, หน้าค้นหา, หน้า `/map` เต็มจอ) พื้นแผนที่ vector tiles ฟรีจาก OpenFreeMap (ไม่ต้องมี key) + MapLibre ผ่าน `@maplibre/maplibre-gl-leaflet` แทนสีเป็นพาเลต Google Maps (ปกติ/กลางคืน) ใน `ui/utils/mapStyle.ts` · สำรอง: OSM raster + CSS filter หรือ `VITE_MAP_TILE_URL_*` ไม่ต้องมี API key · ปุ่มนำทางเปิด Google Maps |
+| Map | `react-leaflet` + OpenStreetMap | แผนที่ร้าน (หน้าร้าน, หน้าค้นหา, หน้า `/map` เต็มจอ) พื้นแผนที่ vector tiles ฟรีจาก OpenFreeMap (ไม่ต้องมี key) + MapLibre ผ่าน `@maplibre/maplibre-gl-leaflet` แทนสีเป็นพาเลต Google Maps (ปกติ/กลางคืน) ใน `ui/utils/mapStyle.ts` · สำรอง: OSM raster + CSS filter หรือ `VITE_MAP_TILE_URL_*` ไม่ต้องมี API key · ปุ่มนำทางเปิด Google Maps · Backoffice: Leaflet + OSM raster (ตรวจหมุด · ไม่มี maplibre) · ค้นหาที่อยู่/หาที่อยู่จากหมุด: backend `GET /geocode/*` → OSM Nominatim เฉพาะไทย (หน้าเว็บไม่เรียกตรง · กดค้นหาเท่านั้น · ADR 0009) |
 | API | `apps/backend/src` (controllers) | controller, guard, pipe, Swagger |
 | API contract | `packages/contracts` | zod ของ body / query / response + รหัส error 1 ไฟล์ต่อโดเมน — backend ใช้ทำ DTO/Swagger · หน้าเว็บใช้เป็น type ([ADR 0006](adr/0006-domain-sliced-api-and-shared-contracts.md)) |
 | Application | `apps/backend/src/domains/<domain>` | 1 โดเมน = 1 module · controller แยกตามคนเรียก (public / me / merchant / admin) → ฟังก์ชัน DB |
@@ -222,6 +222,7 @@ apps/backend/
 | `catalog` | ข้อมูลตั้งต้นของเว็บ (ร้าน รีวิว ย่าน สไตล์ ตั้งค่า แพ็กเกจ) | public |
 | `booking` | จอง ยกเลิก สถานะ เช็กอิน ย้ายโต๊ะ โซนว่าง บัตรแชร์ | public · me · merchant |
 | `deposit` | ส่งสลิป ตรวจสลิป ปิดยอด คืนมัดจำ สมุดมัดจำ | me · merchant · admin |
+| `payment` | ชำระ Table Fee ผ่านผู้ให้บริการ: ช่องทางที่เปิด หน้าชำระเงิน webhook คืนเงินทำมือ (adapter `providers/` — ADR 0010) | public · me · admin |
 | `review` | เขียน รายงาน จัดการรีวิว | me · admin |
 | `bar` | สมัครลงร้าน ข้อมูลร้าน เมนู โปร ค่าธรรมเนียม โซน Safety ตั้งค่าการจอง บัญชีรับเงิน ความแน่น อนุมัติ/ระงับ | me · merchant · admin |
 | `bar-team` | ทีมร้าน: เชิญ นำออก คำเชิญของฉัน | me · merchant |
@@ -270,6 +271,7 @@ sequenceDiagram
   participant W as apps/frontend
   participant A as NestJS
   participant D as Postgres
+  participant P as ผู้ให้บริการชำระเงิน
   actor S as ร้าน
   U->>W: เลือกวัน เวลา คน โซน
   W->>A: GET /availability
@@ -277,19 +279,30 @@ sequenceDiagram
   W->>A: POST /bookings (โต๊ะ + โปรโมชันของร้านถ้ามี — ไม่มีสั่งอาหาร/เครื่องดื่ม)
   A->>D: BEGIN · lock zone · INSERT booking (exclusion constraint) · outbox · COMMIT
   A-->>W: booking = AWAITING_DEPOSIT (ทุกการจองต้องมัดจำ)
-  U->>W: โอน PromptPay ของ NightOut + อัปโหลดสลิป
-  W->>A: POST /bookings/:id/deposit
-  A->>D: deposit = SUBMITTED · booking = DEPOSIT_SUBMITTED
   actor AD as แอดมิน NightOut
-  AD->>A: ตรวจสลิป → ผ่าน
-  A->>D: deposit VERIFIED · settlement = HELD · booking = CONFIRMED · outbox (แจ้งลูกค้า+ร้าน)
+  alt ตั้ง PAYMENT_PROVIDER (ชำระออนไลน์ · ADR 0010)
+    W->>A: POST /bookings/:id/checkout
+    A->>D: app_payment_start → payment_intent PENDING
+    A->>P: สร้างหน้าชำระเงิน (adapter)
+    A->>D: app_payment_attach (checkout_url)
+    A-->>W: checkout_url → ลูกค้าไปหน้าผู้ให้บริการ (mock = /pay/mock/:intentId)
+    P->>A: POST /payments/webhook/:provider (ตรวจลายเซ็นจาก raw body)
+    A->>D: payment_apply_event → PAID ยอดตรง: deposit VERIFIED · settlement = HELD · booking = CONFIRMED (E-Ticket) · แจ้งลูกค้า+ร้าน
+    W->>A: กลับ ?payment=return → GET /bookings/:id/payments (poll จนได้ผล)
+  else ไม่ตั้ง (ค่าเริ่มต้น — โอน + สลิป)
+    U->>W: โอน PromptPay ของ NightOut + อัปโหลดสลิป
+    W->>A: POST /bookings/:id/deposit
+    A->>D: deposit = SUBMITTED · booking = DEPOSIT_SUBMITTED
+    AD->>A: ตรวจสลิป → ผ่าน
+    A->>D: deposit VERIFIED · settlement = HELD · booking = CONFIRMED · outbox (แจ้งลูกค้า+ร้าน)
+  end
   S->>A: ลูกค้าเช็กอิน / ระบบ NO_SHOW
   A->>D: settlement = PAYOUT_PENDING (เงินเป็นของร้าน)
   AD->>A: โอนเข้าบัญชีร้าน หรือเก็บเป็นเครดิตร้าน
   A->>D: settlement = PAID_OUT / CREDIT · audit log
 ```
 
-**เงินมัดจำเข้าแพลตฟอร์ม ไม่เข้าร้านโดยตรง:** ลูกค้าโอนเข้า PromptPay ของ NightOut (`platform_settings.deposit_promptpay`) · แอดมินเป็นคนตรวจสลิป (ร้านไม่เห็นสลิป) · `deposits.settlement` บอกว่าเงินอยู่ที่ไหน: `HELD` (เราถือไว้) → `PAYOUT_PENDING` (ลูกค้าเช็กอิน/ไม่มา → เป็นของร้าน) → `PAID_OUT` (โอนเข้าบัญชีที่ร้านตั้งใน `/merchant/settings`) หรือ `CREDIT` (เก็บเป็นเครดิตในร้าน) · ยกเลิก/ปฏิเสธ → `REFUNDED` คืนลูกค้า · ร้านดูสรุปที่ `/merchant/deposits` แอดมินจัดการที่ `/deposits`
+**เงินมัดจำเข้าแพลตฟอร์ม ไม่เข้าร้านโดยตรง:** ลูกค้าโอนเข้า PromptPay ของ NightOut (`platform_settings.deposit_promptpay`) · แอดมินเป็นคนตรวจสลิป (ร้านไม่เห็นสลิป) · `deposits.settlement` บอกว่าเงินอยู่ที่ไหน: `HELD` (เราถือไว้) → `PAYOUT_PENDING` (ลูกค้าเช็กอิน/ไม่มา → เป็นของร้าน) → `PAID_OUT` (โอนเข้าบัญชีที่ร้านตั้งใน `/merchant/settings`) หรือ `CREDIT` (เก็บเป็นเครดิตในร้าน) · ยกเลิก/ปฏิเสธ → `REFUNDED` คืนลูกค้า · ร้านดูสรุปที่ `/merchant/deposits` แอดมินจัดการที่ `/deposits` · **ชำระออนไลน์** (`domains/payment` · ตั้ง `PAYMENT_PROVIDER`): เงินเข้าบัญชี NightOut ที่ผู้ให้บริการ → `deposits` VERIFIED/HELD ทันทีไม่มีตรวจสลิป (ปิดส่งสลิป 409 `SLIP_FLOW_DISABLED`) · ยอดไม่ตรง / การจองปิดแล้ว = "ต้องคืนเงิน" ที่ `/payments` · การคืนเงินยังทำมือที่ระบบผู้ให้บริการแล้วบันทึก
 
 ### 5.2 เช็กอินด้วย QR
 ```mermaid

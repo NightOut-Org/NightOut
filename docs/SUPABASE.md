@@ -101,8 +101,13 @@ SUPABASE_SERVICE_ROLE_KEY   (Sensitive)
 CORS_ORIGINS=https://<โดเมน>
 JOB_SECRET, QR_SIGNING_KEY  (สุ่มยาวๆ)
 PAYOUT_ENCRYPTION_KEY       (สุ่มยาวๆ ≥ 16 ตัว · ใช้เข้ารหัสเลขบัญชีร้าน · ห้ามเปลี่ยนหลังมีข้อมูลแล้ว · Sensitive)
+PAYMENT_PROVIDER            (ไม่บังคับ · ว่าง = โอน PromptPay + แนบสลิปเดิม · mock = หน้าชำระเงินจำลอง · beam = โครงรอคีย์ ยังใช้สลิป)
+PAYMENT_WEBHOOK_SECRET      (≥ 16 ตัว · ตรวจลายเซ็น webhook · Sensitive)
+PAYMENT_ALLOW_MOCK_IN_PRODUCTION=false  (true = เปิด mock บน deploy — เดโมเท่านั้น ต้องตั้ง PAYMENT_WEBHOOK_SECRET ด้วย)
+WEB_APP_URL=https://<โดเมน>  (ลิงก์กลับหลังชำระเงิน)
 ```
 
+ชำระเงินออนไลน์ (`domains/payment` · ADR 0010): ตั้ง `PAYMENT_PROVIDER` แล้วหน้า `/bookings/:id/deposit` เปลี่ยนเป็นหน้าชำระเงินและปิดส่งสลิป · URL webhook ที่ต้องใส่ในระบบผู้ให้บริการ = `https://<โดเมน>/api/payments/webhook/<provider>` · จะปิด `PAYMENT_PROVIDER` ให้รอรายการที่ค้าง "รอชำระ" หมดเวลาก่อน (webhook ที่มาช้าจะตอบ 404)
 Supabase → Authentication → URL Configuration: ใส่ Site URL = โดเมนเว็บ และ Redirect URLs = `https://<โดเมน>/**`
 ถ้าใช้ปุ่ม Google/Facebook ในหน้า Login: Authentication → Providers → เปิด Google / Facebook แล้วใส่ Client ID/Secret จาก Google Cloud / Meta for Developers
 

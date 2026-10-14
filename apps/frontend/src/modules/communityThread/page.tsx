@@ -1,3 +1,4 @@
+import { COMMUNITY_SHOP_NEWS_CATEGORY } from '@nightout/contracts';
 import type { CommunityComment, CommunityThreadDetail } from '@nightout/contracts';
 import {
   BookmarkSimple,
@@ -19,6 +20,7 @@ import { Link, useNavigate, useParams } from 'react-router';
 import { getBar } from '@/services/data';
 import { useAuth } from '@/services/auth';
 import { useAuthModal } from '@/ui/components/authModal';
+import { CommunityAuthorBadges } from '@/ui/components/communityAuthorBadges';
 import { CommunityAvatar } from '@/ui/components/communityAvatar';
 import { CommunityMediaView } from '@/ui/components/communityMediaView';
 import { barImage } from '@/ui/utils/barImage';
@@ -32,6 +34,7 @@ import {
   setPin,
   setSave,
   setThreadLike,
+  useMyCommunityTeam,
   useRelatedThreads,
   useThread,
 } from './api';
@@ -50,6 +53,7 @@ export function CommunityThreadPage() {
   const qc = useQueryClient();
   const { data: t, isPending, error, refetch } = useThread(id, user?.id ?? null);
   const related = useRelatedThreads(t?.category);
+  const { data: myTeam = [] } = useMyCommunityTeam(user?.id ?? null);
   const [order, setOrder] = useState<'latest' | 'oldest'>('latest');
   const composer = useRef<ReplyComposerHandle>(null);
   const [reportTarget, setReportTarget] = useState<{
@@ -99,6 +103,14 @@ export function CommunityThreadPage() {
       />
     );
   }
+
+  /** กระทู้ที่แท็กร้านที่ฉันอยู่ในทีม → ถูกใจของฉัน (กระทู้ + ความเห็น) ไม่นับในยอด */
+  const ownShopThread = !!t.bar && myTeam.some((b) => b.bar_id === t.bar!.id);
+  const LIKE_NOT_COUNTED = 'ถูกใจแล้ว — ถูกใจจากทีมร้านไม่นับในยอด';
+  const likeThread = guard(async () => {
+    const r = await setThreadLike(t.id, !t.is_liked);
+    if (r.liked && !r.counted) message.info(LIKE_NOT_COUNTED);
+  });
 
   const togglePin = guard(async () => {
     const r = await setPin(t.id, !t.is_pinned);
@@ -162,12 +174,17 @@ export function CommunityThreadPage() {
     ...(t.is_mine
       ? [
           { type: 'divider' as const },
-          {
-            key: 'edit',
-            icon: <PencilSimple size={16} />,
-            label: 'แก้กระทู้',
-            onClick: () => navigate(`/community/t/${t.id}/edit`),
-          },
+          // ข่าวจากร้านแก้ได้เฉพาะทีมของร้านที่แท็ก (ร้านที่แสดงอยู่) — นอกนั้นลบได้อย่างเดียว
+          ...(t.category === COMMUNITY_SHOP_NEWS_CATEGORY && !ownShopThread
+            ? []
+            : [
+                {
+                  key: 'edit',
+                  icon: <PencilSimple size={16} />,
+                  label: 'แก้กระทู้',
+                  onClick: () => navigate(`/community/t/${t.id}/edit`),
+                },
+              ]),
           {
             key: 'delete',
             icon: <Trash size={16} />,
@@ -190,7 +207,11 @@ export function CommunityThreadPage() {
   const commentActions = {
     onReply: (c: CommunityComment) =>
       user ? composer.current?.replyTo(c) : openLogin(`/community/t/${t.id}`),
-    onLike: (c: CommunityComment) => guard(() => setCommentLike(c.id, !c.is_liked))(),
+    onLike: (c: CommunityComment) =>
+      guard(async () => {
+        const r = await setCommentLike(c.id, !c.is_liked);
+        if (r.liked && !r.counted) message.info(LIKE_NOT_COUNTED);
+      })(),
     onDelete: (c: CommunityComment) => guard(() => deleteComment(c.id))(),
     onReport: (c: CommunityComment) =>
       user ? setReportTarget({ comment_id: c.id }) : openLogin(`/community/t/${t.id}`),
@@ -226,13 +247,14 @@ export function CommunityThreadPage() {
             <Alert
               type="warning"
               showIcon
-              message="กระทู้นี้ถูกซ่อนโดยทีมงาน — คนอื่นมองไม่เห็น แก้ให้ตรงกติกาแล้วติดต่อทีมงานได้"
+              title="กระทู้นี้ถูกซ่อนโดยทีมงาน — คนอื่นมองไม่เห็น แก้ให้ตรงกติกาแล้วติดต่อทีมงานได้"
             />
           )}
           <ThreadArticle
             t={t}
             menu={menu}
-            onLike={guard(() => setThreadLike(t.id, !t.is_liked))}
+            ownShopThread={ownShopThread}
+            onLike={likeThread}
             onSave={toggleSave}
             onPin={togglePin}
             onHistory={() => setHistoryOf({ kind: 'thread', id: t.id })}
@@ -300,6 +322,7 @@ export function CommunityThreadPage() {
 function ThreadArticle({
   t,
   menu,
+  ownShopThread,
   onLike,
   onSave,
   onPin,
@@ -307,6 +330,8 @@ function ThreadArticle({
 }: {
   t: CommunityThreadDetail;
   menu: MenuProps['items'];
+  /** กระทู้แท็กร้านที่ฉันอยู่ในทีม → บอกว่าถูกใจของฉันไม่นับ */
+  ownShopThread: boolean;
   onLike: () => void;
   onSave: () => void;
   onPin: () => void;
@@ -322,11 +347,7 @@ function ThreadArticle({
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5 text-sm font-semibold">
             <span className="truncate">{t.author.name}</span>
-            {t.author.is_staff && (
-              <span className="rounded-md bg-gold/15 px-1.5 py-px text-[11px] text-gold-text">
-                ทีมงาน
-              </span>
-            )}
+            <CommunityAuthorBadges author={t.author} />
           </div>
           <div className="text-xs text-muted">
             {timeAgo(t.created_at)}
@@ -406,6 +427,11 @@ function ThreadArticle({
             {t.is_pinned ? 'ปักหมุดแล้ว' : 'ปักหมุด'}
           </button>
         </div>
+      )}
+      {open && ownShopThread && (
+        <p className="m-0 mt-2 text-xs text-muted">
+          ถูกใจของทีมร้านในกระทู้ที่แท็กร้านตัวเองไม่นับในยอดถูกใจ
+        </p>
       )}
     </article>
   );

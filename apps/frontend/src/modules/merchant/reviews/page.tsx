@@ -145,7 +145,7 @@ export function MerchantReviewsPage() {
 
         {rows.length === 0 ? (
           <Tile>
-            <Empty description={reviews.length ? 'ไม่มีรีวิวในตัวกรองนี้' : 'ยังไม่มีรีวิว — ลูกค้ารีวิวได้หลังจองและมัดจำผ่านแล้ว'} />
+            <Empty description={reviews.length ? 'ไม่มีรีวิวในตัวกรองนี้' : 'ยังไม่มีรีวิว — ลูกค้ารีวิวได้หลังจองและชำระ Table Fee แล้ว'} />
           </Tile>
         ) : (
           <ul className="m-0 flex list-none flex-col gap-2.5 self-start p-0 lg:gap-0 lg:overflow-hidden lg:rounded-[20px] lg:border lg:border-border lg:bg-card">

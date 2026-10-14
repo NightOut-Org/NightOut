@@ -1,6 +1,7 @@
 import { Injectable, Logger, type OnApplicationShutdown, type OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { SupabaseService } from '../supabase/supabase.service';
+import type { BookingTimeoutsResult } from './jobs.controller';
 
 /**
  * เครื่อง dev ไม่มี pg_cron → รัน run_booking_timeouts() เองทุก JOBS_LOCAL_INTERVAL_MS
@@ -30,8 +31,12 @@ export class LocalJobsScheduler implements OnModuleInit, OnApplicationShutdown {
 
   private async tick() {
     try {
-      const r = await this.db.rpc<{ expired: number; no_show: number; completed: number }>('run_booking_timeouts', {});
-      if (r.expired || r.no_show || r.completed) this.logger.log(`หมดเวลา ${r.expired} · ไม่มาตามนัด ${r.no_show} · ปิดโต๊ะ ${r.completed}`);
+      const r = await this.db.rpc<BookingTimeoutsResult>('run_booking_timeouts', {});
+      if (r.expired || r.reminded || r.warned || r.no_show || r.completed) {
+        this.logger.log(
+          `หมดเวลา ${r.expired} · เตือน 15 นาที ${r.reminded ?? 0} · เตือนก่อนปลดโต๊ะ ${r.warned ?? 0} · ปลดโต๊ะ (Forfeited) ${r.no_show} · ปิดโต๊ะ ${r.completed}`,
+        );
+      }
     } catch (e) {
       this.logger.warn(`run_booking_timeouts: ${(e as Error).message}`);
     }

@@ -25,11 +25,16 @@ function passwordStrength(pw: string): number {
   ].filter(Boolean).length;
 }
 
-/** ฟอร์มสมัครสมาชิกใน AuthModal (Supabase signUp → trigger สร้าง public.users) */
+/**
+ * ฟอร์มสมัครสมาชิกใน AuthModal (Supabase signUp → trigger สร้าง public.users)
+ * next = path ที่จะกลับไปหลัง onboarding (เช่น ลิงก์แชร์ที่กด "ไปด้วย") — ส่งต่อเป็น `/onboarding?next=`
+ */
 export function AuthRegisterForm({
+  next,
   onNavigate,
   onSwitch,
 }: {
+  next?: string;
   onNavigate: () => void;
   onSwitch: () => void;
 }) {
@@ -40,6 +45,8 @@ export function AuthRegisterForm({
   const [form] = Form.useForm<RegisterValues>();
   const strength = passwordStrength(Form.useWatch('password', form) ?? '');
 
+  const onboarding = next ? `/onboarding?next=${encodeURIComponent(next)}` : '/onboarding';
+
   const onFinish = async (v: RegisterValues) => {
     setLoading(true);
     try {
@@ -47,7 +54,7 @@ export function AuthRegisterForm({
         email: v.email,
         password: v.password,
         options: {
-          emailRedirectTo: `${location.origin}/onboarding`,
+          emailRedirectTo: `${location.origin}${onboarding}`,
           data: {
             display_name: v.displayName,
             birthdate: v.birthdate.format('YYYY-MM-DD'),
@@ -59,7 +66,7 @@ export function AuthRegisterForm({
       if (error) throw error;
       onNavigate();
       // ถ้าปิด "Confirm email" ใน Supabase จะได้ session ทันที → ไปต่อได้เลย ไม่ต้องรออีเมล
-      if (data.session) navigate('/onboarding');
+      if (data.session) navigate(onboarding);
       else navigate(`/verify-email?email=${encodeURIComponent(v.email)}`);
     } catch (e) {
       message.error((e as Error).message || 'สมัครไม่สำเร็จ');

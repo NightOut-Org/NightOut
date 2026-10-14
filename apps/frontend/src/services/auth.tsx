@@ -22,8 +22,10 @@ export interface AppUser {
   barId?: string;
   /** เบอร์ล่าสุดที่ใช้จอง (E.164) */
   phoneE164?: string | null;
-  /** ถูกระงับการจอง */
+  /** ถูกระงับ (จองไม่ได้ + ชุมชนอ่านอย่างเดียว) */
   bannedAt?: string | null;
+  /** เหตุผลที่ถูกระงับ (แอดมินกรอก / สลิปปลอมซ้ำ) */
+  banReason?: string | null;
 }
 
 interface AuthContextValue {
@@ -56,6 +58,7 @@ async function loadProfile(session: Session): Promise<AppUser | null> {
     roleLabel: u.role_label,
     phoneE164: u.phone_e164 ?? null,
     bannedAt: u.banned_at ?? null,
+    banReason: u.ban_reason ?? null,
   };
   // ข้อมูลของผู้ใช้ (การจอง แจ้งเตือน ร้านของฉัน …) โหลดให้เสร็จก่อนเปิดหน้าที่ต้องล็อกอิน
   const { barId } = await startUser(profile).catch((e: Error) => {
