@@ -2,7 +2,9 @@
   "name": "night-list",
   "private": true,
   "packageManager": "pnpm@10.28.0",
-  "engines": { "node": ">=22" },
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "db": "pnpm --filter @nightout/backend db:start",
     "db:stop": "pnpm --filter @nightout/backend db:stop",
@@ -12,7 +14,8 @@
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "pdev": "powershell -NoProfile -Command \"$env:PATH = 'D:\\pnpm;D:\\pnpm\\bin;' + $env:PATH; turbo run dev\""
   },
   "devDependencies": {
     "@nightout/config": "workspace:*",
