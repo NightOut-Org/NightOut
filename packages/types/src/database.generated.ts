@@ -9405,6 +9405,7 @@ export type Database = {
           age_verified: boolean
           age_verified_at: string | null
           anonymized_at: string | null
+          avatar_path: string | null
           avatar_url: string | null
           ban_reason: string | null
           banned_at: string | null
@@ -9427,6 +9428,7 @@ export type Database = {
           age_verified?: boolean
           age_verified_at?: string | null
           anonymized_at?: string | null
+          avatar_path?: string | null
           avatar_url?: string | null
           ban_reason?: string | null
           banned_at?: string | null
@@ -9449,6 +9451,7 @@ export type Database = {
           age_verified?: boolean
           age_verified_at?: string | null
           anonymized_at?: string | null
+          avatar_path?: string | null
           avatar_url?: string | null
           ban_reason?: string | null
           banned_at?: string | null
@@ -10531,6 +10534,7 @@ export type Database = {
       }
       admin_users: {
         Row: {
+          avatar_url: string | null
           ban_reason: string | null
           banned_at: string | null
           banned_phones: Json | null
@@ -10545,6 +10549,7 @@ export type Database = {
           role: Database["public"]["Enums"]["user_role"] | null
         }
         Insert: {
+          avatar_url?: string | null
           ban_reason?: string | null
           banned_at?: string | null
           banned_phones?: never
@@ -10559,6 +10564,7 @@ export type Database = {
           role?: Database["public"]["Enums"]["user_role"] | null
         }
         Update: {
+          avatar_url?: string | null
           ban_reason?: string | null
           banned_at?: string | null
           banned_phones?: never
@@ -11510,6 +11516,10 @@ export type Database = {
         Returns: Json
       }
       admin_recompute_ranking: { Args: { p_actor: string }; Returns: Json }
+      admin_remove_user_avatar: {
+        Args: { p_actor: string; p_reason: string; p_user: string }
+        Returns: Json
+      }
       admin_reorder_team_members: {
         Args: { p_actor: string; p_ids: string[] }
         Returns: Json
@@ -11673,6 +11683,7 @@ export type Database = {
           age_verified: boolean
           age_verified_at: string | null
           anonymized_at: string | null
+          avatar_path: string | null
           avatar_url: string | null
           ban_reason: string | null
           banned_at: string | null
@@ -11943,6 +11954,7 @@ export type Database = {
         }
         Returns: Json
       }
+      app_remove_avatar: { Args: { p_actor: string }; Returns: Json }
       app_remove_staff: {
         Args: { p_actor: string; p_bar: string; p_user: string }
         Returns: Json
@@ -11990,6 +12002,10 @@ export type Database = {
           p_payout: Json
           p_settings: Json
         }
+        Returns: Json
+      }
+      app_set_avatar: {
+        Args: { p_actor: string; p_path: string; p_url: string }
         Returns: Json
       }
       app_set_bar_media: {

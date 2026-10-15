@@ -1,6 +1,6 @@
 <!-- สร้างจาก /sync-requirements (scripts/gdoc-to-md.mjs) — ห้ามแก้มือ -->
 <!-- source: https://docs.google.com/document/d/1GQ3ilsu_y_dzTulZS9_UEtNH7ygOLkaM-YkqdFm3UUI/edit -->
-<!-- revisionId: AHj4eMQsNreEunldDWPOa3CjE3SFCdCBCGCAXNPXwZoQwJD8_Nifr0nKiVmVXg2ZITXnUW5zJBfM54UcazMNenTGTELuh9bXCEJ4rYi5Ggo -->
+<!-- revisionId: AHj4eMQ6ipR_cA_agtsai8Le-S12OA6b68AhHf4atHS956UnZN1y6hkOym2Qzom0fzx0ncq9hwAImuNo1cZnRDobAVGKB3eG8yvv-Kh96g4 -->
 <!-- synced: 2026-10-15 -->
 
 # Nightout_2.day
@@ -126,6 +126,7 @@ Dashboard แอดมิน: 2 ระดับ (Admin และ Super Admin) + 
 | 🆕 รีวิว | รีวิวได้ทุกคนที่สมัครสมาชิก (ผ่านการยืนยันตัวตนแล้ว) · ให้คะแนนความปลอดภัย ราคา การเดินทาง ที่จอดรถ ❓ · ป้อนเข้าคะแนนดาว/อันดับฝั่งแอดมิน | เขียน: ลูกค้าที่สมัครสมาชิก · ดู: ทุกคน |
 | 🆕 ชุมชน (Community) | ฟีดกระทู้แยกหมวด (ดนตรีสด · รีวิว · หาเพื่อนเที่ยว · เครื่องดื่ม · ถาม-ตอบ · ประกาศ) เรียงล่าสุด/ยอดนิยม/ยังไม่มีคำตอบ ค้นหาได้ · ตั้งกระทู้ แท็กร้านได้ 1 ร้าน แนบรูป/วิดีโอสูงสุด 6 ไฟล์ (วิดีโอไม่เกิน 30 วิ) · ตอบกลับซ้อนได้ 1 ชั้น · ถูกใจ · บันทึกไว้อ่าน · ปักหมุดส่วนตัวสูงสุด 3 กระทู้ (เห็นคนเดียว) · ฉบับร่างบันทึกอัตโนมัติ เก็บ 7 วัน · แก้/ลบได้เฉพาะของตัวเอง (ทั้งกระทู้และความเห็น แก้ได้ทั้งข้อความและรูป/วิดีโอ) · กระทู้/ความเห็นที่ถูกแก้มีป้าย "แก้ไขแล้ว" กดดูประวัติการแก้ไขได้ทุกเวอร์ชัน (ทุกคนที่เห็นโพสต์นั้นดูได้ · เวอร์ชันเดิมแก้/ลบไม่ได้) · รายงานกระทู้/ความเห็นที่ผิดกติกาได้ · หมวด "ประกาศ" ตั้งได้เฉพาะทีม NightOut | อ่าน: ทุกคน ไม่ต้องล็อกอิน(guest) · ตั้งกระทู้/ตอบ/ถูกใจ/บันทึก/ปักหมุด/รายงาน: ลูกค้าที่ล็อกอิน · บัญชีที่ถูกแบนอ่านได้อย่างเดียว · ทีมร้านดูแถวชุมชนในตารางฝั่งร้าน |
 
+🆕 หน้าโปรไฟล์ใหม่ + รูปโปรไฟล์ — หน้าบ้าน: /profile แสดงรูป ชื่อ และชั้นบัญชี (role) ชัดเจน แบ่งแท็บ ข้อมูลและความชอบ (ดู/แก้) · บัญชีและสิทธิ์ (เห็นเฉพาะชั้นของตัวเองและที่ต่ำกว่า) · ช่องทางแจ้งเตือน · ปุ่มบัญชีบน navbar แสดงรูป + ชื่อ + ชั้นบัญชี · ผู้ใช้อัปโหลด/ลบรูปโปรไฟล์เองได้ (JPG/PNG/WebP ≤ 5MB ย่อเป็น 400×400) · หลังบ้าน: แอดมินลบรูปไม่เหมาะสมได้ที่ /users (บันทึก audit + แจ้งเจ้าของบัญชี) · ข้อมูลที่เก็บ: users.avatar_url + ไฟล์ใน Storage bucket avatars · Phase: นอก MVP — อนุมัติ 2026-10-16
 🆕 ฟีเจอร์เสริมฝั่งลูกค้าที่ Brief ระบุ แต่ไม่ได้ระบุ Phase ❓
 
 | ฟีเจอร์ | รายละเอียด (ตาม Brief) | ใครใช้ |
@@ -1684,6 +1685,7 @@ New Lead → Qualified Lead → Opportunity → Proposal → Negotiation → Won
 | TypeError: Cannot read properties of undefined (reading 'id') |  | /merchant/reviews | Got |
 | TypeError: Cannot read properties of undefined (reading 'id') |  | /merchant/analytics | Got |
 | TypeError: Cannot read properties of undefined (reading 'id') |  | /merchant/staff | Got |
+|  |  |  |  |
 
 ฝั่ง Admin
 

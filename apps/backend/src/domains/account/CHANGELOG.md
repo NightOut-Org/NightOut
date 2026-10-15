@@ -1,5 +1,11 @@
 # account — ประวัติการแก้ไข
 
+## 2026-10-16 — รูปโปรไฟล์ (นอก MVP — อนุมัติ 2026-10-16)
+- `GET /me/profile` ตอบ `avatar_url` เพิ่ม · `PUT /me/avatar` `{path}` (rpc `app_set_avatar` — ตรวจ path ในโฟลเดอร์ตัวเอง + มีไฟล์จริง) · `DELETE /me/avatar` (rpc `app_remove_avatar`) · `POST /admin/users/:id/avatar/remove` `{reason}` (rpc `admin_remove_user_avatar` · audit + แจ้งเจ้าของ)
+- `AccountAvatarService`: เรียก rpc แล้วลบไฟล์เก่าใน `removed_paths` จาก bucket `avatars` (แบบเดียวกับ mini-ads)
+- migration `20261016000100_account_avatar`: `users.avatar_path` · bucket `avatars` + policy · 3 ฟังก์ชัน · view `admin_users` + `avatar_url`
+- ไฟล์: `account-avatar.service.ts` (ใหม่) · `account.me.controller.ts` · `account.admin.controller.ts` · `account.dto.ts` · `account.module.ts`
+
 ## 2026-10-16 — แจ้งเตือนของคนอื่นโผล่ในกล่องแจ้งเตือน (บัญชีแอดมิน)
 - `GET /me/overview` อ่าน `notifications` และ `review_reports` โดยไม่กรองเจ้าของ → บัญชีที่เป็นแอดมินได้แถวของทุกคนผ่าน policy `admin_read` (เช่น เจ้าของร้านที่เป็นแอดมินด้วยเห็นแจ้งเตือนการจองร้านอื่น) · เพิ่ม `user_id=eq.<me>` / `reporter_id=eq.<me>` (`account.me.controller.ts`)
 

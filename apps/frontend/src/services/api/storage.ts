@@ -67,6 +67,11 @@ export function barMediaUrl(path: string) {
   return storagePublicUrl(import.meta.env.VITE_SUPABASE_URL ?? '', 'bar-media', path);
 }
 
+/** รูปโปรไฟล์ — avatars/<user_id>/<uuid>.<ext> (bucket public) · path ไปบันทึกผ่าน PUT /me/avatar */
+export function uploadAvatar(userId: string, file: Blob) {
+  return upload('avatars', `${userId}/${crypto.randomUUID()}.${ext(file)}`, file);
+}
+
 export function uploadSafetyEvidence(barId: string, key: string, file: Blob) {
   return upload('bar-verifications', `${barId}/safety-${key.toLowerCase()}-${Date.now()}.${ext(file)}`, file);
 }

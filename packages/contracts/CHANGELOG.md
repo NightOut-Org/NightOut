@@ -1,5 +1,8 @@
 # CHANGELOG — @nightout/contracts
 
+## 2026-10-16 — รูปโปรไฟล์
+- `MyProfile.avatar_url` · `SetAvatarBody` · `AvatarResult` · `RemoveUserAvatarBody` / `RemoveUserAvatarResult` · `AVATAR_MAX_BYTES` · `AVATAR_MIME_TYPES` · error `AVATAR_INVALID` / `AVATAR_NOT_FOUND` / `AVATAR_REMOVE_REASON_REQUIRED` · `UPLOAD_BUCKETS` + `PUBLIC_BUCKETS` เพิ่ม `avatars` · เทสต์ใน `contracts.test.ts`
+
 ## 2026-10-15 — เมนู navbar (site-content)
 - `SITE_NAV_KEYS` · `SiteNavKey` · `SITE_NAV_REQUIRED` · `SITE_NAV_LABEL_MAX` · `SiteNavItem` · `SaveSiteNavBody` (ครบทุกเมนู · ลำดับ 0..n-1 · หน้าหลักซ่อนไม่ได้) · `SaveSiteNavResult` · error `INVALID_SITE_NAV` · view `admin_site_nav` ใน `ADMIN_VIEWS` + เทสต์
 - ไฟล์: `src/site-content.ts` · `src/backoffice.ts` · `src/contracts.test.ts`

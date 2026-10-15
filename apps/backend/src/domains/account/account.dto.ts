@@ -10,3 +10,5 @@ export class UnbanUserDto extends createZodDto(C.UnbanUserBody) {}
 export class BanUserDto extends createZodDto(C.BanUserBody) {}
 export class OAuthSignupVerifyDto extends createZodDto(C.OAuthSignupVerifyBody) {}
 export class OAuthSignupCompleteDto extends createZodDto(C.OAuthSignupCompleteBody) {}
+export class SetAvatarDto extends createZodDto(C.SetAvatarBody) {}
+export class RemoveUserAvatarDto extends createZodDto(C.RemoveUserAvatarBody) {}

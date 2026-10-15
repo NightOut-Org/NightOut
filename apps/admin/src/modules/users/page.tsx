@@ -1,8 +1,9 @@
 import { PageContainer } from '@ant-design/pro-components';
-import { LockOpen, PencilSimple, Prohibit, Trash, UserPlus } from '@phosphor-icons/react';
+import { ImageBroken, LockOpen, PencilSimple, Prohibit, Trash, UserPlus } from '@phosphor-icons/react';
 import type { Db } from '@nightout/types';
 import {
   App,
+  Avatar,
   Button,
   Input,
   Popconfirm,
@@ -29,6 +30,7 @@ import { STAFF_ROLE, USER_ROLE } from '@/ui/utils/labels';
 import { BanUserModal } from './modal/banUserModal';
 import { CreateUserModal } from './modal/createUserModal';
 import { EditUserModal } from './modal/editUserModal';
+import { RemoveAvatarModal } from './modal/removeAvatarModal';
 import { UnbanUserModal } from './modal/unbanUserModal';
 import { LEAVES_BARS, roleNotes, useRoleDraft, type Role } from './utils/useRoleDraft';
 import { groupUsers, USER_GROUP_LABEL, USER_GROUPS, type UserGroup } from './utils/userGroups';
@@ -63,6 +65,7 @@ export function UsersPage() {
   const [editing, setEditing] = useState<Db.AdminUser | null>(null);
   const [banning, setBanning] = useState<Db.AdminUser | null>(null);
   const [unbanning, setUnbanning] = useState<Db.AdminUser | null>(null);
+  const [removingAvatar, setRemovingAvatar] = useState<Db.AdminUser | null>(null);
   const { data, isLoading, error, refetch } = useUsers();
   const roles = useAccountRoles();
   const act = useAdminAction();
@@ -157,7 +160,21 @@ export function UsersPage() {
   };
 
   const columns: Record<ColumnKey, TableColumnType<Db.AdminUser>> = {
-    name: { title: 'ชื่อ', key: 'name', dataIndex: 'display_name', width: 180, ellipsis: true },
+    name: {
+      title: 'ชื่อ',
+      key: 'name',
+      dataIndex: 'display_name',
+      width: 200,
+      ellipsis: true,
+      render: (v: string, u) => (
+        <Space size={8}>
+          <Avatar size={28} src={u.avatar_url ?? undefined} className="!bg-purple">
+            {v?.slice(0, 2)}
+          </Avatar>
+          {v}
+        </Space>
+      ),
+    },
     email: { title: 'อีเมล', key: 'email', dataIndex: 'email', width: 220, ellipsis: true },
     phone: {
       title: 'เบอร์',
@@ -263,7 +280,7 @@ export function UsersPage() {
       key: 'actions',
       align: 'right',
       fixed: 'right',
-      width: 140,
+      width: 180,
       render: (_, u) => {
         const canEdit = auth.isSuperAdmin || u.id === auth.session?.user.id;
         return (
@@ -275,6 +292,17 @@ export function UsersPage() {
                   aria-label={`แก้ไข ${u.display_name}`}
                   disabled={busy}
                   onClick={() => setEditing(u)}
+                />
+              </Tooltip>
+            )}
+            {u.avatar_url && (
+              <Tooltip title="ลบรูปโปรไฟล์">
+                <Button
+                  danger
+                  icon={<ImageBroken size={16} />}
+                  aria-label={`ลบรูปโปรไฟล์ของ ${u.display_name}`}
+                  disabled={busy}
+                  onClick={() => setRemovingAvatar(u)}
                 />
               </Tooltip>
             )}
@@ -394,6 +422,7 @@ export function UsersPage() {
       <EditUserModal user={editing} open={!!editing} onClose={() => setEditing(null)} />
       <BanUserModal user={banning} onClose={() => setBanning(null)} />
       <UnbanUserModal user={unbanning} onClose={() => setUnbanning(null)} />
+      <RemoveAvatarModal user={removingAvatar} onClose={() => setRemovingAvatar(null)} />
     </PageContainer>
   );
 }

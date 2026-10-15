@@ -8,7 +8,7 @@ import { PUBLIC_BUCKETS, UploadBucket } from './storage';
 import { CommunityCommentBody, CommunityFeedQuery, CommunityReportBody, CommunityThreadBody, communityTeamBadge, ModerateCommunityBody, MyCommunityFeedQuery, SaveCommunityDraftBody, UpdateCommunityCommentBody } from './community';
 import { ADMIN_VIEWS, AdminReportNoTableBody, BAR_ERRORS, BarBlacklistBody, BOOKING_ERRORS, CheckInPreviewQuery, ReportNoTableBody } from './index';
 import { SafetyInspectionBody } from './index';
-import { ADMIN_MASTER_TABLES, AdminBarDetailsBody, AdminBarInfoBody, BanUserBody, RankingQuery, SaveStylesBody, STYLE_ICONS, UnbanUserBody } from './index';
+import { ADMIN_MASTER_TABLES, AdminBarDetailsBody, AdminBarInfoBody, BanUserBody, RankingQuery, RemoveUserAvatarBody, SaveStylesBody, SetAvatarBody, STYLE_ICONS, UnbanUserBody } from './index';
 import { MarkPaymentRefundedBody, MockCompleteBody, PAYMENT_ERRORS, SUPER_ADMIN_VIEWS } from './index';
 import { TableBoardQuery, TableOccupancyBody } from './index';
 import { MINI_ADS_ERRORS, MiniAdBody, MiniAdsQuery, TrackMiniAdBody, UpdateMiniAdBody } from './index';
@@ -433,6 +433,15 @@ describe('G6: แก้ข้อมูลร้านแทน · สไตล�
     expect(STYLE_ICONS).toContain('Microphone');
     expect(ERROR_MESSAGES.INVALID_STYLES).toBeTruthy();
     expect(ERROR_MESSAGES.DUPLICATE_STYLE_NAME).toBeTruthy();
+  });
+
+  it('avatar: SetAvatarBody needs a path · RemoveUserAvatarBody reason 3–300 · avatars bucket is public', () => {
+    expect(SetAvatarBody.safeParse({}).success).toBe(false);
+    expect(SetAvatarBody.safeParse({ path: 'u1/a.webp' }).success).toBe(true);
+    expect(RemoveUserAvatarBody.safeParse({ reason: 'ab' }).success).toBe(false);
+    expect(RemoveUserAvatarBody.safeParse({ reason: 'รูปไม่เหมาะสม' }).success).toBe(true);
+    expect(PUBLIC_BUCKETS).toContain('avatars');
+    for (const k of ['AVATAR_INVALID', 'AVATAR_NOT_FOUND', 'AVATAR_REMOVE_REASON_REQUIRED']) expect(ERROR_MESSAGES[k]).toBeTruthy();
   });
 
   it('BanUserBody: reason 3–300 · ban_phones defaults false · UnbanUserBody requires a reason', () => {

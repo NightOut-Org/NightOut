@@ -27,6 +27,8 @@ export interface AppUser {
   bannedAt?: string | null;
   /** เหตุผลที่ถูกระงับ (แอดมินกรอก / สลิปปลอมซ้ำ) */
   banReason?: string | null;
+  /** URL รูปโปรไฟล์ (null = ใช้ตัวย่อชื่อ) */
+  avatarUrl?: string | null;
 }
 
 interface AuthContextValue {
@@ -67,6 +69,7 @@ async function loadProfile(session: Session): Promise<AppUser | 'oauth-signup' |
     phoneE164: u.phone_e164 ?? null,
     bannedAt: u.banned_at ?? null,
     banReason: u.ban_reason ?? null,
+    avatarUrl: u.avatar_url ?? null,
   };
   // ข้อมูลของผู้ใช้ (การจอง แจ้งเตือน ร้านของฉัน …) โหลดให้เสร็จก่อนเปิดหน้าที่ต้องล็อกอิน
   const { barId } = await startUser(profile).catch((e: Error) => {

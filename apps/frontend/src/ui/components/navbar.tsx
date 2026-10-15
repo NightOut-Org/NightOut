@@ -1,4 +1,4 @@
-import { Bell, SignOut, User, type Icon } from '@phosphor-icons/react';
+import { Bell, type Icon } from '@phosphor-icons/react';
 import type * as C from '@nightout/contracts';
 import { Rest } from '@nightout/utils/rest';
 import { myNotifications } from '@/services/data';
@@ -9,10 +9,12 @@ import { useState } from 'react';
 import { Link, NavLink, useLocation, useNavigate, useSearchParams } from 'react-router';
 import { NOTIFICATION_PREVIEW_LIMIT } from '@/configs/app';
 import { useDemo } from '@/hooks/useDemo';
+import { useCompactOnOverflow } from '@/hooks/useCompactOnOverflow';
 import { useScrolled } from '@/hooks/useScrolled';
 import { useAuth } from '@/services/auth';
 import { timeAgo } from '@/ui/utils/format';
 import { isMerchantNotification, isMerchantView } from '@/ui/utils/notifications';
+import { AccountMenu } from './accountMenu';
 import { BrandLogo } from './brandLogo';
 import { useAuthModal } from './authModal';
 
@@ -90,6 +92,11 @@ export function Navbar({
     });
   };
   const glass = overVideo && !scrolled;
+  // เนื้อหาเกินความกว้าง island (เลื่อนแล้วหดเหลือ max-w-3xl · จอกว้างปานกลาง · ชื่อเมนูที่แอดมินตั้งยาว) → ปุ่มบัญชีเหลือรูป + จุดชั้นบัญชี
+  const { ref: islandRef, compact: compactAccount } = useCompactOnOverflow<HTMLDivElement>(
+    [items.map((n) => n.label).join('|'), user?.displayName, user?.roleLabel, minimal].join('/'),
+    scrolled,
+  );
   const dim = glass ? 'text-white/75 hover:text-white' : 'text-muted hover:text-text';
 
   const logout = async () => {
@@ -109,6 +116,7 @@ export function Navbar({
 
   return (
     <motion.div
+      ref={islandRef}
       layout={!reduce}
       transition={spring}
       className={`flex items-center gap-2 rounded-full border px-2 transition-colors duration-300 ${glass ? ISLAND.overVideo : ISLAND.page} ${scrolled ? 'h-12 w-full max-w-3xl' : 'h-14 w-full max-w-4xl'}`}
@@ -220,42 +228,16 @@ export function Navbar({
           </Dropdown>
         )}
         {user ? (
-          <Dropdown
-            placement="bottomRight"
-            trigger={['click']}
+          <AccountMenu
+            user={user}
             open={profileOpen}
             onOpenChange={setProfileOpen}
-            menu={{
-              items: [
-                {
-                  key: 'profile',
-                  icon: <User size={18} />,
-                  label: <Link to="/profile">ดูโปรไฟล์</Link>,
-                },
-                {
-                  key: 'logout',
-                  icon: <SignOut size={18} />,
-                  label: 'ออกจากระบบ',
-                  danger: true,
-                  disabled: signingOut,
-                },
-              ],
-              onClick: ({ key }) => {
-                setProfileOpen(false);
-                if (key === 'logout') void logout();
-              },
-            }}
-          >
-            <Button
-              type="text"
-              shape="circle"
-              aria-label="โปรไฟล์"
-              aria-haspopup="menu"
-              aria-expanded={profileOpen}
-              loading={signingOut}
-              icon={<User size={20} />}
-            />
-          </Dropdown>
+            glass={glass}
+            scrolled={scrolled}
+            compact={compactAccount}
+            signingOut={signingOut}
+            onLogout={() => void logout()}
+          />
         ) : minimal ? null : (
           <Button type="primary" shape="round" className="ml-1" onClick={() => openLogin()}>
             เข้าสู่ระบบ

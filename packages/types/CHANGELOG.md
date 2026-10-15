@@ -1,5 +1,8 @@
 # CHANGELOG — @nightout/types
 
+## 2026-10-16 — รูปโปรไฟล์
+- `database.generated.ts`: `users.avatar_path` · `admin_users.avatar_url` · ฟังก์ชัน `app_set_avatar` / `app_remove_avatar` / `admin_remove_user_avatar` (migration `20261016000100` push ขึ้น Supabase แล้ว · สร้างใหม่ด้วย `db:types`)
+
 ## 2026-10-15 — เมนู navbar
 - `Db.AdminSiteNavItem` (view `admin_site_nav` · migration `20261015000300`)
 - ไฟล์: `src/database.ts`
