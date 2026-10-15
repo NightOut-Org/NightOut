@@ -10,7 +10,7 @@ import {
   Tree,
   type Icon,
 } from '@phosphor-icons/react';
-import type { BarWithTier } from '@/services/data';
+import { listBars, type BarWithTier } from '@/services/data';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { useId, useLayoutEffect, useState, type KeyboardEvent, type RefObject } from 'react';
 import { createPortal } from 'react-dom';
@@ -29,6 +29,7 @@ const SLOT_ICONS: Record<string, Icon> = {
   party: DiscoBall,
 };
 const POPULAR_LIMIT = 4;
+const BAR_MATCH_LIMIT = 6;
 const PANEL_WIDTH = 480;
 
 interface SuggestItem {
@@ -50,7 +51,7 @@ const withQuery = (to: string, extra: string) => {
 };
 
 /** แบ่งการ์ดหมวดตามลิงก์: ?category= = ประเภทร้าน · ?style= = สไตล์ (การ์ดอื่น เช่น /ranking ไม่อยู่ในแผง) */
-function buildGroups(categories: HomeCategory[] = [], popular: BarWithTier[], filterQuery: string) {
+function buildGroups(categories: HomeCategory[] = [], popular: BarWithTier[], filterQuery: string, q: string) {
   const toItem = (c: HomeCategory): SuggestItem => ({
     id: `cat-${c.key}`,
     label: c.title,
@@ -64,8 +65,9 @@ function buildGroups(categories: HomeCategory[] = [], popular: BarWithTier[], fi
     { title: 'ประเภทร้าน', items: categories.filter((c) => linkParam(c, 'category')).map(toItem) },
     { title: 'สไตล์', items: categories.filter((c) => linkParam(c, 'style')).map(toItem) },
     {
-      title: 'ร้านยอดนิยม',
-      items: popular.slice(0, POPULAR_LIMIT).map((b) => ({
+      // พิมพ์แล้วค้นจากทุกร้าน (listBars แบบเดียวกับหน้า /search) ไม่ใช่แค่ร้านยอดนิยม
+      title: q ? 'ร้าน' : 'ร้านยอดนิยม',
+      items: (q ? listBars({ q }).slice(0, BAR_MATCH_LIMIT) : popular.slice(0, POPULAR_LIMIT)).map((b) => ({
         id: `bar-${b.id}`,
         label: b.name,
         hint: b.district,
@@ -149,7 +151,7 @@ export function HeroSuggest({
   const [active, setActive] = useState(-1);
   const hover = useHoverIntent({ openDelay: 150, closeDelay: 250 });
 
-  const groups = filterGroups(buildGroups(categories, popularBars, filterQuery), q);
+  const groups = filterGroups(buildGroups(categories, popularBars, filterQuery, q.trim()), q);
   const flat = groups.flatMap((g) => g.items);
   const hasSource = categories !== undefined || popularBars.length > 0;
   const open = !dismissed && hasSource && (hover.hovered || focused);
