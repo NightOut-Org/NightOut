@@ -1,7 +1,6 @@
 import { EnvelopeSimple, Eye, EyeSlash, Lock } from '@phosphor-icons/react';
 import { App, Button, Form, Input } from 'antd';
 import { useState } from 'react';
-import { Link } from 'react-router';
 import { OAUTH_BIRTHDAY_SCOPE } from '@nightout/utils';
 import { supabase } from '@/services/supabase';
 
@@ -28,16 +27,16 @@ const FacebookIcon = () => (
   </svg>
 );
 
-/** ฟอร์มเข้าสู่ระบบใน AuthModal — onDone หลังล็อกอินสำเร็จ · onNavigate ปิด modal ก่อนไปหน้าอื่น */
+/** ฟอร์มเข้าสู่ระบบใน AuthModal — onDone หลังล็อกอินสำเร็จ · onForgot สลับไปลืมรหัสผ่าน · onSwitch สลับไปสมัคร */
 export function AuthLoginForm({
   next,
   onDone,
-  onNavigate,
+  onForgot,
   onSwitch,
 }: {
   next?: string;
   onDone: () => void;
-  onNavigate: () => void;
+  onForgot: () => void;
   onSwitch: () => void;
 }) {
   const { message } = App.useApp();
@@ -89,13 +88,13 @@ export function AuthLoginForm({
           label={
             <span className="flex w-full items-center justify-between">
               รหัสผ่าน
-              <Link
-                to="/forgot-password"
-                onClick={onNavigate}
-                className="text-xs font-normal !text-white/80 hover:!text-white"
+              <button
+                type="button"
+                onClick={onForgot}
+                className="text-xs font-normal text-white/80 hover:text-white"
               >
                 ลืมรหัสผ่าน ?
-              </Link>
+              </button>
             </span>
           }
           className="!mb-5"

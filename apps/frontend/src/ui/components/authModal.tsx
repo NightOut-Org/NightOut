@@ -3,16 +3,19 @@ import { ConfigProvider, Modal, theme } from 'antd';
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router';
 import { BrandLogo } from './brandLogo';
+import { AuthForgotForm } from './authForgotForm';
 import { AuthLoginForm } from './authLoginForm';
 import { AuthRegisterForm } from './authRegisterForm';
 
-type AuthView = 'login' | 'register';
+type AuthView = 'login' | 'register' | 'forgot';
 
 interface AuthModalApi {
   /** เปิด modal เข้าสู่ระบบ · next = path ที่จะไปต่อหลังล็อกอินสำเร็จ (ไม่ใส่ = อยู่หน้าเดิม) · สลับไปสมัครก็ส่งต่อ (หลัง onboarding) */
   openLogin: (next?: string) => void;
   /** เปิด modal สมัครสมาชิก */
   openRegister: () => void;
+  /** เปิด modal ลืมรหัสผ่าน (ขอลิงก์ตั้งรหัสใหม่ทางอีเมล) */
+  openForgotPassword: () => void;
 }
 
 const AuthModalContext = createContext<AuthModalApi | null>(null);
@@ -39,6 +42,10 @@ const HEADINGS: Record<AuthView, { title: string; subtitle: string }> = {
     title: 'สร้างบัญชี',
     subtitle: 'ใช้เวลาไม่ถึงนาที · สำหรับผู้ที่อายุ 20 ปีขึ้นไป',
   },
+  forgot: {
+    title: 'ลืมรหัสผ่าน',
+    subtitle: 'กรอกอีเมลที่ใช้สมัคร เราจะส่งลิงก์ตั้งรหัสใหม่ให้',
+  },
 };
 
 /** Provider เดียวทั้งแอป: ปุ่ม "เข้าสู่ระบบ" / route guard เรียก `useAuthModal().openLogin()` */
@@ -58,7 +65,15 @@ export function AuthModalProvider({ children }: { children: ReactNode }) {
     setView('register');
     setOpen(true);
   }, []);
-  const api = useMemo(() => ({ openLogin, openRegister }), [openLogin, openRegister]);
+  const openForgotPassword = useCallback(() => {
+    setNext(undefined);
+    setView('forgot');
+    setOpen(true);
+  }, []);
+  const api = useMemo(
+    () => ({ openLogin, openRegister, openForgotPassword }),
+    [openLogin, openRegister, openForgotPassword],
+  );
   const close = () => setOpen(false);
 
   return (
@@ -87,19 +102,21 @@ export function AuthModalProvider({ children }: { children: ReactNode }) {
             <h2 className="mt-5 text-2xl font-bold text-white">{HEADINGS[view].title}</h2>
             <p className="mt-1.5 text-xs text-white/60">{HEADINGS[view].subtitle}</p>
           </header>
-          {view === 'login' ? (
+          {view === 'login' && (
             <AuthLoginForm
               next={next}
               onDone={() => {
                 close();
                 if (next) navigate(next, { replace: true });
               }}
-              onNavigate={close}
+              onForgot={() => setView('forgot')}
               onSwitch={() => setView('register')}
             />
-          ) : (
+          )}
+          {view === 'register' && (
             <AuthRegisterForm next={next} onNavigate={close} onSwitch={() => setView('login')} />
           )}
+          {view === 'forgot' && <AuthForgotForm onBack={() => setView('login')} />}
         </Modal>
       </ConfigProvider>
     </AuthModalContext.Provider>

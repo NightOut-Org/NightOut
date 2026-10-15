@@ -26,7 +26,7 @@ flowchart TD
 
   AUTH --> LOGIN["/login → / + modal"]
   AUTH --> REG["/register → / + modal"]
-  AUTH --> FGT["/forgot-password · /reset-password"]
+  AUTH --> FGT["/forgot-password → / + modal · /reset-password"]
   AUTH --> VER["/verify-email"]
   AUTH --> SOC["/signup/social"]
   AUTH --> INV["/accept-invite"]
@@ -89,7 +89,7 @@ flowchart TD
 | `/register` | สมัครสมาชิก (redirect → `/` + เปิด modal) | 🌐 | modal เดียวกับ login สลับมุมมองได้ · อีเมล, password + ยืนยัน, ชื่อที่แสดง, วันเกิด (20+), ยอมรับ Terms/Privacy, Turnstile · 🟡 |
 | `/verify-email` | ยืนยันอีเมล | 🌐 | แจ้งให้เช็กอีเมล + ส่งใหม่ | ⬜ |
 | `/signup/social` | สมัครด้วย Google / Facebook | 👤 (ล็อกอิน OAuth แล้วยังไม่มีบัญชี) | ล็อกอิน Google/Facebook ครั้งแรก → `RootLayout` พามาหน้านี้ (`?next=` หน้าเดิม) · backend ดึงวันเกิดจากบัญชีเอง → อายุ 20+ = ชื่อที่แสดง + ติ๊กยอมรับ Terms/Privacy (PDPA) → "ยอมรับและสร้างบัญชี" · "ไม่ยอมรับ" = ลบบัญชี Auth + ออกจากระบบ · ไม่มีวันเกิด/ปีเกิด หรืออายุ < 20 = "ใช้งานบัญชีนี้ไม่ได้" ไม่สร้างบัญชี + ปุ่มสมัครด้วยอีเมล | ⬜ |
-| `/forgot-password` | ลืมรหัสผ่าน | 🌐 | อีเมล | ⬜ |
+| `/forgot-password` | ลืมรหัสผ่าน (redirect → `/` + เปิด modal) | 🌐 | modal เดียวกับ login (ลิงก์ "ลืมรหัสผ่าน ?" สลับมุมมอง) · อีเมล → ส่งลิงก์ไป `/reset-password` → แสดงผลในกล่องเดิม + ส่งอีกครั้ง/กลับไปเข้าสู่ระบบ · `ui/components/authForgotForm.tsx` | ⬜ |
 | `/reset-password` | ตั้งรหัสใหม่ | 🌐 | password + ยืนยัน | ⬜ |
 | `/accept-invite` | รับคำเชิญ Staff | 🌐 | ตั้งรหัสผ่านจากลิงก์เชิญทางอีเมล | ⬜ |
 | `/onboarding` | ตั้งค่าความชอบ | 👤 | สไตล์ร้าน, งบ, จำนวนคน, ย่าน · เสร็จ/ข้าม → ไป `?next=` (path ในเว็บเท่านั้น เช่น ลิงก์แชร์ที่กด "ไปด้วย" ตอนสมัคร · ไม่มี = หน้าแรก) | ⬜ |
