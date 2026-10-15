@@ -1,6 +1,6 @@
 ---
 name: sync-requirements
-description: ดึง requirement ล่าสุดจาก Google Doc "Nightout_2.day" มาอัปเดต docs/REQUIREMENTS.md และกฎใน CLAUDE.md ให้ตรงกัน ใช้เองอัตโนมัติตอนต้น session และก่อนเริ่มงานแก้โค้ดทุกครั้ง (ไม่ต้องรอผู้ใช้สั่ง) หรือเมื่อผู้ใช้บอกว่าแก้เอกสาร requirement แล้ว
+description: ดึง requirement ล่าสุดจาก Google Doc "Nightout_2.day" มาอัปเดต docs/REQUIREMENTS.md และกฎใน CLAUDE.md ให้ตรงกัน ใช้เองอัตโนมัติตอนต้น session และก่อนเริ่มงานแก้โค้ดทุกครั้ง (ไม่ต้องรอผู้ใช้สั่ง) หรือเมื่อผู้ใช้บอกว่าแก้เอกสาร requirement แล้ว · และใช้เขียนฟีเจอร์นอก requirement/MVP ที่ผู้ใช้เพิ่งอนุมัติกลับลง Google Doc
 ---
 
 # Sync Requirements (Google Doc → repo)
@@ -35,6 +35,17 @@ description: ดึง requirement ล่าสุดจาก Google Doc "Night
    - ข้อ ❓ ใหม่ที่ต้องตัดสิน (ใช้ `AskUserQuestion` ถ้าข้อนั้นกระทบงานที่กำลังจะทำ)
    - ร่างข้อความ commit: `docs: sync requirements (rev <8 ตัวแรกของ revisionId>)`
 7. ถ้างานที่ผู้ใช้สั่งอยู่ ชนกับสิ่งที่เพิ่งเปลี่ยน → ถามก่อนลงมือ
+
+## เขียนกลับ (ฟีเจอร์นอก requirement/MVP ที่ผู้ใช้อนุมัติแล้ว)
+
+ใช้เมื่อ agent ถามตาม CLAUDE.md ขั้นตอนข้อ 1 แล้วผู้ใช้**ตอบตกลง** — ทำก่อนเริ่มโค้ด
+1. `read_doc` (ข้อ 1 ด้านบน) → หาแท็บ (`tabId`) และหัวข้อที่เป็นรายการฟีเจอร์/Phase ที่เรื่องนี้ควรอยู่ แล้วเอา `endIndex` ของย่อหน้าสุดท้ายในหัวข้อนั้น · ไม่แน่ใจว่าควรอยู่ตรงไหน → `AskUserQuestion`
+2. Google Docs connector `update_doc` · `insertText` ที่ `location { index, tabId }` · `writeControl.requiredRevisionId` = revisionId ที่เพิ่งอ่าน (เอกสารเปลี่ยนระหว่างนั้น = อ่านใหม่แล้วลองอีกครั้ง)
+   - ข้อความ 1 ย่อหน้าต่อฟีเจอร์: `<ชื่อฟีเจอร์> — <ขอบเขตสั้นๆ: หน้าบ้าน/หลังบ้าน/ข้อมูลที่เก็บ> · Phase: นอก MVP — อนุมัติ YYYY-MM-DD`
+   - **เพิ่มอย่างเดียว** ห้ามแก้/ลบเนื้อหาเดิมของเอกสาร
+3. รันขั้นตอน sync (ข้อ 1–5) ทันที → `docs/REQUIREMENTS.md` มีรายการนั้น + สถานะ 🆕
+4. บอกผู้ใช้ 1 บรรทัดว่าเพิ่มอะไรไว้ที่แท็บ/หัวข้อไหน
+- ไม่มี connector / เขียนไม่ได้ → ร่างข้อความข้อ 2 ให้ผู้ใช้ไปวางเอง แล้วทำงานต่อ (ติด `นอก MVP — อนุมัติ YYYY-MM-DD` ใน `docs/STRUCTURE.md` / `docs/SITEMAP.md` ตามเดิม)
 
 ## ข้อห้าม
 - ห้าม `git commit` / `push` / `merge` (กฎ repo) — ร่างข้อความให้อย่างเดียว
