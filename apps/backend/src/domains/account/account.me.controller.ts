@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, NotFoundException, Patch, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, NotFoundException, Patch, Post, Req, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { bearerOf } from '../../auth/bearer';
 import { CurrentUser } from '../../auth/current-user.decorator';
@@ -6,20 +6,24 @@ import { SupabaseJwtGuard, type AuthedRequest, type AuthUser } from '../../auth/
 import { ApiDoc } from '../../common/api-doc';
 import { Id } from '../../common/params';
 import { SupabaseService } from '../../supabase/supabase.service';
-import { MarkReadDto, UpdateProfileDto } from './account.dto';
+import { AccountOAuthService } from './account-oauth.service';
+import { MarkReadDto, OAuthSignupCompleteDto, OAuthSignupVerifyDto, UpdateProfileDto } from './account.dto';
 
 const inList = (ids: string[]) => `in.(${ids.map(encodeURIComponent).join(',')})`;
 
 /**
  * account · ฉัน — โปรไฟล์ ความชอบ ข้อมูลรวมหลังล็อกอิน แจ้งเตือน ร้านโปรด ลบบัญชี
- * อ่านด้วย token ของผู้ใช้ (RLS) · เขียนผ่าน rpc app_update_profile, app_mark_notifications_read, app_toggle_favorite, app_delete_account
+ * อ่านด้วย token ของผู้ใช้ (RLS) · เขียนผ่าน rpc app_update_profile, app_mark_notifications_read, app_toggle_favorite, app_delete_account, app_complete_oauth_signup
  */
 @ApiTags('account')
 @ApiBearerAuth()
 @UseGuards(SupabaseJwtGuard)
 @Controller('me')
 export class AccountMeController {
-  constructor(private readonly db: SupabaseService) {}
+  constructor(
+    private readonly db: SupabaseService,
+    private readonly oauth: AccountOAuthService,
+  ) {}
 
   @Get('profile')
   @ApiDoc({
@@ -123,5 +127,46 @@ export class AccountMeController {
     const r = await this.db.rpc('app_delete_account', { p_actor: me.id });
     await this.db.banUser(me.id);
     return r;
+  }
+
+  // ---- สมัครด้วย Google / Facebook (ล็อกอินครั้งแรกยังไม่มี public.users — /me/profile = USER_NOT_FOUND) ----
+
+  @Post('oauth-signup/verify')
+  @HttpCode(200)
+  @ApiDoc({
+    summary: 'ยืนยันอายุจากบัญชี Google / Facebook',
+    description:
+      'หน้าเว็บเรียกหลังล็อกอิน Google/Facebook ครั้งแรก (ยังไม่มีบัญชี) พร้อม `provider_token` จาก session · backend ดึงวันเกิดจาก Google People API / Facebook Graph เอง (ผู้ใช้แก้ไม่ได้) และตรวจว่า token เป็นของบัญชีที่ล็อกอิน · ' +
+      'วันเกิดครบ วัน/เดือน/ปี และอายุ ≥ 20 → พักวันเกิดไว้ใน app_metadata ของ Auth (30 นาที) รอยอมรับเงื่อนไข · ไม่มีวันเกิด/ไม่มีปีเกิด (`OAUTH_BIRTHDATE_MISSING`) หรืออายุ < 20 (`OAUTH_AGE_UNDER_20`) หรือไม่มีอีเมล (`OAUTH_EMAIL_MISSING`) → **ลบบัญชี Auth (ไม่สร้างบัญชี)** ตอบ 403 · ' +
+      'ไม่ส่ง token และยังไม่เคยยืนยัน/หมดเวลา = `OAUTH_RELOGIN_REQUIRED` · มีบัญชีแล้ว = `REGISTERED`',
+    returns:
+      '`status` REGISTERED (มีบัญชีแล้ว) / NEEDS_CONSENT (อายุผ่าน รอยอมรับเงื่อนไข) · `provider` google/facebook · `email` · `display_name` ชื่อจากบัญชีผู้ให้บริการ · `terms_version` · `privacy_version`',
+    forbidden: 'ยืนยันอายุไม่ผ่าน (บัญชี Auth ถูกลบแล้ว) หรือ token ไม่ใช่ของบัญชีที่ล็อกอิน',
+  })
+  verifyOAuthSignup(@CurrentUser() me: AuthUser, @Body() b: OAuthSignupVerifyDto) {
+    return this.oauth.verify(me.id, b.provider_token);
+  }
+
+  @Post('oauth-signup/complete')
+  @HttpCode(200)
+  @ApiDoc({
+    summary: 'ยอมรับเงื่อนไขแล้วสร้างบัญชี (Google / Facebook)',
+    description:
+      'ผู้ใช้ติ๊กยอมรับเงื่อนไขการใช้งาน + นโยบายความเป็นส่วนตัว (PDPA) หลังยืนยันอายุผ่าน → สร้างบัญชี CUSTOMER ด้วยวันเกิดที่ backend ดึงไว้ · วิธียืนยันอายุ = GOOGLE / FACEBOOK · บันทึก consent ใน user_consents (rpc app_complete_oauth_signup) · ยังไม่ยืนยันอายุ/หมดเวลา = `OAUTH_RELOGIN_REQUIRED` · เรียกซ้ำ = คืนบัญชีเดิม',
+    returns: '`id` รหัสผู้ใช้ · `created` false = มีบัญชีอยู่แล้ว',
+  })
+  completeOAuthSignup(@CurrentUser() me: AuthUser, @Body() b: OAuthSignupCompleteDto) {
+    return this.oauth.complete(me.id, b);
+  }
+
+  @Delete('oauth-signup')
+  @ApiDoc({
+    summary: 'ไม่ยอมรับเงื่อนไข — ยกเลิกการสมัครด้วย Google / Facebook',
+    description: 'ลบบัญชี Auth ที่ Supabase สร้างไว้ตอนล็อกอินแต่ยังไม่ได้สร้างโปรไฟล์ (หน้าเว็บออกจากระบบต่อ) · บัญชีที่สร้างแล้วไม่ถูกแตะ',
+    returns: '`deleted` true = ลบแล้ว · false = มีบัญชีอยู่แล้ว (ไม่ลบ)',
+    validates: false,
+  })
+  cancelOAuthSignup(@CurrentUser() me: AuthUser) {
+    return this.oauth.cancel(me.id);
   }
 }

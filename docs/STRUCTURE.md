@@ -16,6 +16,7 @@
 | `login` | redirect `/login` → `/` แล้วเปิด modal เข้าสู่ระบบ (`ui/components/authModal.tsx`) | `/login` | Supabase Auth | — | 1A |
 | `register` | สมัครสมาชิก | `/register` | Supabase Auth · `account` | — | 1A |
 | `verifyEmail` | ยืนยันอีเมล | `/verify-email` | Supabase Auth | — | 1A |
+| `oauthSignup` | สมัครด้วย Google / Facebook: ยืนยันอายุจากวันเกิดของบัญชี + ยอมรับ ToS/PDPA ก่อนสร้างบัญชี | `/signup/social` | `account` | — | 1A |
 | `forgotPassword` | ขอลิงก์รีเซ็ตรหัสผ่าน | `/forgot-password` | Supabase Auth | — | 1A |
 | `resetPassword` | ตั้งรหัสผ่านใหม่ | `/reset-password` | Supabase Auth | — | 1A |
 | `acceptInvite` | รับคำเชิญเข้าทีมร้าน | `/accept-invite` | `bar-team` | — | 1B |

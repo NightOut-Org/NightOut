@@ -2,6 +2,7 @@ import { EnvelopeSimple, Eye, EyeSlash, Lock } from '@phosphor-icons/react';
 import { App, Button, Form, Input } from 'antd';
 import { useState } from 'react';
 import { Link } from 'react-router';
+import { OAUTH_BIRTHDAY_SCOPE } from '@nightout/utils';
 import { supabase } from '@/services/supabase';
 
 interface LoginValues {
@@ -9,7 +10,7 @@ interface LoginValues {
   password: string;
 }
 
-type Provider = 'google' | 'facebook';
+type Provider = keyof typeof OAUTH_BIRTHDAY_SCOPE;
 
 const GoogleIcon = () => (
   <svg viewBox="0 0 48 48" width="16" height="16" aria-hidden="true">
@@ -60,7 +61,8 @@ export function AuthLoginForm({
     const target = next ?? `${window.location.pathname}${window.location.search}`;
     const { error } = await supabase!.auth.signInWithOAuth({
       provider,
-      options: { redirectTo: `${window.location.origin}${target}` },
+      // ขอสิทธิ์อ่านวันเกิด — ล็อกอินครั้งแรก backend ใช้ยืนยันอายุ 20+ (/signup/social)
+      options: { redirectTo: `${window.location.origin}${target}`, scopes: OAUTH_BIRTHDAY_SCOPE[provider] },
     });
     if (error) message.error('เข้าสู่ระบบไม่สำเร็จ ลองใหม่อีกครั้ง');
   };
@@ -142,6 +144,10 @@ export function AuthLoginForm({
           Facebook
         </Button>
       </div>
+
+      <p className="mt-3 text-center text-[11px] leading-relaxed text-white/60">
+        สมัครด้วย Google / Facebook ต้องมีวันเกิดในบัญชีและอายุ 20 ปีขึ้นไป
+      </p>
 
       <p className="mt-6 text-center text-xs text-white/80">
         ยังไม่มีบัญชี ?{' '}

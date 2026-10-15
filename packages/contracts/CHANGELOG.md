@@ -1,5 +1,8 @@
 # CHANGELOG — @nightout/contracts
 
+## 2026-10-15 — สมัครด้วย Google / Facebook
+- `account.ts`: `OAuthSignupVerifyBody` / `OAuthSignupVerifyResult` · `OAuthSignupCompleteBody` / `OAuthSignupCompleteResult` · `OAuthSignupCancelResult` · รหัส error `OAUTH_*` ใน `ACCOUNT_ERRORS` + เทสต์
+
 ## 2026-10-13 — ทีมร้านกดปลดโต๊ะเอง (คอมเมนต์ #76)
 - `src/booking.ts`: `TeamForfeitResult` (`{ id, status: 'NO_SHOW' }`) ของ `POST /merchant/bookings/:id/forfeit` · error ใหม่ `BOOKING_NOT_OVERDUE` ใน `BOOKING_ERRORS` (ยังไม่เลยเวลาเก็บโต๊ะ)
 - เทสต์ใน `src/contracts.test.ts`

@@ -28,6 +28,7 @@ flowchart TD
   AUTH --> REG["/register → / + modal"]
   AUTH --> FGT["/forgot-password · /reset-password"]
   AUTH --> VER["/verify-email"]
+  AUTH --> SOC["/signup/social"]
   AUTH --> INV["/accept-invite"]
   AUTH --> ONB["/onboarding"]
 
@@ -87,6 +88,7 @@ flowchart TD
 | `/login` | เข้าสู่ระบบ (redirect → `/` + เปิด modal) | 🌐 | ไม่มีหน้าแยก: modal Ant Design เปิดจากปุ่ม navbar / route guard (`?next=`) · อีเมล + password, Google/Facebook, ลืมรหัสผ่าน, ลิงก์สมัคร · `ui/components/authModal.tsx` | 🟡 Login, Login-P |
 | `/register` | สมัครสมาชิก (redirect → `/` + เปิด modal) | 🌐 | modal เดียวกับ login สลับมุมมองได้ · อีเมล, password + ยืนยัน, ชื่อที่แสดง, วันเกิด (20+), ยอมรับ Terms/Privacy, Turnstile · 🟡 |
 | `/verify-email` | ยืนยันอีเมล | 🌐 | แจ้งให้เช็กอีเมล + ส่งใหม่ | ⬜ |
+| `/signup/social` | สมัครด้วย Google / Facebook | 👤 (ล็อกอิน OAuth แล้วยังไม่มีบัญชี) | ล็อกอิน Google/Facebook ครั้งแรก → `RootLayout` พามาหน้านี้ (`?next=` หน้าเดิม) · backend ดึงวันเกิดจากบัญชีเอง → อายุ 20+ = ชื่อที่แสดง + ติ๊กยอมรับ Terms/Privacy (PDPA) → "ยอมรับและสร้างบัญชี" · "ไม่ยอมรับ" = ลบบัญชี Auth + ออกจากระบบ · ไม่มีวันเกิด/ปีเกิด หรืออายุ < 20 = "ใช้งานบัญชีนี้ไม่ได้" ไม่สร้างบัญชี + ปุ่มสมัครด้วยอีเมล | ⬜ |
 | `/forgot-password` | ลืมรหัสผ่าน | 🌐 | อีเมล | ⬜ |
 | `/reset-password` | ตั้งรหัสใหม่ | 🌐 | password + ยืนยัน | ⬜ |
 | `/accept-invite` | รับคำเชิญ Staff | 🌐 | ตั้งรหัสผ่านจากลิงก์เชิญทางอีเมล | ⬜ |

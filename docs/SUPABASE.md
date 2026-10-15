@@ -89,6 +89,17 @@ pnpm --filter @nightout/backend user:create --email staff@bar.com --name "พน
 - Backoffice **อ่านและเขียนผ่าน NestJS ทั้งหมด** (ADR 0003: view `admin_*` → `GET /admin/views/:view` · ปุ่มอนุมัติร้าน ตรวจสลิป ซ่อนรีวิว เปลี่ยนสิทธิ์ ฯลฯ → `POST/PATCH /admin/*`) ที่ `VITE_API_BASE_URL` (ค่าเริ่มต้น dev `http://localhost:3000/api`) → ต้องเปิด backend ด้วย (`pnpm dev` ที่ root เปิดให้ครบ) และมี `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` + anon key ใน `.env` · `CORS_ORIGINS` ต้องมี `http://localhost:5174`
 - ⚠️ ปุ่ม **Add user** ใน Supabase Dashboard ใช้ไม่ได้ (ไม่มีช่องวันเกิด → trigger ตรวจอายุ 20+ ปฏิเสธ)
 
+## เปิดล็อกอินด้วย Google / Facebook
+
+สมัครด้วย Google/Facebook ยืนยันอายุ 20+ จากวันเกิดของบัญชี — backend ดึงวันเกิดเองด้วย `provider_token` (`/signup/social` → `POST /me/oauth-signup/verify`)
+
+1. **Google Cloud Console** — OAuth client (Web) · Authorized redirect URI = `https://<project>.supabase.co/auth/v1/callback` · เปิด **People API** · OAuth consent screen เพิ่ม scope `https://www.googleapis.com/auth/user.birthday.read` (ได้รับอนุมัติแล้ว)
+2. **Meta for Developers** — Facebook Login · Valid OAuth Redirect URI เดียวกับข้างบน · ขอสิทธิ์ `user_birthday` (ผ่าน App Review แล้ว) + `email`
+3. **Supabase → Authentication → Providers** — เปิด Google และ Facebook ใส่ Client ID / Secret · **URL Configuration** → Redirect URLs ใส่โดเมนเว็บ (เช่น `http://localhost:5173/**`, `https://<โดเมนจริง>/**`)
+4. รัน migration `…20261015000100` + `…20261015000200` (`db:push`) — ไม่รัน = ล็อกอิน OAuth ครั้งแรกล้ม ("Database error saving new user")
+
+หน้าเว็บขอ scope วันเกิดให้เอง (`OAUTH_BIRTHDAY_SCOPE` ใน `@nightout/utils`) · ผู้ใช้ไม่ติ๊กให้สิทธิ์วันเกิด = ยืนยันอายุไม่ได้ ไม่สร้างบัญชี
+
 ## 4. Vercel
 
 Project → Settings → Environment Variables (ทั้ง Production และ Preview):

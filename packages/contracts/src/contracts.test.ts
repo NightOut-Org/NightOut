@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { CreateBookingBody, ERROR_MESSAGES, errorMessageOf, ReviewDepositBody, SaveTeamPageBody, TeamMemberBody, UpdateTeamMemberBody } from './index';
-import { canCreateRole, CreateUserBody } from './account';
+import { ACCOUNT_ERRORS, canCreateRole, CreateUserBody, OAuthSignupCompleteBody, OAuthSignupVerifyBody } from './account';
 import { SaveHomePageBody, UpdateHomeCategoryBody, UpdateHomeContentBody, UpdateHomePopularBody } from './site-content';
 import { SetUsersRoleBody } from './account';
 import { AdminBarMediaBody, BAR_GALLERY_MAX, BarMediaBody, BarStoreBody, MenuBody, PromotionsPageBody, SaveSafetyBody, SettingsPageBody, SetBarsStatusBody } from './bar';
@@ -648,5 +648,23 @@ describe('team forfeit (ทีมร้านกดปลดโต๊ะเอ�
   it('TeamForfeitResult is { id, status: NO_SHOW }', () => {
     const r: TeamForfeitResult = { id: 'b1', status: 'NO_SHOW' };
     expect(r.status).toBe('NO_SHOW');
+  });
+});
+
+describe('สมัครด้วย Google / Facebook (REQUIREMENTS ข้อ 3)', () => {
+  it('verify รับ provider_token หรือไม่ส่งก็ได้ (ยืนยันไว้แล้ว)', () => {
+    expect(OAuthSignupVerifyBody.safeParse({ provider_token: 'ya29.a0AfH6SMB' }).success).toBe(true);
+    expect(OAuthSignupVerifyBody.safeParse({}).success).toBe(true);
+    expect(OAuthSignupVerifyBody.safeParse({ provider_token: 'short' }).success).toBe(false);
+  });
+  it('complete ต้องติ๊กยอมรับเงื่อนไข (accept_terms = true)', () => {
+    expect(OAuthSignupCompleteBody.safeParse({ accept_terms: true, display_name: ' มิว ' }).data?.display_name).toBe('มิว');
+    expect(OAuthSignupCompleteBody.safeParse({ accept_terms: false }).success).toBe(false);
+    expect(OAuthSignupCompleteBody.safeParse({}).success).toBe(false);
+  });
+  it('รหัส error ใหม่มีข้อความไทยใน ERROR_MESSAGES', () => {
+    for (const code of ['OAUTH_BIRTHDATE_MISSING', 'OAUTH_AGE_UNDER_20', 'OAUTH_RELOGIN_REQUIRED', 'OAUTH_TOKEN_MISMATCH'] as const) {
+      expect(ERROR_MESSAGES[code]).toBe(ACCOUNT_ERRORS[code]);
+    }
   });
 });

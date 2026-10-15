@@ -48,6 +48,41 @@ export interface ToggleFavoriteResult {
   favorite: boolean;
 }
 
+// ----------------------------- สมัครด้วย Google / Facebook -----------------------------
+/** POST /me/oauth-signup/verify — ส่ง `provider_token` ที่ได้จาก session หลังกลับจาก Google/Facebook (backend ใช้ดึงวันเกิด) */
+export const OAuthSignupVerifyBody = z.object({
+  provider_token: z.string().min(10).max(4096).nullish().describe('access token ของ Google/Facebook จาก session (มีเฉพาะตอนเพิ่งล็อกอิน)'),
+});
+export type OAuthSignupVerifyBody = z.infer<typeof OAuthSignupVerifyBody>;
+export interface OAuthSignupVerifyResult {
+  /** REGISTERED = มีบัญชีแล้ว (ใช้งานได้เลย) · NEEDS_CONSENT = อายุผ่าน รอยอมรับเงื่อนไขก่อนสร้างบัญชี */
+  status: 'REGISTERED' | 'NEEDS_CONSENT';
+  /** ผู้ให้บริการที่ใช้สมัคร (null = บัญชีที่สมัครด้วยอีเมลแล้วผูก Google/Facebook ภายหลัง) */
+  provider: 'google' | 'facebook' | null;
+  email: string;
+  /** ชื่อจากบัญชีผู้ให้บริการ — ใช้เป็นชื่อที่แสดงเริ่มต้น */
+  display_name: string;
+  terms_version: string;
+  privacy_version: string;
+}
+
+/** POST /me/oauth-signup/complete — ยอมรับ ToS + PDPA แล้วสร้างบัญชี */
+export const OAuthSignupCompleteBody = z.object({
+  accept_terms: z.literal(true).describe('ยอมรับเงื่อนไขการใช้งานและนโยบายความเป็นส่วนตัว'),
+  display_name: z.string().trim().min(1).max(60).optional().describe('ชื่อที่แสดง · ไม่ส่ง = ใช้ชื่อจากบัญชีผู้ให้บริการ'),
+});
+export type OAuthSignupCompleteBody = z.infer<typeof OAuthSignupCompleteBody>;
+export interface OAuthSignupCompleteResult {
+  id: string;
+  /** false = มีบัญชีอยู่แล้ว (กดซ้ำ) */
+  created: boolean;
+}
+
+/** DELETE /me/oauth-signup — ไม่ยอมรับเงื่อนไข → ลบบัญชี Auth ที่ยังไม่ได้สร้างโปรไฟล์ */
+export interface OAuthSignupCancelResult {
+  deleted: boolean;
+}
+
 // ----------------------------- Backoffice -----------------------------
 /** ประเภทบัญชีที่แอดมินเลือกตอนสร้าง → ชั้นบัญชี + บทบาทในร้าน · ADMIN / SUPER_ADMIN สร้างได้เฉพาะ SUPER_ADMIN */
 export const ACCOUNT_TYPES = {
@@ -179,4 +214,11 @@ export const ACCOUNT_ERRORS = {
   CANNOT_BAN_SELF: 'แบนบัญชีของตัวเองไม่ได้',
   CANNOT_BAN_ADMIN: 'แบนบัญชีทีมงาน NightOut (แอดมิน / ซูเปอร์แอดมิน) ไม่ได้ — ให้ซูเปอร์แอดมินลดชั้นบัญชีก่อน',
   USER_ALREADY_BANNED: 'บัญชีนี้ถูกแบนอยู่แล้ว',
+  OAUTH_BIRTHDATE_MISSING: 'บัญชี Google/Facebook นี้ไม่มีวันเกิดครบ วัน/เดือน/ปี จึงยืนยันอายุไม่ได้ — กรุณาสมัครด้วยอีเมลแทน',
+  OAUTH_AGE_UNDER_20: 'วันเกิดในบัญชี Google/Facebook อายุยังไม่ถึง 20 ปี จึงใช้งาน NightOut ไม่ได้',
+  OAUTH_EMAIL_MISSING: 'บัญชี Google/Facebook นี้ไม่มีอีเมล — กรุณาสมัครด้วยอีเมลแทน',
+  OAUTH_PROVIDER_UNSUPPORTED: 'ยืนยันอายุได้เฉพาะบัญชี Google หรือ Facebook',
+  OAUTH_TOKEN_MISMATCH: 'ข้อมูลจาก Google/Facebook ไม่ตรงกับบัญชีที่ล็อกอิน — ออกจากระบบแล้วลองใหม่',
+  OAUTH_RELOGIN_REQUIRED: 'หมดเวลายืนยันอายุ — เข้าสู่ระบบด้วย Google/Facebook อีกครั้ง',
+  OAUTH_PROVIDER_UNAVAILABLE: 'อ่านวันเกิดจาก Google/Facebook ไม่ได้ — ตรวจว่าอนุญาตให้เข้าถึงวันเกิดแล้วลองใหม่',
 } as const satisfies Record<string, string>;

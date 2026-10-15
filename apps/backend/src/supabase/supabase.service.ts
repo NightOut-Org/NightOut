@@ -13,6 +13,15 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { storagePublicUrl } from '@nightout/utils';
 
+/** บัญชีใน Supabase Auth (GET /auth/v1/admin/users/:id) เฉพาะ field ที่ใช้ */
+export interface AuthAdminUser {
+  id: string;
+  email?: string | null;
+  app_metadata?: Record<string, unknown> | null;
+  user_metadata?: Record<string, unknown> | null;
+  identities?: { provider: string; id?: string; identity_data?: Record<string, unknown> | null }[] | null;
+}
+
 interface PostgrestError {
   code?: string;
   message?: string;
@@ -215,6 +224,24 @@ export class SupabaseService {
       if (res.status === 422 && /exists|already been registered/i.test(body)) throw new ConflictException('EMAIL_EXISTS');
       throw new ConflictException('INVALID_ACCOUNT');
     }
+  }
+
+  /** อ่านบัญชีใน Auth ด้วย service_role (app_metadata ผู้ใช้แก้เองไม่ได้) · ไม่พบ = null */
+  async getAuthUserById(id: string): Promise<AuthAdminUser | null> {
+    const res = await this.call(`${this.url}/auth/v1/admin/users/${encodeURIComponent(id)}`, { headers: this.headers() });
+    if (res.status === 404) return null;
+    if (!res.ok) throw new InternalServerErrorException(`get auth user failed: ${res.status}`);
+    return (await res.json()) as AuthAdminUser;
+  }
+
+  /** ตั้งค่า app_metadata (Auth รวม key กับของเดิม · ส่ง null = ลบ key นั้น) */
+  async updateAuthAppMetadata(id: string, appMetadata: Record<string, unknown>): Promise<void> {
+    const res = await this.call(`${this.url}/auth/v1/admin/users/${encodeURIComponent(id)}`, {
+      method: 'PUT',
+      headers: this.headers(),
+      body: JSON.stringify({ app_metadata: appMetadata }),
+    });
+    if (!res.ok) throw new InternalServerErrorException(`update auth app_metadata failed: ${res.status}`);
   }
 
   /** ปิดการเข้าสู่ระบบของบัญชี (ลบบัญชี) — ห้ามลบจริงเพราะการจองยังอ้างถึง */

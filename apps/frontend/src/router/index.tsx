@@ -46,6 +46,12 @@ const routes: RouteObject[] = [
           import('@/modules/resetPassword/page').then((m) => ({ Component: m.ResetPasswordPage })),
       },
       {
+        // ล็อกอิน Google/Facebook ครั้งแรก: ยืนยันอายุจากวันเกิดของบัญชี + ยอมรับ ToS/PDPA ก่อนสร้างบัญชี
+        path: 'signup/social',
+        lazy: () =>
+          import('@/modules/oauthSignup/page').then((m) => ({ Component: m.OAuthSignupPage })),
+      },
+      {
         path: 'accept-invite',
         lazy: () =>
           import('@/modules/acceptInvite/page').then((m) => ({ Component: m.AcceptInvitePage })),

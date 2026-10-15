@@ -11880,6 +11880,17 @@ export type Database = {
         }
         Returns: Json
       }
+      app_complete_oauth_signup: {
+        Args: {
+          p_actor: string
+          p_birthdate: string
+          p_display_name: string
+          p_method: Database["public"]["Enums"]["age_verification_method"]
+          p_privacy_version: string
+          p_terms_version: string
+        }
+        Returns: Json
+      }
       app_create_booking: {
         Args: {
           p_actor: string
@@ -11905,6 +11916,18 @@ export type Database = {
           p_zone: string
         }
         Returns: Json
+      }
+      app_create_customer_profile: {
+        Args: {
+          p_birthdate: string
+          p_display_name: string
+          p_email: string
+          p_id: string
+          p_method: Database["public"]["Enums"]["age_verification_method"]
+          p_privacy_version: string
+          p_terms_version: string
+        }
+        Returns: undefined
       }
       app_delete_account: { Args: { p_actor: string }; Returns: Json }
       app_extend_booking: {
@@ -12644,7 +12667,12 @@ export type Database = {
       }
     }
     Enums: {
-      age_verification_method: "SELF_DECLARED" | "ID_CHECK_AT_VENUE" | "EKYC"
+      age_verification_method:
+        | "SELF_DECLARED"
+        | "ID_CHECK_AT_VENUE"
+        | "EKYC"
+        | "GOOGLE"
+        | "FACEBOOK"
       bar_category: "PUB_BAR" | "CHILL" | "RESTAURANT"
       bar_staff_role: "OWNER" | "MANAGER" | "STAFF"
       bar_status:
@@ -12859,7 +12887,13 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      age_verification_method: ["SELF_DECLARED", "ID_CHECK_AT_VENUE", "EKYC"],
+      age_verification_method: [
+        "SELF_DECLARED",
+        "ID_CHECK_AT_VENUE",
+        "EKYC",
+        "GOOGLE",
+        "FACEBOOK",
+      ],
       bar_category: ["PUB_BAR", "CHILL", "RESTAURANT"],
       bar_staff_role: ["OWNER", "MANAGER", "STAFF"],
       bar_status: [
