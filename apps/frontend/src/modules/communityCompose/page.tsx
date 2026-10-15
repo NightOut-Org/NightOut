@@ -36,6 +36,7 @@ import {
   useThreadToEdit,
 } from './api';
 import { LeaveDraftModal } from './components/leaveDraftModal';
+import { EmbersBackdrop } from '@/ui/components/embersBackdrop';
 
 interface ThreadForm {
   category: string | null;
@@ -335,7 +336,9 @@ function ComposeForm({
   const postLabel = editId ? 'บันทึกการแก้ไข' : 'โพสต์กระทู้';
 
   return (
-    <div className="mx-auto max-w-[920px]">
+    <div className="embers-glass relative isolate mx-auto max-w-[920px]">
+      {/* พื้นหลัง Golden Embers เดียวกับหน้า /community (ธีมมืด) */}
+      <EmbersBackdrop />
       {/* แถบบน (มือถือ) */}
       <div className="-mx-4 -mt-6 mb-4 flex items-center gap-1.5 border-b border-border px-1.5 pb-2 md:hidden">
         <button

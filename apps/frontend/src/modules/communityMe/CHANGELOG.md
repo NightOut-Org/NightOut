@@ -1,5 +1,9 @@
 # CHANGELOG — frontend · communityMe
 
+## 2026-10-16 — พื้นหลังเหมือนหน้าชุมชน
+- ใส่พื้นหลัง Golden Embers (`EmbersBackdrop`) + การ์ดกระจก (`embers-glass`) แบบเดียวกับหน้า `/community` (ธีมมืด) แทนพื้นดำเรียบ
+- ไฟล์: `communityMe/page.tsx`
+
 ## 2026-10-12 — ชุมชน: แก้ไขความเห็น + ประวัติการแก้ไข
 - แท็บร่างแสดงร่างชนิดใหม่ "แก้ความเห็น" (`DRAFT_KIND.EDIT_COMMENT`) · ไฟล์: `page.tsx`
 
