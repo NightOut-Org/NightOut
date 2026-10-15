@@ -33,7 +33,7 @@ export function HomePage() {
         → Hero ที่ทึบบังไว้ แสงไม่ล้นเข้า Hero · ใต้ Hero ไปจนถึงฟุตเตอร์ (ภาพเมืองไล่จากใส) เห็นพื้นหลังต่อเนื่อง
       */}
       <EmbersBackdrop />
-      <Hero content={content} failed={failed} onRetry={retry} />
+      <Hero content={content} categories={categories} popularBars={popular} failed={failed} onRetry={retry} />
       {/* ทุกส่วนใต้ Hero ซ้อนขึ้นทับ Hero ให้เห็นหมวดหมู่ตั้งแต่จอแรก · ธีมสว่างใช้พื้นเรียบ */}
       <div className="relative isolate z-10 -mt-28 md:-mt-36">
         {/* แถบไล่ #07070d → ใส 280px เริ่มที่ขอบล่าง Hero (ต่อจากสีขอบล่างของ Hero) ให้แสงค่อย ๆ โผล่ */}

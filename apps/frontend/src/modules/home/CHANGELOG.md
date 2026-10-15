@@ -1,5 +1,12 @@
 # home — ประวัติการแก้ไข
 
+## 2026-10-16 — แผงแนะนำตัวกรองใต้ช่องค้นหา Hero
+- ช่องพิมพ์ค้นหาใน Hero มีแผงแนะนำ (ดีไซน์ 2a "Home Search Variations"): hover ค้าง 150ms / focus / แตะ = เปิด · เมาส์ออกจากช่องและแผง 250ms = ปิด (ยกเว้นช่องยัง focus → ปิดเมื่อ blur / Esc) · พิมพ์ = กรองตามชื่อ/คำโปรย · ไม่เหลือรายการ = บอกให้กด "ค้นหา"
+- 3 กลุ่ม: **ประเภทร้าน** และ **สไตล์** มาจากการ์ดหมวดหน้าแรกตัวเดียวกับ `categoryGrid` (การ์ดที่ลิงก์ `?category=` / `?style=` · ชื่อ คำโปรย ลิงก์ตาม DB ไม่ hardcode — ยังไม่มีร้านเงียบ/ห้องส่วนตัวเพราะไม่มีการ์ด) · **ร้านยอดนิยม** 4 ร้านแรกจาก `utils/popularBars.ts` (คำโปรย = ย่าน) → หน้าร้าน
+- เลือกประเภท/สไตล์ = ลิงก์ของการ์ด + ย่าน/งบ/คนที่เลือกไว้ (`budgetSearchQuery`) · ↑/↓ เลื่อน · Enter เลือก (ไม่มี highlight = submit ฟอร์มเดิม) · a11y combobox/listbox · แผงอยู่ใน portal (Hero เป็น `overflow-hidden`) · Motion fade + y 4px 150ms เคารพ `prefers-reduced-motion`
+- ไม่แตะ dropdown ย่าน/งบ/คน และ URL ที่ submit ฟอร์มส่งไปเหมือนเดิม
+- ไฟล์: `components/heroSuggest.tsx` (ใหม่) · `utils/useHoverIntent.ts` (ใหม่) · `components/hero.tsx` · `page.tsx`
+
 ## 2026-10-16 — การ์ดฟีลเป็นวงกลมแบบ Story
 - การ์ด 'คืนนี้อยากได้ฟีลไหน' เปลี่ยนจาก bento เป็นวงกลมแบบ Story 8 ช่องเท่ากัน · ร้านยอดนิยมขอบทอง · มือถือเลื่อนแนวนอน · ไฟล์: `components/categoryGrid.tsx`
 
