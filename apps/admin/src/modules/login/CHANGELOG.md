@@ -1,5 +1,12 @@
 # CHANGELOG — admin/modules/login
 
+## 2026-10-15 — พื้นหลัง Aurora ทุกหน้า Backoffice (dark mode)
+- ใหม่ `ui/components/AuroraBackground.tsx`: พื้นหลัง WebGL ม่วง + ทอง (ไม่มี dependency เพิ่ม) ขยับตามเมาส์ · คลิก = คลื่นวง · หยุดเมื่อสลับแท็บ · `prefers-reduced-motion` = ภาพนิ่ง · light mode ไม่แสดง
+- `layouts/main.tsx`: วาง Aurora หลัง ProLayout ให้ทุกหน้าใน MainLayout · dark mode ให้ header/sider โปร่ง (token ของ ProLayout) และการ์ด/ตารางโปร่งเล็กน้อย (`colorBgContainer`) — Modal/Drawer/Dropdown ยังทึบ
+- `styles/index.css`: glass blur 8px ให้ header + sider เฉพาะ `.dark`
+- หน้า login (`page.tsx`) ใส่ Aurora ด้วย · แสงม่วงมุมจอเดิมเหลือเฉพาะ light mode
+- แก้: ตารางที่มีคอลัมน์ `fixed: 'right'` (`/safety` `/users` `/community` `/bars`) ข้อความซ้อนกันตอนเลื่อนแนวนอน เพราะพื้นเซลล์ sticky โปร่งตาม `colorBgContainer` → ตาราง (Table token) ใช้พื้นทึบเดิม `#171520` + หัวตาราง/hover ทึบ `#201e29` — การ์ดยังโปร่งเหมือนเดิม
+
 ## 2026-10-10 — ดีไซน์ใหม่ "Staff Pass" (บัตรพนักงาน)
 - หน้า login เปลี่ยนจาก Card ธรรมดาเป็นบัตร 2 ส่วน: ต้นขั้ว (โลโก้ใหม่ · STAFF ONLY · Admin Pass · ชื่อผู้ถือ) + ฝั่งฟอร์ม มีรอยปรุและรูบัตร · จอ < 900px ต้นขั้วกลายเป็นแถบบน
 - ชื่อผู้ถือบนต้นขั้วตามช่องอีเมลแบบสด (`Form.useWatch`) · ขั้นยืนยันแสดงอีเมลที่ล็อกอินพร้อมเครื่องหมายถูก

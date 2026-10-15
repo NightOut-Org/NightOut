@@ -2,7 +2,7 @@ import { PageContainer } from '@ant-design/pro-components';
 import { ClipboardText } from '@phosphor-icons/react';
 import type { Db } from '@nightout/types';
 import { safetyVerifyLabel } from '@nightout/utils';
-import { Button, Segmented, Select, Space, Table, Tabs, Tag, Tooltip } from 'antd';
+import { Button, Segmented, Select, Table, Tabs, Tag, Tooltip } from 'antd';
 import { useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { PAGE_SIZE } from '@/configs/constants';
@@ -113,7 +113,7 @@ export function SafetyPage() {
                   loading={queue.isLoading}
                   dataSource={rows}
                   pagination={{ pageSize: PAGE_SIZE }}
-                  scroll={{ x: 1100 }}
+                  scroll={{ x: 1124 }}
                   locale={{ emptyText: 'ไม่มีรายการรอลงพื้นที่' }}
                   columns={[
                     {
@@ -176,10 +176,12 @@ export function SafetyPage() {
                     {
                       title: '',
                       key: 'a',
-                      width: 220,
+                      width: 244,
                       fixed: 'right',
                       render: (_, r) => (
-                        <Space wrap size={6}>
+                        // 2 ช่องตำแหน่งตายตัว: ซ้าย "ยืนยันแล้ว" (ไม่มี = เว้นที่ว่าง) · ขวา "ลงพื้นที่ตรวจ"
+                        <div className="flex items-center justify-between gap-2">
+                          {r.source !== 'SELF_DECLARED' && <span aria-hidden />}
                           {r.source === 'SELF_DECLARED' && (
                             <Tooltip
                               title={
@@ -209,7 +211,7 @@ export function SafetyPage() {
                           <Button type="primary" onClick={() => setParam('inspect', r.bar_id)}>
                             ลงพื้นที่ตรวจ
                           </Button>
-                        </Space>
+                        </div>
                       ),
                     },
                   ]}
