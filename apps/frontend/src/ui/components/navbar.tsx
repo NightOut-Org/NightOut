@@ -6,12 +6,13 @@ import { ThemeToggle } from '@nightout/ui';
 import { App, Badge, Button, Dropdown, Empty, Tag } from 'antd';
 import { motion, useReducedMotion } from 'motion/react';
 import { useState } from 'react';
-import { Link, NavLink, useNavigate } from 'react-router';
+import { Link, NavLink, useLocation, useNavigate, useSearchParams } from 'react-router';
 import { NOTIFICATION_PREVIEW_LIMIT } from '@/configs/app';
 import { useDemo } from '@/hooks/useDemo';
 import { useScrolled } from '@/hooks/useScrolled';
 import { useAuth } from '@/services/auth';
 import { timeAgo } from '@/ui/utils/format';
+import { isMerchantNotification, isMerchantView } from '@/ui/utils/notifications';
 import { BrandLogo } from './brandLogo';
 import { useAuthModal } from './authModal';
 
@@ -67,8 +68,11 @@ export function Navbar({
   const [signingOut, setSigningOut] = useState(false);
   const scrolled = useScrolled();
   const reduce = useReducedMotion();
-  // แจ้งเตือนจาก Supabase (services/sync.ts โหลดใหม่ทุก 60 วินาที)
-  const notifications = user ? myNotifications() : [];
+  const { pathname } = useLocation();
+  const [search] = useSearchParams();
+  const merchantView = isMerchantView(pathname, search);
+  // แจ้งเตือนจาก Supabase (services/sync.ts โหลดใหม่ทุก 60 วินาที) · หน้าร้านเห็นเฉพาะของทีมร้าน หน้าลูกค้าเห็นเฉพาะของลูกค้า
+  const notifications = user ? myNotifications().filter((n) => isMerchantNotification(n) === merchantView) : [];
   const latestNotifications = notifications
     .toSorted((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt))
     .slice(0, NOTIFICATION_PREVIEW_LIMIT);
@@ -165,7 +169,10 @@ export function Navbar({
               >
                 <div className="flex items-center justify-between gap-2 border-b border-border p-4">
                   <h2 className="font-semibold">แจ้งเตือน</h2>
-                  <Link to="/notifications" onClick={() => setNotificationsOpen(false)}>
+                  <Link
+                    to={merchantView ? '/notifications?view=merchant' : '/notifications'}
+                    onClick={() => setNotificationsOpen(false)}
+                  >
                     <Tag color="gold" className="!m-0 cursor-pointer">
                       ดูรายการทั้งหมด
                     </Tag>

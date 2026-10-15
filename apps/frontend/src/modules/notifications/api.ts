@@ -7,8 +7,3 @@ import { Rest } from '@nightout/utils/rest';
 export async function markRead(ids: string[]) {
   await Rest.post('/me/notifications/read', { ids } satisfies C.MarkReadBody);
 }
-
-/** POST /me/notifications/read — อ่านทั้งหมด */
-export async function markAllRead() {
-  await Rest.post('/me/notifications/read', {} satisfies C.MarkReadBody);
-}

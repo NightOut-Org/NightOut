@@ -1,5 +1,8 @@
 # account — ประวัติการแก้ไข
 
+## 2026-10-16 — แจ้งเตือนของคนอื่นโผล่ในกล่องแจ้งเตือน (บัญชีแอดมิน)
+- `GET /me/overview` อ่าน `notifications` และ `review_reports` โดยไม่กรองเจ้าของ → บัญชีที่เป็นแอดมินได้แถวของทุกคนผ่าน policy `admin_read` (เช่น เจ้าของร้านที่เป็นแอดมินด้วยเห็นแจ้งเตือนการจองร้านอื่น) · เพิ่ม `user_id=eq.<me>` / `reporter_id=eq.<me>` (`account.me.controller.ts`)
+
 ## 2026-10-15 — สมัคร / เข้าสู่ระบบด้วย Google และ Facebook (ยืนยันอายุจากวันเกิดของบัญชี)
 - ล็อกอิน OAuth ครั้งแรกยังไม่สร้างบัญชี: backend ดึงวันเกิดจาก Google People API / Facebook Graph เอง (ผู้ใช้แก้ไม่ได้ · ตรวจว่า token เป็นของบัญชีที่ล็อกอิน) → วันเกิดครบ + อายุ 20+ พักไว้ใน `app_metadata` ของ Auth 30 นาทีรอผู้ใช้ยอมรับ ToS + PDPA · ไม่มีวันเกิด/ปีเกิด หรืออายุ < 20 = ลบบัญชี Auth (ไม่สร้างบัญชี)
 - endpoint ใหม่ `POST /me/oauth-signup/verify` · `POST /me/oauth-signup/complete` (rpc `app_complete_oauth_signup` · วิธียืนยันอายุ = GOOGLE / FACEBOOK) · `DELETE /me/oauth-signup` (ไม่ยอมรับ = ลบบัญชี Auth ที่ยังไม่มีโปรไฟล์)
