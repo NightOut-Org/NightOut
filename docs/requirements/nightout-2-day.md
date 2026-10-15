@@ -1,9 +1,11 @@
 <!-- สร้างจาก /sync-requirements (scripts/gdoc-to-md.mjs) — ห้ามแก้มือ -->
 <!-- source: https://docs.google.com/document/d/1GQ3ilsu_y_dzTulZS9_UEtNH7ygOLkaM-YkqdFm3UUI/edit -->
-<!-- revisionId: AHj4eMSSoFOaasknKrPfmyvsPBEbJ_oH9pL2SLzBZ5jIjb-NkEZFkVS21JM06OC9Cosa_m4cNlr0Qt5jgpDkdAqqIemGoE0XJeLQxh4VUMA -->
-<!-- synced: 2026-10-14 -->
+<!-- revisionId: AHj4eMQ7rcKk_kNYfcYzA09Kn7H-Q6aS-IzhyTUX4Z5Kb7qQo4vW0R4-zyozzveta9oebrXCJ3kHVRrAUPfnuKK7Z3_TUXupC5m4WwdnTLs -->
+<!-- synced: 2026-10-15 -->
 
 # Nightout_2.day
+
+# แท็บ: การตลาด
 
 # แท็บ: NightOut — Requirement
 

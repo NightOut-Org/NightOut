@@ -1,5 +1,9 @@
 # CHANGELOG — frontend · community
 
+## 2026-10-15 — แก้แถบ "บัญชีของคุณถูกระงับ" ถูกพื้นหลังทับ
+- บน `/community` แถบแจ้งบัญชีถูกแบนมองไม่เห็น: container `relative isolate` ของ EmbersBackdrop มาทีหลังแถบใน DOM และอยู่ระดับ z-auto เท่ากัน จึงวาดทับทั้งแถบ → ให้แถบเป็น `relative z-10` ลอยเหนือพื้นหลัง (หน้าอื่นที่ใช้แถบนี้ได้ผลเหมือนเดิม)
+- ไฟล์: ของกลาง `ui/components/accountBannedBanner.tsx`
+
 ## 2026-10-15 — ชุมชน: พื้นหลัง Golden Embers แบบหน้าร้าน
 - ฟีด `/community` · `/community/c/:category` ใช้พื้นหลังแสง + ประกายทองเคลื่อนไหวแบบเดียวกับ `/merchant` (ธีมมืดเท่านั้น · หยุดเมื่อสลับแท็บ · reduced-motion/ประหยัดเน็ต = ภาพนิ่ง) และการ์ด/คอลัมน์เป็นกระจก (`embers-glass`)
 - ไฟล์: `page.tsx` (ใช้ของกลาง `ui/components/embersBackdrop.tsx`)
