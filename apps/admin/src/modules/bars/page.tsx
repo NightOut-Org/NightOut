@@ -91,7 +91,7 @@ export function BarsPage() {
         loading={isLoading}
         dataSource={rows}
         pagination={{ pageSize: PAGE_SIZE }}
-        scroll={{ x: 1320 }}
+        scroll={{ x: 1120 }}
         columns={[
           {
             title: 'ร้าน',
@@ -187,25 +187,33 @@ export function BarsPage() {
           },
           {
             title: '',
-            key: 'media',
-            width: 330,
+            key: 'actions',
+            width: 128,
+            fixed: 'right',
+            // ไอคอนอย่างเดียว — ชื่อปุ่มอยู่ใน Tooltip + aria-label
             render: (_, b) => (
-              <Space size={4} wrap>
-                <Button icon={<PencilSimple size={14} />} onClick={() => setEdit(b.id)}>
-                  แก้ข้อมูล
-                </Button>
-                <Button
-                  icon={<Images size={14} />}
-                  onClick={() => void navigate(`/bar-media?bar=${b.id}`)}
-                >
-                  รูปร้าน
-                </Button>
-                <Button
-                  icon={<MapPin size={14} />}
-                  onClick={() => void navigate(`/bar-locations?tab=all&bar=${b.id}`)}
-                >
-                  ตำแหน่ง
-                </Button>
+              <Space size={4}>
+                <Tooltip title="แก้ข้อมูล">
+                  <Button
+                    aria-label={`แก้ข้อมูล ${b.name}`}
+                    icon={<PencilSimple size={16} />}
+                    onClick={() => setEdit(b.id)}
+                  />
+                </Tooltip>
+                <Tooltip title="รูปร้าน">
+                  <Button
+                    aria-label={`รูปร้าน ${b.name}`}
+                    icon={<Images size={16} />}
+                    onClick={() => void navigate(`/bar-media?bar=${b.id}`)}
+                  />
+                </Tooltip>
+                <Tooltip title="ตำแหน่ง">
+                  <Button
+                    aria-label={`ตำแหน่ง ${b.name}`}
+                    icon={<MapPin size={16} />}
+                    onClick={() => void navigate(`/bar-locations?tab=all&bar=${b.id}`)}
+                  />
+                </Tooltip>
               </Space>
             ),
           },
