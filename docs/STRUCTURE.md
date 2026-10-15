@@ -17,7 +17,7 @@
 | `register` | สมัครสมาชิก | `/register` | Supabase Auth · `account` | — | 1A |
 | `verifyEmail` | ยืนยันอีเมล | `/verify-email` | Supabase Auth | — | 1A |
 | `oauthSignup` | สมัครด้วย Google / Facebook: ยืนยันอายุจากวันเกิดของบัญชี + ยอมรับ ToS/PDPA ก่อนสร้างบัญชี | `/signup/social` | `account` | — | 1A |
-| `forgotPassword` | ขอลิงก์รีเซ็ตรหัสผ่าน | `/forgot-password` | Supabase Auth | — | 1A |
+| `forgotPassword` | ขอลิงก์รีเซ็ตรหัสผ่าน (redirect → `/` + เปิด modal · ฟอร์มอยู่ `ui/components/authForgotForm.tsx`) | `/forgot-password` | Supabase Auth | — | 1A |
 | `resetPassword` | ตั้งรหัสผ่านใหม่ | `/reset-password` | Supabase Auth | — | 1A |
 | `acceptInvite` | รับคำเชิญเข้าทีมร้าน | `/accept-invite` | `bar-team` | — | 1B |
 | `onboarding` | Age Gate / Consent / ความชอบ | `/onboarding` | `account` | — | 1A |
