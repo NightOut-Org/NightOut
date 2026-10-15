@@ -5,6 +5,7 @@ import { BookingStatusTag } from '@/ui/components/bookingStatusTag';
 import { PageHeader } from '@/ui/components/pageHeader';
 import { useDemo } from '@/hooks/useDemo';
 import { dateTime } from '@/ui/utils/format';
+import { EmbersBackdrop } from '@/ui/components/embersBackdrop';
 
 const UPCOMING = ['PENDING', 'AWAITING_DEPOSIT', 'DEPOSIT_SUBMITTED', 'CONFIRMED', 'CHECKED_IN'];
 const CANCELLED = [
@@ -55,7 +56,9 @@ export function BookingsPage() {
       </Empty>
     );
   return (
-    <div className="mx-auto max-w-3xl">
+    <div className="embers-glass relative isolate mx-auto max-w-3xl">
+      {/* พื้นหลัง Golden Embers เดียวกับหน้า /community (ธีมมืด) */}
+      <EmbersBackdrop />
       <PageHeader title="การจองของฉัน" />
       <Tabs
         items={[

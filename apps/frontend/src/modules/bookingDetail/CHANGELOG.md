@@ -1,5 +1,9 @@
 # CHANGELOG — frontend/modules/bookingDetail
 
+## 2026-10-16 — พื้นหลัง Golden Embers
+- ใส่พื้นหลัง Golden Embers (`EmbersBackdrop`) + การ์ดกระจก (`embers-glass`) แบบเดียวกับหน้า `/community` (ธีมมืด) แทนพื้นดำเรียบ
+- ไฟล์: `bookingDetail/page.tsx`
+
 ## 2026-10-13 — ชั้นชำระเงินกลาง (payment intents + mock)
 - ช่อง QR ของการจองที่รอชำระ: โหมดชำระออนไลน์ขึ้น "จะแสดงเมื่อชำระ Table Fee สำเร็จ" (เดิมพูดถึงการตรวจสลิปอย่างเดียว) · โหมดสลิปข้อความเดิม · ไฟล์: `page.tsx`
 
