@@ -1,15 +1,15 @@
 import { Body, Controller, Put, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import type { SaveHomePageResult } from '@nightout/contracts';
+import type { SaveSiteNavResult } from '@nightout/contracts';
 import { AdminGuard } from '../../auth/admin.guard';
 import { CurrentUser } from '../../auth/current-user.decorator';
 import { SupabaseJwtGuard, type AuthUser } from '../../auth/supabase-jwt.guard';
 import { ApiDoc } from '../../common/api-doc';
 import { ADMIN_FORBIDDEN } from '../../common/params';
 import { SupabaseService } from '../../supabase/supabase.service';
-import { SaveHomePageDto } from './site-content.dto';
+import { SaveSiteNavDto } from './site-content.dto';
 
-/** site-content · Backoffice — แก้เนื้อหาหน้าแรกทั้งหน้าในคำขอเดียว (rpc admin_save_home_page → admin_save_home_content / admin_save_home_category / admin_save_home_popular · audit log) */
+/** site-content · Backoffice — เมนู navbar ของเว็บลูกค้า (rpc admin_save_site_nav · audit log) · เนื้อหาหน้าแรกแก้จาก Backoffice ไม่ได้แล้ว (2026-10-15) */
 @ApiTags('site-content')
 @ApiBearerAuth()
 @UseGuards(SupabaseJwtGuard, AdminGuard)
@@ -17,24 +17,17 @@ import { SaveHomePageDto } from './site-content.dto';
 export class SiteContentAdminController {
   constructor(private readonly db: SupabaseService) {}
 
-  @Put('home-page')
+  @Put('site-nav')
   @ApiDoc({
-    summary: 'บันทึกหน้าแรก (Hero · หัวข้อ section · การ์ดหมวด · ร้านยอดนิยม)',
+    summary: 'บันทึกเมนู navbar ของเว็บลูกค้า',
     description:
-      'หน้า /home-content แก้ในหน้าแล้วบันทึกครั้งเดียว · ส่งเฉพาะส่วนที่แก้ อย่างน้อย 1 ส่วน · ' +
-      '`content` = field ของ Hero / หัวข้อ section ที่แก้ (`hero_image_url: null` = ภาพตั้งต้น) · ' +
-      '`categories` = เฉพาะการ์ดที่แก้ คู่กับ `slot` (popular · pub · food · live · rooftop · chill · outdoor · party) · ' +
-      '`popular.bar_ids` = ร้านยอดนิยมทั้งรายการตามลำดับ (สูงสุด 8 · เฉพาะร้าน APPROVED · `[]` = ไม่ปัก) · ' +
-      'ภาพอัปโหลดเข้า bucket site-media ก่อนด้วย POST /storage/upload-url แล้วส่ง URL · ธุรกรรมเดียว · audit log ต่อส่วน (rpc admin_save_home_page)',
-    returns: '`content_updated` · `categories_updated` จำนวนการ์ด · `popular_updated`',
+      'หน้า /home-content · ส่งครบทุกเมนู (home · search · community · ranking · bookings · about) พร้อมชื่อที่แสดง (1–20 ตัวอักษร) ' +
+      'และลำดับ/ซ่อน-แสดง แยก desktop (navbar) กับ mobile (แถบเมนูล่าง) · ลำดับแต่ละชุด 0..n-1 ไม่ซ้ำ · หน้าหลักซ่อนไม่ได้ · ' +
+      'ลิงก์และไอคอนตายตัวในโค้ดหน้าเว็บ · ธุรกรรมเดียว · audit log เมื่อมีการเปลี่ยน (rpc admin_save_site_nav)',
+    returns: '`updated` จำนวนเมนูที่เปลี่ยน',
     forbidden: ADMIN_FORBIDDEN,
   })
-  savePage(@CurrentUser() me: AuthUser, @Body() b: SaveHomePageDto) {
-    return this.db.rpc<SaveHomePageResult>('admin_save_home_page', {
-      p_actor: me.id,
-      p_content: b.content ?? null,
-      p_categories: b.categories ?? null,
-      p_popular: b.popular?.bar_ids ?? null,
-    });
+  saveNav(@CurrentUser() me: AuthUser, @Body() b: SaveSiteNavDto) {
+    return this.db.rpc<SaveSiteNavResult>('admin_save_site_nav', { p_actor: me.id, p_items: b.items });
   }
 }

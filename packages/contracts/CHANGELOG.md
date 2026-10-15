@@ -1,5 +1,10 @@
 # CHANGELOG — @nightout/contracts
 
+## 2026-10-15 — เมนู navbar (site-content)
+- `SITE_NAV_KEYS` · `SiteNavKey` · `SITE_NAV_REQUIRED` · `SITE_NAV_LABEL_MAX` · `SiteNavItem` · `SaveSiteNavBody` (ครบทุกเมนู · ลำดับ 0..n-1 · หน้าหลักซ่อนไม่ได้) · `SaveSiteNavResult` · error `INVALID_SITE_NAV` · view `admin_site_nav` ใน `ADMIN_VIEWS` + เทสต์
+- ไฟล์: `src/site-content.ts` · `src/backoffice.ts` · `src/contracts.test.ts`
+- เอา `SaveHomePageBody` · `UpdateHomeContentBody` · `UpdateHomeCategoryBody` · `UpdateHomePopularBody` · `SaveHomePageResult` · zod `HomeCategorySlot` (เหลือเป็น type) · error `INVALID_HOME_PAGE` / `HOME_CATEGORY_NOT_FOUND` / `INVALID_HOME_POPULAR` / `HOME_POPULAR_BAR_NOT_FOUND` / `INVALID_HOME_CONTENT` · view `admin_home_content` / `admin_home_popular` ออกจาก `ADMIN_VIEWS` + เทสต์ที่เกี่ยว — Backoffice แก้หน้าแรกไม่ได้แล้ว
+
 ## 2026-10-15 — สมัครด้วย Google / Facebook
 - `account.ts`: `OAuthSignupVerifyBody` / `OAuthSignupVerifyResult` · `OAuthSignupCompleteBody` / `OAuthSignupCompleteResult` · `OAuthSignupCancelResult` · รหัส error `OAUTH_*` ใน `ACCOUNT_ERRORS` + เทสต์
 

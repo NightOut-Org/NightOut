@@ -4,8 +4,8 @@ import {
   ClipboardText,
   Crown,
   Gear,
-  House,
   Images,
+  ListBullets,
   MapPin,
   Megaphone,
   MegaphoneSimple,
@@ -67,7 +67,7 @@ export const ADMIN_ROUTES: AdminRoute[] = [
     name: 'เนื้อหาและการตลาด',
     icon: icon(Megaphone),
     routes: [
-      { path: '/home-content', name: 'หน้าแรก', icon: icon(House) },
+      { path: '/home-content', name: 'เมนูเว็บ (Navbar)', icon: icon(ListBullets) },
       { path: '/styles', name: 'สไตล์ร้าน', icon: icon(Tag) },
       { path: '/ranking', name: 'ดาว / อันดับ', icon: icon(Crown) },
       { path: '/promotions', name: 'โปรโมท', icon: icon(Megaphone) },

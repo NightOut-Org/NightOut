@@ -79,7 +79,7 @@ describe('NightOut API', () => {
     await request(app.getHttpServer()).post('/admin/users').send({ email: 'a@b.co' }).expect(401);
     await request(app.getHttpServer()).patch('/admin/team-members').send({ order: [] }).expect(401);
     await request(app.getHttpServer()).patch('/admin/bars/status').send({ changes: [] }).expect(401);
-    await request(app.getHttpServer()).put('/admin/home-page').send({ popular: { bar_ids: [] } }).expect(401);
+    await request(app.getHttpServer()).put('/admin/site-nav').send({ items: [] }).expect(401);
     await request(app.getHttpServer()).get('/admin/views/admin_bar_media').expect(401);
     await request(app.getHttpServer()).put('/admin/bars/00000000-0000-4000-8000-000000000000/media').send({ gallery: { paths: [], cover_path: null } }).expect(401);
     await request(app.getHttpServer()).post('/admin/bars/00000000-0000-4000-8000-000000000000/safety-inspections').send({ items: [] }).expect(401);

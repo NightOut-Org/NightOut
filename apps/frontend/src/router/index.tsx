@@ -220,6 +220,7 @@ const routes: RouteObject[] = [
           },
           {
             path: 'profile',
+            handle: { backdrop: true },
             lazy: () =>
               import('@/modules/profile/page').then((m) => ({ Component: m.ProfilePage })),
           },

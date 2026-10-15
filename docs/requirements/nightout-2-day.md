@@ -1,6 +1,6 @@
 <!-- สร้างจาก /sync-requirements (scripts/gdoc-to-md.mjs) — ห้ามแก้มือ -->
 <!-- source: https://docs.google.com/document/d/1GQ3ilsu_y_dzTulZS9_UEtNH7ygOLkaM-YkqdFm3UUI/edit -->
-<!-- revisionId: AHj4eMQUupkMUMjEBgFFuvqnjmS6LHDLd4nHb834W0fZo41Zm5Vvbo-WWoOlkdE6jLb0g28SPIU1YDR0FwlPeitye9P-HX6i8rTCZ9svyCQ -->
+<!-- revisionId: AHj4eMRIvreqnSyM79W1QtNGyBOa0WS2tYJVNB7bn0s9uMddh6A9-IMWyuuv9TUhF9Z9b_3qlCJi_hBKjuLXWKiHczyrZi0SbPhHAsejv-I -->
 <!-- synced: 2026-10-15 -->
 
 # Nightout_2.day
@@ -349,7 +349,8 @@ Brief ระบุสถานะ "Ready" และ "ข้อมูลที่
 - อันดับ 2 (30% ของงบ) — Content Production & Campus Micro-Influencers: สนับสนุนการลงพื้นที่ถ่ายทำคอนเทนต์ของทีม Content และจ้างนักศึกษา/ครีเอเตอร์สายรีวิวรอบรั้ว ม.หอการค้าฯ
 - อันดับ 3 (20% ของงบ) — Hyper-Local Paid Ads: ยิงแอดเจาะจงพิกัดรัศมี 3–5 กม. รอบพื้นที่นำร่อง เฉพาะช่วงวันพุธ–เสาร์ เวลา 14:00–20:30 น. (จำกัดอายุ 20+ เท่านั้น)
 - อันดับ 4 (10% ของงบ) — Offline POSM & Merchant Onboarding Kit: ป้าย QR หน้าร้าน ป้ายตั้งโต๊ะ และคู่มือการใช้งานสำหรับพนักงานร้าน
-###  2. Market & Customer Research (การวิจัยตลาดและลูกค้า)
+###  
+### 2. Market & Customer Research (การวิจัยตลาดและลูกค้า)
 #### 2.1 วิเคราะห์ตลาดและแนวโน้มอุตสาหกรรม
 - ตลาดสถานบันเทิงและร้านนั่งชิลในไทยกำลังเผชิญการเปลี่ยนแปลงด้านพฤติกรรมผู้บริโภคที่ต้องการ ความชัดเจนของราคา (Budget Control) และ ความมั่นใจเรื่องโต๊ะว่างและความปลอดภัย ก่อนตัดสินใจเดินทาง 
 - ข้อจำกัดและแนวโน้มด้านฤดูกาล (Seasonality): ยอดการเที่ยวของกลุ่มนักศึกษาจะลดลงในช่วงสอบ (Midterm/Final), ปิดเทอม และวันสำคัญทางศาสนา/วันเลือกตั้งที่ห้ามขายแอลกอฮอล์การตลาดจึงต้อง วางแผนสลับกลุ่มเป้าหมายไปหากลุ่มคนทำงาน (First Jobber) ในช่วงที่นักศึกษาสอบ  

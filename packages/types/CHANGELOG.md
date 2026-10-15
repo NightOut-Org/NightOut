@@ -1,5 +1,10 @@
 # CHANGELOG — @nightout/types
 
+## 2026-10-15 — เมนู navbar
+- `Db.AdminSiteNavItem` (view `admin_site_nav` · migration `20261015000300`)
+- ไฟล์: `src/database.ts`
+- เอา `Db.AdminHomeContent` · `Db.AdminHomePopular` ออก (view ถูก drop ใน `20261015000400`) · `database.generated.ts` สร้างใหม่หลัง `db:push` (มี `site_nav_items`)
+
 ## 2026-10-13 — ยอดขายเฉลี่ย (Performance Analytics)
 - `database.generated.ts`: เพิ่ม `bar_sales_stats` / `bar_sales_period` (migration `20261013001400_booking_sales_stats`) แบบแก้มือ — รัน `db:types` หลัง `db:push` ให้ตรงของจริง
 

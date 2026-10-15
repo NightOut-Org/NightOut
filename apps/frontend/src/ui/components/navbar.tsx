@@ -20,8 +20,6 @@ export interface NavItem {
   label: string;
   icon?: Icon;
   end?: boolean;
-  /** แสดงเฉพาะ navbar บนจอใหญ่ (ไม่ใส่ใน BottomIsland มือถือ) */
-  desktopOnly?: boolean;
 }
 
 /**
@@ -273,7 +271,6 @@ export function BottomIsland({ items }: { items: NavItem[] }) {
         className={`flex w-full max-w-md items-center justify-between rounded-full border p-1.5 ${ISLAND.page}`}
       >
         {items
-          .filter((n) => !n.desktopOnly)
           .map((n) => (
             <NavLink
               key={n.to}

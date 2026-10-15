@@ -1,6 +1,6 @@
 import { Controller, Get, Req } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import type { HomeCategory, HomeContent, PublicHomeResult } from '@nightout/contracts';
+import type { HomeCategory, HomeContent, PublicHomeResult, SiteNavItem } from '@nightout/contracts';
 import type { Request } from 'express';
 import { bearerOf } from '../../auth/bearer';
 import { ApiDoc } from '../../common/api-doc';
@@ -10,7 +10,7 @@ const CONTENT_COLS =
   'hero_title_lead,hero_title_highlight,hero_title_tail,hero_subtitle,hero_search_placeholder,hero_image_url,categories_eyebrow,categories_title,popular_eyebrow,popular_title,updated_at';
 const CATEGORY_COLS = 'slot,title,hint,link_to,image_url,badge,updated_at';
 
-/** site-content · สาธารณะ — เนื้อหาหน้าแรก (view public_home_content / public_home_categories / public_home_popular) */
+/** site-content · สาธารณะ — เนื้อหาหน้าแรก (view public_home_content / public_home_categories / public_home_popular) + เมนู navbar (view public_site_nav) */
 @ApiTags('site-content')
 @Controller('public')
 export class SiteContentPublicController {
@@ -34,5 +34,21 @@ export class SiteContentPublicController {
       this.db.selectAs<{ bar_id: string }[]>(token, 'public_home_popular?select=bar_id&order=sort_order'),
     ]);
     return { content: content[0]!, categories, popular_bar_ids: popular.map((p) => p.bar_id) };
+  }
+
+  @Get('site-nav')
+  @ApiDoc({
+    summary: 'เมนู navbar ของเว็บลูกค้า',
+    description:
+      'ทุกเมนู (รวมที่ซ่อน) พร้อมชื่อ ลำดับ และซ่อน/แสดง แยก desktop (navbar) กับ mobile (แถบเมนูล่าง) · แอดมินจัดที่ Backoffice /home-content (view public_site_nav)',
+    returns: 'รายการ `key` · `label` · `desktop_order` · `desktop_visible` · `mobile_order` · `mobile_visible` เรียงตาม desktop_order',
+    auth: false,
+    validates: false,
+  })
+  siteNav(@Req() req: Request): Promise<SiteNavItem[]> {
+    return this.db.selectAs<SiteNavItem[]>(
+      bearerOf(req),
+      'public_site_nav?select=key,label,desktop_order,desktop_visible,mobile_order,mobile_visible&order=desktop_order',
+    );
   }
 }

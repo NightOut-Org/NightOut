@@ -8535,6 +8535,36 @@ export type Database = {
           },
         ]
       }
+      site_nav_items: {
+        Row: {
+          desktop_order: number
+          desktop_visible: boolean
+          key: string
+          label: string
+          mobile_order: number
+          mobile_visible: boolean
+          updated_at: string
+        }
+        Insert: {
+          desktop_order: number
+          desktop_visible?: boolean
+          key: string
+          label: string
+          mobile_order: number
+          mobile_visible?: boolean
+          updated_at?: string
+        }
+        Update: {
+          desktop_order?: number
+          desktop_visible?: boolean
+          key?: string
+          label?: string
+          mobile_order?: number
+          mobile_visible?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       styles: {
         Row: {
           active: boolean
@@ -9975,150 +10005,6 @@ export type Database = {
         }
         Relationships: []
       }
-      admin_home_content: {
-        Row: {
-          categories_eyebrow: string | null
-          categories_title: string | null
-          hero_image_url: string | null
-          hero_search_placeholder: string | null
-          hero_subtitle: string | null
-          hero_title_highlight: string | null
-          hero_title_lead: string | null
-          hero_title_tail: string | null
-          popular_eyebrow: string | null
-          popular_title: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          categories_eyebrow?: string | null
-          categories_title?: string | null
-          hero_image_url?: string | null
-          hero_search_placeholder?: string | null
-          hero_subtitle?: string | null
-          hero_title_highlight?: string | null
-          hero_title_lead?: string | null
-          hero_title_tail?: string | null
-          popular_eyebrow?: string | null
-          popular_title?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          categories_eyebrow?: string | null
-          categories_title?: string | null
-          hero_image_url?: string | null
-          hero_search_placeholder?: string | null
-          hero_subtitle?: string | null
-          hero_title_highlight?: string | null
-          hero_title_lead?: string | null
-          hero_title_tail?: string | null
-          popular_eyebrow?: string | null
-          popular_title?: string | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      admin_home_popular: {
-        Row: {
-          bar_id: string | null
-          name: string | null
-          slug: string | null
-          sort_order: number | null
-          status: Database["public"]["Enums"]["bar_status"] | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "home_popular_bars_bar_id_fkey"
-            columns: ["bar_id"]
-            isOneToOne: true
-            referencedRelation: "admin_bar_blacklist"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "home_popular_bars_bar_id_fkey"
-            columns: ["bar_id"]
-            isOneToOne: true
-            referencedRelation: "admin_bar_details"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "home_popular_bars_bar_id_fkey"
-            columns: ["bar_id"]
-            isOneToOne: true
-            referencedRelation: "admin_bar_locations"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "home_popular_bars_bar_id_fkey"
-            columns: ["bar_id"]
-            isOneToOne: true
-            referencedRelation: "admin_bar_media"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "home_popular_bars_bar_id_fkey"
-            columns: ["bar_id"]
-            isOneToOne: true
-            referencedRelation: "admin_bar_safety"
-            referencedColumns: ["bar_id"]
-          },
-          {
-            foreignKeyName: "home_popular_bars_bar_id_fkey"
-            columns: ["bar_id"]
-            isOneToOne: true
-            referencedRelation: "admin_bars"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "home_popular_bars_bar_id_fkey"
-            columns: ["bar_id"]
-            isOneToOne: true
-            referencedRelation: "admin_ranking"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "home_popular_bars_bar_id_fkey"
-            columns: ["bar_id"]
-            isOneToOne: true
-            referencedRelation: "bar_cards"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "home_popular_bars_bar_id_fkey"
-            columns: ["bar_id"]
-            isOneToOne: true
-            referencedRelation: "bar_detail"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "home_popular_bars_bar_id_fkey"
-            columns: ["bar_id"]
-            isOneToOne: true
-            referencedRelation: "bars"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "home_popular_bars_bar_id_fkey"
-            columns: ["bar_id"]
-            isOneToOne: true
-            referencedRelation: "my_bar_detail"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "home_popular_bars_bar_id_fkey"
-            columns: ["bar_id"]
-            isOneToOne: true
-            referencedRelation: "my_bars"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "home_popular_bars_bar_id_fkey"
-            columns: ["bar_id"]
-            isOneToOne: true
-            referencedRelation: "my_favorites"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       admin_mini_ads: {
         Row: {
           active: boolean | null
@@ -10528,6 +10414,36 @@ export type Database = {
             referencedColumns: ["key"]
           },
         ]
+      }
+      admin_site_nav: {
+        Row: {
+          desktop_order: number | null
+          desktop_visible: boolean | null
+          key: string | null
+          label: string | null
+          mobile_order: number | null
+          mobile_visible: boolean | null
+          updated_at: string | null
+        }
+        Insert: {
+          desktop_order?: number | null
+          desktop_visible?: boolean | null
+          key?: string | null
+          label?: string | null
+          mobile_order?: number | null
+          mobile_visible?: boolean | null
+          updated_at?: string | null
+        }
+        Update: {
+          desktop_order?: number | null
+          desktop_visible?: boolean | null
+          key?: string | null
+          label?: string | null
+          mobile_order?: number | null
+          mobile_visible?: boolean | null
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       admin_styles: {
         Row: {
@@ -11418,6 +11334,33 @@ export type Database = {
           },
         ]
       }
+      public_site_nav: {
+        Row: {
+          desktop_order: number | null
+          desktop_visible: boolean | null
+          key: string | null
+          label: string | null
+          mobile_order: number | null
+          mobile_visible: boolean | null
+        }
+        Insert: {
+          desktop_order?: number | null
+          desktop_visible?: boolean | null
+          key?: string | null
+          label?: string | null
+          mobile_order?: number | null
+          mobile_visible?: boolean | null
+        }
+        Update: {
+          desktop_order?: number | null
+          desktop_visible?: boolean | null
+          key?: string | null
+          label?: string | null
+          mobile_order?: number | null
+          mobile_visible?: boolean | null
+        }
+        Relationships: []
+      }
       public_team: {
         Row: {
           bio: string | null
@@ -11619,29 +11562,12 @@ export type Database = {
         }
         Returns: Json
       }
-      admin_save_home_category: {
-        Args: { p: Json; p_actor: string; p_slot: string }
-        Returns: Json
-      }
-      admin_save_home_content: {
-        Args: { p: Json; p_actor: string }
-        Returns: Json
-      }
-      admin_save_home_page: {
-        Args: {
-          p_actor: string
-          p_categories: Json
-          p_content: Json
-          p_popular: string[]
-        }
-        Returns: Json
-      }
-      admin_save_home_popular: {
-        Args: { p_actor: string; p_bar_ids: string[] }
-        Returns: Json
-      }
       admin_save_mini_ad: {
         Args: { p: Json; p_actor: string; p_id: string }
+        Returns: Json
+      }
+      admin_save_site_nav: {
+        Args: { p_actor: string; p_items: Json }
         Returns: Json
       }
       admin_save_styles: {
@@ -12434,15 +12360,6 @@ export type Database = {
           zone_name: string
         }[]
       }
-      home_category_check: {
-        Args: { r: Database["public"]["Tables"]["home_categories"]["Row"] }
-        Returns: undefined
-      }
-      home_content_check: {
-        Args: { r: Database["public"]["Tables"]["home_content"]["Row"] }
-        Returns: undefined
-      }
-      home_image_ok: { Args: { u: string }; Returns: boolean }
       is_admin: { Args: never; Returns: boolean }
       is_bar_manager: { Args: { p_bar: string }; Returns: boolean }
       is_bar_member: { Args: { p_bar: string }; Returns: boolean }

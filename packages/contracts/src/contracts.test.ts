@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { CreateBookingBody, ERROR_MESSAGES, errorMessageOf, ReviewDepositBody, SaveTeamPageBody, TeamMemberBody, UpdateTeamMemberBody } from './index';
 import { ACCOUNT_ERRORS, canCreateRole, CreateUserBody, OAuthSignupCompleteBody, OAuthSignupVerifyBody } from './account';
-import { SaveHomePageBody, UpdateHomeCategoryBody, UpdateHomeContentBody, UpdateHomePopularBody } from './site-content';
+import { SaveSiteNavBody, SITE_NAV_KEYS } from './site-content';
 import { SetUsersRoleBody } from './account';
 import { AdminBarMediaBody, BAR_GALLERY_MAX, BarMediaBody, BarStoreBody, MenuBody, PromotionsPageBody, SaveSafetyBody, SettingsPageBody, SetBarsStatusBody } from './bar';
 import { PUBLIC_BUCKETS, UploadBucket } from './storage';
@@ -114,16 +114,7 @@ describe('save page: promotions + fees', () => {
   });
 });
 
-describe('save page: home page · merchant settings', () => {
-  it('home page: content and/or changed category cards (unique slots) and/or popular', () => {
-    expect(SaveHomePageBody.safeParse({ content: { hero_title_lead: 'คืนนี้ไป' } }).success).toBe(true);
-    expect(SaveHomePageBody.safeParse({ categories: [{ slot: 'pub', title: 'ผับ' }] }).success).toBe(true);
-    expect(SaveHomePageBody.safeParse({ popular: { bar_ids: [] } }).success).toBe(true);
-    expect(SaveHomePageBody.safeParse({ categories: [{ slot: 'nope', title: 'x' }] }).success).toBe(false);
-    expect(SaveHomePageBody.safeParse({ categories: [{ slot: 'pub' }, { slot: 'pub' }] }).success).toBe(false);
-    expect(SaveHomePageBody.safeParse({ categories: [] }).success).toBe(false);
-    expect(SaveHomePageBody.safeParse({}).success).toBe(false);
-  });
+describe('save page: merchant settings', () => {
   it('settings: booking and/or payout (at least one)', () => {
     expect(SettingsPageBody.safeParse({ booking: { grace_minutes: 30 } }).success).toBe(true);
     expect(SettingsPageBody.safeParse({ payout: { bank_code: 'กสิกรไทย', account_name: 'ร้าน', account_no: '1234567890' } }).success).toBe(true);
@@ -133,25 +124,26 @@ describe('save page: home page · merchant settings', () => {
 });
 
 describe('site-content', () => {
-  it('partial update keeps only sent fields', () => {
-    expect(UpdateHomeContentBody.parse({ categories_title: ' คืนนี้อยากได้ฟีลไหน ' })).toEqual({ categories_title: 'คืนนี้อยากได้ฟีลไหน' });
-    expect(UpdateHomeContentBody.parse({ hero_image_url: null })).toEqual({ hero_image_url: null });
+  const navItems = () =>
+    SITE_NAV_KEYS.map((key, i) => ({
+      key,
+      label: ` ${key} `,
+      desktop_order: i,
+      desktop_visible: true,
+      mobile_order: SITE_NAV_KEYS.length - 1 - i,
+      mobile_visible: key !== 'about',
+    }));
+  it('site nav: accepts full list with separate desktop/mobile order', () => {
+    const r = SaveSiteNavBody.parse({ items: navItems() });
+    expect(r.items[0]!.label).toBe('home');
   });
-  it('rejects unsafe images and external links', () => {
-    expect(UpdateHomeCategoryBody.safeParse({ image_url: 'javascript:alert(1)' }).success).toBe(false);
-    expect(UpdateHomeCategoryBody.safeParse({ link_to: 'https://evil.example' }).success).toBe(false);
-    expect(UpdateHomeCategoryBody.safeParse({ link_to: '//evil.example' }).success).toBe(false);
-    expect(UpdateHomeCategoryBody.safeParse({ title: '' }).success).toBe(false);
-    expect(UpdateHomeCategoryBody.safeParse({ link_to: '/search?style=Rooftop' }).success).toBe(true);
-  });
-  it('popular bars: up to 8 unique uuids', () => {
-    const id = (n: number) => `00000000-0000-4000-8000-00000000000${n}`;
-    expect(UpdateHomePopularBody.safeParse({ bar_ids: [] }).success).toBe(true);
-    expect(UpdateHomePopularBody.safeParse({ bar_ids: [1, 2, 3, 4, 5, 6, 7, 8].map(id) }).success).toBe(true);
-    expect(UpdateHomePopularBody.safeParse({ bar_ids: [1, 2, 3, 4, 5, 6, 7, 8, 9].map(id) }).success).toBe(false);
-    expect(UpdateHomePopularBody.safeParse({ bar_ids: [id(1), id(1)] }).success).toBe(false);
-    expect(UpdateHomePopularBody.safeParse({ bar_ids: ['not-a-uuid'] }).success).toBe(false);
-    expect(UpdateHomeContentBody.safeParse({ popular_title: ' ' }).success).toBe(false);
+  it('site nav: rejects missing, duplicate order, empty label and hidden home', () => {
+    expect(SaveSiteNavBody.safeParse({ items: navItems().slice(1) }).success).toBe(false);
+    expect(SaveSiteNavBody.safeParse({ items: navItems().map((x) => ({ ...x, desktop_order: 0 })) }).success).toBe(false);
+    expect(SaveSiteNavBody.safeParse({ items: navItems().map((x, i) => (i ? x : { ...x, label: '  ' })) }).success).toBe(false);
+    expect(
+      SaveSiteNavBody.safeParse({ items: navItems().map((x) => (x.key === 'home' ? { ...x, mobile_visible: false } : x)) }).success,
+    ).toBe(false);
   });
 });
 
