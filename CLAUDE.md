@@ -54,6 +54,7 @@
 
 ## Auth
 - เข้าสู่ระบบด้วย email + password ของ Supabase Auth (supabase-js) + ปุ่ม Google / Facebook (Supabase OAuth ตาม Figma "Login") ส่วน NestJS แค่ตรวจ JWT ห้ามเพิ่ม OTP หรือ provider อื่นโดยไม่ได้ตกลงกันก่อน
+- **Google / Facebook = Phase 1 (MVP)**: ยืนยันอายุ 20+ จากวันเกิดของบัญชี (backend ดึงเอง · ผู้ใช้แก้ไม่ได้ · ไม่มีวันเกิด/ไม่มีปี/อายุ < 20 → ไม่สร้างบัญชี แนะนำสมัครด้วยอีเมล) · บันทึกวิธียืนยันแยกจากอีเมล (`SELF_DECLARED`) · ติ๊กยอมรับ ToS + PDPA หลังล็อกอินครั้งแรก บัญชีสร้างเมื่อกดยอมรับ — **ยังไม่ทำในโค้ด** (ปุ่มมี แต่ trigger `handle_new_auth_user` บังคับ `birthdate` → สมัครผ่าน OAuth ล้ม) · รายละเอียด `docs/REQUIREMENTS.md` ข้อ 3
 - ขั้นตอนเชื่อม Supabase project จริง: `docs/SUPABASE.md`
 
 ## คำสั่ง
