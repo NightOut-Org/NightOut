@@ -12,6 +12,7 @@ import { Link, useNavigate, useParams, useSearchParams } from 'react-router';
 import { useAuth } from '@/services/auth';
 import { useAuthModal } from '@/ui/components/authModal';
 import { CommunityThreadRow } from '@/ui/components/communityThreadRow';
+import { EmbersBackdrop } from '@/ui/components/embersBackdrop';
 import { setPin, useCommunityCategories, useCommunityFeed, useHasNewDraft } from './api';
 import { CategoryAside, FeedSideRail } from './components/feedAside';
 
@@ -81,7 +82,9 @@ export function CommunityPage() {
   const pinnedCount = threads.filter((t) => t.is_pinned).length;
 
   return (
-    <div className="-mx-4 md:mx-0">
+    <div className="embers-glass relative isolate -mx-4 md:mx-0">
+      {/* พื้นหลัง Golden Embers แบบเดียวกับ /merchant (ธีมมืด) + การ์ด/คอลัมน์เป็นกระจก (embers-glass) */}
+      <EmbersBackdrop />
       <header className="flex flex-wrap items-end gap-4 px-4 pb-1 md:px-0 lg:pb-5">
         <div className="min-w-0 flex-1">
           <div className="font-display text-[13px] tracking-[0.14em] text-gold-text">COMMUNITY</div>

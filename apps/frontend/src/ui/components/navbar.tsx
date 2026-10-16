@@ -1,15 +1,20 @@
-import { Bell, SignOut, User, type Icon } from '@phosphor-icons/react';
+import { Bell, type Icon } from '@phosphor-icons/react';
+import type * as C from '@nightout/contracts';
+import { Rest } from '@nightout/utils/rest';
 import { myNotifications } from '@/services/data';
 import { ThemeToggle } from '@nightout/ui';
 import { App, Badge, Button, Dropdown, Empty, Tag } from 'antd';
 import { motion, useReducedMotion } from 'motion/react';
 import { useState } from 'react';
-import { Link, NavLink, useNavigate } from 'react-router';
+import { Link, NavLink, useLocation, useNavigate, useSearchParams } from 'react-router';
 import { NOTIFICATION_PREVIEW_LIMIT } from '@/configs/app';
 import { useDemo } from '@/hooks/useDemo';
+import { useCompactOnOverflow } from '@/hooks/useCompactOnOverflow';
 import { useScrolled } from '@/hooks/useScrolled';
 import { useAuth } from '@/services/auth';
 import { timeAgo } from '@/ui/utils/format';
+import { isMerchantNotification, isMerchantView } from '@/ui/utils/notifications';
+import { AccountMenu } from './accountMenu';
 import { BrandLogo } from './brandLogo';
 import { useAuthModal } from './authModal';
 
@@ -18,8 +23,6 @@ export interface NavItem {
   label: string;
   icon?: Icon;
   end?: boolean;
-  /** แสดงเฉพาะ navbar บนจอใหญ่ (ไม่ใส่ใน BottomIsland มือถือ) */
-  desktopOnly?: boolean;
 }
 
 /**
@@ -34,6 +37,10 @@ const ISLAND = {
 } as const;
 
 const spring = { type: 'spring', stiffness: 420, damping: 34 } as const;
+
+/** POST /me/notifications/read — อ่านแล้วเฉพาะรายการที่ส่งไป (แจ้งเตือนที่เข้ามาทีหลังยังนับเป็นใหม่) */
+const markNotificationsRead = (ids: string[]) =>
+  Rest.post('/me/notifications/read', { ids } satisfies C.MarkReadBody);
 
 /**
  * Floating island navbar (บนสุด)
@@ -57,17 +64,39 @@ export function Navbar({
   const { openLogin } = useAuthModal();
   const navigate = useNavigate();
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  // แจ้งเตือนที่เพิ่งกดเข้าไปดู → เลขบนกระดิ่งและจุดของอันนั้นหายทันที (ไม่ต้องรอ store โหลดใหม่)
+  const [seenIds, setSeenIds] = useState<ReadonlySet<string>>(() => new Set());
   const [profileOpen, setProfileOpen] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
   const scrolled = useScrolled();
   const reduce = useReducedMotion();
-  // แจ้งเตือนจาก Supabase (services/sync.ts โหลดใหม่ทุก 60 วินาที)
-  const notifications = user ? myNotifications() : [];
+  const { pathname } = useLocation();
+  const [search] = useSearchParams();
+  const merchantView = isMerchantView(pathname, search);
+  // แจ้งเตือนจาก Supabase (services/sync.ts โหลดใหม่ทุก 60 วินาที) · หน้าร้านเห็นเฉพาะของทีมร้าน หน้าลูกค้าเห็นเฉพาะของลูกค้า
+  const notifications = user ? myNotifications().filter((n) => isMerchantNotification(n) === merchantView) : [];
   const latestNotifications = notifications
     .toSorted((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt))
     .slice(0, NOTIFICATION_PREVIEW_LIMIT);
-  const unread = notifications.filter((n) => !n.readAt).length;
+  const isUnread = (n: { id: string; readAt?: string }) => !n.readAt && !seenIds.has(n.id);
+  const unread = notifications.filter(isUnread).length;
+
+  /** กดเข้าไปดูแจ้งเตือน = อ่านเฉพาะอันนั้น */
+  const openNotification = (n: { id: string; readAt?: string }) => {
+    setNotificationsOpen(false);
+    if (!isUnread(n)) return;
+    setSeenIds((prev) => new Set(prev).add(n.id));
+    markNotificationsRead([n.id]).catch((e: Error) => {
+      setSeenIds((prev) => new Set([...prev].filter((id) => id !== n.id)));
+      message.error(e.message);
+    });
+  };
   const glass = overVideo && !scrolled;
+  // เนื้อหาเกินความกว้าง island (เลื่อนแล้วหดเหลือ max-w-3xl · จอกว้างปานกลาง · ชื่อเมนูที่แอดมินตั้งยาว) → ปุ่มบัญชีเหลือรูป + จุดชั้นบัญชี
+  const { ref: islandRef, compact: compactAccount } = useCompactOnOverflow<HTMLDivElement>(
+    [items.map((n) => n.label).join('|'), user?.displayName, user?.roleLabel, minimal].join('/'),
+    scrolled,
+  );
   const dim = glass ? 'text-white/75 hover:text-white' : 'text-muted hover:text-text';
 
   const logout = async () => {
@@ -87,6 +116,7 @@ export function Navbar({
 
   return (
     <motion.div
+      ref={islandRef}
       layout={!reduce}
       transition={spring}
       className={`flex items-center gap-2 rounded-full border px-2 transition-colors duration-300 ${glass ? ISLAND.overVideo : ISLAND.page} ${scrolled ? 'h-12 w-full max-w-3xl' : 'h-14 w-full max-w-4xl'}`}
@@ -147,7 +177,10 @@ export function Navbar({
               >
                 <div className="flex items-center justify-between gap-2 border-b border-border p-4">
                   <h2 className="font-semibold">แจ้งเตือน</h2>
-                  <Link to="/notifications" onClick={() => setNotificationsOpen(false)}>
+                  <Link
+                    to={merchantView ? '/notifications?view=merchant' : '/notifications'}
+                    onClick={() => setNotificationsOpen(false)}
+                  >
                     <Tag color="gold" className="!m-0 cursor-pointer">
                       ดูรายการทั้งหมด
                     </Tag>
@@ -161,10 +194,10 @@ export function Navbar({
                       <li key={n.id}>
                         <Link
                           to={n.link || '/notifications'}
-                          onClick={() => setNotificationsOpen(false)}
+                          onClick={() => openNotification(n)}
                           className="flex gap-3 p-4 !text-text transition-colors hover:bg-card"
                         >
-                          <Badge dot={!n.readAt} className="mt-1 shrink-0">
+                          <Badge dot={isUnread(n)} className="mt-1 shrink-0">
                             <Bell size={20} className="text-gold-text" />
                           </Badge>
                           <div className="min-w-0">
@@ -195,42 +228,16 @@ export function Navbar({
           </Dropdown>
         )}
         {user ? (
-          <Dropdown
-            placement="bottomRight"
-            trigger={['click']}
+          <AccountMenu
+            user={user}
             open={profileOpen}
             onOpenChange={setProfileOpen}
-            menu={{
-              items: [
-                {
-                  key: 'profile',
-                  icon: <User size={18} />,
-                  label: <Link to="/profile">ดูโปรไฟล์</Link>,
-                },
-                {
-                  key: 'logout',
-                  icon: <SignOut size={18} />,
-                  label: 'ออกจากระบบ',
-                  danger: true,
-                  disabled: signingOut,
-                },
-              ],
-              onClick: ({ key }) => {
-                setProfileOpen(false);
-                if (key === 'logout') void logout();
-              },
-            }}
-          >
-            <Button
-              type="text"
-              shape="circle"
-              aria-label="โปรไฟล์"
-              aria-haspopup="menu"
-              aria-expanded={profileOpen}
-              loading={signingOut}
-              icon={<User size={20} />}
-            />
-          </Dropdown>
+            glass={glass}
+            scrolled={scrolled}
+            compact={compactAccount}
+            signingOut={signingOut}
+            onLogout={() => void logout()}
+          />
         ) : minimal ? null : (
           <Button type="primary" shape="round" className="ml-1" onClick={() => openLogin()}>
             เข้าสู่ระบบ
@@ -253,7 +260,6 @@ export function BottomIsland({ items }: { items: NavItem[] }) {
         className={`flex w-full max-w-md items-center justify-between rounded-full border p-1.5 ${ISLAND.page}`}
       >
         {items
-          .filter((n) => !n.desktopOnly)
           .map((n) => (
             <NavLink
               key={n.to}

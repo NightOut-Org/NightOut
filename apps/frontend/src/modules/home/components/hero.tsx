@@ -1,11 +1,13 @@
 import { CaretDown, MagnifyingGlass, MapPin, UsersThree, Wallet } from '@phosphor-icons/react';
 import { budgetSearchQuery, MAX_GROUP_SIZE, SEARCH_BUDGET_PRESETS } from '@nightout/utils';
-import { DISTRICTS } from '@/services/data';
+import { DISTRICTS, type BarWithTier } from '@/services/data';
 import { baht } from '@/ui/utils/format';
 import { type SiteHomeContent } from '../api';
+import type { HomeCategory } from '../type/category';
 import { Dropdown } from 'antd';
-import { useState, type ReactNode } from 'react';
+import { useRef, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router';
+import { HeroSuggest } from './heroSuggest';
 import { SkyBackdrop } from './skyBackdrop';
 
 const HERE = 'ตำแหน่งปัจจุบัน';
@@ -27,21 +29,30 @@ const fromKey = (key: string) => (key === ANY ? undefined : Number(key));
  * หัวข้อ 3 ท่อน เช่น "คืนนี้ไป | ร้านไหน | ดี" (ตัวกลางใหญ่สีทอง) + ช่องค้นหากระจก มีเลือกย่าน · งบต่อหัว · จำนวนคน
  * (requirement "ค้นหาตามงบ" เช่น 8 คน ไม่เกินคนละ 400 → /search?budget=400&people=8 · สร้าง query ด้วย budgetSearchQuery)
  * ข้อความ/ภาพมาจาก content (แอดมินแก้ได้ · ดู useHomeContent) · ยังไม่มา = skeleton แทนหัวข้อ (ช่องค้นหาใช้ได้เลย)
+ * ช่องพิมพ์ = <HeroSuggest> (แผงแนะนำประเภทร้าน / สไตล์ / ร้านยอดนิยม ใต้ช่องค้นหา)
  */
 export function Hero({
   content: c,
+  categories,
+  popularBars,
   failed = false,
   onRetry,
 }: {
   content?: Omit<SiteHomeContent, 'updated_at'>;
+  /** การ์ดหมวดหน้าแรก — แผงแนะนำใช้การ์ดที่ลิงก์ ?category= / ?style= */
+  categories?: HomeCategory[];
+  /** ร้านยอดนิยม (utils/popularBars) — แผงแนะนำแสดง 4 ร้านแรก */
+  popularBars: BarWithTier[];
   /** โหลดเนื้อหาไม่สำเร็จ → แสดงข้อความ + ปุ่มลองใหม่แทน skeleton */
   failed?: boolean;
   onRetry?: () => void;
 }) {
   const navigate = useNavigate();
+  const formRef = useRef<HTMLFormElement>(null);
   const [area, setArea] = useState(HERE);
   const [budget, setBudget] = useState<number>();
   const [people, setPeople] = useState<number>();
+  const district = area !== HERE ? area : undefined;
 
   return (
     <section className="relative isolate flex min-h-[540px] items-center overflow-hidden bg-[#07070d] pb-24 pt-20 md:min-h-[620px] md:pb-32 md:pt-24">
@@ -92,21 +103,23 @@ export function Hero({
         )}
 
         <form
+          ref={formRef}
           role="search"
           className="mt-8 flex w-full max-w-4xl flex-wrap items-center text-left gap-2 rounded-lg border sm:flex-nowrap border-white/15 bg-white/10 p-1.5 pl-5 shadow-[0_8px_40px_rgba(0,0,0,0.35)] backdrop-blur-xl"
           onSubmit={(e) => {
             e.preventDefault();
             const q = new FormData(e.currentTarget).get('q')?.toString() ?? '';
-            const qs = budgetSearchQuery({ q, district: area !== HERE ? area : undefined, budget, people });
+            const qs = budgetSearchQuery({ q, district, budget, people });
             navigate(`/search${qs ? `?${qs}` : ''}`);
           }}
         >
           <MagnifyingGlass size={20} className="shrink-0 text-white/70" aria-hidden />
-          <input
-            name="q"
-            aria-label="ค้นหาร้าน"
+          <HeroSuggest
+            anchorRef={formRef}
             placeholder={c?.hero_search_placeholder}
-            className="min-w-0 flex-1 bg-transparent py-2.5 text-base text-white outline-none placeholder:text-white/70"
+            categories={categories}
+            popularBars={popularBars}
+            filterQuery={budgetSearchQuery({ district, budget, people })}
           />
           {/* มือถือ: แถวล่างเต็มกว้าง 3 ช่อง (ย่าน · งบ · คน) · sm+: อยู่ในแถวเดียวกัน คั่นด้วยเส้นตั้ง */}
           <div className="order-last -ml-3.5 grid w-[calc(100%+0.875rem)] grid-cols-3 divide-x divide-white/10 border-t border-white/10 pt-1.5 sm:order-none sm:ml-0 sm:flex sm:w-auto sm:shrink-0 sm:items-center sm:divide-x-0 sm:border-t-0 sm:pt-0">

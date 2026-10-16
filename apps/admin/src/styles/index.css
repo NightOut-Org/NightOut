@@ -6,3 +6,10 @@
 
 /* ให้ Tailwind สแกน class ที่ใช้ใน packages/ui ด้วย (path นับจากไฟล์นี้: src/styles → root) */
 @source '../../../../packages/ui/src';
+
+/* dark: header + sider เป็นกระจกบนพื้น Aurora (layouts/main.tsx) · blur ≤ 8px — มากกว่านี้กระตุกเพราะพื้นหลังวาดใหม่ทุกเฟรม */
+.dark .ant-pro-layout .ant-layout-header,
+.dark .ant-pro-layout .ant-pro-sider {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}

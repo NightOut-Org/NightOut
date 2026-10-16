@@ -16,7 +16,8 @@
 | `login` | redirect `/login` → `/` แล้วเปิด modal เข้าสู่ระบบ (`ui/components/authModal.tsx`) | `/login` | Supabase Auth | — | 1A |
 | `register` | สมัครสมาชิก | `/register` | Supabase Auth · `account` | — | 1A |
 | `verifyEmail` | ยืนยันอีเมล | `/verify-email` | Supabase Auth | — | 1A |
-| `forgotPassword` | ขอลิงก์รีเซ็ตรหัสผ่าน | `/forgot-password` | Supabase Auth | — | 1A |
+| `oauthSignup` | สมัครด้วย Google / Facebook: ยืนยันอายุจากวันเกิดของบัญชี + ยอมรับ ToS/PDPA ก่อนสร้างบัญชี | `/signup/social` | `account` | — | 1A |
+| `forgotPassword` | ขอลิงก์รีเซ็ตรหัสผ่าน (redirect → `/` + เปิด modal · ฟอร์มอยู่ `ui/components/authForgotForm.tsx`) | `/forgot-password` | Supabase Auth | — | 1A |
 | `resetPassword` | ตั้งรหัสผ่านใหม่ | `/reset-password` | Supabase Auth | — | 1A |
 | `acceptInvite` | รับคำเชิญเข้าทีมร้าน | `/accept-invite` | `bar-team` | — | 1B |
 | `onboarding` | Age Gate / Consent / ความชอบ | `/onboarding` | `account` | — | 1A |
@@ -86,7 +87,7 @@
 | `promotions` | ตรวจถ้อยคำโปร + คำสั่งซื้อโปรโมท | `/promotions` | `promotion` · `admin_bar_promotions` · `admin_promoted_listings` | `merchant/promotions` · `merchant/promote` | 1C |
 | `users` | ผู้ใช้ ชั้นบัญชี แบน / ปลดแบนเองพร้อมเหตุผล (แบนเบอร์ได้) | `/users` | `account` · `admin_users` | `profile` · `settings` | 1C |
 | `team` | ทีมงาน NightOut หน้า /about | `/team` | `site-team` · `admin_team_members` | `about` | นอก MVP — ยังไม่ระบุวันอนุมัติ |
-| `homeContent` | แก้ Hero / ชื่อ section / การ์ดหมวดของหน้าแรก | `/home-content` | `site-content` · `admin_home_content` · `admin_home_categories` | `home` | นอก MVP — ยังไม่ระบุวันอนุมัติ |
+| `homeContent` | เมนู navbar ของเว็บลูกค้า: ชื่อ · ลำดับ · ซ่อน/แสดง แยกคอมพิวเตอร์กับมือถือ (ส่วนแก้ Hero / การ์ดหมวด / ร้านยอดนิยม เอาออก 2026-10-15) | `/home-content` | `site-content` · `admin_site_nav` | `layouts` (navbar ทุกหน้า) | นอก MVP — อนุมัติ 2026-10-15 |
 | `miniAds` | โฆษณาแบนเนอร์เล็ก (Native Mini-Ads): เพิ่ม/แก้/ลบ · ยืนยันไม่ใช่แบรนด์แอลกอฮอล์ (+ เตือนคำแอลกอฮอล์) · ยอดเห็น/คลิก | `/mini-ads` | `mini-ads` · `admin_mini_ads` | `home` · `search` | 1C — ย้ายเข้า Phase 1 (2026-10-11) · หลังบ้านตัดสิน 2026-10-13 |
 | `bookings` | ติดตามการจอง | `/bookings` | `backoffice` · `admin_bookings` | `bookings` · `merchant/bookings` | 1C |
 | `tableBoard` | ผังโต๊ะร้าน (ดูอย่างเดียว): เลือกร้าน → ผังโต๊ะ / ไทม์ไลน์คืนนี้ ข้อมูลชุดเดียวกับหน้าร้าน · โพลทุก 10 วิ | `/table-board` | `booking` (`GET admin/bars/:barId/table-board`) · `admin_bars` | `merchant/floor` | 1C — เจ้าของอนุมัติ 2026-10-13 |
@@ -117,7 +118,7 @@
 | `storage` | URL อัปโหลด / URL ชั่วคราว | storage (controller เดียว) | 1A / 1B |
 | `backoffice` | การอ่านของหน้าแอดมิน: แดชบอร์ด view `admin_*` ตาราง master | admin | 1C |
 | `site-team` | ทีมงาน NightOut หน้า /about (อ่านสาธารณะ + จัดการ) | public · admin | นอก MVP — ยังไม่ระบุวันอนุมัติ |
-| `site-content` | เนื้อหาหน้าแรก: Hero ชื่อ section การ์ดหมวด (อ่านสาธารณะ + แก้) | public · admin | นอก MVP — ยังไม่ระบุวันอนุมัติ |
+| `site-content` | เนื้อหาหน้าแรก: Hero ชื่อ section การ์ดหมวด (อ่านสาธารณะอย่างเดียว · Backoffice แก้ไม่ได้แล้ว 2026-10-15) · เมนู navbar ของเว็บลูกค้า (`site_nav_items` · อนุมัติ 2026-10-15) | public · admin | นอก MVP — ยังไม่ระบุวันอนุมัติ |
 | `mini-ads` | โฆษณาแบนเนอร์เล็ก: อ่านที่กำลังแสดง · นับเห็น/คลิก · แอดมินจัดการ (bucket `site-media/ads/`) | public · admin | 1C — ย้ายเข้า Phase 1 (2026-10-11) · หลังบ้านตัดสิน 2026-10-13 |
 
 **ระบบ (นอก `domains/`):** `health` (เช็กสถานะ) · `jobs` (`/jobs/*` เรียกจาก pg_cron: auto-cancel / no-show, หมดเวลา pending, notification outbox, คำนวณดาว `/jobs/tier` ทุกคืน 00:05, เปิด/ปิดโปรโมท)

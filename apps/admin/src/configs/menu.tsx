@@ -4,8 +4,8 @@ import {
   ClipboardText,
   Crown,
   Gear,
-  House,
   Images,
+  ListBullets,
   MapPin,
   Megaphone,
   MegaphoneSimple,
@@ -28,33 +28,72 @@ import type { ReactNode } from 'react';
 export interface AdminRoute {
   path: string;
   name: string;
-  icon: ReactNode;
+  icon?: ReactNode;
+  /** มี = กลุ่มยุบ/ขยายได้ในเมนูซ้าย (ไม่ใช่หน้า · path ใช้เป็น key เท่านั้น) */
+  routes?: AdminRoute[];
 }
 
-/** เมนู Backoffice ตาม docs/SITEMAP.md ข้อ 4 */
+const icon = (Icon: typeof ChartBar) => <Icon size={18} />;
+
+/** เมนู Backoffice ตาม docs/SITEMAP.md ข้อ 4 — จัดเป็นกลุ่มตามงาน ยุบ/ขยายได้ (submenu ของ ProLayout · เปิดกลุ่มของหน้าปัจจุบันให้เอง) */
 export const ADMIN_ROUTES: AdminRoute[] = [
-  { path: '/', name: 'แดชบอร์ด', icon: <ChartBar size={18} /> },
-  { path: '/merchants', name: 'ร้านรออนุมัติ', icon: <Storefront size={18} /> },
-  { path: '/bars', name: 'จัดการร้าน', icon: <Buildings size={18} /> },
-  { path: '/bar-blacklist', name: 'Blacklist ร้าน', icon: <Prohibit size={18} /> },
-  { path: '/bar-media', name: 'รูปร้าน', icon: <Images size={18} /> },
-  { path: '/bar-locations', name: 'ตรวจตำแหน่งร้าน', icon: <MapPin size={18} /> },
-  { path: '/safety', name: 'ยืนยัน Safety', icon: <ShieldCheck size={18} /> },
-  { path: '/ranking', name: 'ดาว / อันดับ', icon: <Crown size={18} /> },
-  { path: '/styles', name: 'สไตล์ร้าน', icon: <Tag size={18} /> },
-  { path: '/promotions', name: 'โปรโมท', icon: <Megaphone size={18} /> },
-  { path: '/users', name: 'ผู้ใช้', icon: <Users size={18} /> },
-  { path: '/team', name: 'จัดการทีมงาน', icon: <UsersFour size={18} /> },
-  { path: '/home-content', name: 'หน้าแรก', icon: <House size={18} /> },
-  { path: '/mini-ads', name: 'โฆษณา (Mini-Ads)', icon: <MegaphoneSimple size={18} /> },
-  { path: '/bookings', name: 'การจอง', icon: <CalendarCheck size={18} /> },
-  { path: '/table-board', name: 'ผังโต๊ะร้าน', icon: <Armchair size={18} /> },
-  { path: '/deposits', name: 'เงินมัดจำ', icon: <Wallet size={18} /> },
-  { path: '/payments', name: 'การชำระเงิน', icon: <CreditCard size={18} /> },
-  { path: '/reviews', name: 'รีวิวที่ถูกรายงาน', icon: <ChatCircleText size={18} /> },
-  { path: '/community', name: 'ชุมชน', icon: <ChatsCircle size={18} /> },
-  { path: '/audit-logs', name: 'Audit Log', icon: <ClipboardText size={18} /> },
-  { path: '/settings', name: 'ตั้งค่าระบบ', icon: <Gear size={18} /> },
+  { path: '/', name: 'แดชบอร์ด', icon: icon(ChartBar) },
+  {
+    path: '/group/bars',
+    name: 'ร้านค้า',
+    icon: icon(Storefront),
+    routes: [
+      { path: '/merchants', name: 'ร้านรออนุมัติ', icon: icon(Storefront) },
+      { path: '/bars', name: 'จัดการร้าน', icon: icon(Buildings) },
+      { path: '/bar-locations', name: 'ตรวจตำแหน่งร้าน', icon: icon(MapPin) },
+      { path: '/bar-media', name: 'รูปร้าน', icon: icon(Images) },
+      { path: '/safety', name: 'ยืนยัน Safety', icon: icon(ShieldCheck) },
+      { path: '/bar-blacklist', name: 'Blacklist ร้าน', icon: icon(Prohibit) },
+    ],
+  },
+  {
+    path: '/group/bookings',
+    name: 'การจองและการเงิน',
+    icon: icon(CalendarCheck),
+    routes: [
+      { path: '/bookings', name: 'การจอง', icon: icon(CalendarCheck) },
+      { path: '/table-board', name: 'ผังโต๊ะร้าน', icon: icon(Armchair) },
+      { path: '/deposits', name: 'เงินมัดจำ', icon: icon(Wallet) },
+      { path: '/payments', name: 'การชำระเงิน', icon: icon(CreditCard) },
+    ],
+  },
+  {
+    path: '/group/content',
+    name: 'เนื้อหาและการตลาด',
+    icon: icon(Megaphone),
+    routes: [
+      { path: '/home-content', name: 'เมนูเว็บ (Navbar)', icon: icon(ListBullets) },
+      { path: '/styles', name: 'สไตล์ร้าน', icon: icon(Tag) },
+      { path: '/ranking', name: 'ดาว / อันดับ', icon: icon(Crown) },
+      { path: '/promotions', name: 'โปรโมท', icon: icon(Megaphone) },
+      { path: '/mini-ads', name: 'โฆษณา (Mini-Ads)', icon: icon(MegaphoneSimple) },
+    ],
+  },
+  {
+    path: '/group/people',
+    name: 'ผู้ใช้และชุมชน',
+    icon: icon(Users),
+    routes: [
+      { path: '/users', name: 'ผู้ใช้', icon: icon(Users) },
+      { path: '/reviews', name: 'รีวิวที่ถูกรายงาน', icon: icon(ChatCircleText) },
+      { path: '/community', name: 'ชุมชน', icon: icon(ChatsCircle) },
+    ],
+  },
+  {
+    path: '/group/system',
+    name: 'ระบบ',
+    icon: icon(Gear),
+    routes: [
+      { path: '/team', name: 'จัดการทีมงาน', icon: icon(UsersFour) },
+      { path: '/audit-logs', name: 'Audit Log', icon: icon(ClipboardText) },
+      { path: '/settings', name: 'ตั้งค่าระบบ', icon: icon(Gear) },
+    ],
+  },
 ];
 
 export const AvatarIcon = <UserCircle size={24} />;

@@ -9,8 +9,9 @@ import { SupabaseJwtGuard, type AuthedRequest, type AuthUser } from '../../auth/
 import { ApiDoc } from '../../common/api-doc';
 import { ADMIN_FORBIDDEN, Id } from '../../common/params';
 import { SupabaseService } from '../../supabase/supabase.service';
+import { AccountAvatarService } from './account-avatar.service';
 import { AccountUsersService } from './account-users.service';
-import { BanUserDto, CreateUserDto, SetUsersRoleDto, UnbanUserDto, UpdateUserAccountDto } from './account.dto';
+import { BanUserDto, CreateUserDto, RemoveUserAvatarDto, SetUsersRoleDto, UnbanUserDto, UpdateUserAccountDto } from './account.dto';
 
 /** account · Backoffice — ผู้ใช้ ชั้นบัญชี (ADR 0005) · แบน/ปลดแบนพร้อมเหตุผล (แบนเอง + แบนอัตโนมัติจากสลิปปลอม) · audit log ในธุรกรรมเดียว */
 @ApiTags('account')
@@ -21,6 +22,7 @@ export class AccountAdminController {
   constructor(
     private readonly db: SupabaseService,
     private readonly users: AccountUsersService,
+    private readonly avatar: AccountAvatarService,
   ) {}
 
   @Get('roles')
@@ -124,5 +126,18 @@ export class AccountAdminController {
   })
   unban(@CurrentUser() me: AuthUser, @Id() id: string, @Body() b: UnbanUserDto) {
     return this.db.rpc('admin_unban_user', { p_actor: me.id, p_user: id, p_reason: b.reason });
+  }
+
+  @Post('users/:id/avatar/remove')
+  @HttpCode(200)
+  @ApiDoc({
+    summary: 'ลบรูปโปรไฟล์ไม่เหมาะสม',
+    description:
+      'แอดมินลบรูปโปรไฟล์ของบัญชีใดก็ได้ (ต้องมีเหตุผล 3–300 ตัวอักษร — เจ้าของบัญชีเห็นในแจ้งเตือน) · ไฟล์ถูกลบจาก Storage · เจ้าของอัปโหลดรูปใหม่ได้ · audit log (rpc admin_remove_user_avatar)',
+    returns: '`id` รหัสผู้ใช้',
+    forbidden: ADMIN_FORBIDDEN,
+  })
+  removeAvatar(@CurrentUser() me: AuthUser, @Id() id: string, @Body() b: RemoveUserAvatarDto) {
+    return this.avatar.adminRemove(me.id, id, b.reason);
   }
 }

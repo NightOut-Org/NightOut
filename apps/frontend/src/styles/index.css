@@ -7,6 +7,15 @@
 /* ให้ Tailwind สแกน class ที่ใช้ใน packages/ui ด้วย */
 @source '../../../../packages/ui/src';
 
+/* สีชั้นบัญชี "พนักงานร้าน" (configs/roles.ts) — ไม่มีใน token กลาง: มืด = tier-b แบบสว่าง · สว่าง = tier-b */
+:root,
+.dark {
+  --role-staff: #8c9bea;
+}
+.light {
+  --role-staff: #5869c8;
+}
+
 @layer components {
   /* ปุ่มหลักหน้า Auth (Figma login 2: ไล่ม่วง #b38bef → #553a80 บนพื้นมืด) */
   /* ปุ่มหลักหน้า Auth (Figma "Login": ม่วง #5b3fa0 มุม 6px) */

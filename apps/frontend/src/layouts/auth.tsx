@@ -1,7 +1,7 @@
 import { getAntdTheme } from '@nightout/ui';
 import { ConfigProvider, type ThemeConfig } from 'antd';
 import { Outlet } from 'react-router';
-import { NAV } from '@/configs/nav';
+import { useSiteNav } from '@/hooks/useSiteNav';
 import { AgeGate } from '@/ui/components/ageGate';
 import { Navbar } from '@/ui/components/navbar';
 
@@ -48,6 +48,7 @@ const authTheme: ThemeConfig = {
  * Figma "Login": navbar แคปซูลลอยแบบเดียวกับหน้าหลัก · การ์ดกระจกอยู่กลางจอ · ภาพเมืองกลางคืนเต็มจอ
  */
 export function AuthLayout() {
+  const nav = useSiteNav();
   return (
     <ConfigProvider theme={authTheme}>
       <div className="dark relative isolate flex min-h-dvh flex-col overflow-hidden bg-[#07070d] text-[#f5f1e8]">
@@ -66,7 +67,7 @@ export function AuthLayout() {
 
         <header className="sticky top-0 z-40 h-0">
           <div className="flex justify-center px-3 pt-3 md:pt-4">
-            <Navbar items={NAV} overVideo minimal />
+            <Navbar items={nav.desktop} overVideo minimal />
           </div>
         </header>
 

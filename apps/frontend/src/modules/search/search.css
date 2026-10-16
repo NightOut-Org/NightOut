@@ -1,0 +1,73 @@
+/*
+ * หน้า /search (ดีไซน์ Search Combined v2)
+ * หมุดรูปร้านบนแผนที่ — divIcon ของ components/mapPins.ts
+ */
+.nl-photo-pin {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.55));
+  transition: transform 160ms cubic-bezier(0.22, 1, 0.36, 1);
+  transform-origin: 50% 100%;
+}
+.nl-photo-pin:hover {
+  transform: translateY(-2px);
+}
+.nl-photo-pin.is-active {
+  transform: scale(1.1);
+}
+.nl-photo-pin__img {
+  display: block;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  border-radius: 9999px;
+  border: 3px solid var(--gold);
+  background-color: var(--card);
+  background-size: cover;
+  background-position: center;
+}
+.nl-photo-pin__tail {
+  width: 0;
+  height: 0;
+  margin-top: -2px;
+  border-left: 7px solid transparent;
+  border-right: 7px solid transparent;
+  border-top: 10px solid var(--gold);
+}
+.nl-photo-pin.is-active .nl-photo-pin__img {
+  border-color: #fff;
+}
+.nl-photo-pin.is-active .nl-photo-pin__tail {
+  border-top-color: #fff;
+}
+.nl-photo-pin__label {
+  position: absolute;
+  top: calc(100% + 4px);
+  max-width: 120px;
+  padding: 2px 8px;
+  border-radius: 8px;
+  border: 1px solid var(--gold);
+  background: var(--card);
+  color: var(--gold-text);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.nl-photo-pin.is-active .nl-photo-pin__label {
+  background: var(--gold);
+  color: var(--on-gold);
+}
+@media (prefers-reduced-motion: reduce) {
+  .nl-photo-pin {
+    transition: none;
+  }
+}

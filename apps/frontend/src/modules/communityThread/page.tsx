@@ -42,6 +42,7 @@ import { CommentList } from './components/commentList';
 import { HistoryModal, type HistoryTarget } from './components/historyModal';
 import { ReplyComposer, type ReplyComposerHandle } from './components/replyComposer';
 import { ReportModal } from './components/reportModal';
+import { EmbersBackdrop } from '@/ui/components/embersBackdrop';
 
 /** อ่านกระทู้ (/community/t/:id) — ทุกคนอ่านได้ · ตอบ/ถูกใจ/บันทึก/ปักหมุด ต้องล็อกอิน */
 export function CommunityThreadPage() {
@@ -219,7 +220,9 @@ export function CommunityThreadPage() {
   };
 
   return (
-    <div className="mx-auto max-w-6xl pb-32 md:pb-0">
+    <div className="embers-glass relative isolate mx-auto max-w-6xl pb-32 md:pb-0">
+      {/* พื้นหลัง Golden Embers เดียวกับหน้า /community (ธีมมืด) */}
+      <EmbersBackdrop />
       <nav aria-label="ตำแหน่ง" className="mb-4 flex items-center gap-1 text-sm text-muted">
         <button
           type="button"

@@ -16,7 +16,7 @@ import { RequireAuth, RequireBarRole, RequireRole } from './middleware';
 const routes: RouteObject[] = [
   // แผนที่เต็มจอ (ไม่มี navbar — มีปุ่มลอยของตัวเอง) ซ่อนไว้ก่อนตอนนี้ไม่ใช้
   { path: 'map', lazy: () => import('@/modules/map/page').then((m) => ({ Component: m.MapPage })) },
-  // /login, /register = redirect ไปหน้าหลักแล้วเปิด modal (ลิงก์เก่า + RequireAuth)
+  // /login, /register, /forgot-password = redirect ไปหน้าหลักแล้วเปิด modal (ลิงก์เก่า + RequireAuth)
   {
     path: 'login',
     lazy: () => import('@/modules/login/page').then((m) => ({ Component: m.LoginPage })),
@@ -24,6 +24,11 @@ const routes: RouteObject[] = [
   {
     path: 'register',
     lazy: () => import('@/modules/register/page').then((m) => ({ Component: m.RegisterPage })),
+  },
+  {
+    path: 'forgot-password',
+    lazy: () =>
+      import('@/modules/forgotPassword/page').then((m) => ({ Component: m.ForgotPasswordPage })),
   },
   {
     element: <AuthLayout />,
@@ -34,16 +39,15 @@ const routes: RouteObject[] = [
           import('@/modules/verifyEmail/page').then((m) => ({ Component: m.VerifyEmailPage })),
       },
       {
-        path: 'forgot-password',
-        lazy: () =>
-          import('@/modules/forgotPassword/page').then((m) => ({
-            Component: m.ForgotPasswordPage,
-          })),
-      },
-      {
         path: 'reset-password',
         lazy: () =>
           import('@/modules/resetPassword/page').then((m) => ({ Component: m.ResetPasswordPage })),
+      },
+      {
+        // ล็อกอิน Google/Facebook ครั้งแรก: ยืนยันอายุจากวันเกิดของบัญชี + ยอมรับ ToS/PDPA ก่อนสร้างบัญชี
+        path: 'signup/social',
+        lazy: () =>
+          import('@/modules/oauthSignup/page').then((m) => ({ Component: m.OAuthSignupPage })),
       },
       {
         path: 'accept-invite',
@@ -216,6 +220,7 @@ const routes: RouteObject[] = [
           },
           {
             path: 'profile',
+            handle: { backdrop: true },
             lazy: () =>
               import('@/modules/profile/page').then((m) => ({ Component: m.ProfilePage })),
           },

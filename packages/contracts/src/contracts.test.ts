@@ -1,14 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { CreateBookingBody, ERROR_MESSAGES, errorMessageOf, ReviewDepositBody, SaveTeamPageBody, TeamMemberBody, UpdateTeamMemberBody } from './index';
-import { canCreateRole, CreateUserBody } from './account';
-import { SaveHomePageBody, UpdateHomeCategoryBody, UpdateHomeContentBody, UpdateHomePopularBody } from './site-content';
+import { ACCOUNT_ERRORS, canCreateRole, CreateUserBody, OAuthSignupCompleteBody, OAuthSignupVerifyBody } from './account';
+import { SaveSiteNavBody, SITE_NAV_KEYS } from './site-content';
 import { SetUsersRoleBody } from './account';
 import { AdminBarMediaBody, BAR_GALLERY_MAX, BarMediaBody, BarStoreBody, MenuBody, PromotionsPageBody, SaveSafetyBody, SettingsPageBody, SetBarsStatusBody } from './bar';
 import { PUBLIC_BUCKETS, UploadBucket } from './storage';
 import { CommunityCommentBody, CommunityFeedQuery, CommunityReportBody, CommunityThreadBody, communityTeamBadge, ModerateCommunityBody, MyCommunityFeedQuery, SaveCommunityDraftBody, UpdateCommunityCommentBody } from './community';
 import { ADMIN_VIEWS, AdminReportNoTableBody, BAR_ERRORS, BarBlacklistBody, BOOKING_ERRORS, CheckInPreviewQuery, ReportNoTableBody } from './index';
 import { SafetyInspectionBody } from './index';
-import { ADMIN_MASTER_TABLES, AdminBarDetailsBody, AdminBarInfoBody, BanUserBody, RankingQuery, SaveStylesBody, STYLE_ICONS, UnbanUserBody } from './index';
+import { ADMIN_MASTER_TABLES, AdminBarDetailsBody, AdminBarInfoBody, BanUserBody, RankingQuery, RemoveUserAvatarBody, SaveStylesBody, SetAvatarBody, STYLE_ICONS, UnbanUserBody } from './index';
 import { MarkPaymentRefundedBody, MockCompleteBody, PAYMENT_ERRORS, SUPER_ADMIN_VIEWS } from './index';
 import { TableBoardQuery, TableOccupancyBody } from './index';
 import { MINI_ADS_ERRORS, MiniAdBody, MiniAdsQuery, TrackMiniAdBody, UpdateMiniAdBody } from './index';
@@ -114,16 +114,7 @@ describe('save page: promotions + fees', () => {
   });
 });
 
-describe('save page: home page · merchant settings', () => {
-  it('home page: content and/or changed category cards (unique slots) and/or popular', () => {
-    expect(SaveHomePageBody.safeParse({ content: { hero_title_lead: 'คืนนี้ไป' } }).success).toBe(true);
-    expect(SaveHomePageBody.safeParse({ categories: [{ slot: 'pub', title: 'ผับ' }] }).success).toBe(true);
-    expect(SaveHomePageBody.safeParse({ popular: { bar_ids: [] } }).success).toBe(true);
-    expect(SaveHomePageBody.safeParse({ categories: [{ slot: 'nope', title: 'x' }] }).success).toBe(false);
-    expect(SaveHomePageBody.safeParse({ categories: [{ slot: 'pub' }, { slot: 'pub' }] }).success).toBe(false);
-    expect(SaveHomePageBody.safeParse({ categories: [] }).success).toBe(false);
-    expect(SaveHomePageBody.safeParse({}).success).toBe(false);
-  });
+describe('save page: merchant settings', () => {
   it('settings: booking and/or payout (at least one)', () => {
     expect(SettingsPageBody.safeParse({ booking: { grace_minutes: 30 } }).success).toBe(true);
     expect(SettingsPageBody.safeParse({ payout: { bank_code: 'กสิกรไทย', account_name: 'ร้าน', account_no: '1234567890' } }).success).toBe(true);
@@ -133,25 +124,26 @@ describe('save page: home page · merchant settings', () => {
 });
 
 describe('site-content', () => {
-  it('partial update keeps only sent fields', () => {
-    expect(UpdateHomeContentBody.parse({ categories_title: ' คืนนี้อยากได้ฟีลไหน ' })).toEqual({ categories_title: 'คืนนี้อยากได้ฟีลไหน' });
-    expect(UpdateHomeContentBody.parse({ hero_image_url: null })).toEqual({ hero_image_url: null });
+  const navItems = () =>
+    SITE_NAV_KEYS.map((key, i) => ({
+      key,
+      label: ` ${key} `,
+      desktop_order: i,
+      desktop_visible: true,
+      mobile_order: SITE_NAV_KEYS.length - 1 - i,
+      mobile_visible: key !== 'about',
+    }));
+  it('site nav: accepts full list with separate desktop/mobile order', () => {
+    const r = SaveSiteNavBody.parse({ items: navItems() });
+    expect(r.items[0]!.label).toBe('home');
   });
-  it('rejects unsafe images and external links', () => {
-    expect(UpdateHomeCategoryBody.safeParse({ image_url: 'javascript:alert(1)' }).success).toBe(false);
-    expect(UpdateHomeCategoryBody.safeParse({ link_to: 'https://evil.example' }).success).toBe(false);
-    expect(UpdateHomeCategoryBody.safeParse({ link_to: '//evil.example' }).success).toBe(false);
-    expect(UpdateHomeCategoryBody.safeParse({ title: '' }).success).toBe(false);
-    expect(UpdateHomeCategoryBody.safeParse({ link_to: '/search?style=Rooftop' }).success).toBe(true);
-  });
-  it('popular bars: up to 8 unique uuids', () => {
-    const id = (n: number) => `00000000-0000-4000-8000-00000000000${n}`;
-    expect(UpdateHomePopularBody.safeParse({ bar_ids: [] }).success).toBe(true);
-    expect(UpdateHomePopularBody.safeParse({ bar_ids: [1, 2, 3, 4, 5, 6, 7, 8].map(id) }).success).toBe(true);
-    expect(UpdateHomePopularBody.safeParse({ bar_ids: [1, 2, 3, 4, 5, 6, 7, 8, 9].map(id) }).success).toBe(false);
-    expect(UpdateHomePopularBody.safeParse({ bar_ids: [id(1), id(1)] }).success).toBe(false);
-    expect(UpdateHomePopularBody.safeParse({ bar_ids: ['not-a-uuid'] }).success).toBe(false);
-    expect(UpdateHomeContentBody.safeParse({ popular_title: ' ' }).success).toBe(false);
+  it('site nav: rejects missing, duplicate order, empty label and hidden home', () => {
+    expect(SaveSiteNavBody.safeParse({ items: navItems().slice(1) }).success).toBe(false);
+    expect(SaveSiteNavBody.safeParse({ items: navItems().map((x) => ({ ...x, desktop_order: 0 })) }).success).toBe(false);
+    expect(SaveSiteNavBody.safeParse({ items: navItems().map((x, i) => (i ? x : { ...x, label: '  ' })) }).success).toBe(false);
+    expect(
+      SaveSiteNavBody.safeParse({ items: navItems().map((x) => (x.key === 'home' ? { ...x, mobile_visible: false } : x)) }).success,
+    ).toBe(false);
   });
 });
 
@@ -443,6 +435,15 @@ describe('G6: แก้ข้อมูลร้านแทน · สไตล�
     expect(ERROR_MESSAGES.DUPLICATE_STYLE_NAME).toBeTruthy();
   });
 
+  it('avatar: SetAvatarBody needs a path · RemoveUserAvatarBody reason 3–300 · avatars bucket is public', () => {
+    expect(SetAvatarBody.safeParse({}).success).toBe(false);
+    expect(SetAvatarBody.safeParse({ path: 'u1/a.webp' }).success).toBe(true);
+    expect(RemoveUserAvatarBody.safeParse({ reason: 'ab' }).success).toBe(false);
+    expect(RemoveUserAvatarBody.safeParse({ reason: 'รูปไม่เหมาะสม' }).success).toBe(true);
+    expect(PUBLIC_BUCKETS).toContain('avatars');
+    for (const k of ['AVATAR_INVALID', 'AVATAR_NOT_FOUND', 'AVATAR_REMOVE_REASON_REQUIRED']) expect(ERROR_MESSAGES[k]).toBeTruthy();
+  });
+
   it('BanUserBody: reason 3–300 · ban_phones defaults false · UnbanUserBody requires a reason', () => {
     expect(BanUserBody.safeParse({ reason: 'ab' }).success).toBe(false);
     expect(BanUserBody.safeParse({ reason: '  ab  ' }).success).toBe(false);
@@ -648,5 +649,23 @@ describe('team forfeit (ทีมร้านกดปลดโต๊ะเอ�
   it('TeamForfeitResult is { id, status: NO_SHOW }', () => {
     const r: TeamForfeitResult = { id: 'b1', status: 'NO_SHOW' };
     expect(r.status).toBe('NO_SHOW');
+  });
+});
+
+describe('สมัครด้วย Google / Facebook (REQUIREMENTS ข้อ 3)', () => {
+  it('verify รับ provider_token หรือไม่ส่งก็ได้ (ยืนยันไว้แล้ว)', () => {
+    expect(OAuthSignupVerifyBody.safeParse({ provider_token: 'ya29.a0AfH6SMB' }).success).toBe(true);
+    expect(OAuthSignupVerifyBody.safeParse({}).success).toBe(true);
+    expect(OAuthSignupVerifyBody.safeParse({ provider_token: 'short' }).success).toBe(false);
+  });
+  it('complete ต้องติ๊กยอมรับเงื่อนไข (accept_terms = true)', () => {
+    expect(OAuthSignupCompleteBody.safeParse({ accept_terms: true, display_name: ' มิว ' }).data?.display_name).toBe('มิว');
+    expect(OAuthSignupCompleteBody.safeParse({ accept_terms: false }).success).toBe(false);
+    expect(OAuthSignupCompleteBody.safeParse({}).success).toBe(false);
+  });
+  it('รหัส error ใหม่มีข้อความไทยใน ERROR_MESSAGES', () => {
+    for (const code of ['OAUTH_BIRTHDATE_MISSING', 'OAUTH_AGE_UNDER_20', 'OAUTH_RELOGIN_REQUIRED', 'OAUTH_TOKEN_MISMATCH'] as const) {
+      expect(ERROR_MESSAGES[code]).toBe(ACCOUNT_ERRORS[code]);
+    }
   });
 });

@@ -13,3 +13,4 @@ export * from './table-board';
 export * from './mini-ads';
 export * from './alcohol';
 export * from './deal';
+export * from './age';

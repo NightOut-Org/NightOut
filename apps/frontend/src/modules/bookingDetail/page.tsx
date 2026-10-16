@@ -6,6 +6,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import { Link, useParams } from 'react-router';
 import { BookingStatusTag } from '@/ui/components/bookingStatusTag';
 import { DepositSummary } from '@/ui/components/depositCard';
+import { EmbersBackdrop } from '@/ui/components/embersBackdrop';
 import { useAuth } from '@/services/auth';
 import { useDemo } from '@/hooks/useDemo';
 import { BOOKING_STATUS, dateTime } from '@/ui/utils/format';
@@ -92,7 +93,9 @@ export function BookingDetailPage() {
   };
 
   return (
-    <div className="mx-auto grid max-w-4xl gap-6 md:grid-cols-[1fr_320px]">
+    <div className="embers-glass relative isolate mx-auto grid max-w-4xl gap-6 md:grid-cols-[1fr_320px]">
+      {/* พื้นหลัง Golden Embers เดียวกับหน้า /community (ธีมมืด) · fixed เลยไม่กินช่อง grid */}
+      <EmbersBackdrop />
       <div className="space-y-6">
         <Card>
           <div className="flex items-start justify-between gap-3">

@@ -21,9 +21,8 @@ export interface AdminViewRows {
   admin_audit_logs: Db.AdminAuditLog;
   admin_bar_promotions: Db.AdminBarPromotion;
   admin_team_members: Db.AdminTeamMember;
-  admin_home_content: Db.AdminHomeContent;
   admin_home_categories: Db.AdminHomeCategory;
-  admin_home_popular: Db.AdminHomePopular;
+  admin_site_nav: Db.AdminSiteNavItem;
   admin_bar_media: Db.AdminBarMedia;
   admin_community_threads: Db.AdminCommunityThread;
   admin_community_comments: Db.AdminCommunityComment;

@@ -1,7 +1,7 @@
 import { EnvelopeSimple, Eye, EyeSlash, Lock } from '@phosphor-icons/react';
 import { App, Button, Form, Input } from 'antd';
 import { useState } from 'react';
-import { Link } from 'react-router';
+import { OAUTH_BIRTHDAY_SCOPE } from '@nightout/utils';
 import { supabase } from '@/services/supabase';
 
 interface LoginValues {
@@ -9,7 +9,7 @@ interface LoginValues {
   password: string;
 }
 
-type Provider = 'google' | 'facebook';
+type Provider = keyof typeof OAUTH_BIRTHDAY_SCOPE;
 
 const GoogleIcon = () => (
   <svg viewBox="0 0 48 48" width="16" height="16" aria-hidden="true">
@@ -27,16 +27,16 @@ const FacebookIcon = () => (
   </svg>
 );
 
-/** ฟอร์มเข้าสู่ระบบใน AuthModal — onDone หลังล็อกอินสำเร็จ · onNavigate ปิด modal ก่อนไปหน้าอื่น */
+/** ฟอร์มเข้าสู่ระบบใน AuthModal — onDone หลังล็อกอินสำเร็จ · onForgot สลับไปลืมรหัสผ่าน · onSwitch สลับไปสมัคร */
 export function AuthLoginForm({
   next,
   onDone,
-  onNavigate,
+  onForgot,
   onSwitch,
 }: {
   next?: string;
   onDone: () => void;
-  onNavigate: () => void;
+  onForgot: () => void;
   onSwitch: () => void;
 }) {
   const { message } = App.useApp();
@@ -60,7 +60,8 @@ export function AuthLoginForm({
     const target = next ?? `${window.location.pathname}${window.location.search}`;
     const { error } = await supabase!.auth.signInWithOAuth({
       provider,
-      options: { redirectTo: `${window.location.origin}${target}` },
+      // ขอสิทธิ์อ่านวันเกิด — ล็อกอินครั้งแรก backend ใช้ยืนยันอายุ 20+ (/signup/social)
+      options: { redirectTo: `${window.location.origin}${target}`, scopes: OAUTH_BIRTHDAY_SCOPE[provider] },
     });
     if (error) message.error('เข้าสู่ระบบไม่สำเร็จ ลองใหม่อีกครั้ง');
   };
@@ -87,13 +88,13 @@ export function AuthLoginForm({
           label={
             <span className="flex w-full items-center justify-between">
               รหัสผ่าน
-              <Link
-                to="/forgot-password"
-                onClick={onNavigate}
-                className="text-xs font-normal !text-white/80 hover:!text-white"
+              <button
+                type="button"
+                onClick={onForgot}
+                className="text-xs font-normal text-white/80 hover:text-white"
               >
                 ลืมรหัสผ่าน ?
-              </Link>
+              </button>
             </span>
           }
           className="!mb-5"
@@ -142,6 +143,10 @@ export function AuthLoginForm({
           Facebook
         </Button>
       </div>
+
+      <p className="mt-3 text-center text-[11px] leading-relaxed text-white/60">
+        สมัครด้วย Google / Facebook ต้องมีวันเกิดในบัญชีและอายุ 20 ปีขึ้นไป
+      </p>
 
       <p className="mt-6 text-center text-xs text-white/80">
         ยังไม่มีบัญชี ?{' '}

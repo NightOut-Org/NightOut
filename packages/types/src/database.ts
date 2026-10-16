@@ -577,12 +577,18 @@ export type PublicTeamMember = Override<
 /** admin_team_members (migration 20261003000100) — ทุกคนรวมที่ซ่อนอยู่ · Backoffice "ทีมงาน" */
 export type AdminTeamMember = Omit<Tables<'team_members'>, 'contacts'> & { contacts: TeamContacts };
 
-/** admin_home_content / admin_home_categories (migration 20261007000100) — เนื้อหาหน้าแรกที่แก้ได้ · Backoffice "หน้าแรก" */
-export type AdminHomeContent = Omit<Tables<'home_content'>, 'id'>;
+/** admin_home_categories (migration 20261007000100) — การ์ดหมวดหน้าแรก · Backoffice /styles ใช้เตือนลิงก์การ์ด (หน้าแรกแก้จาก Backoffice ไม่ได้แล้ว 2026-10-15) */
 export type AdminHomeCategory = Tables<'home_categories'>;
-/** admin_home_popular (migration 20261008000300) — ร้านยอดนิยมที่ปักไว้บนหน้าแรก (รวมร้านที่ไม่ APPROVED แล้ว) */
-export type AdminHomePopular = Pick<Tables<'home_popular_bars'>, 'bar_id' | 'sort_order'> &
-  Pick<Tables<'bars'>, 'name' | 'slug' | 'status'>;
+/** admin_site_nav (migration 20261015000300) — เมนู navbar ของเว็บลูกค้า · Backoffice "เมนูเว็บ (Navbar)" (/home-content) */
+export interface AdminSiteNavItem {
+  key: 'home' | 'search' | 'community' | 'ranking' | 'bookings' | 'about';
+  label: string;
+  desktop_order: number;
+  desktop_visible: boolean;
+  mobile_order: number;
+  mobile_visible: boolean;
+  updated_at: ISODateTime;
+}
 
 /** admin_bar_media (migration 20261009000100) — รูปร้าน 1 แถวต่อร้าน (ทุกสถานะ) · Backoffice "รูปร้าน" · path อยู่ bucket bar-media */
 export interface AdminBarMedia {

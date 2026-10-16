@@ -1,92 +1,19 @@
 import { z } from 'zod';
 
 /**
- * โดเมน site-content — เนื้อหาหน้าแรกที่แอดมินแก้ได้ (ตาราง home_content / home_categories · bucket site-media)
- * Hero (หัวข้อ · คำโปรย · ช่องค้นหา · ภาพพื้น) + การ์ดหมวด "คืนนี้อยากได้ฟีลไหน" 8 ช่องแบบ bento
- * + ร้านยอดนิยมที่แอดมินปักไว้ (ตาราง home_popular_bars · สูงสุด HOME_POPULAR_MAX)
- * Backoffice จัดการที่ /home-content
+ * โดเมน site-content — เนื้อหาหน้าแรก (ตาราง home_content / home_categories / home_popular_bars · อ่านอย่างเดียวผ่าน GET /public/home)
+ * Hero (หัวข้อ · คำโปรย · ช่องค้นหา · ภาพพื้น) + การ์ดหมวด "คืนนี้อยากได้ฟีลไหน" 8 ช่องแบบ bento + ร้านยอดนิยมที่ปักไว้
+ * Backoffice แก้หน้าแรกไม่ได้แล้ว (2026-10-15) — /home-content จัดเมนู navbar (site_nav_items) แทน
  */
 
-/** ช่องของการ์ดหมวดบนกริด bento — ตำแหน่งตายตัว (popular = การ์ดใหญ่ 2×2 · party = กว้าง 2) แก้ได้เฉพาะเนื้อหา */
+/** ช่องของการ์ดหมวดบนกริด bento — ตำแหน่งตายตัว (popular = การ์ดใหญ่ 2×2 · party = กว้าง 2) */
 export const HOME_CATEGORY_SLOTS = ['popular', 'pub', 'food', 'live', 'rooftop', 'chill', 'outdoor', 'party'] as const;
-export const HomeCategorySlot = z.enum(HOME_CATEGORY_SLOTS);
-export type HomeCategorySlot = z.infer<typeof HomeCategorySlot>;
+export type HomeCategorySlot = (typeof HOME_CATEGORY_SLOTS)[number];
 
-const imageUrl = z
-  .string()
-  .trim()
-  .max(500)
-  // http:// ไว้สำหรับ Supabase ในเครื่อง · path ใน public/ ของเว็บ (เช่น /images/categories/x.webp) ก็ได้
-  .regex(/^(https?:\/\/|\/)/, 'ต้องเป็น URL http(s):// หรือ path ที่ขึ้นต้นด้วย /');
-/** ลิงก์ภายในเว็บเท่านั้น เช่น /ranking หรือ /search?style=Rooftop */
-const internalLink = z
-  .string()
-  .trim()
-  .max(300)
-  .regex(/^\/(?!\/)\S*$/, 'ต้องเป็นลิงก์ในเว็บที่ขึ้นต้นด้วย / เช่น /search?category=PUB_BAR');
 const line = (max: number) => z.string().trim().min(1).max(max);
 
-/** Hero + หัวข้อ section (ส่วน `content` ของ PUT /admin/home-page) — ส่งเฉพาะ field ที่แก้ */
-export const UpdateHomeContentBody = z
-  .object({
-    hero_title_lead: line(20).describe('คำหน้าหัวข้อ Hero เช่น "คืนนี้ไป"'),
-    hero_title_highlight: line(20).describe('คำกลางตัวใหญ่สีทอง เช่น "ร้านไหน"'),
-    hero_title_tail: z.string().trim().max(20).describe('คำท้าย เช่น "ดี" (ว่างได้)'),
-    hero_subtitle: z.string().trim().max(160).describe('คำโปรยใต้หัวข้อ'),
-    hero_search_placeholder: line(60).describe('ข้อความในช่องค้นหา'),
-    hero_image_url: imageUrl.nullable().describe('ภาพพื้น Hero · null = ภาพดวงจันทร์ตั้งต้น (มีดาว/ไฟระยิบ)'),
-    categories_eyebrow: z.string().trim().max(40).describe('บรรทัดเล็กเหนือชื่อ section หมวด (ว่างได้)'),
-    categories_title: line(60).describe('ชื่อ section หมวด เช่น "คืนนี้อยากได้ฟีลไหน"'),
-    popular_eyebrow: z.string().trim().max(40).describe('บรรทัดเล็กเหนือชื่อ section ร้านยอดนิยม (ว่างได้)'),
-    popular_title: line(60).describe('ชื่อ section ร้านยอดนิยม เช่น "ร้านยอดนิยม"'),
-  })
-  .partial();
-export type UpdateHomeContentBody = z.infer<typeof UpdateHomeContentBody>;
-
-/** การ์ดหมวด 1 ช่อง (ส่วน `categories[]` ของ PUT /admin/home-page คู่กับ `slot`) — ส่งเฉพาะ field ที่แก้ */
-export const UpdateHomeCategoryBody = z
-  .object({
-    title: line(30).describe('ชื่อหมวดบนการ์ด'),
-    hint: z.string().trim().max(60).describe('คำอธิบายสั้นใต้ชื่อ'),
-    link_to: internalLink.describe('กดการ์ดแล้วไปไหน'),
-    image_url: imageUrl.describe('ภาพพื้นการ์ด'),
-    badge: z.string().trim().max(30).nullable().describe('ป้ายเล็กเหนือชื่อ เช่น "อันดับประจำสัปดาห์" · null = ไม่มี'),
-  })
-  .partial();
-export type UpdateHomeCategoryBody = z.infer<typeof UpdateHomeCategoryBody>;
-
-/** จำนวนร้านในกริดร้านยอดนิยมของหน้าแรก (= จำนวนที่แอดมินปักได้สูงสุด) */
+/** จำนวนร้านในกริดร้านยอดนิยมของหน้าแรก */
 export const HOME_POPULAR_MAX = 8;
-
-/** ร้านยอดนิยม (ส่วน `popular` ของ PUT /admin/home-page) — แทนที่ทั้งรายการตามลำดับ · [] = ไม่ปัก (หน้าแรกเรียงตามคะแนนรีวิวทั้งหมด) */
-export const UpdateHomePopularBody = z.object({
-  bar_ids: z
-    .array(z.string().uuid())
-    .max(HOME_POPULAR_MAX, `เลือกได้ไม่เกิน ${HOME_POPULAR_MAX} ร้าน`)
-    .refine((ids) => new Set(ids).size === ids.length, 'มีร้านซ้ำ')
-    .describe('รหัสร้าน (APPROVED) เรียงตามลำดับที่จะแสดง'),
-});
-export type UpdateHomePopularBody = z.infer<typeof UpdateHomePopularBody>;
-
-/** PUT /admin/home-page — หน้า /home-content บันทึกครั้งเดียว: ส่งเฉพาะส่วนที่แก้ (อย่างน้อย 1 ส่วน) */
-export const SaveHomePageBody = z
-  .object({
-    content: UpdateHomeContentBody.optional().describe('Hero + หัวข้อ section (ไม่ส่ง = ไม่แตะ)'),
-    categories: z
-      .array(UpdateHomeCategoryBody.extend({ slot: HomeCategorySlot }))
-      .max(HOME_CATEGORY_SLOTS.length)
-      .refine((c) => new Set(c.map((x) => x.slot)).size === c.length, 'การ์ดซ้ำกัน')
-      .optional()
-      .describe('เฉพาะการ์ดที่แก้'),
-    popular: UpdateHomePopularBody.optional().describe('ร้านยอดนิยมทั้งรายการ (ไม่ส่ง = ไม่แตะ)'),
-  })
-  .refine((b) => b.content !== undefined || !!b.categories?.length || b.popular !== undefined, 'ไม่มีอะไรให้บันทึก');
-export type SaveHomePageBody = z.infer<typeof SaveHomePageBody>;
-export interface SaveHomePageResult {
-  content_updated: boolean;
-  categories_updated: number;
-  popular_updated: boolean;
-}
 
 export interface HomeContent {
   hero_title_lead: string;
@@ -121,10 +48,57 @@ export interface PublicHomeResult {
   popular_bar_ids: string[];
 }
 
+/**
+ * เมนู navbar ของเว็บลูกค้า (ตาราง site_nav_items · นอก MVP — อนุมัติ 2026-10-15) — key ตายตัว ลิงก์/ไอคอนอยู่ในโค้ดหน้าเว็บ
+ * แก้ได้: ชื่อที่แสดง · ลำดับ · ซ่อน/แสดง แยก 2 ชุด (desktop = navbar แคปซูล · mobile = แถบเมนูล่าง) · "หน้าหลัก" ซ่อนไม่ได้
+ */
+export const SITE_NAV_KEYS = ['home', 'search', 'community', 'ranking', 'bookings', 'about'] as const;
+export const SiteNavKey = z.enum(SITE_NAV_KEYS);
+export type SiteNavKey = z.infer<typeof SiteNavKey>;
+/** เมนูที่ซ่อนไม่ได้ */
+export const SITE_NAV_REQUIRED: SiteNavKey = 'home';
+export const SITE_NAV_LABEL_MAX = 20;
+
+export interface SiteNavItem {
+  key: SiteNavKey;
+  label: string;
+  desktop_order: number;
+  desktop_visible: boolean;
+  mobile_order: number;
+  mobile_visible: boolean;
+}
+
+const isPermutation = (orders: number[]) =>
+  [...orders].sort((a, b) => a - b).every((o, i) => o === i);
+
+/** PUT /admin/site-nav — ส่งครบทุกเมนู (ลำดับแต่ละชุด 0..n-1 ไม่ซ้ำ) */
+export const SaveSiteNavBody = z.object({
+  items: z
+    .array(
+      z.object({
+        key: SiteNavKey,
+        label: line(SITE_NAV_LABEL_MAX).describe('ชื่อเมนูที่แสดง'),
+        desktop_order: z.number().int().min(0).describe('ลำดับบน navbar (0 = ซ้ายสุด)'),
+        desktop_visible: z.boolean().describe('แสดงบน navbar'),
+        mobile_order: z.number().int().min(0).describe('ลำดับบนแถบเมนูล่างของมือถือ (0 = ซ้ายสุด)'),
+        mobile_visible: z.boolean().describe('แสดงบนแถบเมนูล่างของมือถือ'),
+      }),
+    )
+    .length(SITE_NAV_KEYS.length, 'ต้องส่งครบทุกเมนู')
+    .refine((items) => new Set(items.map((i) => i.key)).size === items.length, 'มีเมนูซ้ำ')
+    .refine((items) => isPermutation(items.map((i) => i.desktop_order)), 'ลำดับ navbar ไม่ถูกต้อง')
+    .refine((items) => isPermutation(items.map((i) => i.mobile_order)), 'ลำดับเมนูมือถือไม่ถูกต้อง')
+    .refine(
+      (items) => items.every((i) => i.key !== SITE_NAV_REQUIRED || (i.desktop_visible && i.mobile_visible)),
+      'ซ่อนหน้าหลักไม่ได้',
+    ),
+});
+export type SaveSiteNavBody = z.infer<typeof SaveSiteNavBody>;
+export interface SaveSiteNavResult {
+  /** จำนวนเมนูที่เปลี่ยน */
+  updated: number;
+}
+
 export const SITE_CONTENT_ERRORS = {
-  INVALID_HOME_PAGE: 'ไม่มีอะไรให้บันทึก หรือข้อมูลไม่ถูกต้อง — รีเฟรชหน้าแล้วลองใหม่',
-  HOME_CATEGORY_NOT_FOUND: 'ไม่พบการ์ดหมวดนี้ — รีเฟรชหน้าแล้วลองใหม่',
-  INVALID_HOME_POPULAR: 'เลือกร้านยอดนิยมได้ไม่เกิน 8 ร้าน และห้ามซ้ำ',
-  HOME_POPULAR_BAR_NOT_FOUND: 'มีร้านที่ไม่พบหรือยังไม่อนุมัติ — รีเฟรชหน้าแล้วเลือกใหม่',
-  INVALID_HOME_CONTENT: 'เนื้อหาหน้าแรกไม่ครบหรือยาวเกินไป (รูปต้องเป็น URL · ลิงก์ต้องขึ้นต้นด้วย /)',
+  INVALID_SITE_NAV: 'เมนูไม่ครบ ลำดับซ้ำ ชื่อว่าง/ยาวเกิน 20 ตัวอักษร หรือซ่อนหน้าหลัก — รีเฟรชหน้าแล้วลองใหม่',
 } as const satisfies Record<string, string>;

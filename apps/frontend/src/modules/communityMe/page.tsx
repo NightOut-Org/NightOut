@@ -13,6 +13,7 @@ import { CommunityThreadRow } from '@/ui/components/communityThreadRow';
 import { PageHeader } from '@/ui/components/pageHeader';
 import { timeAgo } from '@/ui/utils/format';
 import { deleteDraft, setPin, useMyDrafts, useMyThreads, useThreadTitle } from './api';
+import { EmbersBackdrop } from '@/ui/components/embersBackdrop';
 
 type Tab = CommunityScope | 'drafts';
 const TABS: { key: Tab; label: string; empty: string }[] = [
@@ -35,7 +36,9 @@ export function CommunityMePage() {
   const { data: drafts = [] } = useMyDrafts();
 
   return (
-    <div className="mx-auto max-w-3xl">
+    <div className="embers-glass relative isolate mx-auto max-w-3xl">
+      {/* พื้นหลัง Golden Embers เดียวกับหน้า /community (ธีมมืด) */}
+      <EmbersBackdrop />
       <PageHeader
         title="กระทู้ของฉัน"
         extra={

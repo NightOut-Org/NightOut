@@ -6,6 +6,7 @@ import { ApiError } from '@nightout/utils/rest';
 import { useAdminAuth } from '@/services/adminAuth';
 import { supabase } from '@/services/supabase';
 import { fetchMyProfile } from './api';
+import { AuroraBackground } from '@/ui/components/AuroraBackground';
 import { StaffPass } from './components/staffPass';
 
 type Step = 'password' | 'verify' | 'enroll';
@@ -112,7 +113,9 @@ export function LoginPage() {
       } catch (e) {
         await supabase.auth.signOut();
         const detail = e instanceof ApiError ? `${e.status} · ${e.code}` : (e as Error).message;
-        setError(`ล็อกอินผ่านแล้ว แต่อ่านข้อมูลบัญชีจากเซิร์ฟเวอร์ไม่ได้ (${detail}) — ไม่ใช่เรื่องสิทธิ์ ให้ตรวจ API / Supabase`);
+        setError(
+          `ล็อกอินผ่านแล้ว แต่อ่านข้อมูลบัญชีจากเซิร์ฟเวอร์ไม่ได้ (${detail}) — ไม่ใช่เรื่องสิทธิ์ ให้ตรวจ API / Supabase`,
+        );
         return;
       }
       if (!profile.can_enter_backoffice) {
@@ -184,10 +187,12 @@ export function LoginPage() {
   );
 
   return (
-    <div className="relative grid min-h-dvh place-items-center overflow-hidden bg-background p-5">
+    <div className="relative isolate grid min-h-dvh place-items-center overflow-hidden bg-background p-5">
+      <AuroraBackground />
+      {/* light mode ไม่มี Aurora → ใช้แสงม่วงมุมจอเดิม */}
       <div
         aria-hidden
-        className="pointer-events-none absolute -right-[200px] -bottom-[300px] size-[700px] rounded-full bg-[radial-gradient(circle,rgba(167,56,245,.22),transparent_65%)]"
+        className="pointer-events-none absolute -right-[200px] -bottom-[300px] size-[700px] rounded-full bg-[radial-gradient(circle,rgba(167,56,245,.22),transparent_65%)] dark:hidden"
       />
       <StaffPass
         kicker={step === 'password' ? 'STAFF ONLY' : 'CHECKED · 1/2'}

@@ -170,7 +170,7 @@ export function MerchantLayout() {
         <span className="inline-flex items-center rounded-full border border-border px-2.5 py-1 text-xs">
           <CrowdBadge crowd={bar.crowd} updatedAt={bar.crowdUpdatedAt} />
         </span>
-        <Link to="/notifications" aria-label="การแจ้งเตือน" className="grid size-10 place-items-center text-xl text-text">
+        <Link to="/notifications?view=merchant" aria-label="การแจ้งเตือน" className="grid size-10 place-items-center text-xl text-text">
           <Bell />
         </Link>
       </header>

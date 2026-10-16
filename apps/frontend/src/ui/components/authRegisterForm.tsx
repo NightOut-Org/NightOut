@@ -3,6 +3,7 @@ import { App, Button, Checkbox, DatePicker, Form, Input } from 'antd';
 import dayjs, { type Dayjs } from 'dayjs';
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router';
+import { PRIVACY_VERSION, TERMS_VERSION } from '@nightout/utils';
 import { supabase } from '@/services/supabase';
 
 interface RegisterValues {
@@ -58,8 +59,8 @@ export function AuthRegisterForm({
           data: {
             display_name: v.displayName,
             birthdate: v.birthdate.format('YYYY-MM-DD'),
-            terms_version: 'v1',
-            privacy_version: 'v1',
+            terms_version: TERMS_VERSION,
+            privacy_version: PRIVACY_VERSION,
           },
         },
       });

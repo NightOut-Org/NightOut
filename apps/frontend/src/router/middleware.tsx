@@ -1,6 +1,6 @@
 import type { UserRole } from '@nightout/types';
 import { Button, Result, Spin } from 'antd';
-import { Link, Navigate, Outlet, useLocation } from 'react-router';
+import { Link, Navigate, Outlet, useLocation, useOutletContext } from 'react-router';
 import { useAuth } from '@/services/auth';
 import { getBar, type Bar } from '@/services/data';
 
@@ -40,6 +40,8 @@ export function RequireRole({ roles }: { roles: UserRole[] }) {
  */
 export function RequireBarRole({ roles }: { roles: NonNullable<Bar['staffRole']>[] }) {
   const { user } = useAuth();
+  // ส่ง context ของ <MerchantLayout> (ร้านปัจจุบัน) ต่อให้หน้าข้างใน — ไม่งั้น useMerchantBar() ได้ undefined
+  const bar = useOutletContext<Bar>();
   const role = user?.barId ? getBar(user.barId)?.staffRole : undefined;
   if (!role || !roles.includes(role)) {
     return (
@@ -55,5 +57,5 @@ export function RequireBarRole({ roles }: { roles: NonNullable<Bar['staffRole']>
       />
     );
   }
-  return <Outlet />;
+  return <Outlet context={bar} />;
 }

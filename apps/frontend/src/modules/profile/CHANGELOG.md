@@ -1,5 +1,37 @@
 # CHANGELOG — frontend/modules/profile
 
+## 2026-10-16 — ปุ่มบัญชียังล้น 1–2 เฟรมตอน navbar หด
+- ดูจากวิดีโอทีละเฟรม: navbar หดแล้ว (เฟรม 1.238s) แต่ chip ยังเต็มอยู่ 1–2 เฟรมก่อนย่อ (1.272s) — เพราะเดิมตัดสินใจย่อใน callback ของ ResizeObserver แล้ว React render ทีหลัง browser paint
+- แก้ `hooks/useCompactOnOverflow.ts`: รับ `layoutKey` (navbar ส่ง `scrolled`) → ตรวจใน `useLayoutEffect` ของ commit เดียวกับที่ navbar หด = ย่อก่อน paint · ทาง ResizeObserver (ย่อหน้าต่าง/ฟอนต์โหลด) ใช้ `flushSync` ให้ย่อก่อน paint เช่นกัน
+- ไฟล์: `hooks/useCompactOnOverflow.ts` · `ui/components/navbar.tsx`
+
+## 2026-10-16 — ปุ่มบัญชีบน navbar ล้นตอนเลื่อนแล้ว island หด
+- สาเหตุ: เลื่อนแล้ว island หดเหลือ `max-w-3xl` (766px) แต่โลโก้ + เมนู 6 อัน + ธีม + กระดิ่ง + chip เต็ม ต้องการ ~887px → chip ล้นขอบขวา (วัดจริงในเบราว์เซอร์ที่ 1280px · ยังไม่เลื่อน 894px พอดี)
+- แก้: hook ใหม่ `hooks/useCompactOnOverflow.ts` วัด scrollWidth/clientWidth ของ island (ResizeObserver บน island + ลูก) → ไม่พอ = chip เหลือรูป + จุดไอคอนชั้นบัญชี (แบบมือถือ) · จำความกว้างแบบเต็มไว้ กลับเป็นแบบเต็มเมื่อกว้างพอเท่านั้น (ไม่สลับไปมา) · วัดใหม่เมื่อชื่อเมนู/ชื่อผู้ใช้/ชื่อชั้นเปลี่ยน · วัดจาก layout ไม่ใช่ getBoundingClientRect (ไม่เพี้ยนตอน motion layout animation)
+- ครอบคลุมเคสอื่นด้วย: จอกว้างปานกลาง (768–1000px) ที่ยังไม่เลื่อน · ชื่อเมนูที่แอดมินตั้งยาวที่ `/home-content` · ชื่อผู้ใช้ยาว · บัญชีร้านที่เห็น "ร้านของฉัน" · หน้า Auth (`minimal` ไม่มี chip — ไม่กระทบ) · มือถือ (< md) เหมือนเดิม
+- ไฟล์: `hooks/useCompactOnOverflow.ts` (ใหม่) · `ui/components/navbar.tsx` · `ui/components/accountMenu.tsx` (prop `compact`)
+
+## 2026-10-16 — แก้แถบเลื่อนเล็ก ▲○▼ ที่แถวแท็บ + ระยะกระดิ่งกับปุ่มบัญชี
+- แถวแท็บ `overflow-x-auto` + ปุ่มแท็บ `-mb-px` ล้นแนวตั้ง 1px → Windows โชว์ scrollbar แนวตั้งจิ๋ว · ตอนนี้ `overflow-y-hidden` + ซ่อน scrollbar (ยังปัดแท็บแนวนอนได้บนจอแคบ) · เส้นใต้แถววาดด้วย inset shadow แทน border เส้นทองของแท็บที่เลือกจึงไม่ถูกตัด
+- navbar: ปุ่มบัญชีเว้นจากกระดิ่ง `ml-3` (เดิม `ml-1`) ตัวเลขแจ้งเตือนจึงไม่ทับ chip — `ui/components/accountMenu.tsx`
+- ไฟล์: `page.tsx` · `ui/components/accountMenu.tsx`
+
+## 2026-10-16 — หน้าโปรไฟล์ใหม่ตามดีไซน์ 2a + รูปโปรไฟล์ (นอก MVP — อนุมัติ 2026-10-16)
+- หัวโปรไฟล์: รูปใหญ่ 136px ขอบสีชั้นบัญชี + ปุ่ม "แก้ไขรูป" (อัปโหลดรูปใหม่ / ลบรูป — ถามยืนยันก่อน) · ชื่อ Playfair · ป้ายชั้นบัญชีทึบ + ขอบเขต (ร้าน · บทบาท / ทีม NightOut) · แสงเรืองสีชั้นบัญชีหลังหัว (พื้น Molten เดิมยังอยู่)
+- รูป: ตรวจชนิด JPG/PNG/WebP + ≤ 5MB → ครอปกลางย่อ 400×400 WebP (canvas) → โชว์รูปตัวอย่างทันที + spinner → อัปโหลด bucket `avatars` → `PUT /me/avatar` → `reload()` (navbar อัปเดต) · พลาด = กลับรูปเดิม + แจ้งเหตุผล · เปลี่ยนรูป cross-fade 0.25s (เคารพ reduced motion)
+- แท็บ sync กับ `?tab=`: ข้อมูลและความชอบ (ค่าเริ่มต้น) · บัญชีและสิทธิ์ · ช่องทางแจ้งเตือน (การ์ด LINE เดิม ข้อความเดิม)
+- "ข้อมูลและความชอบ": การ์ดพื้นทองหรู โหมดดู (ชื่อ · งบต่อหัว · ไปกันปกติ · ย่าน · สไตล์ · ค่าว่าง = "ยังไม่ได้ระบุ เพิ่ม") ↔ โหมดแก้ (ฟอร์มเดิม) · บันทึก = กลับโหมดดู · มีการแก้ค้าง = กันออกจากหน้า (`useUnsavedGuard`) · โหมดสว่างลดความเข้มทองลง
+- "บัญชีและสิทธิ์": แสดงเฉพาะชั้นของตัวเอง (ไฮไลต์ + เครื่องหมายถูก) และชั้นที่ต่ำกว่า · ไม่โชว์ชั้นที่สูงกว่า
+- เอาออก: PageHeader "โปรไฟล์" · การ์ดหัวเดิม (อีเมล + ปุ่มไปหน้าร้าน — ปุ่มลัดย้ายไปเมนูบัญชีบน navbar) · ConfigProvider การ์ดโปร่ง · มือถือมีปุ่มออกจากระบบเต็มกว้างท้ายหน้า
+- ไฟล์: `page.tsx` · `api.ts` (`setAvatar` · `removeAvatar`) · `components/{profileHeader,preferencesCard,preferencesView,preferencesForm,roleList}.tsx` · `components/preferencesCard.css` · `utils/resizeAvatar.ts` · ของกลาง: `configs/roles.ts` · `ui/components/{accountMenu,userAvatar}.tsx` · `ui/components/navbar.tsx` (ปุ่มบัญชีแบบ chip) · `services/auth.tsx` (`avatarUrl`) · `services/api/storage.ts` (`uploadAvatar`) · `styles/index.css` (`--role-staff`)
+- endpoint: `PUT /me/avatar` · `DELETE /me/avatar` · migration `20261016000100_account_avatar`
+
+## 2026-10-15 — พื้นหลังเคลื่อนไหว Molten Gold (เฉพาะธีมมืด)
+- เพิ่ม `<MoltenBackground />` (WebGL ล้วน · ริ้วทองเหลวเบนตามเมาส์ · ไม่มีแสงเรืองตามเมาส์ (ตัดออกตามที่ขอ) · ไม่มี click effect · render ครึ่งความละเอียด · `prefers-reduced-motion` = ภาพนิ่ง · ซ่อนแท็บ = หยุด · ธีมสว่าง = ไม่แสดง) ใส่เฉพาะหน้านี้ ห่อด้วย `fixed inset-0 -z-10` ให้อยู่หลังเนื้อหาและ footer
+- route `/profile` มี `handle: { backdrop: true }` → `MainLayout` ใส่ `isolate` (แบบเดียวกับหน้าแรก) ให้พื้นหลัง -z-10 อยู่เหนือพื้นทึบของ Layout · header / BottomIsland เหมือนเดิม
+- ธีมมืด: การ์ดโปร่งเล็กน้อย `colorBgContainer` = `rgba(23,21,32,0.82)` ผ่าน `ConfigProvider` ของหน้า (ไม่แตะ `colorBgElevated` → dropdown ของ Select ยังทึบ · ไม่ใช้ backdrop-filter) · ข้อความ `text-muted` บนจุดทองสว่างสุด contrast ≈ 4.6:1 (AA)
+- ไฟล์: `page.tsx` · `ui/components/MoltenBackground.tsx` (ใหม่) · `layouts/main.tsx` · `router/index.tsx`
+
 ## 2026-10-10 — รองรับมือถือ (responsive)
 - การ์ดหัวโปรไฟล์: ชื่อ/อีเมลไม่ล้นจอแคบ (`min-w-0` + `truncate` / `break-all`) · ปุ่ม "ออกจากระบบ" ลงบรรทัดใหม่เต็มความกว้างบนมือถือ
 - ปุ่ม "ไปหน้าร้านของฉัน" / "บันทึก" / "เชื่อม LINE" เต็มความกว้างบนมือถือ (กดง่าย) · ระยะห่างการ์ดแคบลงบนจอเล็ก

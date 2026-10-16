@@ -32,3 +32,10 @@ export const banUserAction = (userId: string, body: C.BanUserBody): AdminActionI
 
 /** POST /admin/users/:id/unban — ปลดแบนพร้อมเหตุผล (บัญชี + ทุกเบอร์ที่เคยใช้) · ข้อยกเว้นที่บันทึกทันที */
 export const unbanUserAction = (userId: string, body: C.UnbanUserBody): AdminActionInput => ({ method: 'POST', path: `users/${userId}/unban`, body });
+
+/** POST /admin/users/:id/avatar/remove — ลบรูปโปรไฟล์ไม่เหมาะสม พร้อมเหตุผล (แจ้งเจ้าของบัญชี) · ข้อยกเว้นที่บันทึกทันที */
+export const removeUserAvatarAction = (userId: string, body: C.RemoveUserAvatarBody): AdminActionInput => ({
+  method: 'POST',
+  path: `users/${userId}/avatar/remove`,
+  body,
+});

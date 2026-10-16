@@ -1,5 +1,6 @@
 import type * as C from '@nightout/contracts';
 import { Rest } from '@nightout/utils/rest';
+import { uploadAvatar } from '@/services/api/storage';
 import { currentProfile, setProfileName } from '@/services/sync';
 
 /** API ของหน้าโปรไฟล์ · backend: domains/account */
@@ -15,3 +16,12 @@ export async function updateProfile(patch: C.UpdateProfileBody) {
     throw e;
   }
 }
+
+/** อัปโหลดรูปเข้า bucket avatars แล้ว PUT /me/avatar — DB ตรวจ path + ลบรูปเดิมให้ */
+export async function setAvatar(userId: string, file: Blob) {
+  const path = await uploadAvatar(userId, file);
+  return Rest.put<C.AvatarResult>('/me/avatar', { path } satisfies C.SetAvatarBody);
+}
+
+/** DELETE /me/avatar — กลับไปใช้ตัวย่อชื่อ */
+export const removeAvatar = () => Rest.delete<C.AvatarResult>('/me/avatar');

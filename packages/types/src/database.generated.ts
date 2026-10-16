@@ -8535,6 +8535,36 @@ export type Database = {
           },
         ]
       }
+      site_nav_items: {
+        Row: {
+          desktop_order: number
+          desktop_visible: boolean
+          key: string
+          label: string
+          mobile_order: number
+          mobile_visible: boolean
+          updated_at: string
+        }
+        Insert: {
+          desktop_order: number
+          desktop_visible?: boolean
+          key: string
+          label: string
+          mobile_order: number
+          mobile_visible?: boolean
+          updated_at?: string
+        }
+        Update: {
+          desktop_order?: number
+          desktop_visible?: boolean
+          key?: string
+          label?: string
+          mobile_order?: number
+          mobile_visible?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       styles: {
         Row: {
           active: boolean
@@ -9375,6 +9405,7 @@ export type Database = {
           age_verified: boolean
           age_verified_at: string | null
           anonymized_at: string | null
+          avatar_path: string | null
           avatar_url: string | null
           ban_reason: string | null
           banned_at: string | null
@@ -9397,6 +9428,7 @@ export type Database = {
           age_verified?: boolean
           age_verified_at?: string | null
           anonymized_at?: string | null
+          avatar_path?: string | null
           avatar_url?: string | null
           ban_reason?: string | null
           banned_at?: string | null
@@ -9419,6 +9451,7 @@ export type Database = {
           age_verified?: boolean
           age_verified_at?: string | null
           anonymized_at?: string | null
+          avatar_path?: string | null
           avatar_url?: string | null
           ban_reason?: string | null
           banned_at?: string | null
@@ -9975,150 +10008,6 @@ export type Database = {
         }
         Relationships: []
       }
-      admin_home_content: {
-        Row: {
-          categories_eyebrow: string | null
-          categories_title: string | null
-          hero_image_url: string | null
-          hero_search_placeholder: string | null
-          hero_subtitle: string | null
-          hero_title_highlight: string | null
-          hero_title_lead: string | null
-          hero_title_tail: string | null
-          popular_eyebrow: string | null
-          popular_title: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          categories_eyebrow?: string | null
-          categories_title?: string | null
-          hero_image_url?: string | null
-          hero_search_placeholder?: string | null
-          hero_subtitle?: string | null
-          hero_title_highlight?: string | null
-          hero_title_lead?: string | null
-          hero_title_tail?: string | null
-          popular_eyebrow?: string | null
-          popular_title?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          categories_eyebrow?: string | null
-          categories_title?: string | null
-          hero_image_url?: string | null
-          hero_search_placeholder?: string | null
-          hero_subtitle?: string | null
-          hero_title_highlight?: string | null
-          hero_title_lead?: string | null
-          hero_title_tail?: string | null
-          popular_eyebrow?: string | null
-          popular_title?: string | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      admin_home_popular: {
-        Row: {
-          bar_id: string | null
-          name: string | null
-          slug: string | null
-          sort_order: number | null
-          status: Database["public"]["Enums"]["bar_status"] | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "home_popular_bars_bar_id_fkey"
-            columns: ["bar_id"]
-            isOneToOne: true
-            referencedRelation: "admin_bar_blacklist"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "home_popular_bars_bar_id_fkey"
-            columns: ["bar_id"]
-            isOneToOne: true
-            referencedRelation: "admin_bar_details"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "home_popular_bars_bar_id_fkey"
-            columns: ["bar_id"]
-            isOneToOne: true
-            referencedRelation: "admin_bar_locations"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "home_popular_bars_bar_id_fkey"
-            columns: ["bar_id"]
-            isOneToOne: true
-            referencedRelation: "admin_bar_media"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "home_popular_bars_bar_id_fkey"
-            columns: ["bar_id"]
-            isOneToOne: true
-            referencedRelation: "admin_bar_safety"
-            referencedColumns: ["bar_id"]
-          },
-          {
-            foreignKeyName: "home_popular_bars_bar_id_fkey"
-            columns: ["bar_id"]
-            isOneToOne: true
-            referencedRelation: "admin_bars"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "home_popular_bars_bar_id_fkey"
-            columns: ["bar_id"]
-            isOneToOne: true
-            referencedRelation: "admin_ranking"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "home_popular_bars_bar_id_fkey"
-            columns: ["bar_id"]
-            isOneToOne: true
-            referencedRelation: "bar_cards"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "home_popular_bars_bar_id_fkey"
-            columns: ["bar_id"]
-            isOneToOne: true
-            referencedRelation: "bar_detail"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "home_popular_bars_bar_id_fkey"
-            columns: ["bar_id"]
-            isOneToOne: true
-            referencedRelation: "bars"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "home_popular_bars_bar_id_fkey"
-            columns: ["bar_id"]
-            isOneToOne: true
-            referencedRelation: "my_bar_detail"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "home_popular_bars_bar_id_fkey"
-            columns: ["bar_id"]
-            isOneToOne: true
-            referencedRelation: "my_bars"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "home_popular_bars_bar_id_fkey"
-            columns: ["bar_id"]
-            isOneToOne: true
-            referencedRelation: "my_favorites"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       admin_mini_ads: {
         Row: {
           active: boolean | null
@@ -10529,6 +10418,36 @@ export type Database = {
           },
         ]
       }
+      admin_site_nav: {
+        Row: {
+          desktop_order: number | null
+          desktop_visible: boolean | null
+          key: string | null
+          label: string | null
+          mobile_order: number | null
+          mobile_visible: boolean | null
+          updated_at: string | null
+        }
+        Insert: {
+          desktop_order?: number | null
+          desktop_visible?: boolean | null
+          key?: string | null
+          label?: string | null
+          mobile_order?: number | null
+          mobile_visible?: boolean | null
+          updated_at?: string | null
+        }
+        Update: {
+          desktop_order?: number | null
+          desktop_visible?: boolean | null
+          key?: string | null
+          label?: string | null
+          mobile_order?: number | null
+          mobile_visible?: boolean | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       admin_styles: {
         Row: {
           active: boolean | null
@@ -10615,6 +10534,7 @@ export type Database = {
       }
       admin_users: {
         Row: {
+          avatar_url: string | null
           ban_reason: string | null
           banned_at: string | null
           banned_phones: Json | null
@@ -10629,6 +10549,7 @@ export type Database = {
           role: Database["public"]["Enums"]["user_role"] | null
         }
         Insert: {
+          avatar_url?: string | null
           ban_reason?: string | null
           banned_at?: string | null
           banned_phones?: never
@@ -10643,6 +10564,7 @@ export type Database = {
           role?: Database["public"]["Enums"]["user_role"] | null
         }
         Update: {
+          avatar_url?: string | null
           ban_reason?: string | null
           banned_at?: string | null
           banned_phones?: never
@@ -11418,6 +11340,33 @@ export type Database = {
           },
         ]
       }
+      public_site_nav: {
+        Row: {
+          desktop_order: number | null
+          desktop_visible: boolean | null
+          key: string | null
+          label: string | null
+          mobile_order: number | null
+          mobile_visible: boolean | null
+        }
+        Insert: {
+          desktop_order?: number | null
+          desktop_visible?: boolean | null
+          key?: string | null
+          label?: string | null
+          mobile_order?: number | null
+          mobile_visible?: boolean | null
+        }
+        Update: {
+          desktop_order?: number | null
+          desktop_visible?: boolean | null
+          key?: string | null
+          label?: string | null
+          mobile_order?: number | null
+          mobile_visible?: boolean | null
+        }
+        Relationships: []
+      }
       public_team: {
         Row: {
           bio: string | null
@@ -11567,6 +11516,10 @@ export type Database = {
         Returns: Json
       }
       admin_recompute_ranking: { Args: { p_actor: string }; Returns: Json }
+      admin_remove_user_avatar: {
+        Args: { p_actor: string; p_reason: string; p_user: string }
+        Returns: Json
+      }
       admin_reorder_team_members: {
         Args: { p_actor: string; p_ids: string[] }
         Returns: Json
@@ -11619,29 +11572,12 @@ export type Database = {
         }
         Returns: Json
       }
-      admin_save_home_category: {
-        Args: { p: Json; p_actor: string; p_slot: string }
-        Returns: Json
-      }
-      admin_save_home_content: {
-        Args: { p: Json; p_actor: string }
-        Returns: Json
-      }
-      admin_save_home_page: {
-        Args: {
-          p_actor: string
-          p_categories: Json
-          p_content: Json
-          p_popular: string[]
-        }
-        Returns: Json
-      }
-      admin_save_home_popular: {
-        Args: { p_actor: string; p_bar_ids: string[] }
-        Returns: Json
-      }
       admin_save_mini_ad: {
         Args: { p: Json; p_actor: string; p_id: string }
+        Returns: Json
+      }
+      admin_save_site_nav: {
+        Args: { p_actor: string; p_items: Json }
         Returns: Json
       }
       admin_save_styles: {
@@ -11747,6 +11683,7 @@ export type Database = {
           age_verified: boolean
           age_verified_at: string | null
           anonymized_at: string | null
+          avatar_path: string | null
           avatar_url: string | null
           ban_reason: string | null
           banned_at: string | null
@@ -11880,6 +11817,17 @@ export type Database = {
         }
         Returns: Json
       }
+      app_complete_oauth_signup: {
+        Args: {
+          p_actor: string
+          p_birthdate: string
+          p_display_name: string
+          p_method: Database["public"]["Enums"]["age_verification_method"]
+          p_privacy_version: string
+          p_terms_version: string
+        }
+        Returns: Json
+      }
       app_create_booking: {
         Args: {
           p_actor: string
@@ -11905,6 +11853,18 @@ export type Database = {
           p_zone: string
         }
         Returns: Json
+      }
+      app_create_customer_profile: {
+        Args: {
+          p_birthdate: string
+          p_display_name: string
+          p_email: string
+          p_id: string
+          p_method: Database["public"]["Enums"]["age_verification_method"]
+          p_privacy_version: string
+          p_terms_version: string
+        }
+        Returns: undefined
       }
       app_delete_account: { Args: { p_actor: string }; Returns: Json }
       app_extend_booking: {
@@ -11994,6 +11954,7 @@ export type Database = {
         }
         Returns: Json
       }
+      app_remove_avatar: { Args: { p_actor: string }; Returns: Json }
       app_remove_staff: {
         Args: { p_actor: string; p_bar: string; p_user: string }
         Returns: Json
@@ -12041,6 +12002,10 @@ export type Database = {
           p_payout: Json
           p_settings: Json
         }
+        Returns: Json
+      }
+      app_set_avatar: {
+        Args: { p_actor: string; p_path: string; p_url: string }
         Returns: Json
       }
       app_set_bar_media: {
@@ -12411,15 +12376,6 @@ export type Database = {
           zone_name: string
         }[]
       }
-      home_category_check: {
-        Args: { r: Database["public"]["Tables"]["home_categories"]["Row"] }
-        Returns: undefined
-      }
-      home_content_check: {
-        Args: { r: Database["public"]["Tables"]["home_content"]["Row"] }
-        Returns: undefined
-      }
-      home_image_ok: { Args: { u: string }; Returns: boolean }
       is_admin: { Args: never; Returns: boolean }
       is_bar_manager: { Args: { p_bar: string }; Returns: boolean }
       is_bar_member: { Args: { p_bar: string }; Returns: boolean }
@@ -12644,7 +12600,12 @@ export type Database = {
       }
     }
     Enums: {
-      age_verification_method: "SELF_DECLARED" | "ID_CHECK_AT_VENUE" | "EKYC"
+      age_verification_method:
+        | "SELF_DECLARED"
+        | "ID_CHECK_AT_VENUE"
+        | "EKYC"
+        | "GOOGLE"
+        | "FACEBOOK"
       bar_category: "PUB_BAR" | "CHILL" | "RESTAURANT"
       bar_staff_role: "OWNER" | "MANAGER" | "STAFF"
       bar_status:
@@ -12859,7 +12820,13 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      age_verification_method: ["SELF_DECLARED", "ID_CHECK_AT_VENUE", "EKYC"],
+      age_verification_method: [
+        "SELF_DECLARED",
+        "ID_CHECK_AT_VENUE",
+        "EKYC",
+        "GOOGLE",
+        "FACEBOOK",
+      ],
       bar_category: ["PUB_BAR", "CHILL", "RESTAURANT"],
       bar_staff_role: ["OWNER", "MANAGER", "STAFF"],
       bar_status: [

@@ -1,5 +1,16 @@
 # site-content — ประวัติการแก้ไข
 
+## 2026-10-15 — เมนู navbar ของเว็บลูกค้า
+- endpoint ใหม่ `GET /public/site-nav` (view `public_site_nav`) และ `PUT /admin/site-nav` (rpc `admin_save_site_nav`) — แอดมินจัดชื่อ / ลำดับ / ซ่อน-แสดง แยกคอมพิวเตอร์กับมือถือ · หน้าหลักซ่อนไม่ได้ · audit `site_nav.update`
+- migration `20261015000300_site_content_nav` (ตาราง `site_nav_items` + view `admin_site_nav`)
+- ไฟล์: `site-content.public.controller.ts` · `site-content.admin.controller.ts` · `site-content.dto.ts` (`SaveSiteNavDto`)
+- เอา `PUT /admin/home-page` (`SaveHomePageDto`) ออก — Backoffice แก้หน้าแรกไม่ได้แล้ว · migration `20261015000400_site_content_drop_home_page_writes` drop rpc `admin_save_home_page` / `_content` / `_category` / `_popular` + ตัวตรวจค่า + view `admin_home_content` / `admin_home_popular` · `GET /public/home` และตาราง home_* ยังอยู่
+
+## 2026-10-14 — เปลี่ยนชื่อ NightList ที่ค้างในข้อมูลเป็น NightOut
+- ชื่อบัญชีใต้ QR PromptPay ยังขึ้น "NightList Co., Ltd." เพราะ migration เปลี่ยนชื่อแบรนด์ (`…20261005000100`) แก้แค่โค้ด ไม่ได้แก้ข้อมูลในตาราง
+- migration `20261014000200_site_content_rename_nightout_data`: แทน NightList → NightOut ใน `platform_settings` (`deposit_promptpay` / `promotion_promptpay`) · `bars.perks` ร้านเดโม · `bar_promotions.description` · `notifications.title/body` เก่า (เฉพาะแถวที่มีคำนี้ · รันซ้ำได้)
+- ไฟล์: `supabase/migrations/20261014000200_site_content_rename_nightout_data.sql`
+
 ## 2026-10-12 — บันทึกหน้าแรกครั้งเดียว
 - ใหม่ `PUT /admin/home-page` `{ content?, categories?, popular? }` (`admin_save_home_page`) · ลบ `PATCH /admin/home-content` · `PATCH /admin/home-categories/:slot` · `PUT /admin/home-popular`
 - migration `20261012000600_site_content_save_home_page` · ไฟล์: `site-content.admin.controller.ts` · `site-content.dto.ts` (`SaveHomePageDto`) · เทสต์ `test/app.test.ts`

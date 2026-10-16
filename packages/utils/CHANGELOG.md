@@ -1,5 +1,8 @@
 # CHANGELOG — @nightout/utils
 
+## 2026-10-15 — อายุ 20+ จากวันเกิดของ Google / Facebook
+- `age.ts` ใหม่: `googleBirthdate()` (เลือกวันเกิดจากบัญชีก่อนโปรไฟล์ · ต้องครบ วัน/เดือน/ปี) · `facebookBirthdate()` (`MM/DD/YYYY` เท่านั้น) · `isAtLeastAge()` (วันตัดตรง DB) · `OAUTH_BIRTHDAY_SCOPE` · `TERMS_VERSION` / `PRIVACY_VERSION` + เทสต์ `age.test.ts`
+
 ## 2026-10-13 — ทีมร้านกดปลดโต๊ะเอง (คอมเมนต์ #76)
 - `src/booking-status.ts`: `CONFIRMED → NO_SHOW` ทำได้โดย `SYSTEM` + `MERCHANT` + `STAFF` (ทีมร้านทุกบทบาทกด "ปลดโต๊ะ (Forfeited)" เองได้เมื่อเลยเวลาเก็บโต๊ะ) · ลูกค้า/แอดมินยังทำไม่ได้
 - `src/booking-time.ts`: ใหม่ `canTeamForfeit({ status, autoCancelAt }, now)` — CONFIRMED และเลย `auto_cancel_at` แล้ว (ตรงกับ `app_team_forfeit_booking`)

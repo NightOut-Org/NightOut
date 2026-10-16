@@ -2,7 +2,6 @@ import { PageContainer } from '@ant-design/pro-components';
 import { ArrowDown, ArrowUp, Plus, X } from '@phosphor-icons/react';
 import { STYLE_ICONS, type SaveStylesResult } from '@nightout/contracts';
 import { Alert, Button, Input, Select, Space, Switch, Table, Tag, Tooltip } from 'antd';
-import { Link } from 'react-router';
 import { useUnsavedGuard } from '@/hooks/useUnsavedGuard';
 import { useAdminAction } from '@/services/adminData';
 import { LoadError } from '@/ui/components/LoadError';
@@ -82,11 +81,10 @@ export function StylesPage() {
           title="การ์ดหมวดหน้าแรกลิงก์ด้วยชื่อสไตล์เดิม"
           description={
             <>
-              แก้ลิงก์ที่หน้า "หน้าแรก" หลังบันทึก ไม่อย่างนั้นการ์ดจะพาไปหน้าค้นหาที่ว่างเปล่า:{' '}
+              บันทึกแล้วการ์ดจะพาไปหน้าค้นหาที่ว่างเปล่า — Backoffice แก้ลิงก์การ์ดหมวดไม่ได้แล้ว แจ้งทีมพัฒนาให้แก้ลิงก์ก่อน:{' '}
               {draft.affected.map((c) => c.title).join(', ')}
             </>
           }
-          action={<Link to="/home-content">ไปหน้าแรก</Link>}
         />
       )}
       <Table<StyleRow>
