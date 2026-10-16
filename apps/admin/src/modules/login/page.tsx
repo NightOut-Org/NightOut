@@ -93,7 +93,12 @@ export function LoginPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [auth.loading, auth.session, auth.isAdmin, auth.aal]);
 
-  if (auth.loading) return <Spin fullscreen />;
+  // มี session แอดมินอยู่แล้ว (ล็อกอินจากหน้าบ้าน / รีเฟรช) → effect ด้านบนกำลังพาไปขั้น MFA ไม่ต้องโชว์ฟอร์มรหัสผ่านคั่น
+  // (ระหว่างกดเข้าสู่ระบบเอง = busy → คงฟอร์มไว้ · เริ่ม MFA ไม่สำเร็จ = มี error → กลับมาที่ฟอร์ม)
+  const resumingMfa =
+    step === 'password' && !busy && !error && !!auth.session && auth.isAdmin && auth.aal === 'aal1';
+
+  if (auth.loading || resumingMfa) return <Spin fullscreen />;
   if (auth.canEnter) return <Navigate to="/" replace />;
 
   const onPassword = async (v: { email: string; password: string }) => {

@@ -1,5 +1,9 @@
 # CHANGELOG — admin/modules/login
 
+## 2026-10-17 — เข้าจากหน้าบ้านแล้วไปขั้น MFA ทันที
+- ใช้ session Supabase ร่วมกับหน้าบ้าน (`services/supabase.ts` เลิกใช้ `storageKey` แยก · dev เปิดผ่าน `localhost:5173/admin/` ที่ vite proxy ไป :5174) → ล็อกอินหน้าบ้านแล้วไม่ต้องกรอกอีเมล/รหัสผ่านซ้ำ
+- `page.tsx`: มี session แอดมินที่ยังไม่ผ่าน MFA → แสดง loading จนขึ้นขั้นใส่รหัส 6 หลัก ไม่โชว์ฟอร์มขั้นที่ 1 คั่น (กดเข้าสู่ระบบเอง/เริ่ม MFA ไม่สำเร็จ = ฟอร์มเหมือนเดิม)
+
 ## 2026-10-15 — พื้นหลัง Aurora ทุกหน้า Backoffice (dark mode)
 - ใหม่ `ui/components/AuroraBackground.tsx`: พื้นหลัง WebGL ม่วง + ทอง (ไม่มี dependency เพิ่ม) ขยับตามเมาส์ · คลิก = คลื่นวง · หยุดเมื่อสลับแท็บ · `prefers-reduced-motion` = ภาพนิ่ง · light mode ไม่แสดง
 - `layouts/main.tsx`: วาง Aurora หลัง ProLayout ให้ทุกหน้าใน MainLayout · dark mode ให้ header/sider โปร่ง (token ของ ProLayout) และการ์ด/ตารางโปร่งเล็กน้อย (`colorBgContainer`) — Modal/Drawer/Dropdown ยังทึบ

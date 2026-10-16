@@ -10,8 +10,11 @@ import {
 } from '@phosphor-icons/react';
 import type { UserRole } from '@nightout/types';
 
-/** หลังบ้าน (apps/admin) — production เสิร์ฟใต้ /admin/ โดเมนเดียวกัน (vercel.json) · dev พอร์ต 5174 */
-export const BACKOFFICE_URL = import.meta.env.DEV ? 'http://localhost:5174/admin/' : '/admin/';
+/**
+ * หลังบ้าน (apps/admin) — โดเมนเดียวกัน (production: vercel.json · dev: vite proxy /admin → :5174)
+ * → ใช้ session Supabase ร่วมกัน ไม่ต้องล็อกอินใหม่ (ยังต้องผ่าน MFA)
+ */
+export const BACKOFFICE_URL = '/admin/';
 
 export interface RoleMeta {
   /** ชื่อสำรอง (ชื่อจริงอ่านจาก DB: user.roleLabel) */
