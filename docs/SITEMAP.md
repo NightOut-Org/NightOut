@@ -26,7 +26,7 @@ flowchart TD
 
   AUTH --> LOGIN["/login → / + modal"]
   AUTH --> REG["/register → / + modal"]
-  AUTH --> FGT["/forgot-password → / + modal · /reset-password"]
+  AUTH --> FGT["/forgot-password · /reset-password → / (ยังไม่เปิดรีเซ็ตรหัส)"]
   AUTH --> VER["/verify-email"]
   AUTH --> SOC["/signup/social"]
   AUTH --> INV["/accept-invite"]
@@ -85,12 +85,12 @@ flowchart TD
 ### เข้าสู่ระบบ
 | Path | หน้า | Access | ส่วนประกอบหลัก | Figma |
 |---|---|---|---|---|
-| `/login` | เข้าสู่ระบบ (redirect → `/` + เปิด modal) | 🌐 | ไม่มีหน้าแยก: modal Ant Design เปิดจากปุ่ม navbar / route guard (`?next=`) · อีเมล + password, Google/Facebook, ลืมรหัสผ่าน, ลิงก์สมัคร · `ui/components/authModal.tsx` | 🟡 Login, Login-P |
+| `/login` | เข้าสู่ระบบ (redirect → `/` + เปิด modal) | 🌐 | ไม่มีหน้าแยก: modal Ant Design เปิดจากปุ่ม navbar / route guard (`?next=`) · อีเมล + password, Google/Facebook, ลิงก์สมัคร (ไม่มีลืมรหัสผ่าน — ยังไม่เปิดรีเซ็ต 2026-10-16) · `ui/components/authModal.tsx` | 🟡 Login, Login-P |
 | `/register` | สมัครสมาชิก (redirect → `/` + เปิด modal) | 🌐 | modal เดียวกับ login สลับมุมมองได้ · อีเมล, password + ยืนยัน, ชื่อที่แสดง, วันเกิด (20+), ยอมรับ Terms/Privacy, Turnstile · 🟡 |
 | `/verify-email` | ยืนยันอีเมล | 🌐 | แจ้งให้เช็กอีเมล + ส่งใหม่ | ⬜ |
 | `/signup/social` | สมัครด้วย Google / Facebook | 👤 (ล็อกอิน OAuth แล้วยังไม่มีบัญชี) | ล็อกอิน Google/Facebook ครั้งแรก → `RootLayout` พามาหน้านี้ (`?next=` หน้าเดิม) · backend ดึงวันเกิดจากบัญชีเอง → อายุ 20+ = ชื่อที่แสดง + ติ๊กยอมรับ Terms/Privacy (PDPA) → "ยอมรับและสร้างบัญชี" · "ไม่ยอมรับ" = ลบบัญชี Auth + ออกจากระบบ · ไม่มีวันเกิด/ปีเกิด หรืออายุ < 20 = "ใช้งานบัญชีนี้ไม่ได้" ไม่สร้างบัญชี + ปุ่มสมัครด้วยอีเมล | ⬜ |
-| `/forgot-password` | ลืมรหัสผ่าน (redirect → `/` + เปิด modal) | 🌐 | modal เดียวกับ login (ลิงก์ "ลืมรหัสผ่าน ?" สลับมุมมอง) · อีเมล → ส่งลิงก์ไป `/reset-password` → แสดงผลในกล่องเดิม + ส่งอีกครั้ง/กลับไปเข้าสู่ระบบ · `ui/components/authForgotForm.tsx` | ⬜ |
-| `/reset-password` | ตั้งรหัสใหม่ | 🌐 | password + ยืนยัน | ⬜ |
+| `/forgot-password` | redirect → `/` (ลิงก์เก่า) | 🌐 | ยังไม่เปิดรีเซ็ตรหัสผ่าน (ตัดสิน 2026-10-16) — ไม่มีฟอร์ม/modal ลืมรหัสผ่าน | ⬜ |
+| `/reset-password` | redirect → `/` (ลิงก์ในอีเมลเดิม) | 🌐 | ยังไม่เปิดรีเซ็ตรหัสผ่าน (ตัดสิน 2026-10-16) | ⬜ |
 | `/accept-invite` | รับคำเชิญ Staff | 🌐 | ตั้งรหัสผ่านจากลิงก์เชิญทางอีเมล | ⬜ |
 | `/onboarding` | ตั้งค่าความชอบ | 👤 | สไตล์ร้าน, งบ, จำนวนคน, ย่าน · เสร็จ/ข้าม → ไป `?next=` (path ในเว็บเท่านั้น เช่น ลิงก์แชร์ที่กด "ไปด้วย" ตอนสมัคร · ไม่มี = หน้าแรก) | ⬜ |
 
@@ -196,4 +196,4 @@ flowchart TD
 4. `/ranking`
 5. `/merchant/tonight` (Scanner)
    - `/merchant/floor` (ผังโต๊ะ + ไทม์ไลน์ — ยังไม่มีเฟรม · requirement ระบุ "Merchant App UI (ผังโต๊ะ …)")
-6. `/login`, `/register`: ใช้ wireframe เดิม (email + password) ได้เลย เพิ่มลิงก์ลืมรหัสผ่าน และช่อง Turnstile
+6. `/login`, `/register`: ใช้ wireframe เดิม (email + password) ได้เลย เพิ่มช่อง Turnstile (ลืมรหัสผ่านยังไม่เปิด — 2026-10-16)

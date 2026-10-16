@@ -27,16 +27,14 @@ const FacebookIcon = () => (
   </svg>
 );
 
-/** ฟอร์มเข้าสู่ระบบใน AuthModal — onDone หลังล็อกอินสำเร็จ · onForgot สลับไปลืมรหัสผ่าน · onSwitch สลับไปสมัคร */
+/** ฟอร์มเข้าสู่ระบบใน AuthModal — onDone หลังล็อกอินสำเร็จ · onSwitch สลับไปสมัคร · ไม่มีลืมรหัสผ่าน (ยังไม่เปิดรีเซ็ต — 2026-10-16) */
 export function AuthLoginForm({
   next,
   onDone,
-  onForgot,
   onSwitch,
 }: {
   next?: string;
   onDone: () => void;
-  onForgot: () => void;
   onSwitch: () => void;
 }) {
   const { message } = App.useApp();
@@ -85,18 +83,7 @@ export function AuthLoginForm({
         </Form.Item>
         <Form.Item
           name="password"
-          label={
-            <span className="flex w-full items-center justify-between">
-              รหัสผ่าน
-              <button
-                type="button"
-                onClick={onForgot}
-                className="text-xs font-normal text-white/80 hover:text-white"
-              >
-                ลืมรหัสผ่าน ?
-              </button>
-            </span>
-          }
+          label="รหัสผ่าน"
           className="!mb-5"
           rules={[{ required: true, message: 'กรอกรหัสผ่าน' }]}
         >

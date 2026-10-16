@@ -1,4 +1,4 @@
-import { createBrowserRouter, type RouteObject } from 'react-router';
+import { createBrowserRouter, Navigate, type RouteObject } from 'react-router';
 import { AuthLayout } from '@/layouts/auth';
 import { MainLayout } from '@/layouts/main';
 import { MerchantLayout } from '@/layouts/merchant';
@@ -16,7 +16,7 @@ import { RequireAuth, RequireBarRole, RequireRole } from './middleware';
 const routes: RouteObject[] = [
   // แผนที่เต็มจอ (ไม่มี navbar — มีปุ่มลอยของตัวเอง) ซ่อนไว้ก่อนตอนนี้ไม่ใช้
   { path: 'map', lazy: () => import('@/modules/map/page').then((m) => ({ Component: m.MapPage })) },
-  // /login, /register, /forgot-password = redirect ไปหน้าหลักแล้วเปิด modal (ลิงก์เก่า + RequireAuth)
+  // /login, /register = redirect ไปหน้าหลักแล้วเปิด modal (ลิงก์เก่า + RequireAuth)
   {
     path: 'login',
     lazy: () => import('@/modules/login/page').then((m) => ({ Component: m.LoginPage })),
@@ -25,11 +25,9 @@ const routes: RouteObject[] = [
     path: 'register',
     lazy: () => import('@/modules/register/page').then((m) => ({ Component: m.RegisterPage })),
   },
-  {
-    path: 'forgot-password',
-    lazy: () =>
-      import('@/modules/forgotPassword/page').then((m) => ({ Component: m.ForgotPasswordPage })),
-  },
+  // ยังไม่เปิดให้รีเซ็ตรหัสผ่าน (ตัดสิน 2026-10-16) — ลิงก์เก่า / ลิงก์ในอีเมลเดิม → หน้าแรก
+  { path: 'forgot-password', element: <Navigate to="/" replace /> },
+  { path: 'reset-password', element: <Navigate to="/" replace /> },
   {
     element: <AuthLayout />,
     children: [
@@ -37,11 +35,6 @@ const routes: RouteObject[] = [
         path: 'verify-email',
         lazy: () =>
           import('@/modules/verifyEmail/page').then((m) => ({ Component: m.VerifyEmailPage })),
-      },
-      {
-        path: 'reset-password',
-        lazy: () =>
-          import('@/modules/resetPassword/page').then((m) => ({ Component: m.ResetPasswordPage })),
       },
       {
         // ล็อกอิน Google/Facebook ครั้งแรก: ยืนยันอายุจากวันเกิดของบัญชี + ยอมรับ ToS/PDPA ก่อนสร้างบัญชี

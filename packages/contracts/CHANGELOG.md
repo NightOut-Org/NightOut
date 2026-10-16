@@ -1,5 +1,9 @@
 # CHANGELOG — @nightout/contracts
 
+## 2026-10-16 — รหัส error ตาม HTTP status
+- `COMMON_ERRORS` เพิ่ม `HTTP_BAD_REQUEST` / `HTTP_UNAUTHORIZED` / `HTTP_FORBIDDEN` / `HTTP_NOT_FOUND` / `HTTP_CONFLICT` — backend (`common/api-response.ts`) ใช้แทนข้อความอังกฤษของ Nest/guard ที่ไม่ใช่รหัสของเรา (เช่น "Missing bearer token" · "Cannot GET …") ข้อความเดิมไป log ฝั่ง server · ขึ้นต้น `HTTP_` กันชนการหารหัสแบบ substring ของ `errorMessageOf`
+
+
 ## 2026-10-16 — รูปโปรไฟล์
 - `MyProfile.avatar_url` · `SetAvatarBody` · `AvatarResult` · `RemoveUserAvatarBody` / `RemoveUserAvatarResult` · `AVATAR_MAX_BYTES` · `AVATAR_MIME_TYPES` · error `AVATAR_INVALID` / `AVATAR_NOT_FOUND` / `AVATAR_REMOVE_REASON_REQUIRED` · `UPLOAD_BUCKETS` + `PUBLIC_BUCKETS` เพิ่ม `avatars` · เทสต์ใน `contracts.test.ts`
 

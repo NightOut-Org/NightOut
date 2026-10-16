@@ -114,8 +114,7 @@ values (${q(id)}, null, ${q(bar.slug)}, ${q(bar.name)}, ${q(bar.category)}, ${q(
   deposit_policy = ${q(bar.deposit.policy)}, refund_before_hours = 6, grace_minutes = ${bar.gracePeriodMinutes}
 where bar_id = ${q(id)};`);
   out.push(`update bar_stats set avg_price_per_person = ${bar.avgPerPerson}, safety_score = ${safetyScore(bar.safety)}, score = ${approved ? n(bar.score) : 'null'},
-  current_stars = ${n(stars)}, current_tier = ${stars ? q(starsToTier(stars)) : 'null'}, is_new = ${b(isNew)},
-  rating_avg = ${bar.rating > 0 ? bar.rating : 'null'}, rating_count = ${bar.reviewCount}
+  current_stars = ${n(stars)}, current_tier = ${stars ? q(starsToTier(stars)) : 'null'}, is_new = ${b(isNew)}
 where bar_id = ${q(id)};`);
   if (approved)
     out.push(`update bar_live_status set current_crowd = ${q(bar.crowd)}, crowd_updated_at = now() - interval '20 minutes' where bar_id = ${q(id)};`);

@@ -36,18 +36,32 @@ export class ApiExceptionFilter implements ExceptionFilter {
   catch(e: unknown, host: ArgumentsHost): void {
     const http = host.switchToHttp();
     const res = http.getResponse<{ status: (code: number) => { json: (body: unknown) => void } }>();
-    const { status, code, err_msg } = toError(e);
+    const { status, code, err_msg, raw } = toError(e);
+    const req = http.getRequest<{ method?: string; url?: string }>();
     if (status >= 500) {
-      const req = http.getRequest<{ method?: string; url?: string }>();
       this.log.error(`${req.method} ${req.url} → ${status} ${code}`, e instanceof Error ? e.stack : String(e));
+    } else if (raw) {
+      this.log.warn(`${req.method} ${req.url} → ${status} ${code} (${raw})`);
     }
     const body: ApiResponse<null> = { status: 'no', status_code: status, data: null, code, err_msg };
     res.status(status).json(body);
   }
 }
 
-/** แปลง error ทุกแบบ (zod / guard / throttler / Supabase / bug) เป็นรหัส + ข้อความไทย */
-function toError(e: unknown): { status: number; code: string; err_msg: string } {
+/** รหัสสำรองเมื่อข้อความ error ไม่ใช่รหัสของเรา (ตาม HTTP status) */
+const HTTP_FALLBACK_CODES: Partial<Record<number, string>> = {
+  [HttpStatus.BAD_REQUEST]: 'HTTP_BAD_REQUEST',
+  [HttpStatus.UNAUTHORIZED]: 'HTTP_UNAUTHORIZED',
+  [HttpStatus.FORBIDDEN]: 'HTTP_FORBIDDEN',
+  [HttpStatus.NOT_FOUND]: 'HTTP_NOT_FOUND',
+  [HttpStatus.CONFLICT]: 'HTTP_CONFLICT',
+};
+
+/**
+ * แปลง error ทุกแบบ (zod / guard / throttler / Supabase / bug) เป็นรหัส + ข้อความไทย
+ * ข้อความที่ไม่ใช่รหัสที่รู้จัก (เช่น "Missing bearer token") → รหัสตาม HTTP status · raw = ข้อความเดิมไว้ log
+ */
+function toError(e: unknown): { status: number; code: string; err_msg: string; raw?: string } {
   if (e instanceof ZodValidationException) {
     const issues = (e.getResponse() as { errors?: { path?: PropertyKey[] }[] }).errors ?? [];
     const fields = [...new Set(issues.map((i) => i.path?.join('.')).filter(Boolean))].join(', ');
@@ -59,6 +73,9 @@ function toError(e: unknown): { status: number; code: string; err_msg: string } 
     const r = e.getResponse();
     const msg = typeof r === 'string' ? r : (r as { message?: string | string[] }).message;
     const code = (Array.isArray(msg) ? msg.join(', ') : msg) || e.message;
+    const known = errorMessageOf(code) !== code || /^[A-Z][A-Z0-9_]*$/.test(code);
+    const fallback = HTTP_FALLBACK_CODES[status] ?? (status >= 500 ? 'INTERNAL_ERROR' : 'HTTP_BAD_REQUEST');
+    if (!known) return { status, code: fallback, err_msg: errorMessageOf(fallback), raw: code };
     return { status, code, err_msg: errorMessageOf(code) };
   }
   return { status: 500, code: 'INTERNAL_ERROR', err_msg: errorMessageOf('INTERNAL_ERROR') };

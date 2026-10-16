@@ -290,8 +290,8 @@ Age Gate (20+) → Onboarding (ความชอบ) → Home / Tier List / Sea
 - **เข้าสู่ระบบ (`/login`):**
   - `supabase.auth.signInWithPassword({ email, password })` จาก frontend
   - ข้อความ error ใช้แบบเดียวกันเสมอ คือ "อีเมลหรือรหัสผ่านไม่ถูกต้อง"
-- **ป้องกันการเดารหัส:** ใช้ rate limit ของ Supabase Auth + **CAPTCHA (Cloudflare Turnstile)** ที่ Supabase รองรับในตัว บนหน้า login, register และ forgot-password
-- **ลืมรหัสผ่าน:** `/forgot-password` → `resetPasswordForEmail()` → ลิงก์ในอีเมล → `/reset-password` → `updateUser({ password })`
+- **ป้องกันการเดารหัส:** ใช้ rate limit ของ Supabase Auth + **CAPTCHA (Cloudflare Turnstile)** ที่ Supabase รองรับในตัว บนหน้า login และ register
+- **ลืมรหัสผ่าน:** ยังไม่เปิด (ตัดสิน 2026-10-16) — ไม่มีลิงก์ "ลืมรหัสผ่าน" · `/forgot-password` และ `/reset-password` redirect ไปหน้าแรก
 - **Staff ของร้าน:**
   - เจ้าของร้านเชิญ Staff ด้วยอีเมล โดย NestJS เรียก `auth.admin.inviteUserByEmail()`
   - Staff ตั้งรหัสเองจากลิงก์ในอีเมล แล้วถูกผูกกับร้านใน `bar_staff`

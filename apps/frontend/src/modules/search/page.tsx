@@ -1,10 +1,10 @@
 import { ListBullets, MapTrifold, MoonStars } from '@phosphor-icons/react';
 import { DISTRICTS, listBars, STYLES, type BarFilter } from '@/services/data';
 import type { CrowdStatus } from '@nightout/types';
-import { distanceMeters, parseBudgetSearch } from '@nightout/utils';
+import { distanceMeters } from '@nightout/utils';
 import { Segmented, Select } from 'antd';
-import { Fragment, useCallback, useState, type MouseEvent } from 'react';
-import { useLocation, useSearchParams } from 'react-router';
+import { Fragment, useCallback, useEffect, useRef, useState, type MouseEvent } from 'react';
+import { useLocation, useNavigate } from 'react-router';
 import { useDemo } from '@/hooks/useDemo';
 import { EmbersBackdrop } from '@/ui/components/embersBackdrop';
 import { MINI_AD_SEARCH_AFTER, MiniAdSlot } from '@/ui/components/miniAdSlot';
@@ -12,6 +12,7 @@ import { baht } from '@/ui/utils/format';
 import { BudgetRow } from './components/budgetRow';
 import { CommandBar } from './components/commandBar';
 import { SearchMap, type LatLng } from './components/searchMap';
+import { filterFromParams, filterToQuery } from './utils/searchUrl';
 import { parseSmartQuery } from './utils/smartQuery';
 
 /** จอกว้างตั้งแต่นี้: รายการกับแผนที่วางคู่กัน · แคบกว่า: แผนที่อยู่บน รายการอยู่ล่าง */
@@ -30,38 +31,35 @@ const CLEARED: BarFilter = {
 };
 
 /**
- * /search — เปลี่ยน query string (เช่นคลิกลิงก์ /search?style=… จากโฆษณาในหน้านี้) = เริ่มตัวกรองใหม่
- * ตัวกรองอ่านจาก URL ครั้งเดียวตอน mount จึงต้อง remount ด้วย key
- */
-export function SearchPage() {
-  const { search } = useLocation();
-  return <SearchView key={search} />;
-}
-
-/**
- * ดีไซน์ Search Combined v2: ช่องพิมพ์แบบที่พูด + ลิ้นชักตัวกรอง (layout C) + แถวร้านรูปใหญ่ + แผนที่หมุดรูปร้าน
+ * /search — ดีไซน์ Search Combined v2: ช่องพิมพ์แบบที่พูด + ลิ้นชักตัวกรอง (layout C) + แถวร้านรูปใหญ่ + แผนที่หมุดรูปร้าน
+ * ตัวกรองอยู่ใน URL (utils/searchUrl.ts) → รีเฟรช / ย้อนกลับ / แชร์ลิงก์ ได้ตัวกรองเดิม
  * อ่าน ?q=&district=&budget=&people= จาก Hero หน้าแรก (requirement "ค้นหาตามงบ") + ?category= / ?style=
  * พื้นหลัง Golden Embers + การ์ดกระจกแบบเดียวกับหน้าร้าน (/merchant) — ธีมมืดเท่านั้น (ไม่เปลี่ยนตามดีไซน์ v2)
  */
-function SearchView() {
+export function SearchPage() {
   useDemo();
-  const [params] = useSearchParams();
-  const [f, setF] = useState<BarFilter>(() => {
-    // ลิงก์จากช่องค้นหาหน้าแรก: คำค้น · ย่าน · งบต่อหัว · จำนวนคน (ค่าผิด = ไม่กรอง)
-    const s = parseBudgetSearch(params);
-    return {
-      ...CLEARED,
-      q: s.q ?? '',
-      // ลิงก์จากการ์ดหมวดหมู่หน้าแรก: ?category=PUB_BAR หรือ ?style=Rooftop
-      category: (params.get('category') as BarFilter['category']) ?? 'ALL',
-      styles: params.getAll('style'),
-      district: s.district,
-      maxBudget: s.budget,
-      people: s.people,
-      sort: 'relevance',
-    };
-  });
+  const { search } = useLocation();
+  const navigate = useNavigate();
+  const [f, setF] = useState<BarFilter>(() => filterFromParams(new URLSearchParams(search)));
   const [smart, setSmart] = useState(f.q ?? '');
+  /** query string ที่หน้านี้เขียนเองล่าสุด — URL เปลี่ยนเป็นค่าอื่น (เช่นกดลิงก์ /search?style=… จากโฆษณา) = เริ่มตัวกรองใหม่ */
+  const written = useRef(search);
+
+  useEffect(() => {
+    if (search === written.current) return;
+    written.current = search;
+    const next = filterFromParams(new URLSearchParams(search));
+    setF(next);
+    setSmart(next.q ?? '');
+  }, [search]);
+
+  useEffect(() => {
+    const qs = filterToQuery(f);
+    const next = qs ? `?${qs}` : '';
+    if (next === written.current) return;
+    written.current = next;
+    navigate({ search: next }, { replace: true, preventScrollReset: true });
+  }, [f, navigate]);
   const [view, setView] = useState<'map' | 'list'>('map');
   const [activeId, setActiveId] = useState<string | null>(null);
   const [cardOpen, setCardOpen] = useState(false);

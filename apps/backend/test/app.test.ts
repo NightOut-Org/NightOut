@@ -42,6 +42,12 @@ describe('NightOut API', () => {
     expect(res.body.err_msg).toContain('ข้อมูลที่ส่งมาไม่ถูกต้อง');
   });
 
+  // error ของ Nest ที่ไม่มีรหัสของเรา (route ไม่มี / guard) → รหัสตาม HTTP status + ข้อความไทย (ไม่หลุดข้อความอังกฤษถึงผู้ใช้)
+  it('maps Nest errors without our code to HTTP_* codes with Thai messages', async () => {
+    const res = await request(app.getHttpServer()).get('/no-such-route').expect(404);
+    expect(res.body).toMatchObject({ status: 'no', status_code: 404, data: null, code: 'HTTP_NOT_FOUND', err_msg: 'ไม่พบข้อมูลที่ขอ' });
+  });
+
   it('POST /jobs/* requires the job secret', async () => {
     await request(app.getHttpServer()).post('/jobs/booking-timeouts').expect(401);
     await request(app.getHttpServer())
@@ -53,7 +59,7 @@ describe('NightOut API', () => {
   // ADR 0002: หน้าเว็บอ่านข้อมูลผ่าน API — endpoint ของผู้ใช้ต้องล็อกอิน · ข้อมูลที่ส่งมาต้องผ่าน validation
   it('GET /me/* requires a bearer token', async () => {
     const res = await request(app.getHttpServer()).get('/me/overview').expect(401);
-    expect(res.body).toMatchObject({ status: 'no', status_code: 401, data: null, code: 'Missing bearer token' });
+    expect(res.body).toMatchObject({ status: 'no', status_code: 401, data: null, code: 'HTTP_UNAUTHORIZED', err_msg: 'กรุณาเข้าสู่ระบบอีกครั้ง' });
     await request(app.getHttpServer()).get('/me/profile').expect(401);
     await request(app.getHttpServer()).get('/merchant/bars/00000000-0000-4000-8000-000000000000/team').expect(401);
     await request(app.getHttpServer()).put('/merchant/bars/00000000-0000-4000-8000-000000000000/safety').send({ items: [] }).expect(401);
