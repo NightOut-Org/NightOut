@@ -213,7 +213,7 @@ const routes: RouteObject[] = [
           },
           {
             path: 'profile',
-            handle: { backdrop: true },
+            handle: { backdrop: true, hideFooter: true },
             lazy: () =>
               import('@/modules/profile/page').then((m) => ({ Component: m.ProfilePage })),
           },

@@ -1,5 +1,12 @@
 # CHANGELOG — frontend/modules/profile
 
+## 2026-10-17 — การ์ด "ชื่อที่แสดง" มืดลง เป็นกระจกหยดน้ำ
+- ลดความสว่าง: พื้นม่วงโปร่งเข้มขึ้น · ขอบ/แสงเรืองรอบการ์ดจางลง · `backdrop-filter` เพิ่ม `brightness(0.85)` และเบลอหนาขึ้น (24px)
+- ลุคกระจกหยดน้ำ: ขอบสะท้อนแสงด้านบน + แสงหักเหขอบล่าง (inset shadow) + ประกายโค้งมุมซ้ายบน/แสงม่วงจางมุมขวาล่าง (`::before`) · มุมโค้งขึ้นเป็น 1.25rem · ธีมสว่างปรับตาม · ไม่มี motion (`components/preferencesView.css`)
+
+## 2026-10-17 — เอา footer ออกจากหน้า /profile
+- หน้าโปรไฟล์ไม่แสดง `SiteFooter` แล้ว: ใส่ `hideFooter: true` ใน handle ของ route `profile` (`router/index.tsx`) · แถบเมนูล่างมือถือยังอยู่เหมือนเดิม
+
 ## 2026-10-17 — สีของชั้นบัญชีมาจาก API (นอก MVP — อนุมัติ 2026-10-17)
 - สีของชั้นบัญชีเลิกตายตัวในโค้ด: อ่านจาก `GET /me/roles` ผ่าน `hooks/useRoles` (cache localStorage `nightout-roles` · โหลดไม่ได้ = `ROLE_DEFAULT_COLORS`) แล้วแปลงเป็นชุดสีด้วย `roleTone()` (สีหลัก · ตัวหนังสือที่เข้มขึ้นในธีมสว่างผ่าน `--role-ink` · ตัวหนังสือบนป้ายทึบดำ/ขาวตามความสว่าง · พื้นจาง)
 - ใช้ทุกที่: แสงเรืองพื้นหลังหน้า (`page.tsx`) · วงรอบรูป + ป้ายใต้ชื่อ (`components/profileHeader.tsx`) · รายการชั้นบัญชี ชื่อชั้นอื่นมาจาก API ด้วย (`components/roleList.tsx`) · ปุ่ม/เมนูบัญชีบน navbar (`ui/components/accountMenu.tsx`)

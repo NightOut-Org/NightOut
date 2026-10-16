@@ -53,7 +53,7 @@ export function ProfilePage() {
 
   return (
     <>
-      {/* -z-10 ใน Layout ที่ isolate (handle `backdrop`) → หลังเนื้อหาและ footer แต่เหนือพื้นของ Layout */}
+      {/* -z-10 ใน Layout ที่ isolate (handle `backdrop`) → หลังเนื้อหาแต่เหนือพื้นของ Layout */}
       <div className="fixed inset-0 -z-10">
         <MoltenBackground />
       </div>
