@@ -1,5 +1,9 @@
 # CHANGELOG — @nightout/contracts
 
+## 2026-10-17 — สีของชั้นบัญชี
+- `account.ts`: `RoleColor` (#RRGGBB → ตัวพิมพ์ใหญ่) · `RoleInfo` (`GET /me/roles`) · `SaveRoleColorsBody` / `SaveRoleColorsResult` (`PUT /admin/roles/colors` · ชั้นซ้ำไม่ได้) · `AccountRoleOption.color` · error `INVALID_ROLE_COLORS`
+- เทสต์ใน `contracts.test.ts`
+
 ## 2026-10-16 — รหัส error ตาม HTTP status
 - `COMMON_ERRORS` เพิ่ม `HTTP_BAD_REQUEST` / `HTTP_UNAUTHORIZED` / `HTTP_FORBIDDEN` / `HTTP_NOT_FOUND` / `HTTP_CONFLICT` — backend (`common/api-response.ts`) ใช้แทนข้อความอังกฤษของ Nest/guard ที่ไม่ใช่รหัสของเรา (เช่น "Missing bearer token" · "Cannot GET …") ข้อความเดิมไป log ฝั่ง server · ขึ้นต้น `HTTP_` กันชนการหารหัสแบบ substring ของ `errorMessageOf`
 

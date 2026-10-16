@@ -2,7 +2,7 @@ import { ChatCircleDots, SignOut } from '@phosphor-icons/react';
 import { App, Button } from 'antd';
 import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
-import { ROLE_META, roleTint } from '@/configs/roles';
+import { useRoles } from '@/hooks/useRoles';
 import { useDemo } from '@/hooks/useDemo';
 import { useAuth } from '@/services/auth';
 import { MoltenBackground } from '@/ui/components/MoltenBackground';
@@ -24,6 +24,7 @@ export function ProfilePage() {
   const navigate = useNavigate();
   const [search, setSearch] = useSearchParams();
   const [signingOut, setSigningOut] = useState(false);
+  const roles = useRoles();
   if (!user) return null;
 
   const tab: TabKey = TABS.find((t) => t.key === search.get('tab'))?.key ?? 'prefs';
@@ -37,7 +38,7 @@ export function ProfilePage() {
       },
       { replace: true },
     );
-  const meta = ROLE_META[user.role];
+  const tone = roles.tone(user.role);
 
   const logout = async () => {
     setSigningOut(true);
@@ -60,7 +61,7 @@ export function ProfilePage() {
       <div
         aria-hidden
         className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[360px]"
-        style={{ background: `radial-gradient(60% 100% at 50% 0%, ${roleTint(meta, 0.28)}, transparent 70%)` }}
+        style={{ background: `radial-gradient(60% 100% at 50% 0%, ${tone.tint(0.28)}, transparent 70%)` }}
       />
       <div className="mx-auto flex max-w-[880px] flex-col gap-5">
         <ProfileHeader user={user} />

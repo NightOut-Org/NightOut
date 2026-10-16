@@ -109,7 +109,10 @@ export function Hero({
           onSubmit={(e) => {
             e.preventDefault();
             const q = new FormData(e.currentTarget).get('q')?.toString() ?? '';
-            const qs = budgetSearchQuery({ q, district, budget, people });
+            // "ตำแหน่งปัจจุบัน" = ไม่กรองย่าน แต่เรียงร้านใกล้ผู้ใช้ก่อน (/search ขอตำแหน่งเอง · ไม่ใส่พิกัดใน URL)
+            const qs = [budgetSearchQuery({ q, district, budget, people }), area === HERE ? 'sort=distance' : '']
+              .filter(Boolean)
+              .join('&');
             navigate(`/search${qs ? `?${qs}` : ''}`);
           }}
         >

@@ -214,6 +214,8 @@ export interface UnbanUserResult {
 export interface AccountRoleOption {
   code: UserRole;
   label_th: string;
+  /** สีหลักของชั้น #RRGGBB (ตาราง roles) */
+  color: string;
   sort_order: number;
   can_enter_backoffice: boolean;
   /** ผู้เรียกเลือกชั้นนี้ตอนสร้างบัญชีได้ */
@@ -222,7 +224,37 @@ export interface AccountRoleOption {
   can_assign: boolean;
 }
 
+// ----------------------------- สีของชั้นบัญชี -----------------------------
+/** สีหลักของชั้นบัญชี #RRGGBB — เก็บเป็นตัวพิมพ์ใหญ่ */
+export const RoleColor = z
+  .string()
+  .regex(/^#[0-9a-fA-F]{6}$/, 'สีต้องเป็นรูปแบบ #RRGGBB')
+  .transform((v) => v.toUpperCase());
+
+/** GET /me/roles — ทุกชั้นบัญชีพร้อมชื่อและสี เรียงต่ำ → สูง (sort_order) */
+export interface RoleInfo {
+  code: UserRole;
+  label_th: string;
+  /** สีหลักของชั้น #RRGGBB */
+  color: string;
+  sort_order: number;
+}
+
+/** PUT /admin/roles/colors (SUPER_ADMIN) — แก้สีหลายชั้นในครั้งเดียว · ส่งเฉพาะชั้นที่เปลี่ยน */
+export const SaveRoleColorsBody = z.object({
+  items: z
+    .array(z.object({ code: UserRole, color: RoleColor.describe('สีหลักของชั้น #RRGGBB') }))
+    .min(1)
+    .max(20)
+    .refine((c) => new Set(c.map((x) => x.code)).size === c.length, 'ชั้นบัญชีซ้ำกัน'),
+});
+export type SaveRoleColorsBody = z.input<typeof SaveRoleColorsBody>;
+export interface SaveRoleColorsResult {
+  updated: number;
+}
+
 export const ACCOUNT_ERRORS = {
+  INVALID_ROLE_COLORS: 'สีของชั้นบัญชีไม่ถูกต้อง — ใช้รูปแบบ #RRGGBB แล้วลองใหม่',
   INVALID_DISPLAY_NAME: 'ชื่อที่แสดงต้องยาว 1–60 ตัวอักษร',
   HAS_ACTIVE_BOOKINGS: 'ยังมีการจองที่ยังไม่จบ — ยกเลิกหรือรอให้จบก่อนลบบัญชี',
   EMAIL_EXISTS: 'อีเมลนี้มีบัญชีอยู่แล้ว — ถ้าชั้นบัญชีผิด ให้ซูเปอร์แอดมินแก้จากรายชื่อผู้ใช้',

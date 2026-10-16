@@ -3,7 +3,8 @@ import { motionTokens } from '@nightout/ui';
 import { App, Dropdown, Spin } from 'antd';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { useEffect, useRef, useState } from 'react';
-import { ROLE_META, roleScope, roleTint } from '@/configs/roles';
+import { ROLE_META, roleScope } from '@/configs/roles';
+import { useRoles } from '@/hooks/useRoles';
 import { useAuth, type AppUser } from '@/services/auth';
 import { getBar } from '@/services/data';
 import { UserAvatar } from '@/ui/components/userAvatar';
@@ -20,7 +21,9 @@ export function ProfileHeader({ user }: { user: AppUser }) {
   const [uploading, setUploading] = useState(false);
   const meta = ROLE_META[user.role];
   const RoleIcon = meta.icon;
-  const label = user.roleLabel || meta.label;
+  const roles = useRoles();
+  const tone = roles.tone(user.role);
+  const label = user.roleLabel || roles.label(user.role);
   const scope = roleScope(user.role, user.barId ? getBar(user.barId)?.name : undefined);
   const shown = previewUrl ?? user.avatarUrl ?? null;
 
@@ -67,7 +70,7 @@ export function ProfileHeader({ user }: { user: AppUser }) {
         <Spin spinning={uploading}>
           <div
             className="relative size-[136px] overflow-hidden rounded-full border-4"
-            style={{ borderColor: meta.color }}
+            style={{ borderColor: tone.solid }}
           >
             <AnimatePresence initial={false} mode="popLayout">
               <motion.div
@@ -120,8 +123,8 @@ export function ProfileHeader({ user }: { user: AppUser }) {
         {user.displayName}
       </h1>
       <span
-        className="inline-flex min-h-9 max-w-full flex-wrap items-center justify-center gap-x-2 rounded-full px-4 py-1 text-[15px] font-semibold text-[#07070D]"
-        style={{ background: `rgb(${meta.rgb})`, boxShadow: `0 8px 24px -10px ${roleTint(meta, 0.6)}` }}
+        className="inline-flex min-h-9 max-w-full flex-wrap items-center justify-center gap-x-2 rounded-full px-4 py-1 text-[15px] font-semibold"
+        style={{ background: tone.solid, color: tone.on, boxShadow: `0 8px 24px -10px ${tone.tint(0.6)}` }}
       >
         <RoleIcon size={18} weight="fill" />
         {label}

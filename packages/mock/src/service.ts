@@ -51,9 +51,10 @@ export interface BarFilter {
   people?: number;
   crowd?: CrowdStatus[];
   minSafety?: number;
-  /** ร้านที่มี PR (ชายหรือหญิงอย่างน้อย 1 คน) */
+  /** true = เฉพาะร้านที่มี PR (ชาย/หญิง/LGBTQ+ อย่างน้อย 1 คน) · false = เฉพาะร้านที่ไม่มี PR · ไม่ระบุ = ทุกร้าน */
   hasPR?: boolean;
-  sort?: 'relevance' | 'rating' | 'price' | 'safety';
+  /** distance = ใกล้ผู้ใช้ที่สุด — listBars ไม่รู้ตำแหน่ง (เรียงแบบ relevance) หน้า /search เรียงระยะต่อเอง */
+  sort?: 'relevance' | 'rating' | 'price' | 'safety' | 'distance';
 }
 
 export function listBars(filter: BarFilter = {}): BarWithTier[] {
@@ -67,7 +68,7 @@ export function listBars(filter: BarFilter = {}): BarWithTier[] {
     .filter((b) => fitsGroup(b.zones, filter.people))
     .filter((b) => !filter.crowd?.length || filter.crowd.includes(b.crowd))
     .filter((b) => !filter.minSafety || safetyScore(b) >= filter.minSafety)
-    .filter((b) => !filter.hasPR || b.pr.male + b.pr.female + (b.pr.lgbtq ?? 0) > 0)
+    .filter((b) => filter.hasPR === undefined || b.pr.male + b.pr.female + (b.pr.lgbtq ?? 0) > 0 === filter.hasPR)
     .filter(
       (b) =>
         !q ||

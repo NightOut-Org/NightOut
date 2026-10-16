@@ -8062,6 +8062,7 @@ export type Database = {
         Row: {
           can_enter_backoffice: boolean
           code: Database["public"]["Enums"]["user_role"]
+          color: string
           created_at: string
           label_th: string
           sort_order: number
@@ -8069,6 +8070,7 @@ export type Database = {
         Insert: {
           can_enter_backoffice?: boolean
           code: Database["public"]["Enums"]["user_role"]
+          color?: string
           created_at?: string
           label_th: string
           sort_order: number
@@ -8076,6 +8078,7 @@ export type Database = {
         Update: {
           can_enter_backoffice?: boolean
           code?: Database["public"]["Enums"]["user_role"]
+          color?: string
           created_at?: string
           label_th?: string
           sort_order?: number
@@ -11576,6 +11579,10 @@ export type Database = {
         Args: { p: Json; p_actor: string; p_id: string }
         Returns: Json
       }
+      admin_save_role_colors: {
+        Args: { p_actor: string; p_items: Json }
+        Returns: Json
+      }
       admin_save_site_nav: {
         Args: { p_actor: string; p_items: Json }
         Returns: Json
@@ -12509,6 +12516,7 @@ export type Database = {
         }[]
       }
       recompute_safety_score: { Args: { p_bar: string }; Returns: undefined }
+      refresh_bar_rating: { Args: { p_bar: string }; Returns: undefined }
       review_author_name: { Args: { p_user: string }; Returns: string }
       review_media_path_is_public: {
         Args: { p_name: string }

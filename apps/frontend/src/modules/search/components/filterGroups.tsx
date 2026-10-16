@@ -239,7 +239,7 @@ export function FilterGroups({
         type="button"
         role="switch"
         aria-checked={!!f.hasPR}
-        onClick={() => set({ hasPR: f.hasPR ? undefined : true })}
+        onClick={() => set({ hasPR: !f.hasPR })}
         className="flex min-h-10 w-full items-center justify-between gap-3 rounded-xl border border-border bg-background px-3 text-left text-sm text-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
       >
         เฉพาะร้านที่มี PR

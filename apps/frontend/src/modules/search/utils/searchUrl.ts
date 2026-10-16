@@ -7,7 +7,7 @@ type Sort = NonNullable<BarFilter['sort']>;
 
 const CATEGORIES: readonly Category[] = ['PUB_BAR', 'CHILL', 'RESTAURANT'];
 const CROWDS: readonly CrowdStatus[] = ['AVAILABLE', 'ALMOST_FULL', 'FULL'];
-const SORTS: readonly Sort[] = ['rating', 'price', 'safety'];
+const SORTS: readonly Sort[] = ['rating', 'price', 'safety', 'distance'];
 
 const oneOf = <T extends string>(list: readonly T[], v: string | null): T | undefined =>
   list.find((x) => x === v);
@@ -28,7 +28,8 @@ export function filterFromParams(params: URLSearchParams): BarFilter {
     maxBudget: s.budget,
     people: s.people,
     crowd: params.getAll('crowd').filter((c): c is CrowdStatus => oneOf(CROWDS, c) !== undefined),
-    hasPR: params.get('pr') === '1' || undefined,
+    // สวิตช์ "เฉพาะร้านที่มี PR": เปิด (?pr=1) = เฉพาะร้านมี PR · ปิด = เฉพาะร้านที่ไม่มี PR (ตกลงกับผู้ใช้ 2026-10-17)
+    hasPR: params.get('pr') === '1',
     minSafety: Number.isInteger(safety) && safety > 0 && safety <= 100 ? safety : undefined,
     sort: oneOf(SORTS, params.get('sort')) ?? 'relevance',
   };

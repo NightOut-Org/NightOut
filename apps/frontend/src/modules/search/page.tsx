@@ -2,7 +2,7 @@ import { ListBullets, MapTrifold, MoonStars } from '@phosphor-icons/react';
 import { DISTRICTS, listBars, STYLES, type BarFilter } from '@/services/data';
 import type { CrowdStatus } from '@nightout/types';
 import { distanceMeters } from '@nightout/utils';
-import { Segmented, Select } from 'antd';
+import { App, Segmented, Select } from 'antd';
 import { Fragment, useCallback, useEffect, useRef, useState, type MouseEvent } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import { useDemo } from '@/hooks/useDemo';
@@ -26,7 +26,7 @@ const CLEARED: BarFilter = {
   maxBudget: undefined,
   people: undefined,
   crowd: [],
-  hasPR: undefined,
+  hasPR: false,
   minSafety: undefined,
 };
 
@@ -63,14 +63,45 @@ export function SearchPage() {
   const [view, setView] = useState<'map' | 'list'>('map');
   const [activeId, setActiveId] = useState<string | null>(null);
   const [cardOpen, setCardOpen] = useState(false);
-  /** ตำแหน่งผู้ใช้ — รู้เมื่อกด "ตำแหน่งของฉัน" บนแผนที่ (ไม่ขอสิทธิ์ตอนเปิดหน้า) → แสดงระยะทางในรายการ/การ์ด */
+  /**
+   * ตำแหน่งผู้ใช้ — รู้เมื่อกด "ตำแหน่งของฉัน" บนแผนที่ หรือเรียง "ใกล้ที่สุด" (?sort=distance · Hero "ตำแหน่งปัจจุบัน")
+   * → แสดงระยะทางในรายการ/การ์ด · ไม่ขอสิทธิ์ตอนเปิดหน้าแบบอื่น · ไม่บันทึกพิกัด
+   */
   const [me, setMe] = useState<LatLng | null>(null);
+  const { message } = App.useApp();
+  const wantsDistance = f.sort === 'distance' && !me;
+  useEffect(() => {
+    if (!wantsDistance) return;
+    let cancelled = false;
+    const fallback = (text: string) => {
+      if (cancelled) return;
+      void message.warning(text);
+      setF((prev) => ({ ...prev, sort: 'relevance' }));
+    };
+    if (!('geolocation' in navigator)) {
+      fallback('เบราว์เซอร์นี้หาตำแหน่งไม่ได้ — เรียงแบบแนะนำแทน');
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => !cancelled && setMe([pos.coords.latitude, pos.coords.longitude]),
+      (err) =>
+        fallback(
+          err.code === err.PERMISSION_DENIED
+            ? 'เปิดสิทธิ์ตำแหน่งในเบราว์เซอร์ก่อน ถึงจะเรียงร้านใกล้คุณได้ — เรียงแบบแนะนำแทน'
+            : 'หาตำแหน่งปัจจุบันไม่ได้ — เรียงแบบแนะนำแทน',
+        ),
+      { enableHighAccuracy: true, timeout: 10_000, maximumAge: 60_000 },
+    );
+    return () => {
+      cancelled = true;
+    };
+  }, [wantsDistance, message]);
 
   const set = (patch: Partial<BarFilter>) => setF((prev) => ({ ...prev, ...patch }));
   const smartPatch = (text: string) =>
     parseSmartQuery(text, { districts: DISTRICTS, styles: STYLES });
 
-  const bars = listBars(f);
+  const found = listBars(f);
   // จำนวนข้างปุ่มประเภท/ความแน่น = ผลถ้าเลือกค่านั้น (ตัวกรองอื่นคงเดิม)
   const anyCategory = listBars({ ...f, category: 'ALL' });
   const categoryCounts = {
@@ -91,6 +122,9 @@ export function SearchPage() {
       me ? distanceMeters({ lat: me[0], lng: me[1] }, b) / 1000 : undefined,
     [me],
   );
+  // ใกล้ที่สุด: listBars ไม่รู้ตำแหน่ง → เรียงระยะที่นี่ (ระหว่างรอตำแหน่ง = ลำดับแนะนำ)
+  const bars =
+    f.sort === 'distance' && me ? found.toSorted((a, b) => distanceKm(a)! - distanceKm(b)!) : found;
 
   const adAfter = Math.min(MINI_AD_SEARCH_AFTER, bars.length) - 1;
   const groupBudget =
@@ -174,6 +208,7 @@ export function SearchPage() {
                   { label: 'คะแนนสูงสุด', value: 'rating' },
                   { label: 'ราคาต่ำสุด', value: 'price' },
                   { label: 'ปลอดภัยที่สุด', value: 'safety' },
+                  { label: 'ใกล้ที่สุด', value: 'distance' },
                 ]}
               />
               <Segmented

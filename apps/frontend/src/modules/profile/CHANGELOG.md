@@ -1,5 +1,21 @@
 # CHANGELOG — frontend/modules/profile
 
+## 2026-10-17 — สีของชั้นบัญชีมาจาก API (นอก MVP — อนุมัติ 2026-10-17)
+- สีของชั้นบัญชีเลิกตายตัวในโค้ด: อ่านจาก `GET /me/roles` ผ่าน `hooks/useRoles` (cache localStorage `nightout-roles` · โหลดไม่ได้ = `ROLE_DEFAULT_COLORS`) แล้วแปลงเป็นชุดสีด้วย `roleTone()` (สีหลัก · ตัวหนังสือที่เข้มขึ้นในธีมสว่างผ่าน `--role-ink` · ตัวหนังสือบนป้ายทึบดำ/ขาวตามความสว่าง · พื้นจาง)
+- ใช้ทุกที่: แสงเรืองพื้นหลังหน้า (`page.tsx`) · วงรอบรูป + ป้ายใต้ชื่อ (`components/profileHeader.tsx`) · รายการชั้นบัญชี ชื่อชั้นอื่นมาจาก API ด้วย (`components/roleList.tsx`) · ปุ่ม/เมนูบัญชีบน navbar (`ui/components/accountMenu.tsx`)
+- ของกลาง: `configs/roles.ts` (เอา `color` / `rgb` / `roleTint` ออก · เพิ่ม `ROLE_DEFAULT_COLORS` · `roleTone`) · `hooks/useRoles.ts` · `services/api/roles.ts` (ใหม่) · `styles/index.css` (`--role-staff` → `--role-ink`)
+
+## 2026-10-17 — การ์ดชื่อเป็นกระจกม่วง · สไตล์ร้านเป็นการ์ดพื้นเข้ม
+- การ์ด "ชื่อที่แสดง" เป็น glassmorphism ม่วง (ไล่สีโปร่ง + ขอบเรืองแสง + blur · ไม่มีจุดแสง/เส้นเฉียง) ปุ่ม "แก้ไขข้อมูล" พื้นโปร่งเข้ากับกระจก · ธีมมืดเป็นค่าตั้งต้น ธีมสว่างใช้ `.light`
+- กล่อง "สไตล์ร้านที่ชอบ" ใช้การ์ดแบบเดียวกับกล่องอื่น (`bg-card` + `border-border`) หัวข้อสีเทา ชิปขอบเทาแบบเดียวกับชิปย่าน
+- ไฟล์: `components/preferencesView.tsx` · `components/preferencesView.css` (ใหม่)
+
+## 2026-10-17 — แท็บ "ข้อมูลและความชอบ" เป็น Bento (ดีไซน์ 3c)
+- โหมดดูเปลี่ยนจากการ์ดใบเดียวเป็นกล่อง Bento: ชื่อ (กว้าง 3 + ปุ่ม "แก้ไขข้อมูล") · งบต่อหัวเป็นการ์ดทองสูง 2 แถว (ไม่มีงบ = "—" + "ตั้งงบ") · สไตล์ร้านที่ชอบเป็นกล่องม่วง ชิปมีไอคอนของสไตล์ · จำนวนคน · ย่านเต็มแถว · มือถือ 2 คอลัมน์ · ค่าว่าง = "ยังไม่ได้ระบุ" + "เพิ่ม" · ไล่ขึ้นทีละกล่อง 40ms (ลดการเคลื่อนไหว = จางอย่างเดียว)
+- โหมดแก้ = การ์ดฟอร์มใบเดียว หัว "แก้ไขข้อมูลและความชอบ" + "ยกเลิก" (ฟอร์มเดิม · useUnsavedGuard เดิม)
+- ไอคอนสไตล์ใช้ค่าที่แอดมินตั้งที่ Backoffice /styles (`utils/styleIcon.tsx` · ไม่รู้จัก = Sparkle)
+- ลบ `components/preferencesCard.css` (การ์ดเดิม) · ไฟล์: `components/preferencesView.tsx` · `components/preferencesCard.tsx` · `utils/styleIcon.tsx` · `services/sync.ts` (`StyleOpt.icon`)
+
 ## 2026-10-16 — ปุ่มบัญชียังล้น 1–2 เฟรมตอน navbar หด
 - ดูจากวิดีโอทีละเฟรม: navbar หดแล้ว (เฟรม 1.238s) แต่ chip ยังเต็มอยู่ 1–2 เฟรมก่อนย่อ (1.272s) — เพราะเดิมตัดสินใจย่อใน callback ของ ResizeObserver แล้ว React render ทีหลัง browser paint
 - แก้ `hooks/useCompactOnOverflow.ts`: รับ `layoutKey` (navbar ส่ง `scrolled`) → ตรวจใน `useLayoutEffect` ของ commit เดียวกับที่ navbar หด = ย่อก่อน paint · ทาง ResizeObserver (ย่อหน้าต่าง/ฟอนต์โหลด) ใช้ `flushSync` ให้ย่อก่อน paint เช่นกัน

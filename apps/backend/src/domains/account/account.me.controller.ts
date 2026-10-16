@@ -1,5 +1,6 @@
 import { Body, Controller, Delete, Get, HttpCode, NotFoundException, Patch, Post, Put, Req, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import type { RoleInfo } from '@nightout/contracts';
 import { bearerOf } from '../../auth/bearer';
 import { CurrentUser } from '../../auth/current-user.decorator';
 import { SupabaseJwtGuard, type AuthedRequest, type AuthUser } from '../../auth/supabase-jwt.guard';
@@ -51,6 +52,18 @@ export class AccountMeController {
     if (!rows[0]) throw new NotFoundException('USER_NOT_FOUND');
     const { roles, ...u } = rows[0];
     return { ...u, role_label: roles?.label_th ?? u.role, can_enter_backoffice: roles?.can_enter_backoffice ?? false };
+  }
+
+  @Get('roles')
+  @ApiDoc({
+    summary: 'ชั้นบัญชีทั้งหมดพร้อมสี',
+    description:
+      'ทุกชั้นจากตาราง roles เรียงต่ำ → สูง (sort_order) — หน้าเว็บใช้ชื่อและสีของชั้นในป้าย วงรอบรูป พื้นหลังหน้า /profile รายการชั้นบัญชี และปุ่ม/เมนูบัญชีบน navbar · Super Admin แก้สีที่ Backoffice /settings',
+    returns: 'รายการ `code` รหัสชั้น · `label_th` ชื่อไทย · `color` สีหลักของชั้น #RRGGBB · `sort_order`',
+    validates: false,
+  })
+  roles(@Req() req: AuthedRequest) {
+    return this.db.selectAs<RoleInfo[]>(bearerOf(req), 'roles?select=code,label_th,color,sort_order&order=sort_order');
   }
 
   @Patch('profile')

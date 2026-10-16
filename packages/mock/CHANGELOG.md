@@ -1,5 +1,11 @@
 # @nightout/mock — ประวัติการแก้ไข
 
+## 2026-10-17 — `hasPR: false` = ร้านที่ไม่มี PR
+- `listBars`: `hasPR` true = เฉพาะร้านมี PR · false = เฉพาะร้านไม่มี PR · ไม่ระบุ = ทุกร้าน (หน้า /map ส่ง true/undefined เหมือนเดิม) (`src/service.ts`)
+
+## 2026-10-17 — sort `distance`
+- `BarFilter.sort` รับ `distance` (ใกล้ผู้ใช้ที่สุด) — `listBars` ไม่รู้ตำแหน่ง เรียงแบบ relevance ให้ หน้า /search เรียงระยะต่อเอง (`src/service.ts`)
+
 ## 2026-10-13 — ดีลวันนี้
 - `models.ts`: `BarPromotion` เพิ่ม `validFrom` / `validTo` (YYYY-MM-DD · map จาก `valid_from` / `valid_to` ของ `bar_detail` / `my_bar_detail`) ให้ป้าย "ดีลวันนี้" ตัดสินวันตรงกับ DB
 

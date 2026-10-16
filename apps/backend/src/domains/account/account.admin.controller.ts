@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, HttpCode, Patch, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Patch, Post, Put, Req, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { canCreateRole } from '@nightout/contracts';
 import type { UserRole } from '@nightout/types';
@@ -11,7 +11,7 @@ import { ADMIN_FORBIDDEN, Id } from '../../common/params';
 import { SupabaseService } from '../../supabase/supabase.service';
 import { AccountAvatarService } from './account-avatar.service';
 import { AccountUsersService } from './account-users.service';
-import { BanUserDto, CreateUserDto, RemoveUserAvatarDto, SetUsersRoleDto, UnbanUserDto, UpdateUserAccountDto } from './account.dto';
+import { BanUserDto, CreateUserDto, RemoveUserAvatarDto, SaveRoleColorsDto, SetUsersRoleDto, UnbanUserDto, UpdateUserAccountDto } from './account.dto';
 
 /** account · Backoffice — ผู้ใช้ ชั้นบัญชี (ADR 0005) · แบน/ปลดแบนพร้อมเหตุผล (แบนเอง + แบนอัตโนมัติจากสลิปปลอม) · audit log ในธุรกรรมเดียว */
 @ApiTags('account')
@@ -31,17 +31,30 @@ export class AccountAdminController {
     description:
       'ห้าชั้นจากตาราง roles เรียงตาม sort_order พร้อมสิทธิ์ของผู้เรียก — แอดมินสร้างบัญชีได้แค่ลูกค้า / ร้านค้า / พนักงาน · แก้ชั้นของบัญชีที่มีอยู่ได้เฉพาะ SUPER_ADMIN',
     returns:
-      'รายการ `code` · `label_th` · `sort_order` · `can_enter_backoffice` · `can_create` ผู้เรียกเลือกชั้นนี้ตอนสร้างบัญชีได้ · `can_assign` ผู้เรียกแก้บัญชีอื่นเป็นชั้นนี้ได้',
+      'รายการ `code` · `label_th` · `color` สีหลักของชั้น #RRGGBB · `sort_order` · `can_enter_backoffice` · `can_create` ผู้เรียกเลือกชั้นนี้ตอนสร้างบัญชีได้ · `can_assign` ผู้เรียกแก้บัญชีอื่นเป็นชั้นนี้ได้',
     forbidden: ADMIN_FORBIDDEN,
     validates: false,
   })
   async roles(@Req() req: AuthedRequest) {
-    const rows = await this.db.selectAs<{ code: UserRole; label_th: string; sort_order: number; can_enter_backoffice: boolean }[]>(
+    const rows = await this.db.selectAs<{ code: UserRole; label_th: string; color: string; sort_order: number; can_enter_backoffice: boolean }[]>(
       bearerOf(req),
-      'roles?select=code,label_th,sort_order,can_enter_backoffice&order=sort_order',
+      'roles?select=code,label_th,color,sort_order,can_enter_backoffice&order=sort_order',
     );
     const actor = req.user?.role;
     return rows.map((r) => ({ ...r, can_create: canCreateRole(actor, r.code), can_assign: actor === 'SUPER_ADMIN' }));
+  }
+
+  @Put('roles/colors')
+  @UseGuards(SuperAdminGuard)
+  @ApiDoc({
+    summary: 'แก้สีของชั้นบัญชี',
+    description:
+      'หน้า /settings ของ Backoffice แก้สีหลักของชั้นบัญชีหลายชั้นในครั้งเดียว · ส่งเฉพาะชั้นที่เปลี่ยน · สี #RRGGBB (เก็บตัวพิมพ์ใหญ่) · หน้าเว็บลูกค้าใช้สีนี้ทุกที่ที่แสดงชั้นบัญชี · audit log ต่อชั้นที่เปลี่ยน (rpc admin_save_role_colors)',
+    returns: '`updated` จำนวนชั้นที่สีเปลี่ยนจริง',
+    forbidden: 'ไม่ใช่ SUPER_ADMIN (`SUPER_ADMIN_REQUIRED`)',
+  })
+  saveRoleColors(@CurrentUser() me: AuthUser, @Body() b: SaveRoleColorsDto) {
+    return this.db.rpc('admin_save_role_colors', { p_actor: me.id, p_items: b.items });
   }
 
   @Post('users')

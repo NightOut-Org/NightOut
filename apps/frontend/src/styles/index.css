@@ -7,13 +7,13 @@
 /* ให้ Tailwind สแกน class ที่ใช้ใน packages/ui ด้วย */
 @source '../../../../packages/ui/src';
 
-/* สีชั้นบัญชี "พนักงานร้าน" (configs/roles.ts) — ไม่มีใน token กลาง: มืด = tier-b แบบสว่าง · สว่าง = tier-b */
+/* สีชั้นบัญชีมาจาก API (configs/roles.ts roleTone) — ตัวหนังสือ/เส้น = สีหลักผสมดำ ตามสัดส่วนนี้: มืด = สีเต็ม · สว่าง = เข้มขึ้นให้อ่านออก */
 :root,
 .dark {
-  --role-staff: #8c9bea;
+  --role-ink: 100%;
 }
 .light {
-  --role-staff: #5869c8;
+  --role-ink: 58%;
 }
 
 @layer components {

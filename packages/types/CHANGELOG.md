@@ -1,5 +1,8 @@
 # CHANGELOG — @nightout/types
 
+## 2026-10-17 — สีของชั้นบัญชี
+- `database.generated.ts`: ตาราง `roles` + `color` · ฟังก์ชัน `admin_save_role_colors` (`20261017000100`) · `refresh_bar_rating` (`20261016000200`) — push ขึ้น Supabase แล้ว · สร้างใหม่ด้วย `db:types`
+
 ## 2026-10-16 — รูปโปรไฟล์
 - `database.generated.ts`: `users.avatar_path` · `admin_users.avatar_url` · ฟังก์ชัน `app_set_avatar` / `app_remove_avatar` / `admin_remove_user_avatar` (migration `20261016000100` push ขึ้น Supabase แล้ว · สร้างใหม่ด้วย `db:types`)
 
