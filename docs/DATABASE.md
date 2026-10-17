@@ -186,7 +186,8 @@ stateDiagram-v2
 |  | `bar_check_in_preview` | `20261013000710_booking_check_in_preview` |
 |  | `bar_table_board` · `app_team_set_table_occupancy` · `close_table_occupancy_on_check_in` (trigger `bookings_checkin_close_occupancy`) | `20261013001200_booking_table_board` |
 |  | `app_team_report_no_table` | `20261013000700_bar_blacklist_strikes` |
-|  | `app_cancel_booking` · `app_check_in` · `app_team_set_booking_status` · `booking_customer_name` · `zone_availability` | `20261002001700_app_actions` |
+|  | `app_cancel_booking` · `app_check_in` · `app_team_set_booking_status` · `zone_availability` | `20261002001700_app_actions` |
+|  | `booking_customer_name` | `20261017000200_booking_customer_name_scope` |
 |  | `app_create_booking` · `app_create_booking_core` | `20261006000200_checkout_deposit_consent` |
 |  | `app_team_move_booking` · `bar_booking_table_options` | `20261006000300_merchant_move_table_refund` |
 |  | `booking_ban_check` | `20261006000100_slip_reject_reasons_fake_slip_ban` |
