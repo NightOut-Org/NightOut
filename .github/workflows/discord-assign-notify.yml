@@ -1,0 +1,60 @@
+name: Discord assign notify
+
+on:
+  issues:
+    types: [assigned]
+
+permissions: {}
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Discord DM
+        env:
+          BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
+          USER_MAP: ${{ vars.DISCORD_USER_MAP }}
+          ASSIGNEE: ${{ github.event.assignee.login }}
+          SENDER: ${{ github.event.sender.login }}
+          REPO: ${{ github.repository }}
+          NUMBER: ${{ github.event.issue.number }}
+          TITLE: ${{ github.event.issue.title }}
+          URL: ${{ github.event.issue.html_url }}
+        run: |
+          if [ -z "$BOT_TOKEN" ] || [ -z "$USER_MAP" ]; then
+            echo "::warning::ยังไม่ได้ตั้ง DISCORD_BOT_TOKEN หรือ DISCORD_USER_MAP"
+            exit 0
+          fi
+
+          # ค่าใน map เป็น ID เดียว ("123") หรือหลาย ID (["123", "456"]) · ชื่อ GitHub ไม่สนตัวพิมพ์
+          DISCORD_IDS=$(jq -r --arg u "$ASSIGNEE" '
+            to_entries[] | select((.key | ascii_downcase) == ($u | ascii_downcase))
+            | .value | if type == "array" then .[] else . end' <<< "$USER_MAP")
+          if [ -z "$DISCORD_IDS" ]; then
+            echo "::notice::ไม่พบ Discord ID ของ $ASSIGNEE ใน DISCORD_USER_MAP"
+            exit 0
+          fi
+
+          API=https://discord.com/api/v10
+          MESSAGE=$(jq -n \
+            --arg title "#$NUMBER $TITLE" --arg url "$URL" \
+            --arg desc "$SENDER มอบหมาย issue นี้ให้คุณใน $REPO" \
+            '{embeds: [{title: $title, url: $url, description: $desc, color: 13938487}]}')
+
+          for DISCORD_ID in $DISCORD_IDS; do
+            CHANNEL_ID=$(jq -n --arg id "$DISCORD_ID" '{recipient_id: $id}' \
+              | curl -sS -X POST "$API/users/@me/channels" \
+                  -H "Authorization: Bot $BOT_TOKEN" -H "Content-Type: application/json" -d @- \
+              | jq -r '.id // empty')
+            if [ -z "$CHANNEL_ID" ]; then
+              echo "::warning::เปิดช่อง DM กับ $ASSIGNEE ($DISCORD_ID) ไม่ได้ (bot ไม่อยู่ server เดียวกัน หรือ token ผิด)"
+              continue
+            fi
+
+            STATUS=$(curl -sS -o /tmp/discord.json -w '%{http_code}' -X POST "$API/channels/$CHANNEL_ID/messages" \
+              -H "Authorization: Bot $BOT_TOKEN" -H "Content-Type: application/json" -d "$MESSAGE")
+            if [ "$STATUS" != "200" ]; then
+              echo "::warning::ส่ง DM ถึง $ASSIGNEE ($DISCORD_ID) ไม่สำเร็จ (HTTP $STATUS · ผู้รับอาจปิดรับ DM จากสมาชิก server)"
+              cat /tmp/discord.json
+            fi
+          done
