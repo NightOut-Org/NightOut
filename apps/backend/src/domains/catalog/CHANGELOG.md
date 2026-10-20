@@ -1,5 +1,8 @@
 # CHANGELOG — apps/backend/src/domains/catalog
 
+## 2026-10-17 — catalog ส่งไอคอนสไตล์
+- `GET /public/catalog`: `styles` เพิ่ม `icon` (ชื่อไอคอน Phosphor ที่แอดมินตั้งที่ /styles) ให้หน้าโปรไฟล์แสดงไอคอนคู่ชื่อสไตล์ (`catalog.public.controller.ts`)
+
 ## 2026-10-13 — อันดับร้านจริง · จัดการสไตล์ร้าน · คำนวณดาว/อันดับ
 - `GET /public/ranking?period=WEEKLY|MONTHLY&category=&limit=` → rpc `public_ranking` (อ่านในนามผู้เรียก · รอบล่าสุดของ `tier_scores` · เรียงโหวตแล้วคะแนนรวม · ไม่รวมร้านใหม่/ร้านที่ไม่แสดง · ยังไม่เคยคำนวณ = `[]`)
 - ใหม่ `catalog.admin.controller.ts` (SupabaseJwtGuard + AdminGuard): `PUT /admin/styles` → rpc `admin_save_styles` (เพิ่ม/เปลี่ยนชื่อ/ไอคอน/ซ่อน/เรียงลำดับ · ลบไม่ได้) · `POST /admin/ranking/recompute` → rpc `admin_recompute_ranking` → `run_tier_scores` (ปุ่ม "คำนวณใหม่")

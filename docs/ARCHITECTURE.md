@@ -106,7 +106,7 @@ apps/frontend/src/
 │   │   ├── api.ts        # ทุก API ที่โมดูลนี้ใช้ (Rest + useQuery + key) — ADR 0007
 │   │   ├── components/   # ใช้เฉพาะหน้านี้ (hero.tsx, categoryRow.tsx)
 │   │   └── type/         # type ของหน้านี้
-│   ├── login/ register/ forgotPassword/ resetPassword/ verifyEmail/ acceptInvite/
+│   ├── login/ register/ verifyEmail/ acceptInvite/
 │   ├── ranking/ search/ barDetail/ barReviews/ book/ bookings/ bookingDetail/ deposit/ ...
 │   └── merchant/<ชื่อหน้า>/page.tsx   # dashboard, tonight, bookings, deposits, store, menu ...
 ├── hooks/                # custom hooks ใช้ข้ามหน้า (useDemo, useNow, useScrolled, useMerchantBar)

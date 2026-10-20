@@ -57,8 +57,7 @@ update bar_booking_settings set deposit_amount = 500, deposit_unit = 'PER_TABLE'
   deposit_policy = 'มัดจำหักเป็นค่าอาหาร/เครื่องดื่มในวันที่มา · ยกเลิกก่อน 6 ชม. คืนเต็มจำนวน · ไม่มาตามนัด ร้านขอเก็บมัดจำ', refund_before_hours = 6, grace_minutes = 15
 where bar_id = '96e5917b-2acc-5f7f-b4ca-fc9a3b00f07d';
 update bar_stats set avg_price_per_person = 770, safety_score = 78, score = 94,
-  current_stars = 5, current_tier = 'S', is_new = false,
-  rating_avg = 4.8, rating_count = 978
+  current_stars = 5, current_tier = 'S', is_new = false
 where bar_id = '96e5917b-2acc-5f7f-b4ca-fc9a3b00f07d';
 update bar_live_status set current_crowd = 'ALMOST_FULL', crowd_updated_at = now() - interval '20 minutes' where bar_id = '96e5917b-2acc-5f7f-b4ca-fc9a3b00f07d';
 insert into bar_pr_counts (bar_id, gender, pr_count) values ('96e5917b-2acc-5f7f-b4ca-fc9a3b00f07d', 'MALE', 3), ('96e5917b-2acc-5f7f-b4ca-fc9a3b00f07d', 'FEMALE', 4);
@@ -158,8 +157,7 @@ update bar_booking_settings set deposit_amount = 300, deposit_unit = 'PER_TABLE'
   deposit_policy = 'มัดจำหักเป็นค่าอาหาร/เครื่องดื่มในวันที่มา · ยกเลิกก่อน 6 ชม. คืนเต็มจำนวน · ไม่มาตามนัด ร้านขอเก็บมัดจำ', refund_before_hours = 6, grace_minutes = 30
 where bar_id = '0cccc294-d9b5-501e-bf33-a900f1188f90';
 update bar_stats set avg_price_per_person = 960, safety_score = 89, score = 49,
-  current_stars = 2, current_tier = 'C', is_new = false,
-  rating_avg = 3.1, rating_count = 61
+  current_stars = 2, current_tier = 'C', is_new = false
 where bar_id = '0cccc294-d9b5-501e-bf33-a900f1188f90';
 update bar_live_status set current_crowd = 'FULL', crowd_updated_at = now() - interval '20 minutes' where bar_id = '0cccc294-d9b5-501e-bf33-a900f1188f90';
 insert into bar_hours (bar_id, day_of_week, open_time, close_time, is_closed) values
@@ -252,8 +250,7 @@ update bar_booking_settings set deposit_amount = 300, deposit_unit = 'PER_TABLE'
   deposit_policy = 'มัดจำหักเป็นค่าอาหาร/เครื่องดื่มในวันที่มา · ยกเลิกก่อน 6 ชม. คืนเต็มจำนวน · ไม่มาตามนัด ร้านขอเก็บมัดจำ', refund_before_hours = 6, grace_minutes = 60
 where bar_id = 'fdbadfd4-d389-5cef-aee5-e622cc607bdf';
 update bar_stats set avg_price_per_person = 770, safety_score = 67, score = 45,
-  current_stars = 2, current_tier = 'C', is_new = false,
-  rating_avg = 2.9, rating_count = 1022
+  current_stars = 2, current_tier = 'C', is_new = false
 where bar_id = 'fdbadfd4-d389-5cef-aee5-e622cc607bdf';
 update bar_live_status set current_crowd = 'FULL', crowd_updated_at = now() - interval '20 minutes' where bar_id = 'fdbadfd4-d389-5cef-aee5-e622cc607bdf';
 insert into bar_hours (bar_id, day_of_week, open_time, close_time, is_closed) values
@@ -347,8 +344,7 @@ update bar_booking_settings set deposit_amount = 500, deposit_unit = 'PER_TABLE'
   deposit_policy = 'มัดจำหักเป็นค่าอาหาร/เครื่องดื่มในวันที่มา · ยกเลิกก่อน 6 ชม. คืนเต็มจำนวน · ไม่มาตามนัด ร้านขอเก็บมัดจำ', refund_before_hours = 6, grace_minutes = 15
 where bar_id = 'f19f3694-3757-500b-a54a-71bd7bd1d616';
 update bar_stats set avg_price_per_person = 680, safety_score = 78, score = 63,
-  current_stars = 3, current_tier = 'B', is_new = false,
-  rating_avg = 3.6, rating_count = 410
+  current_stars = 3, current_tier = 'B', is_new = false
 where bar_id = 'f19f3694-3757-500b-a54a-71bd7bd1d616';
 update bar_live_status set current_crowd = 'ALMOST_FULL', crowd_updated_at = now() - interval '20 minutes' where bar_id = 'f19f3694-3757-500b-a54a-71bd7bd1d616';
 insert into bar_pr_counts (bar_id, gender, pr_count) values ('f19f3694-3757-500b-a54a-71bd7bd1d616', 'MALE', 1), ('f19f3694-3757-500b-a54a-71bd7bd1d616', 'FEMALE', 2);
@@ -446,8 +442,7 @@ update bar_booking_settings set deposit_amount = 300, deposit_unit = 'PER_TABLE'
   deposit_policy = 'มัดจำหักเป็นค่าอาหาร/เครื่องดื่มในวันที่มา · ยกเลิกก่อน 6 ชม. คืนเต็มจำนวน · ไม่มาตามนัด ร้านขอเก็บมัดจำ', refund_before_hours = 6, grace_minutes = 30
 where bar_id = 'ca9df1a8-3a56-5dc6-849e-ea71be97f004';
 update bar_stats set avg_price_per_person = 890, safety_score = 78, score = 74,
-  current_stars = 3, current_tier = 'B', is_new = false,
-  rating_avg = 4, rating_count = 1221
+  current_stars = 3, current_tier = 'B', is_new = false
 where bar_id = 'ca9df1a8-3a56-5dc6-849e-ea71be97f004';
 update bar_live_status set current_crowd = 'ALMOST_FULL', crowd_updated_at = now() - interval '20 minutes' where bar_id = 'ca9df1a8-3a56-5dc6-849e-ea71be97f004';
 insert into bar_pr_counts (bar_id, gender, pr_count) values ('ca9df1a8-3a56-5dc6-849e-ea71be97f004', 'FEMALE', 1);
@@ -538,8 +533,7 @@ update bar_booking_settings set deposit_amount = 300, deposit_unit = 'PER_TABLE'
   deposit_policy = 'มัดจำหักเป็นค่าอาหาร/เครื่องดื่มในวันที่มา · ยกเลิกก่อน 6 ชม. คืนเต็มจำนวน · ไม่มาตามนัด ร้านขอเก็บมัดจำ', refund_before_hours = 6, grace_minutes = 60
 where bar_id = '98fd3a61-0a2d-5fea-85d3-8c305d39e6b4';
 update bar_stats set avg_price_per_person = 940, safety_score = 78, score = 61,
-  current_stars = 3, current_tier = 'B', is_new = false,
-  rating_avg = 3.5, rating_count = 1027
+  current_stars = 3, current_tier = 'B', is_new = false
 where bar_id = '98fd3a61-0a2d-5fea-85d3-8c305d39e6b4';
 update bar_live_status set current_crowd = 'FULL', crowd_updated_at = now() - interval '20 minutes' where bar_id = '98fd3a61-0a2d-5fea-85d3-8c305d39e6b4';
 insert into bar_hours (bar_id, day_of_week, open_time, close_time, is_closed) values
@@ -630,8 +624,7 @@ update bar_booking_settings set deposit_amount = 500, deposit_unit = 'PER_TABLE'
   deposit_policy = 'มัดจำหักเป็นค่าอาหาร/เครื่องดื่มในวันที่มา · ยกเลิกก่อน 6 ชม. คืนเต็มจำนวน · ไม่มาตามนัด ร้านขอเก็บมัดจำ', refund_before_hours = 6, grace_minutes = 15
 where bar_id = '2c455e74-6029-52ae-b878-4df21dfc9c16';
 update bar_stats set avg_price_per_person = 970, safety_score = 78, score = 81,
-  current_stars = 4, current_tier = 'A', is_new = false,
-  rating_avg = 4.3, rating_count = 999
+  current_stars = 4, current_tier = 'A', is_new = false
 where bar_id = '2c455e74-6029-52ae-b878-4df21dfc9c16';
 update bar_live_status set current_crowd = 'ALMOST_FULL', crowd_updated_at = now() - interval '20 minutes' where bar_id = '2c455e74-6029-52ae-b878-4df21dfc9c16';
 insert into bar_pr_counts (bar_id, gender, pr_count) values ('2c455e74-6029-52ae-b878-4df21dfc9c16', 'MALE', 1), ('2c455e74-6029-52ae-b878-4df21dfc9c16', 'FEMALE', 3);
@@ -726,8 +719,7 @@ update bar_booking_settings set deposit_amount = 300, deposit_unit = 'PER_TABLE'
   deposit_policy = 'มัดจำหักเป็นค่าอาหาร/เครื่องดื่มในวันที่มา · ยกเลิกก่อน 6 ชม. คืนเต็มจำนวน · ไม่มาตามนัด ร้านขอเก็บมัดจำ', refund_before_hours = 6, grace_minutes = 30
 where bar_id = '772f1a13-43d3-520b-9812-8e9bda5a9b07';
 update bar_stats set avg_price_per_person = 790, safety_score = 67, score = 66,
-  current_stars = 3, current_tier = 'B', is_new = false,
-  rating_avg = 3.7, rating_count = 1182
+  current_stars = 3, current_tier = 'B', is_new = false
 where bar_id = '772f1a13-43d3-520b-9812-8e9bda5a9b07';
 update bar_live_status set current_crowd = 'FULL', crowd_updated_at = now() - interval '20 minutes' where bar_id = '772f1a13-43d3-520b-9812-8e9bda5a9b07';
 insert into bar_hours (bar_id, day_of_week, open_time, close_time, is_closed) values
@@ -821,8 +813,7 @@ update bar_booking_settings set deposit_amount = 300, deposit_unit = 'PER_TABLE'
   deposit_policy = 'มัดจำหักเป็นค่าอาหาร/เครื่องดื่มในวันที่มา · ยกเลิกก่อน 6 ชม. คืนเต็มจำนวน · ไม่มาตามนัด ร้านขอเก็บมัดจำ', refund_before_hours = 6, grace_minutes = 60
 where bar_id = 'e3a93acf-3717-55d8-a6b4-76d56644db42';
 update bar_stats set avg_price_per_person = 930, safety_score = 67, score = 92,
-  current_stars = 5, current_tier = 'S', is_new = false,
-  rating_avg = 4.7, rating_count = 466
+  current_stars = 5, current_tier = 'S', is_new = false
 where bar_id = 'e3a93acf-3717-55d8-a6b4-76d56644db42';
 update bar_live_status set current_crowd = 'ALMOST_FULL', crowd_updated_at = now() - interval '20 minutes' where bar_id = 'e3a93acf-3717-55d8-a6b4-76d56644db42';
 insert into bar_hours (bar_id, day_of_week, open_time, close_time, is_closed) values
@@ -919,8 +910,7 @@ update bar_booking_settings set deposit_amount = 500, deposit_unit = 'PER_TABLE'
   deposit_policy = 'มัดจำหักเป็นค่าอาหาร/เครื่องดื่มในวันที่มา · ยกเลิกก่อน 6 ชม. คืนเต็มจำนวน · ไม่มาตามนัด ร้านขอเก็บมัดจำ', refund_before_hours = 6, grace_minutes = 15
 where bar_id = '072a70ba-33a2-567f-b2c4-013b61da514f';
 update bar_stats set avg_price_per_person = 960, safety_score = 44, score = 90,
-  current_stars = 5, current_tier = 'S', is_new = false,
-  rating_avg = 4.6, rating_count = 188
+  current_stars = 5, current_tier = 'S', is_new = false
 where bar_id = '072a70ba-33a2-567f-b2c4-013b61da514f';
 update bar_live_status set current_crowd = 'FULL', crowd_updated_at = now() - interval '20 minutes' where bar_id = '072a70ba-33a2-567f-b2c4-013b61da514f';
 insert into bar_pr_counts (bar_id, gender, pr_count) values ('072a70ba-33a2-567f-b2c4-013b61da514f', 'MALE', 2), ('072a70ba-33a2-567f-b2c4-013b61da514f', 'FEMALE', 3);
@@ -1014,8 +1004,7 @@ update bar_booking_settings set deposit_amount = 300, deposit_unit = 'PER_TABLE'
   deposit_policy = 'มัดจำหักเป็นค่าอาหาร/เครื่องดื่มในวันที่มา · ยกเลิกก่อน 6 ชม. คืนเต็มจำนวน · ไม่มาตามนัด ร้านขอเก็บมัดจำ', refund_before_hours = 6, grace_minutes = 30
 where bar_id = '287feeb2-dd55-5c27-9ba4-9909a6e80247';
 update bar_stats set avg_price_per_person = 760, safety_score = 78, score = 70,
-  current_stars = 3, current_tier = 'B', is_new = false,
-  rating_avg = 3.9, rating_count = 684
+  current_stars = 3, current_tier = 'B', is_new = false
 where bar_id = '287feeb2-dd55-5c27-9ba4-9909a6e80247';
 update bar_live_status set current_crowd = 'FULL', crowd_updated_at = now() - interval '20 minutes' where bar_id = '287feeb2-dd55-5c27-9ba4-9909a6e80247';
 insert into bar_pr_counts (bar_id, gender, pr_count) values ('287feeb2-dd55-5c27-9ba4-9909a6e80247', 'FEMALE', 3);
@@ -1106,8 +1095,7 @@ update bar_booking_settings set deposit_amount = 300, deposit_unit = 'PER_TABLE'
   deposit_policy = 'มัดจำหักเป็นค่าอาหาร/เครื่องดื่มในวันที่มา · ยกเลิกก่อน 6 ชม. คืนเต็มจำนวน · ไม่มาตามนัด ร้านขอเก็บมัดจำ', refund_before_hours = 6, grace_minutes = 60
 where bar_id = 'bf05155c-d15b-54ae-a9b3-52b5efb784e9';
 update bar_stats set avg_price_per_person = 960, safety_score = 78, score = 65,
-  current_stars = 3, current_tier = 'B', is_new = false,
-  rating_avg = 3.7, rating_count = 925
+  current_stars = 3, current_tier = 'B', is_new = false
 where bar_id = 'bf05155c-d15b-54ae-a9b3-52b5efb784e9';
 update bar_live_status set current_crowd = 'AVAILABLE', crowd_updated_at = now() - interval '20 minutes' where bar_id = 'bf05155c-d15b-54ae-a9b3-52b5efb784e9';
 insert into bar_hours (bar_id, day_of_week, open_time, close_time, is_closed) values
@@ -1199,8 +1187,7 @@ update bar_booking_settings set deposit_amount = 500, deposit_unit = 'PER_TABLE'
   deposit_policy = 'มัดจำหักเป็นค่าอาหาร/เครื่องดื่มในวันที่มา · ยกเลิกก่อน 6 ชม. คืนเต็มจำนวน · ไม่มาตามนัด ร้านขอเก็บมัดจำ', refund_before_hours = 6, grace_minutes = 15
 where bar_id = '5746aa2f-136a-52ad-87dd-eb8ff90fb5e7';
 update bar_stats set avg_price_per_person = 880, safety_score = 44, score = 52,
-  current_stars = 2, current_tier = 'C', is_new = false,
-  rating_avg = 3.2, rating_count = 1021
+  current_stars = 2, current_tier = 'C', is_new = false
 where bar_id = '5746aa2f-136a-52ad-87dd-eb8ff90fb5e7';
 update bar_live_status set current_crowd = 'FULL', crowd_updated_at = now() - interval '20 minutes' where bar_id = '5746aa2f-136a-52ad-87dd-eb8ff90fb5e7';
 insert into bar_pr_counts (bar_id, gender, pr_count) values ('5746aa2f-136a-52ad-87dd-eb8ff90fb5e7', 'MALE', 3), ('5746aa2f-136a-52ad-87dd-eb8ff90fb5e7', 'FEMALE', 4);
@@ -1297,8 +1284,7 @@ update bar_booking_settings set deposit_amount = 300, deposit_unit = 'PER_TABLE'
   deposit_policy = 'มัดจำหักเป็นค่าอาหาร/เครื่องดื่มในวันที่มา · ยกเลิกก่อน 6 ชม. คืนเต็มจำนวน · ไม่มาตามนัด ร้านขอเก็บมัดจำ', refund_before_hours = 6, grace_minutes = 30
 where bar_id = '5bcdb1a4-bb22-5884-8fb1-bc0a0266cde3';
 update bar_stats set avg_price_per_person = 670, safety_score = 78, score = 49,
-  current_stars = 2, current_tier = 'C', is_new = false,
-  rating_avg = 3.1, rating_count = 784
+  current_stars = 2, current_tier = 'C', is_new = false
 where bar_id = '5bcdb1a4-bb22-5884-8fb1-bc0a0266cde3';
 update bar_live_status set current_crowd = 'FULL', crowd_updated_at = now() - interval '20 minutes' where bar_id = '5bcdb1a4-bb22-5884-8fb1-bc0a0266cde3';
 insert into bar_hours (bar_id, day_of_week, open_time, close_time, is_closed) values
@@ -1393,8 +1379,7 @@ update bar_booking_settings set deposit_amount = 300, deposit_unit = 'PER_TABLE'
   deposit_policy = 'มัดจำหักเป็นค่าอาหาร/เครื่องดื่มในวันที่มา · ยกเลิกก่อน 6 ชม. คืนเต็มจำนวน · ไม่มาตามนัด ร้านขอเก็บมัดจำ', refund_before_hours = 6, grace_minutes = 60
 where bar_id = '26924211-46cf-50a1-8642-65323dc4c0b3';
 update bar_stats set avg_price_per_person = 790, safety_score = 44, score = 82,
-  current_stars = null, current_tier = null, is_new = true,
-  rating_avg = 4.3, rating_count = 3
+  current_stars = null, current_tier = null, is_new = true
 where bar_id = '26924211-46cf-50a1-8642-65323dc4c0b3';
 update bar_live_status set current_crowd = 'AVAILABLE', crowd_updated_at = now() - interval '20 minutes' where bar_id = '26924211-46cf-50a1-8642-65323dc4c0b3';
 insert into bar_hours (bar_id, day_of_week, open_time, close_time, is_closed) values
@@ -1486,8 +1471,7 @@ update bar_booking_settings set deposit_amount = 300, deposit_unit = 'PER_TABLE'
   deposit_policy = 'มัดจำหักเป็นค่าอาหาร/เครื่องดื่มในวันที่มา · ยกเลิกก่อน 6 ชม. คืนเต็มจำนวน · ไม่มาตามนัด ร้านขอเก็บมัดจำ', refund_before_hours = 6, grace_minutes = 30
 where bar_id = '2238849e-de7d-56f9-b430-273d0b9b82f6';
 update bar_stats set avg_price_per_person = 960, safety_score = 89, score = null,
-  current_stars = null, current_tier = null, is_new = true,
-  rating_avg = null, rating_count = 0
+  current_stars = null, current_tier = null, is_new = true
 where bar_id = '2238849e-de7d-56f9-b430-273d0b9b82f6';
 insert into bar_hours (bar_id, day_of_week, open_time, close_time, is_closed) values
   ('2238849e-de7d-56f9-b430-273d0b9b82f6', 0, '18:00', '02:00', false),

@@ -52,7 +52,7 @@ export function activeFilters(f: BarFilter, set: (p: Partial<BarFilter>) => void
       label: CROWD[c].label,
       remove: () => set({ crowd: f.crowd?.filter((x) => x !== c) }),
     });
-  if (f.hasPR) out.push({ key: 'pr', label: 'มี PR', remove: () => set({ hasPR: undefined }) });
+  if (f.hasPR) out.push({ key: 'pr', label: 'มี PR', remove: () => set({ hasPR: false }) });
   if (f.minSafety)
     out.push({
       key: 'safety',

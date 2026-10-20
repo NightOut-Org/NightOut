@@ -1,0 +1,71 @@
+/* การ์ด "ชื่อที่แสดง" แบบกระจกหยดน้ำ (liquid glass) โทนม่วงเข้ม: พื้นโปร่งมืด + เบลอหนา + ขอบสะท้อนแสงบน
+   + แสงหักเหขอบล่าง + ประกายโค้งมุมซ้ายบน (::before) · ไม่มี motion
+   ธีมมืด = ค่าตั้งต้น (:root) · ธีมสว่างใช้ class .light */
+.profile-glass {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border-radius: 1.25rem;
+  border: 1px solid rgba(214, 170, 255, 0.2);
+  background: linear-gradient(
+    160deg,
+    rgba(120, 50, 190, 0.16),
+    rgba(14, 4, 28, 0.6) 45%,
+    rgba(14, 4, 28, 0.68) 75%,
+    rgba(120, 50, 190, 0.1)
+  );
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    inset 1px 0 0 rgba(255, 255, 255, 0.06),
+    inset 0 -1px 0 rgba(214, 170, 255, 0.12),
+    inset 0 14px 22px -16px rgba(255, 255, 255, 0.14),
+    inset 0 -16px 26px -16px rgba(184, 107, 250, 0.22),
+    0 12px 32px rgba(0, 0, 0, 0.35),
+    0 0 18px rgba(167, 56, 245, 0.12);
+  backdrop-filter: blur(24px) saturate(160%) brightness(0.85);
+  -webkit-backdrop-filter: blur(24px) saturate(160%) brightness(0.85);
+}
+
+/* ประกายบนผิวหยดน้ำ: แสงโค้งมุมซ้ายบน + แสงหักเหจาง ๆ มุมขวาล่าง (อยู่หลังเนื้อหา) */
+.profile-glass::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  border-radius: inherit;
+  background:
+    radial-gradient(90% 70% at 12% -25%, rgba(255, 255, 255, 0.13), transparent 60%),
+    radial-gradient(60% 80% at 105% 120%, rgba(214, 170, 255, 0.12), transparent 60%);
+}
+
+.light .profile-glass {
+  border-color: rgba(167, 56, 245, 0.3);
+  background: linear-gradient(160deg, rgba(167, 56, 245, 0.12), rgba(255, 255, 255, 0.5) 50%, rgba(167, 56, 245, 0.08));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.8),
+    inset 0 -14px 24px -16px rgba(167, 56, 245, 0.18),
+    0 8px 24px rgba(167, 56, 245, 0.16);
+  backdrop-filter: blur(24px) saturate(160%);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+}
+
+.light .profile-glass::before {
+  background: radial-gradient(90% 70% at 12% -25%, rgba(255, 255, 255, 0.7), transparent 60%);
+}
+
+/* ปุ่มบนกระจก — พื้นโปร่ง เข้ากับผิวการ์ด */
+.profile-glass__btn {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.16);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.light .profile-glass__btn {
+  background: rgba(255, 255, 255, 0.5);
+  border-color: rgba(167, 56, 245, 0.3);
+}
+
+.profile-glass__btn:hover {
+  border-color: var(--gold);
+}

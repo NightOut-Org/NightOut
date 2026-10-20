@@ -34,5 +34,10 @@ export default defineConfig({
     },
   },
   // strictPort: พอร์ตไม่ว่าง = error ทันที (ไม่ขยับไป 5174 ไปชน Backoffice)
-  server: { port: 5173, strictPort: true },
+  // /admin → Backoffice (:5174) ให้อยู่ origin เดียวกับ production → ใช้ session ล็อกอินร่วมกัน (ws = HMR ของ Backoffice)
+  server: {
+    port: 5173,
+    strictPort: true,
+    proxy: { '/admin': { target: 'http://localhost:5174', ws: true } },
+  },
 });

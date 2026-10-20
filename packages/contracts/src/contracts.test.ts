@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { CreateBookingBody, ERROR_MESSAGES, errorMessageOf, ReviewDepositBody, SaveTeamPageBody, TeamMemberBody, UpdateTeamMemberBody } from './index';
 import { ACCOUNT_ERRORS, canCreateRole, CreateUserBody, OAuthSignupCompleteBody, OAuthSignupVerifyBody } from './account';
 import { SaveSiteNavBody, SITE_NAV_KEYS } from './site-content';
-import { SetUsersRoleBody } from './account';
+import { SaveRoleColorsBody, SetUsersRoleBody } from './account';
 import { AdminBarMediaBody, BAR_GALLERY_MAX, BarMediaBody, BarStoreBody, MenuBody, PromotionsPageBody, SaveSafetyBody, SettingsPageBody, SetBarsStatusBody } from './bar';
 import { PUBLIC_BUCKETS, UploadBucket } from './storage';
 import { CommunityCommentBody, CommunityFeedQuery, CommunityReportBody, CommunityThreadBody, communityTeamBadge, ModerateCommunityBody, MyCommunityFeedQuery, SaveCommunityDraftBody, UpdateCommunityCommentBody } from './community';
@@ -148,6 +148,16 @@ describe('site-content', () => {
 });
 
 describe('account', () => {
+  it('validates role colors and upper-cases hex', () => {
+    expect(SaveRoleColorsBody.parse({ items: [{ code: 'ADMIN', color: '#22c55e' }] }).items[0]?.color).toBe('#22C55E');
+    expect(SaveRoleColorsBody.safeParse({ items: [{ code: 'ADMIN', color: '22C55E' }] }).success).toBe(false);
+    expect(SaveRoleColorsBody.safeParse({ items: [{ code: 'ADMIN', color: '#FFF' }] }).success).toBe(false);
+    expect(SaveRoleColorsBody.safeParse({ items: [{ code: 'NOPE', color: '#FFFFFF' }] }).success).toBe(false);
+    expect(SaveRoleColorsBody.safeParse({ items: [{ code: 'STAFF', color: '#FFFFFF' }, { code: 'STAFF', color: '#000000' }] }).success).toBe(false);
+    expect(SaveRoleColorsBody.safeParse({ items: [] }).success).toBe(false);
+    expect(ERROR_MESSAGES.INVALID_ROLE_COLORS).toBe(ACCOUNT_ERRORS.INVALID_ROLE_COLORS);
+  });
+
   const base = { email: ' New@Mail.com ', display_name: 'ใหม่', birthdate: '1995-05-05' };
   it('normalizes email and ties bar to account type', () => {
     expect(CreateUserBody.parse({ ...base, account_type: 'CUSTOMER' }).email).toBe('new@mail.com');

@@ -21,7 +21,7 @@ describe('community shop-team endpoints', () => {
 
   it('GET /me/community/team requires a bearer token', async () => {
     const res = await request(app.getHttpServer()).get('/me/community/team').expect(401);
-    expect(res.body).toMatchObject({ status: 'no', status_code: 401, data: null, code: 'Missing bearer token' });
+    expect(res.body).toMatchObject({ status: 'no', status_code: 401, data: null, code: 'HTTP_UNAUTHORIZED', err_msg: 'กรุณาเข้าสู่ระบบอีกครั้ง' });
   });
 
   it('PUT /community/threads/:id/like requires a bearer token', async () => {

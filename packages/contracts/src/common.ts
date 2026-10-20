@@ -35,6 +35,12 @@ export const COMMON_ERRORS = {
   TOO_MANY_REQUESTS: 'เรียกถี่เกินไป รอสักครู่แล้วลองใหม่',
   INTERNAL_ERROR: 'เซิร์ฟเวอร์ขัดข้อง ลองใหม่อีกครั้ง',
   SUPABASE_BAD_RESPONSE: 'ฐานข้อมูล (Supabase) ตอบกลับผิดปกติ — อาจถูกพักหรือเกินโควตา ลองใหม่อีกครั้ง',
+  // error ของ NestJS / guard ที่ไม่มีรหัสของเรา (เช่น "Missing bearer token", "Cannot GET …") → รหัสตาม HTTP status
+  HTTP_BAD_REQUEST: 'คำขอไม่ถูกต้อง',
+  HTTP_UNAUTHORIZED: 'กรุณาเข้าสู่ระบบอีกครั้ง',
+  HTTP_FORBIDDEN: 'ไม่มีสิทธิ์ทำรายการนี้',
+  HTTP_NOT_FOUND: 'ไม่พบข้อมูลที่ขอ',
+  HTTP_CONFLICT: 'ทำรายการนี้ไม่ได้ในสถานะปัจจุบัน',
 } as const satisfies Record<string, string>;
 
 /**

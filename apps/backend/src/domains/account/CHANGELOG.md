@@ -1,5 +1,10 @@
 # account — ประวัติการแก้ไข
 
+## 2026-10-17 — สีของชั้นบัญชีจาก DB (นอก MVP — อนุมัติ 2026-10-17)
+- migration `20261017000100_account_role_colors`: คอลัมน์ `roles.color` (#RRGGBB · ค่าตั้งต้น = สีเดิมของเว็บลูกค้า) + rpc `admin_save_role_colors` (Super Admin · ส่งเฉพาะชั้นที่แก้ · audit `role.color` · `INVALID_ROLE_COLORS`)
+- endpoint ใหม่: `GET /me/roles` (ผู้ที่ล็อกอิน — ชื่อ + สีของทุกชั้น ให้ navbar และ /profile) · `PUT /admin/roles/colors` (`SuperAdminGuard`) · `GET /admin/roles` ส่ง `color` เพิ่ม
+- ไฟล์: `account.me.controller.ts` · `account.admin.controller.ts` · `account.dto.ts` (`SaveRoleColorsDto`)
+
 ## 2026-10-16 — รูปโปรไฟล์ (นอก MVP — อนุมัติ 2026-10-16)
 - `GET /me/profile` ตอบ `avatar_url` เพิ่ม · `PUT /me/avatar` `{path}` (rpc `app_set_avatar` — ตรวจ path ในโฟลเดอร์ตัวเอง + มีไฟล์จริง) · `DELETE /me/avatar` (rpc `app_remove_avatar`) · `POST /admin/users/:id/avatar/remove` `{reason}` (rpc `admin_remove_user_avatar` · audit + แจ้งเจ้าของ)
 - `AccountAvatarService`: เรียก rpc แล้วลบไฟล์เก่าใน `removed_paths` จาก bucket `avatars` (แบบเดียวกับ mini-ads)

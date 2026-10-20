@@ -93,7 +93,12 @@ export function LoginPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [auth.loading, auth.session, auth.isAdmin, auth.aal]);
 
-  if (auth.loading) return <Spin fullscreen />;
+  // มี session แอดมินอยู่แล้ว (ล็อกอินจากหน้าบ้าน / รีเฟรช) → effect ด้านบนกำลังพาไปขั้น MFA ไม่ต้องโชว์ฟอร์มรหัสผ่านคั่น
+  // (ระหว่างกดเข้าสู่ระบบเอง = busy → คงฟอร์มไว้ · เริ่ม MFA ไม่สำเร็จ = มี error → กลับมาที่ฟอร์ม)
+  const resumingMfa =
+    step === 'password' && !busy && !error && !!auth.session && auth.isAdmin && auth.aal === 'aal1';
+
+  if (auth.loading || resumingMfa) return <Spin fullscreen />;
   if (auth.canEnter) return <Navigate to="/" replace />;
 
   const onPassword = async (v: { email: string; password: string }) => {
@@ -160,30 +165,31 @@ export function LoginPage() {
   };
 
   const signedInEmail = auth.session?.user.email ?? '';
-  const otp = (
-    <Input.OTP
-      length={6}
-      value={code}
-      onChange={(v) => setCode(v)}
-      formatter={(v) => v.replace(/\D/g, '')}
-      disabled={busy}
-    />
-  );
-  const otpActions = (
-    <div className="staff-pass__actions">
-      <Button size="large" disabled={busy} onClick={() => void switchAccount()}>
-        <span className="text-muted">ใช้บัญชีอื่น</span>
-      </Button>
-      <Button
-        type="primary"
-        size="large"
-        loading={busy}
-        disabled={code.length !== 6}
-        onClick={onVerify}
-      >
-        {step === 'enroll' ? 'ยืนยันและเข้าสู่ระบบ' : 'ยืนยันรหัส'}
-      </Button>
-    </div>
+  // อยู่ใน <form> → กด Enter ในช่องรหัสแล้วยืนยันได้ (ปุ่มยืนยันเป็น submit)
+  const otpForm = (
+    <form
+      className="flex flex-col gap-[inherit]"
+      onSubmit={(e) => {
+        e.preventDefault();
+        void onVerify();
+      }}
+    >
+      <Input.OTP
+        length={6}
+        value={code}
+        onChange={(v) => setCode(v)}
+        formatter={(v) => v.replace(/\D/g, '')}
+        disabled={busy}
+      />
+      <div className="staff-pass__actions">
+        <Button size="large" disabled={busy} onClick={() => void switchAccount()}>
+          <span className="text-muted">ใช้บัญชีอื่น</span>
+        </Button>
+        <Button type="primary" htmlType="submit" size="large" loading={busy} disabled={code.length !== 6}>
+          {step === 'enroll' ? 'ยืนยันและเข้าสู่ระบบ' : 'ยืนยันรหัส'}
+        </Button>
+      </div>
+    </form>
   );
 
   return (
@@ -262,8 +268,7 @@ export function LoginPage() {
         {step === 'verify' && (
           <>
             <p className="m-0 -mt-2 text-sm text-muted">ใส่รหัส 6 หลักจากแอป Authenticator</p>
-            {otp}
-            {otpActions}
+            {otpForm}
           </>
         )}
 
@@ -289,8 +294,7 @@ export function LoginPage() {
                 </Typography.Text>
               </div>
             </div>
-            {otp}
-            {otpActions}
+            {otpForm}
           </>
         )}
       </StaffPass>

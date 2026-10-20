@@ -30,7 +30,7 @@ export class CatalogPublicController {
       this.db.selectAs<unknown[]>(t, 'bar_detail?select=*&order=name'),
       this.db.selectAs<unknown[]>(t, 'public_reviews?select=*&order=created_at.desc&limit=2000'),
       this.db.selectAs<unknown[]>(t, 'districts?select=id,name_th&order=sort_order'),
-      this.db.selectAs<unknown[]>(t, 'styles?select=id,key,name_th&order=sort_order'),
+      this.db.selectAs<unknown[]>(t, 'styles?select=id,key,name_th,icon&order=sort_order'),
       this.db.selectAs<unknown[]>(t, 'platform_settings?select=key,value'),
       this.db.selectAs<unknown[]>(t, 'promotion_packages?select=id,name,placement,duration_days,price&order=price'),
     ]);

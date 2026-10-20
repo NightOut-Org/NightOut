@@ -17,7 +17,7 @@ import { Button, Checkbox, Drawer, Input, Segmented } from 'antd';
 import type { Map as LeafletMap } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { MapContainer, Marker, useMapEvents } from 'react-leaflet';
 import { Link, useNavigate } from 'react-router';
 import { useDemo } from '@/hooks/useDemo';
@@ -63,7 +63,8 @@ export function MapPage() {
   const activeFilters =
     (f.category && f.category !== 'ALL' ? 1 : 0) + (f.hasPR ? 1 : 0) + (f.crowd?.length ?? 0);
 
-  // ขอตำแหน่งครั้งแรก (ถ้าผู้ใช้อนุญาต) — ไม่อนุญาตก็ใช้กลางกรุงเทพ
+  // ขอตำแหน่งทันทีที่เข้าหน้า (ถ้าผู้ใช้อนุญาต) — ไม่อนุญาตก็ใช้กลางกรุงเทพ
+  // maximumAge: ใช้ตำแหน่งที่เครื่องเพิ่งหาได้ (≤ 1 นาที) → ขึ้นทันทีไม่ต้องรอ GPS ใหม่
   const locate = (fly: boolean) => {
     navigator.geolocation?.getCurrentPosition(
       (p) => {
@@ -72,13 +73,21 @@ export function MapPage() {
         if (fly) map?.flyTo(ll, 15, { duration: reduce ? 0 : 0.8 });
       },
       () => undefined,
-      { enableHighAccuracy: true, timeout: 8000 },
+      { enableHighAccuracy: true, timeout: 8000, maximumAge: 60_000 },
     );
   };
   useEffect(() => {
     locate(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // ได้ตำแหน่งครั้งแรก → พาแผนที่ไปที่ผู้ใช้ทันที (ครั้งเดียว · ถ้าเลือกร้านไปก่อนแล้วไม่ดึงกลับ)
+  const centeredOnMe = useRef(false);
+  useEffect(() => {
+    if (!map || !me || centeredOnMe.current) return;
+    centeredOnMe.current = true;
+    if (!selectedId) map.setView(me, 15, { animate: !reduce });
+  }, [map, me, selectedId, reduce]);
 
   const select = (b: BarWithTier) => {
     setSelectedId(b.id);

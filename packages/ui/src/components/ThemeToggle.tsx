@@ -3,7 +3,11 @@ import { Button, Tooltip } from 'antd';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { useThemeMode } from '../ThemeProvider';
 
-/** ปุ่มสลับ Light ↔ Dark (ไอคอนหมุน + circular reveal) */
+/** อุปกรณ์ที่ hover ได้จริง (เมาส์) — จอสัมผัสจำลอง hover ตอนแตะ ทำให้ tooltip ค้างหลังกด */
+const canHover = () =>
+  typeof window !== 'undefined' && window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+
+/** ปุ่มสลับ Light ↔ Dark (ไอคอนหมุน + circular reveal) · tooltip เฉพาะอุปกรณ์ที่ hover ได้ (aria-label บอกชื่อปุ่มเสมอ) */
 export function ThemeToggle() {
   const { resolved, toggle } = useThemeMode();
   const reduce = useReducedMotion();
@@ -11,7 +15,7 @@ export function ThemeToggle() {
   const label = isDark ? 'เปลี่ยนเป็นโหมดสว่าง' : 'เปลี่ยนเป็นโหมดมืด';
 
   return (
-    <Tooltip title={label}>
+    <Tooltip title={label} trigger={canHover() ? 'hover' : []}>
       <Button
         type="text"
         shape="circle"

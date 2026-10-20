@@ -2,7 +2,8 @@ import { CaretDown, SignOut, User, type Icon } from '@phosphor-icons/react';
 import { Dropdown, Spin } from 'antd';
 import type { ReactNode } from 'react';
 import { Link, useLocation } from 'react-router';
-import { ROLE_META, roleScope, roleTint } from '@/configs/roles';
+import { ROLE_META, roleScope } from '@/configs/roles';
+import { useRoles } from '@/hooks/useRoles';
 import { getBar } from '@/services/data';
 import type { AppUser } from '@/services/auth';
 import { UserAvatar } from './userAvatar';
@@ -45,7 +46,9 @@ export function AccountMenu({
 }) {
   const { pathname } = useLocation();
   const meta = ROLE_META[user.role];
-  const label = user.roleLabel || meta.label;
+  const roles = useRoles();
+  const tone = roles.tone(user.role);
+  const label = user.roleLabel || roles.label(user.role);
   const scope = roleScope(user.role, user.barId ? getBar(user.barId)?.name : undefined);
   const RoleIcon = meta.icon;
   const avatarSize = scrolled ? 30 : 34;
@@ -67,16 +70,16 @@ export function AccountMenu({
             <p className="text-xs text-muted">เข้าสู่ระบบในฐานะ</p>
             <div
               className="flex items-center gap-3 rounded-xl border p-3"
-              style={{ borderColor: roleTint(meta, 0.45), background: roleTint(meta, 0.12) }}
+              style={{ borderColor: tone.tint(0.45), background: tone.tint(0.12) }}
             >
               <span
-                className="grid size-10 shrink-0 place-items-center rounded-[10px] text-[#07070D]"
-                style={{ background: `rgb(${meta.rgb})` }}
+                className="grid size-10 shrink-0 place-items-center rounded-[10px]"
+                style={{ background: tone.solid, color: tone.on }}
               >
                 <RoleIcon size={22} weight="fill" />
               </span>
               <span className="flex min-w-0 flex-col">
-                <b className="text-[15px]" style={{ color: meta.color }}>
+                <b className="text-[15px]" style={{ color: tone.ink }}>
                   {label}
                 </b>
                 <span className="truncate text-xs text-muted">{scope}</span>
@@ -128,14 +131,14 @@ export function AccountMenu({
         {/* มือถือ / แบบย่อ: จุดไอคอนชั้นบัญชีมุมรูป */}
         <span
           aria-hidden
-          className={`absolute -right-0.5 -bottom-0.5 grid size-4 place-items-center rounded-full border border-surface text-[#07070D] ${compact ? '' : 'md:hidden'}`}
-          style={{ background: `rgb(${meta.rgb})` }}
+          className={`absolute -right-0.5 -bottom-0.5 grid size-4 place-items-center rounded-full border border-surface ${compact ? '' : 'md:hidden'}`}
+          style={{ background: tone.solid, color: tone.on }}
         >
           <RoleIcon size={10} weight="fill" />
         </span>
         <span className={`${compact ? 'hidden' : 'hidden md:flex'} flex-col leading-tight`}>
           <span className="max-w-32 truncate text-[13px] font-semibold whitespace-nowrap">{user.displayName}</span>
-          <span className="flex items-center gap-1 text-xs font-semibold whitespace-nowrap" style={{ color: meta.color }}>
+          <span className="flex items-center gap-1 text-xs font-semibold whitespace-nowrap" style={{ color: tone.ink }}>
             <RoleIcon weight="fill" />
             {label}
           </span>

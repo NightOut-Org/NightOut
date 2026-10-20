@@ -2,7 +2,9 @@ import { Button, Drawer, Empty, Tabs } from 'antd';
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { useDemo } from '@/hooks/useDemo';
+import { useAuth } from '@/services/auth';
 import { barReviews, getBarBySlug } from '@/services/data';
+import { useAuthModal } from '@/ui/components/authModal';
 import { NotFoundResult } from '@/ui/components/notFoundResult';
 import { PRBadge } from '@/ui/components/prBadge';
 import { PriceEstimator, type EstimatorValue } from '@/ui/components/priceEstimator';
@@ -23,13 +25,17 @@ export function BarDetailPage() {
   useDemo();
   const { slug = '' } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { openLogin } = useAuthModal();
   const bar = getBarBySlug(slug);
   const [estOpen, setEstOpen] = useState(false);
   const [est, setEst] = useState<EstimatorValue>({ pax: 4, qty: {} });
 
   if (!bar || bar.status !== 'APPROVED') return <NotFoundResult title="ไม่พบร้านนี้" kind="bar" />;
   const reviews = barReviews(bar.id);
-  const book = () => navigate(`/bars/${bar.slug}/book`);
+  const bookPath = `/bars/${bar.slug}/book`;
+  // ยังไม่ล็อกอิน = เปิด modal บนหน้านี้เลย (ลิ้นชักประเมินราคายังอยู่) แล้วไปหน้าจองหลังล็อกอิน
+  const book = () => (user ? navigate(bookPath) : openLogin(bookPath));
   const estimate = () => setEstOpen(true);
 
   return (

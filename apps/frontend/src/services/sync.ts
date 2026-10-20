@@ -40,6 +40,8 @@ export interface StyleOpt {
   id: string;
   key: string;
   label: string;
+  /** ชื่อไอคอน Phosphor ที่แอดมินตั้ง (Backoffice /styles · STYLE_ICONS) — snapshot เก่าไม่มี */
+  icon?: string;
 }
 export interface PromotionPackage {
   id: string;
@@ -104,7 +106,7 @@ interface PublicRaw {
   bars: BarDetailRow[];
   reviews: PublicReviewRow[];
   districts: { id: string; name_th: string }[];
-  styles: { id: string; key: string; name_th: string }[];
+  styles: { id: string; key: string; name_th: string; icon?: string | null }[];
   settings: { key: string; value: { name?: string; promptpay_id?: string } }[];
   packages: { id: string; name: string; placement: PromotionPackage['placement']; duration_days: number; price: number }[];
 }
@@ -112,7 +114,7 @@ interface PublicRaw {
 /** แปลงข้อมูลดิบ → master + store (ใช้ทั้งตอนโหลดจาก DB และตอนอ่าน snapshot ในเครื่อง) */
 function applyPublic(raw: PublicRaw, urls: Map<string, string>) {
   MASTER.districts = raw.districts.map((d) => ({ id: d.id, name: d.name_th }));
-  MASTER.styles = raw.styles.map((x) => ({ id: x.id, key: x.key, label: x.name_th }));
+  MASTER.styles = raw.styles.map((x) => ({ id: x.id, key: x.key, label: x.name_th, icon: x.icon ?? undefined }));
   for (const x of MASTER.styles) STYLE_LABELS[x.key] = x.label;
   DISTRICTS.splice(0, DISTRICTS.length, ...MASTER.districts.map((d) => d.name));
   STYLES.splice(0, STYLES.length, ...MASTER.styles.map((x) => x.label));

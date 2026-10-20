@@ -1,10 +1,10 @@
 import { ListBullets, MapTrifold, MoonStars } from '@phosphor-icons/react';
 import { DISTRICTS, listBars, STYLES, type BarFilter } from '@/services/data';
 import type { CrowdStatus } from '@nightout/types';
-import { distanceMeters, parseBudgetSearch } from '@nightout/utils';
-import { Segmented, Select } from 'antd';
-import { Fragment, useCallback, useState, type MouseEvent } from 'react';
-import { useLocation, useSearchParams } from 'react-router';
+import { distanceMeters } from '@nightout/utils';
+import { App, Segmented, Select } from 'antd';
+import { Fragment, useCallback, useEffect, useRef, useState, type MouseEvent } from 'react';
+import { useLocation, useNavigate } from 'react-router';
 import { useDemo } from '@/hooks/useDemo';
 import { EmbersBackdrop } from '@/ui/components/embersBackdrop';
 import { MINI_AD_SEARCH_AFTER, MiniAdSlot } from '@/ui/components/miniAdSlot';
@@ -12,6 +12,7 @@ import { baht } from '@/ui/utils/format';
 import { BudgetRow } from './components/budgetRow';
 import { CommandBar } from './components/commandBar';
 import { SearchMap, type LatLng } from './components/searchMap';
+import { filterFromParams, filterToQuery } from './utils/searchUrl';
 import { parseSmartQuery } from './utils/smartQuery';
 
 /** จอกว้างตั้งแต่นี้: รายการกับแผนที่วางคู่กัน · แคบกว่า: แผนที่อยู่บน รายการอยู่ล่าง */
@@ -25,54 +26,82 @@ const CLEARED: BarFilter = {
   maxBudget: undefined,
   people: undefined,
   crowd: [],
-  hasPR: undefined,
+  hasPR: false,
   minSafety: undefined,
 };
 
 /**
- * /search — เปลี่ยน query string (เช่นคลิกลิงก์ /search?style=… จากโฆษณาในหน้านี้) = เริ่มตัวกรองใหม่
- * ตัวกรองอ่านจาก URL ครั้งเดียวตอน mount จึงต้อง remount ด้วย key
- */
-export function SearchPage() {
-  const { search } = useLocation();
-  return <SearchView key={search} />;
-}
-
-/**
- * ดีไซน์ Search Combined v2: ช่องพิมพ์แบบที่พูด + ลิ้นชักตัวกรอง (layout C) + แถวร้านรูปใหญ่ + แผนที่หมุดรูปร้าน
+ * /search — ดีไซน์ Search Combined v2: ช่องพิมพ์แบบที่พูด + ลิ้นชักตัวกรอง (layout C) + แถวร้านรูปใหญ่ + แผนที่หมุดรูปร้าน
+ * ตัวกรองอยู่ใน URL (utils/searchUrl.ts) → รีเฟรช / ย้อนกลับ / แชร์ลิงก์ ได้ตัวกรองเดิม
  * อ่าน ?q=&district=&budget=&people= จาก Hero หน้าแรก (requirement "ค้นหาตามงบ") + ?category= / ?style=
  * พื้นหลัง Golden Embers + การ์ดกระจกแบบเดียวกับหน้าร้าน (/merchant) — ธีมมืดเท่านั้น (ไม่เปลี่ยนตามดีไซน์ v2)
  */
-function SearchView() {
+export function SearchPage() {
   useDemo();
-  const [params] = useSearchParams();
-  const [f, setF] = useState<BarFilter>(() => {
-    // ลิงก์จากช่องค้นหาหน้าแรก: คำค้น · ย่าน · งบต่อหัว · จำนวนคน (ค่าผิด = ไม่กรอง)
-    const s = parseBudgetSearch(params);
-    return {
-      ...CLEARED,
-      q: s.q ?? '',
-      // ลิงก์จากการ์ดหมวดหมู่หน้าแรก: ?category=PUB_BAR หรือ ?style=Rooftop
-      category: (params.get('category') as BarFilter['category']) ?? 'ALL',
-      styles: params.getAll('style'),
-      district: s.district,
-      maxBudget: s.budget,
-      people: s.people,
-      sort: 'relevance',
-    };
-  });
+  const { search } = useLocation();
+  const navigate = useNavigate();
+  const [f, setF] = useState<BarFilter>(() => filterFromParams(new URLSearchParams(search)));
   const [smart, setSmart] = useState(f.q ?? '');
+  /** query string ที่หน้านี้เขียนเองล่าสุด — URL เปลี่ยนเป็นค่าอื่น (เช่นกดลิงก์ /search?style=… จากโฆษณา) = เริ่มตัวกรองใหม่ */
+  const written = useRef(search);
+
+  useEffect(() => {
+    if (search === written.current) return;
+    written.current = search;
+    const next = filterFromParams(new URLSearchParams(search));
+    setF(next);
+    setSmart(next.q ?? '');
+  }, [search]);
+
+  useEffect(() => {
+    const qs = filterToQuery(f);
+    const next = qs ? `?${qs}` : '';
+    if (next === written.current) return;
+    written.current = next;
+    navigate({ search: next }, { replace: true, preventScrollReset: true });
+  }, [f, navigate]);
   const [view, setView] = useState<'map' | 'list'>('map');
   const [activeId, setActiveId] = useState<string | null>(null);
   const [cardOpen, setCardOpen] = useState(false);
-  /** ตำแหน่งผู้ใช้ — รู้เมื่อกด "ตำแหน่งของฉัน" บนแผนที่ (ไม่ขอสิทธิ์ตอนเปิดหน้า) → แสดงระยะทางในรายการ/การ์ด */
+  /**
+   * ตำแหน่งผู้ใช้ — รู้เมื่อกด "ตำแหน่งของฉัน" บนแผนที่ หรือเรียง "ใกล้ที่สุด" (?sort=distance · Hero "ตำแหน่งปัจจุบัน")
+   * → แสดงระยะทางในรายการ/การ์ด · ไม่ขอสิทธิ์ตอนเปิดหน้าแบบอื่น · ไม่บันทึกพิกัด
+   */
   const [me, setMe] = useState<LatLng | null>(null);
+  const { message } = App.useApp();
+  const wantsDistance = f.sort === 'distance' && !me;
+  useEffect(() => {
+    if (!wantsDistance) return;
+    let cancelled = false;
+    const fallback = (text: string) => {
+      if (cancelled) return;
+      void message.warning(text);
+      setF((prev) => ({ ...prev, sort: 'relevance' }));
+    };
+    if (!('geolocation' in navigator)) {
+      fallback('เบราว์เซอร์นี้หาตำแหน่งไม่ได้ — เรียงแบบแนะนำแทน');
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => !cancelled && setMe([pos.coords.latitude, pos.coords.longitude]),
+      (err) =>
+        fallback(
+          err.code === err.PERMISSION_DENIED
+            ? 'เปิดสิทธิ์ตำแหน่งในเบราว์เซอร์ก่อน ถึงจะเรียงร้านใกล้คุณได้ — เรียงแบบแนะนำแทน'
+            : 'หาตำแหน่งปัจจุบันไม่ได้ — เรียงแบบแนะนำแทน',
+        ),
+      { enableHighAccuracy: true, timeout: 10_000, maximumAge: 60_000 },
+    );
+    return () => {
+      cancelled = true;
+    };
+  }, [wantsDistance, message]);
 
   const set = (patch: Partial<BarFilter>) => setF((prev) => ({ ...prev, ...patch }));
   const smartPatch = (text: string) =>
     parseSmartQuery(text, { districts: DISTRICTS, styles: STYLES });
 
-  const bars = listBars(f);
+  const found = listBars(f);
   // จำนวนข้างปุ่มประเภท/ความแน่น = ผลถ้าเลือกค่านั้น (ตัวกรองอื่นคงเดิม)
   const anyCategory = listBars({ ...f, category: 'ALL' });
   const categoryCounts = {
@@ -93,6 +122,9 @@ function SearchView() {
       me ? distanceMeters({ lat: me[0], lng: me[1] }, b) / 1000 : undefined,
     [me],
   );
+  // ใกล้ที่สุด: listBars ไม่รู้ตำแหน่ง → เรียงระยะที่นี่ (ระหว่างรอตำแหน่ง = ลำดับแนะนำ)
+  const bars =
+    f.sort === 'distance' && me ? found.toSorted((a, b) => distanceKm(a)! - distanceKm(b)!) : found;
 
   const adAfter = Math.min(MINI_AD_SEARCH_AFTER, bars.length) - 1;
   const groupBudget =
@@ -176,6 +208,7 @@ function SearchView() {
                   { label: 'คะแนนสูงสุด', value: 'rating' },
                   { label: 'ราคาต่ำสุด', value: 'price' },
                   { label: 'ปลอดภัยที่สุด', value: 'safety' },
+                  { label: 'ใกล้ที่สุด', value: 'distance' },
                 ]}
               />
               <Segmented

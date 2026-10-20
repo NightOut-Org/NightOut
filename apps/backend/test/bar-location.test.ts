@@ -32,7 +32,7 @@ describe('bar location + geocode endpoints', () => {
 
   it('GET /geocode/* requires a bearer token', async () => {
     const res = await request(app.getHttpServer()).get('/geocode/search').query({ q: 'สยาม' }).expect(401);
-    expect(res.body).toMatchObject({ status: 'no', status_code: 401, data: null, code: 'Missing bearer token' });
+    expect(res.body).toMatchObject({ status: 'no', status_code: 401, data: null, code: 'HTTP_UNAUTHORIZED', err_msg: 'กรุณาเข้าสู่ระบบอีกครั้ง' });
     await request(app.getHttpServer()).get('/geocode/reverse').query({ lat: 13.7, lng: 100.5 }).expect(401);
   });
 

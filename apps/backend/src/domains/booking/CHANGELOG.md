@@ -1,5 +1,10 @@
 # booking — ประวัติการแก้ไข
 
+## 2026-10-17 — booking_customer_name ต้องมีการจองจริง (ปิด IDOR)
+- เดิมทีมร้านเรียก `rpc/booking_customer_name` ตรงผ่าน PostgREST ได้ ส่ง `p_bar` ร้านตัวเองคู่กับ `p_user` ของใครก็ได้ → อ่านชื่อที่แสดงของผู้ใช้ทุกคน · ตอนนี้ต้องมีการจองของ `p_user` ที่ร้าน `p_bar` ก่อนถึงคืนชื่อ (ผู้เรียกยังต้องเป็นเจ้าของการจองหรือทีมร้าน) · ถอนสิทธิ์ `anon` / `public`
+- view `booking_detail` ได้ผลเหมือนเดิม (ส่ง user/ร้านของการจองจริงอยู่แล้ว)
+- migration `20261017000200_booking_customer_name_scope`
+
 ## 2026-10-14 — ตั้งตัวรัน job ด้วย pg_cron + ปิด job ในเครื่อง dev
 - ปัญหา: บน DB จริงไม่มี pg_cron ตั้งไว้ และ backend `pnpm dev` ทุกเครื่องที่ต่อ DB จริงยิง `rpc/run_booking_timeouts` ทุกนาทีซ้ำกัน (~3 ครั้ง/นาที) → API log เต็มโควตา Free Plan · เว็บจริงไม่มีตัวรัน job ถ้าไม่มีใครเปิด dev
 - migration `20261014000100_booking_cron_jobs`: pg_cron เรียกฟังก์ชันใน DB ตรง (ไม่ผ่าน HTTP → ไม่เกิด API log) — `nightout-booking-timeouts` ทุกนาที · `nightout-tier` 00:05 เวลาไทย · `nightout-job-cleanup` ล้าง `cron.job_run_details` / `job_runs` เก่าทุกคืน

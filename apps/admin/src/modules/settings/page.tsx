@@ -4,8 +4,9 @@ import { Card, Space, Table, Tag } from 'antd';
 import { Link } from 'react-router';
 import { LoadError } from '@/ui/components/LoadError';
 import { useMasterTable } from './api';
+import { RoleColorsCard } from './components/roleColorsCard';
 
-/** ข้อมูลตั้งต้นของระบบ (อ่านอย่างเดียว — แก้ผ่าน migration/seed) · สไตล์ร้านจัดการที่ /styles */
+/** ข้อมูลตั้งต้นของระบบ (อ่านอย่างเดียว — แก้ผ่าน migration/seed) · สไตล์ร้านจัดการที่ /styles · สีชั้นบัญชีแก้ที่นี่ (Super Admin) */
 export function SettingsPage() {
   const styles = useMasterTable<Db.Tables<'styles'>>('styles', 'sort_order');
   const safety = useMasterTable<Db.Tables<'safety_features'>>('safety_features', 'sort_order');
@@ -13,9 +14,10 @@ export function SettingsPage() {
   return (
     <PageContainer
       title="ตั้งค่าระบบ"
-      content="ค่าระบบและมาตรการ Safety แก้ผ่าน migration / seed ของทีม · สไตล์ร้านจัดการที่หน้าสไตล์ร้าน"
+      content="ค่าระบบและมาตรการ Safety แก้ผ่าน migration / seed ของทีม · สไตล์ร้านจัดการที่หน้าสไตล์ร้าน · สีของชั้นบัญชีซูเปอร์แอดมินแก้ได้ที่นี่"
     >
       <Space orientation="vertical" size="large" className="w-full">
+        <RoleColorsCard />
         <Card title="สไตล์ร้าน" extra={<Link to="/styles">จัดการสไตล์ร้าน</Link>}>
           <LoadError error={styles.error} onRetry={() => void styles.refetch()} />
           <Space size={[8, 8]} wrap>

@@ -51,7 +51,7 @@ const isPendingOAuthSignup = (session: Session, e: unknown) =>
   e instanceof ApiError && e.code === 'USER_NOT_FOUND' && isOAuthProvider(session.user.app_metadata?.provider);
 
 /** โปรไฟล์จาก public.users ผ่าน API (GET /me/profile) — role อ่านจาก DB ไม่ใช่ user_metadata · 'oauth-signup' = ยังไม่มีบัญชี */
-async function loadProfile(session: Session): Promise<AppUser | 'oauth-signup' | null> {
+async function fetchProfile(session: Session): Promise<AppUser | 'oauth-signup' | null> {
   let u: C.MyProfile;
   try {
     u = await fetchMyProfile(session.access_token);
@@ -60,7 +60,7 @@ async function loadProfile(session: Session): Promise<AppUser | 'oauth-signup' |
     log.error('โหลดโปรไฟล์ไม่สำเร็จ', (e as Error).message);
     return null;
   }
-  const profile = {
+  return {
     id: u.id,
     email: session.user.email ?? '',
     displayName: u.display_name,
@@ -71,19 +71,37 @@ async function loadProfile(session: Session): Promise<AppUser | 'oauth-signup' |
     banReason: u.ban_reason ?? null,
     avatarUrl: u.avatar_url ?? null,
   };
-  // ข้อมูลของผู้ใช้ (การจอง แจ้งเตือน ร้านของฉัน …) โหลดให้เสร็จก่อนเปิดหน้าที่ต้องล็อกอิน
-  const { barId } = await startUser(profile).catch((e: Error) => {
-    log.error('โหลดข้อมูลผู้ใช้ไม่สำเร็จ', e.message);
-    return { barId: undefined };
-  });
-  return { ...profile, barId };
+}
+
+/**
+ * โปรไฟล์ล่าสุดในเครื่อง — รีเฟรชแล้ว navbar แสดงบัญชีได้ทันทีไม่ต้องรอ API (ใช้เฉพาะเมื่อ id ตรงกับ session)
+ * ไม่เก็บเบอร์โทร · โปรไฟล์จริงยังโหลดใหม่ทุกครั้ง และหน้าที่ต้องล็อกอินยังรอ `loading` เหมือนเดิม
+ */
+const PROFILE_CACHE_KEY = 'nightout-profile-v1';
+
+function readCachedProfile(): AppUser | null {
+  try {
+    const raw = localStorage.getItem(PROFILE_CACHE_KEY);
+    return raw ? (JSON.parse(raw) as AppUser) : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeCachedProfile(p: AppUser | null) {
+  try {
+    if (p) localStorage.setItem(PROFILE_CACHE_KEY, JSON.stringify({ ...p, phoneE164: null }));
+    else localStorage.removeItem(PROFILE_CACHE_KEY);
+  } catch {
+    // โหมดส่วนตัว / ปิด storage — ไม่มี cache ก็แค่รอ API
+  }
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   useDemo();
   const [session, setSession] = useState<Session | null>(null);
   const [sessionLoading, setSessionLoading] = useState(supabase !== null);
-  const [profile, setProfile] = useState<AppUser | 'oauth-signup' | null>(null);
+  const [profile, setProfile] = useState<AppUser | 'oauth-signup' | null>(readCachedProfile);
   /** โหลดโปรไฟล์ของ user id ไหนเสร็จแล้ว (สำเร็จหรือไม่ก็ตาม) */
   const [profileLoadedFor, setProfileLoadedFor] = useState<string | null>(null);
   const [version, setVersion] = useState(0);
@@ -102,18 +120,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!userId || !session) {
       if (currentProfile()) clearUser();
+      // รู้แน่แล้วว่าไม่มี session (ไม่ใช่แค่ยังอ่านอยู่) → ทิ้งโปรไฟล์ใน cache
+      if (!sessionLoading) writeCachedProfile(null);
       return;
     }
     let cancelled = false;
-    void loadProfile(session)
-      .then((p) => !cancelled && setProfile(p))
-      .finally(() => !cancelled && setProfileLoadedFor(`${userId}:${version}`));
+    const done = () => !cancelled && setProfileLoadedFor(`${userId}:${version}`);
+    void (async () => {
+      const p = await fetchProfile(session);
+      if (cancelled) return;
+      // ตั้งโปรไฟล์ก่อน → navbar แสดงบัญชีทันที ไม่ต้องรอข้อมูลผู้ใช้ทั้งหมด
+      setProfile(p);
+      writeCachedProfile(p === 'oauth-signup' ? null : p);
+      if (!p || p === 'oauth-signup') return;
+      // ข้อมูลของผู้ใช้ (การจอง แจ้งเตือน ร้านของฉัน …) โหลดให้เสร็จก่อนเปิดหน้าที่ต้องล็อกอิน (loading ยัง true)
+      const { barId } = await startUser(p).catch((e: Error) => {
+        log.error('โหลดข้อมูลผู้ใช้ไม่สำเร็จ', e.message);
+        return { barId: undefined };
+      });
+      if (cancelled) return;
+      const full = { ...p, barId };
+      setProfile(full);
+      writeCachedProfile(full);
+    })().finally(done);
     return () => {
       cancelled = true;
     };
     // session object เปลี่ยนทุกครั้งที่ต่ออายุ token — โหลดใหม่เฉพาะเมื่อเปลี่ยนผู้ใช้ / สั่ง reload
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userId, version]);
+  }, [userId, version, sessionLoading]);
 
   // มี session แล้วแต่โปรไฟล์ยังไม่มา = ยังโหลดอยู่ (กัน RequireAuth เด้งไป /login ระหว่างรอ)
   const loading = sessionLoading || (!!userId && profileLoadedFor !== `${userId}:${version}`);
@@ -130,6 +165,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const { error } = await supabase.auth.signOut();
         if (error) throw error;
         clearUser();
+        writeCachedProfile(null);
       },
       reload: async () => {
         setVersion((v) => v + 1);

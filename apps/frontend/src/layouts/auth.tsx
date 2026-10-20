@@ -44,7 +44,7 @@ const authTheme: ThemeConfig = {
 };
 
 /**
- * Layout ของหน้า Auth ทั้งหมด (login / register / forgot / reset / verify / invite)
+ * Layout ของหน้า Auth ทั้งหมด (verify / invite / signup social)
  * Figma "Login": navbar แคปซูลลอยแบบเดียวกับหน้าหลัก · การ์ดกระจกอยู่กลางจอ · ภาพเมืองกลางคืนเต็มจอ
  */
 export function AuthLayout() {
