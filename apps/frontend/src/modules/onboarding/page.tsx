@@ -4,7 +4,8 @@ import { MASTER, myPrefs } from '@/services/data';
 import { updateProfile } from './api';
 import { useNavigate, useSearchParams } from 'react-router';
 import { PageHeader } from '@/ui/components/pageHeader';
-import { districtSelectOptions } from '@/ui/utils/area';
+import { AreaMultiSelect } from '@/ui/components/areaMultiSelect';
+import { joinAreaPicks, splitAreaPicks } from '@/ui/utils/area';
 
 /** `?next=` จากหน้าสมัคร (เช่น ลิงก์แชร์ที่กด "ไปด้วย") — รับเฉพาะ path ในเว็บเรา กันพาออกไปเว็บอื่น */
 const safeNext = (v: string | null) => (v && /^\/(?![/\\])/.test(v) ? v : '/');
@@ -26,13 +27,18 @@ export function OnboardingPage() {
         <Form
           layout="vertical"
           size="large"
-          initialValues={{ styles: myPrefs.styleIds, districts: myPrefs.districtIds, budget: myPrefs.budget, pax: myPrefs.pax }}
+          initialValues={{
+            styles: myPrefs.styleIds,
+            areas: joinAreaPicks(myPrefs.districtIds, myPrefs.areaCodes),
+            budget: myPrefs.budget,
+            pax: myPrefs.pax,
+          }}
           onFinish={async (v) => {
             setSaving(true);
             try {
               await updateProfile({
                 style_ids: v.styles ?? [],
-                district_ids: v.districts ?? [],
+                ...splitAreaPicks(v.areas),
                 budget_per_person: v.budget ?? null,
                 usual_pax: v.pax ?? null,
                 onboarded: true,
@@ -46,7 +52,10 @@ export function OnboardingPage() {
           }}
         >
           <Form.Item name="styles" label="สไตล์ร้าน">
-            <Select mode="multiple" options={MASTER.styles.map((st) => ({ label: st.label, value: st.id }))} />
+            <Select
+              mode="multiple"
+              options={MASTER.styles.map((st) => ({ label: st.label, value: st.id }))}
+            />
           </Form.Item>
           <div className="grid gap-4 sm:grid-cols-2">
             <Form.Item name="budget" label="งบต่อหัว">
@@ -56,8 +65,12 @@ export function OnboardingPage() {
               <InputNumber className="!w-full" min={1} max={30} suffix="คน" />
             </Form.Item>
           </div>
-          <Form.Item name="districts" label="ย่าน">
-            <Select mode="multiple" showSearch={{ optionFilterProp: 'label' }} placeholder="พิมพ์ชื่อย่าน" options={districtSelectOptions()} />
+          <Form.Item
+            name="areas"
+            label="พื้นที่"
+            extra="ย่าน ตำบล/แขวง อำเภอ/เขต หรือจังหวัด เลือกได้ไม่เกิน 20"
+          >
+            <AreaMultiSelect />
           </Form.Item>
           <div className="flex gap-3">
             <Button block onClick={() => navigate(next)}>

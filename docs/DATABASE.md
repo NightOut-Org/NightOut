@@ -103,6 +103,8 @@
 | `…20261020000400_catalog_admin_areas_data` | ข้อมูลพื้นที่ (สร้างด้วย `apps/backend/scripts/areas` · ห้ามแก้มือ) | 77 จังหวัด · 928 อำเภอ/เขต · 7,425 ตำบล/แขวง จาก OCHA COD-AB Thailand (CC BY-IGO · ขอบเขตลดความละเอียด 0.0002° เก็บเป็น TWKB) · ย่าน 850 = ทีมคัดเอง 17 (10 ย่านเดิม upsert ตาม slug + ย่านดังที่ OSM ไม่มี) + OpenStreetMap 833 (ODbL · ตัดชุมชน/หมู่บ้าน/ชื่อซ้ำอำเภอ-ตำบล) · ไฟล์ ~6 MB |
 | `…20261020000500_catalog_bar_areas` | ร้านไม่ต้องเลือกย่านเอง | trigger `bars_set_area` (before insert / update of lat, lng, district_id) ตั้ง `tambon_code` + `district_id` จากหมุดทุกครั้ง — `district_id` ที่ `app_merchant_join` / `app_update_bar_info` / `admin_save_bar_details` รับมาถูกแทน (คง signature เดิม) · เติมให้ร้านเดิม · view `bar_areas` (ตำบล/อำเภอ/จังหวัดของร้าน · RLS ของ bars) · view `admin_bar_areas` (Backoffice `/ranking`) |
 | `…20261021000100_catalog_search_tambons` | ค้นตำบล/แขวงทั้งประเทศ | index trigram `tambons_name_trgm` · `search_tambons(p_q, p_code, p_limit)` (security invoker · anon + authenticated · ชื่อ ≥ 2 ตัวอักษร escape `% _ \` · ชื่อตรงก่อน → ขึ้นต้นด้วยคำค้น · สูงสุด 50) → `GET /public/tambons` |
+| `…20261021000500_account_preferred_areas` | พื้นที่ที่ชอบทุกระดับ | `user_preferences.preferred_area_codes text[]` · `app_update_profile` รับ `area_codes` (`INVALID_AREA_CODES`) · `search_tambons(p_q, p_codes, p_limit)` (แทนของเดิมที่รับ `p_code`) · `run_retention_jobs` ล้างค่านี้ |
+| `…20261021000600_catalog_more_districts` | ย่านเพิ่ม 36 ย่าน + ย่านหลายจุด | `districts.area` (MultiPolygon · gist) · `district_near` ใช้ `st_covers(area)` ถ้ามี · ย่านใหม่ เช่น รังสิต พหลโยธิน ป่าตอง พัทยา หัวหิน · คำนวณย่านร้านเดิมใหม่ |
 | `…20261021000200_notify_text_no_dots` | ข้อความที่ DB สร้างเลิกใช้ " · " (กฎข้อความ UI 2026-10-20) | ประกาศฟังก์ชันตัวล่าสุดซ้ำ 29 ตัว (แจ้งเตือนการจอง/สลิป/โปรโมชัน/ร้าน/ชุมชน/บัญชี/การชำระ + `app_create_booking_core` ที่เดิมเป็น `app_create_booking` ของ `…001700`) เปลี่ยนเฉพาะสตริงที่มีตัวคั่นเป็นวรรค · ตรวจด้วยการเทียบ prosrc ก่อน/หลังแล้วต่างกันแค่ข้อความ · แจ้งเตือนที่ส่งไปแล้วไม่แก้ย้อนหลัง · ไฟล์นี้กลายเป็นตัวล่าสุดของทั้ง 29 ฟังก์ชัน |
 | `…20261021000300_account_notifications_orphan_cleanup` | ล้างแจ้งเตือนที่ค้างจากร้าน/การจองที่ถูกลบ (FK `bar_id`/`booking_id` เป็น `on delete set null` → แถวเหลือในกระดิ่ง) | ลบครั้งเดียวเฉพาะแถวที่รู้แน่ว่าเป้าหมายไม่มีแล้ว: ลิงก์ `/merchant…` แต่ `bar_id` ว่าง · ลิงก์ `/bookings/<id>` / `?booking=<id>` ที่ไม่มีการจอง · `/share/<token>` ที่ไม่มีลิงก์แชร์ · `?bar=<id>` ที่ไม่มีร้าน · แจ้งเตือนที่ไม่เคยผูกร้าน/การจองไม่ถูกแตะ · ไม่เปลี่ยน FK (ดู `…000400`) |
 | `…20261021000400_account_notifications_cascade` | แจ้งเตือนถูกลบตามเมื่อลบร้าน/การจอง | FK `notifications_bar_fk` / `notifications_booking_fk` เปลี่ยนจาก `on delete set null` เป็น `on delete cascade` (`notification_deliveries` หายตาม) · ไม่ต้องตามล้างแถวค้างอีก |
@@ -191,7 +193,8 @@ stateDiagram-v2
 |  | `admin_save_styles` · view `admin_styles` | `20261013001020_catalog_styles_manage` |
 |  | `tambon_at` · `district_near` · `area_at_point` | `20261020000300_catalog_admin_areas` |
 |  | `bars_set_area` (trigger `bars_set_area`) · view `bar_areas` · view `admin_bar_areas` | `20261020000500_catalog_bar_areas` |
-|  | `search_tambons` | `20261021000100_catalog_search_tambons` |
+|  | `search_tambons` | `20261021000500_account_preferred_areas` |
+|  | `district_near` | `20261021000600_catalog_more_districts` |
 | `booking` | `booking_check_in_window` (trigger `bookings_check_in_window`) · `get_share_card` · view `booking_detail` | `20261013000500_booking_timing_rules` |
 |  | `booking_transition_allowed` | `20261013001100_payment_intents` |
 |  | `bar_check_in_preview` | `20261013000710_booking_check_in_preview` |
@@ -269,7 +272,7 @@ stateDiagram-v2
 | `bar_detail` | หน้าร้าน (รวมเมนู/เซ็ต/โปร/โซน-โต๊ะ/ค่าธรรมเนียม/ความปลอดภัย/ตั้งค่าการจอง · ที่จอดรถ `parking_note` + รถไฟฟ้าใกล้สุด `transit_line` / `transit_station` / `transit_walk_minutes` — `…20261013000600` · `safety[].verify_method` EVIDENCE ตรวจหลักฐาน / ON_SITE ลงพื้นที่ — `…20261013000800`) | anon + authenticated | `Db.BarDetail` |
 | `bar_areas` | ตำบล/อำเภอ/จังหวัดของร้าน (`GET /public/catalog` `areas` → หน้าเว็บรวมเข้าร้าน · กรอง/แสดงพื้นที่) — `…20261020000500` | anon + authenticated | `C.BarAreaRow` |
 | `rpc('area_at_point', {p_lat, p_lng})` | `GET /public/area` — พื้นที่ของหมุดตอนร้านปักหมุด (`/merchant/join` · `/merchant/store`) | anon + authenticated | `C.AreaAtPointResult` |
-| `rpc('search_tambons', {p_q, p_code, p_limit})` | `GET /public/tambons` — ตัวกรองพื้นที่ของ `/search` ค้นตำบล/แขวงตอนพิมพ์ · `?code=` ขอชื่อจากรหัส (`?tambon=` ใน URL) | anon + authenticated | `C.TambonOption` |
+| `rpc('search_tambons', {p_q, p_codes, p_limit})` | `GET /public/tambons` — ตัวกรองพื้นที่ของ `/search` และตัวเลือกพื้นที่ที่ชอบค้นตำบล/แขวงตอนพิมพ์ · `?code=` / `?codes=` (≤ 20) ขอชื่อจากรหัส | anon + authenticated | `C.TambonOption` |
 | `public_reviews` | รีวิวในหน้าร้าน (rating, comment, created_at, display_name, media) | anon + authenticated | `Db.PublicReview` |
 | `my_bars` | ร้านที่ฉันอยู่ในทีม (ทุกสถานะ + staff_role) | authenticated | `Db.MyBar` |
 | `my_bookings` | รายการจองของฉัน | authenticated | `Db.MyBooking` |

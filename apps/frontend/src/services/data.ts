@@ -8,4 +8,15 @@ export * from './models';
 export * from './selectors';
 export { getState } from './cache';
 export { promptPayPayload } from '@nightout/utils';
-export { AREA_OPTIONS, DISTRICTS, MASTER, STYLES, currentProfile, myPrefs, type AreaOpt } from '@/services/sync';
+export {
+  AREA_CODE_LABEL,
+  AREA_OPTIONS,
+  AREA_PICKS,
+  DISTRICTS,
+  MASTER,
+  STYLES,
+  currentProfile,
+  myPrefs,
+  type AreaOpt,
+  type AreaPick,
+} from '@/services/sync';

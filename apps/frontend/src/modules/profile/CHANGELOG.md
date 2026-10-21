@@ -1,5 +1,10 @@
 # CHANGELOG — frontend/modules/profile
 
+## 2026-10-21 — พื้นที่ที่ชอบ เลือกได้ทุกระดับ
+- "ย่านที่ชอบ" เปลี่ยนเป็น "พื้นที่ที่ชอบ": ค้น/เลือกได้ทั้งย่าน อำเภอ/เขต จังหวัด และตำบล/แขวง (เช่น พิมพ์ "รังสิต" เจอทั้งย่านและตำบล) ด้วย `AreaMultiSelect` (`ui/components/areaMultiSelect.tsx`) · ไม่เกิน 20 พื้นที่
+- หน้าดูค่าที่ตั้งแสดงป้ายพื้นที่ทุกระดับ
+- ไฟล์: `components/preferencesForm.tsx` · `components/preferencesView.tsx` · `services/api/areas.ts`
+
 ## 2026-10-20 — พื้นที่ร้านครบทั้งประเทศ (หาจากหมุด)
 - ฟอร์มความชอบ: ย่านที่ชอบค้นหาได้ ชื่อต่อท้ายด้วยจังหวัด (`districtSelectOptions`)
 - ไฟล์: `components/preferencesForm.tsx`

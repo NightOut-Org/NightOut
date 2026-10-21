@@ -1,0 +1,66 @@
+[
+  { "slug": "rangsit", "name_th": "รังสิต", "anchors": [
+    { "lat": 13.98895, "lng": 100.61844, "r": 3500, "src": "OSM ห้างฟิวเจอร์พาร์ครังสิต" },
+    { "lat": 13.99054, "lng": 100.60215, "r": 2500, "src": "OSM สถานีรถไฟรังสิต" } ] },
+  { "slug": "phahonyothin", "name_th": "พหลโยธิน", "rank_m": 4000, "densify_m": 3000, "anchors": [
+    { "lat": 13.79298, "lng": 100.54952, "r": 1800, "src": "OSM BTS สะพานควาย" },
+    { "lat": 13.78021, "lng": 100.54469, "r": 1800, "src": "OSM BTS อารีย์" },
+    { "lat": 13.80272, "lng": 100.55389, "r": 1800, "src": "OSM BTS หมอชิต" },
+    { "lat": 13.81668, "lng": 100.56204, "r": 1800, "src": "OSM BTS ห้าแยกลาดพร้าว" },
+    { "lat": 13.83975, "lng": 100.57561, "r": 1800, "src": "OSM แยกเกษตร" },
+    { "lat": 13.87234, "lng": 100.60196, "r": 1800, "src": "OSM เซ็นทรัลรามอินทรา (อนุสาวรีย์)" },
+    { "lat": 13.92603, "lng": 100.62651, "r": 1800, "src": "OSM BTS แยก คปอ." },
+    { "lat": 13.98727, "lng": 100.61615, "r": 1800, "src": "OSM ป้ายรถเมล์ฟิวเจอร์พาร์ค ถนนพหลโยธิน" } ] },
+  { "slug": "navamin", "name_th": "นวมินทร์", "anchors": [{ "tambon": "นวมินทร์", "amphoe": "บึงกุ่ม", "r": 2500 }] },
+  { "slug": "ramintra", "name_th": "รามอินทรา", "anchors": [{ "tambon": "รามอินทรา", "amphoe": "คันนายาว", "r": 3500 }] },
+  { "slug": "chaengwattana", "name_th": "แจ้งวัฒนะ", "anchors": [
+    { "tambon": "ทุ่งสองห้อง", "amphoe": "หลักสี่", "r": 2500 },
+    { "lat": 13.90355, "lng": 100.5282, "r": 2500, "src": "OSM ห้างเซ็นทรัลแจ้งวัฒนะ" } ] },
+  { "slug": "rattanathibet", "name_th": "รัตนาธิเบศร์", "anchors": [
+    { "tambon": "บางกระสอ", "amphoe": "เมืองนนทบุรี", "r": 2500 },
+    { "tambon": "ไทรม้า", "amphoe": "เมืองนนทบุรี", "r": 2500 } ] },
+  { "slug": "salaya", "name_th": "ศาลายา", "anchors": [
+    { "lat": 13.8025, "lng": 100.32433, "r": 3000, "src": "OSM สถานีรถไฟศาลายา" },
+    { "tambon": "ศาลายา", "amphoe": "พุทธมณฑล", "r": 2500 } ] },
+  { "slug": "samrong", "name_th": "สำโรง", "anchors": [
+    { "lat": 13.64502, "lng": 100.5966, "r": 2500, "src": "OSM สถานีสำโรง" },
+    { "tambon": "สำโรงเหนือ", "amphoe": "เมืองสมุทรปราการ", "r": 2500 } ] },
+  { "slug": "minburi", "name_th": "มีนบุรี", "anchors": [
+    { "tambon": "มีนบุรี", "amphoe": "มีนบุรี", "r": 2500 },
+    { "lat": 13.81106, "lng": 100.75023, "r": 2500, "src": "OSM เขตมีนบุรี (ศูนย์กลางเขต)" } ] },
+  { "slug": "lat-krabang", "name_th": "ลาดกระบัง", "anchors": [{ "tambon": "ลาดกระบัง", "amphoe": "ลาดกระบัง", "r": 3000 }] },
+  { "slug": "bang-yai", "name_th": "บางใหญ่", "anchors": [{ "lat": 13.8768, "lng": 100.41153, "r": 4000, "src": "OSM ห้างเซ็นทรัลเวสต์เกต" }] },
+  { "slug": "mahachai", "name_th": "มหาชัย", "anchors": [{ "tambon": "มหาชัย", "amphoe": "เมืองสมุทรสาคร", "r": 3000 }] },
+  { "slug": "rama3", "name_th": "พระราม 3", "anchors": [{ "lat": 13.69791, "lng": 100.53782, "r": 2500, "src": "OSM ห้างเซ็นทรัลพระราม 3" }] },
+  { "slug": "phra-khanong", "name_th": "พระโขนง", "anchors": [{ "tambon": "พระโขนง", "amphoe": "คลองเตย", "r": 2000 }] },
+  { "slug": "chiang-mai-chang-khlan", "name_th": "ช้างคลาน", "anchors": [{ "tambon": "ช้างคลาน", "amphoe": "เมืองเชียงใหม่", "r": 1800 }] },
+  { "slug": "patong", "name_th": "ป่าตอง", "anchors": [{ "lat": 7.89236, "lng": 98.29759, "r": 2500, "src": "OSM ห้างเซ็นทรัลป่าตอง" }] },
+  { "slug": "karon", "name_th": "กะรน", "anchors": [{ "lat": 7.84752, "lng": 98.29811, "r": 2500, "src": "OSM ชุมชนกะรน (place=town)" }] },
+  { "slug": "rawai", "name_th": "ราไวย์", "anchors": [{ "lat": 7.77581, "lng": 98.32772, "r": 2500, "src": "OSM ชุมชนราไวย์ (place=town)" }] },
+  { "slug": "phuket-old-town", "name_th": "เมืองเก่าภูเก็ต", "anchors": [{ "tambon": "ตลาดใหญ่", "amphoe": "เมืองภูเก็ต", "r": 1800 }] },
+  { "slug": "pattaya", "name_th": "พัทยา", "anchors": [{ "lat": 12.92778, "lng": 100.87763, "r": 3000, "src": "OSM ถนนพัทยาสายสอง" }] },
+  { "slug": "jomtien", "name_th": "จอมเทียน", "anchors": [{ "lat": 12.87727, "lng": 100.88437, "r": 2500, "src": "OSM หาดจอมเทียน" }] },
+  { "slug": "bangsaen", "name_th": "บางแสน", "anchors": [{ "tambon": "แสนสุข", "amphoe": "เมืองชลบุรี", "r": 3000 }] },
+  { "slug": "si-racha", "name_th": "ศรีราชา", "anchors": [{ "lat": 13.17926, "lng": 100.93096, "r": 3500, "src": "OSM ห้างเซ็นทรัลศรีราชา" }] },
+  { "slug": "hua-hin", "name_th": "หัวหิน", "anchors": [{ "lat": 12.57102, "lng": 99.95525, "r": 3500, "src": "OSM ตลาดโต้รุ่งหัวหิน" }] },
+  { "slug": "chaweng", "name_th": "เฉวง", "anchors": [{ "lat": 9.52357, "lng": 100.05988, "r": 3000, "src": "OSM หาดเฉวง" }] },
+  { "slug": "lamai", "name_th": "ละไม", "anchors": [{ "lat": 9.46255, "lng": 100.04503, "r": 2500, "src": "OSM หาดละไม" }] },
+  { "slug": "ao-nang", "name_th": "อ่าวนาง", "anchors": [{ "tambon": "อ่าวนาง", "amphoe": "เมืองกระบี่", "r": 3000 }] },
+  { "slug": "khon-kaen", "name_th": "เมืองขอนแก่น", "anchors": [{ "lat": 16.43305, "lng": 102.82584, "r": 3500, "src": "OSM ห้างเซ็นทรัลขอนแก่น" }] },
+  { "slug": "korat", "name_th": "เมืองโคราช", "anchors": [{ "lat": 14.98124, "lng": 102.09055, "r": 3500, "src": "OSM เทอร์มินอล 21 โคราช" }] },
+  { "slug": "pak-chong", "name_th": "ปากช่อง", "anchors": [{ "lat": 14.71805, "lng": 101.4314, "r": 3500, "src": "OSM โรงพยาบาลปากช่อง (กลางเมือง)" }] },
+  { "slug": "hat-yai", "name_th": "หาดใหญ่", "anchors": [
+    { "tambon": "หาดใหญ่", "amphoe": "หาดใหญ่", "r": 2500 },
+    { "lat": 6.99186, "lng": 100.48296, "r": 2500, "src": "OSM ห้างเซ็นทรัลหาดใหญ่" } ] },
+  { "slug": "udon-thani", "name_th": "เมืองอุดรธานี", "anchors": [{ "lat": 17.40596, "lng": 102.80014, "r": 3500, "src": "OSM ห้างเซ็นทรัลอุดร" }] },
+  { "slug": "ubon", "name_th": "เมืองอุบลราชธานี", "anchors": [
+    { "tambon": "ในเมือง", "amphoe": "เมืองอุบลราชธานี", "r": 2500 },
+    { "lat": 15.24031, "lng": 104.82328, "r": 2500, "src": "OSM ห้างเซ็นทรัลอุบล" } ] },
+  { "slug": "phitsanulok", "name_th": "เมืองพิษณุโลก", "anchors": [
+    { "tambon": "ในเมือง", "amphoe": "เมืองพิษณุโลก", "r": 2500 },
+    { "lat": 16.84055, "lng": 100.23309, "r": 2500, "src": "OSM ห้างเซ็นทรัลพิษณุโลก" } ] },
+  { "slug": "chiang-rai", "name_th": "เมืองเชียงราย", "anchors": [
+    { "tambon": "เวียง", "amphoe": "เมืองเชียงราย", "r": 2500 },
+    { "lat": 19.88621, "lng": 99.83308, "r": 2500, "src": "OSM ห้างเซ็นทรัลเชียงราย" } ] },
+  { "slug": "ayutthaya", "name_th": "อยุธยา", "anchors": [{ "lat": 14.357, "lng": 100.56752, "r": 3000, "src": "OSM วัดมหาธาตุ อยุธยา" }] }
+]

@@ -1,5 +1,11 @@
 # CHANGELOG — apps/backend/src/domains/catalog
 
+## 2026-10-21 — ย่านเพิ่ม 36 ย่าน (รังสิต พหลโยธิน ฯลฯ) + ย่านหลายจุด
+- migration `20261021000600_catalog_more_districts`: คอลัมน์ `districts.area` (พื้นที่รวมวงกลมหลายจุด สำหรับย่านที่ยาวเป็นแนวถนน เช่น พหลโยธิน) · `district_near` ใช้ `st_covers(area)` ถ้ามี ไม่มีใช้จุดกลาง + รัศมีเหมือนเดิม · เพิ่ม 36 ย่านที่ทีมคัด (รังสิต พหลโยธิน นวมินทร์ รามอินทรา แจ้งวัฒนะ ศาลายา ป่าตอง พัทยา หัวหิน ฯลฯ) · วอล์คกิ้งสตรีทพัทยาแคบลงเหลือ 400 ม. · คำนวณย่านของร้านเดิมใหม่
+- `GET /public/tambons` รับ `codes=` (คั่นด้วย , ไม่เกิน 20) · rpc `search_tambons(p_q, p_codes, p_limit)` (migration `20261021000500`)
+- สร้างจาก `apps/backend/scripts/areas/extra-districts.json` (ที่มาของทุกจุดในฟิลด์ `src`) ด้วย `resolve-extra.js` + `gen-extra-districts.js`
+- ไฟล์: `catalog.public.controller.ts`
+
 ## 2026-10-21 — ค้นหาตำบล/แขวง
 - ใหม่ `GET /public/tambons?q=` / `?code=` → rpc `search_tambons` (migration `20261021000100_catalog_search_tambons` · index trigram) · สูงสุด 20 รายการ
 - ไฟล์: `catalog.public.controller.ts` · `catalog.dto.ts`

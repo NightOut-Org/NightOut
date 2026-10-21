@@ -1,5 +1,9 @@
 # account — ประวัติการแก้ไข
 
+## 2026-10-21 — พื้นที่ที่ชอบเลือกได้ทุกระดับ
+- `user_preferences.preferred_area_codes text[]` เก็บรหัสจังหวัด/อำเภอ/ตำบล (ย่านยังอยู่ `preferred_district_ids`) · `app_update_profile` รับ `area_codes` (ตรวจรูปแบบ → `INVALID_AREA_CODES`) · `run_retention_jobs` ล้างค่านี้ด้วย
+- migration `20261021000500_account_preferred_areas`
+
 ## 2026-10-21 — แจ้งเตือนถูกลบตามเมื่อลบร้าน/การจอง
 - FK `notifications.bar_id` / `booking_id` เปลี่ยนเป็น `on delete cascade` (เดิม `set null` ทำให้แถวค้างในกระดิ่ง) — ไม่ต้องตามล้างแบบ `…000300` อีก
 - migration `20261021000400_account_notifications_cascade` · ทดสอบกับ Postgres ในเครื่อง: ลบร้านแล้วแจ้งเตือนของร้านหาย แจ้งเตือนอื่นอยู่ครบ
