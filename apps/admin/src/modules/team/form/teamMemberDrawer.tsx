@@ -193,7 +193,7 @@ export function TeamMemberDrawer({
               )}
             </Space>
             <Typography.Text type="secondary" className="block text-xs">
-              รูปแนวตั้งหรือจัตุรัส เห็นหน้าชัด · ระบบย่อเป็น 800px ให้เอง
+              รูปแนวตั้งหรือจัตุรัส เห็นหน้าชัด ระบบย่อเป็น 800px ให้เอง
             </Typography.Text>
           </div>
         </div>
@@ -212,7 +212,7 @@ export function TeamMemberDrawer({
         <Form.Item
           name="roles"
           label="ตำแหน่ง"
-          extra="ตำแหน่งแรกคือตำแหน่งหลัก (สีทองบนการ์ด) · พิมพ์แล้วกด Enter · สูงสุด 6"
+          extra="ตำแหน่งแรกคือตำแหน่งหลัก (สีทองบนการ์ด) พิมพ์แล้วกด Enter ใส่ได้สูงสุด 6"
           rules={[{ type: 'array', max: 6, message: 'ใส่ได้สูงสุด 6 ตำแหน่ง' }]}
         >
           <Select
@@ -231,7 +231,7 @@ export function TeamMemberDrawer({
             placeholder="เล่าสั้นๆ ว่าทำอะไรในทีม"
           />
         </Form.Item>
-        <Form.Item name="skills" label="ทักษะ" extra="พิมพ์แล้วกด Enter · ใส่ได้ไม่จำกัด">
+        <Form.Item name="skills" label="ทักษะ" extra="พิมพ์แล้วกด Enter ใส่ได้ไม่จำกัด">
           <Select
             mode="tags"
             tokenSeparators={[',']}

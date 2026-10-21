@@ -1,5 +1,5 @@
 import type { ReviewMediaItem, SignedUrlsResult, UploadBucket, UploadUrlResult } from '@nightout/contracts';
-import type { ReviewMedia } from '@nightout/mock';
+import type { ReviewMedia } from '@/services/models';
 import { barMediaPath, storagePublicUrl, type BarMediaFolder } from '@nightout/utils';
 import { Rest } from '@nightout/utils/rest';
 import { log } from '@/services/log';

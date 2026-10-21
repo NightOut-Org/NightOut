@@ -1,0 +1,19 @@
+[
+  { "slug": "thonglor", "name_th": "ทองหล่อ", "lat": 13.7305, "lng": 100.5810, "radius_m": 1200 },
+  { "slug": "ekkamai", "name_th": "เอกมัย", "lat": 13.7270, "lng": 100.5865, "radius_m": 1200 },
+  { "slug": "ari", "name_th": "อารีย์", "lat": 13.7797, "lng": 100.5446, "radius_m": 1200 },
+  { "slug": "silom", "name_th": "สีลม", "lat": 13.7290, "lng": 100.5310, "radius_m": 700 },
+  { "slug": "sathorn", "name_th": "สาทร", "lat": 13.7205, "lng": 100.5340, "radius_m": 900 },
+  { "slug": "ratchada", "name_th": "รัชดา", "lat": 13.7660, "lng": 100.5740, "radius_m": 2000 },
+  { "slug": "ladprao", "name_th": "ลาดพร้าว", "lat": 13.8160, "lng": 100.5620, "radius_m": 2500 },
+  { "slug": "riverside", "name_th": "ริมแม่น้ำ", "lat": 13.7200, "lng": 100.5120, "radius_m": 2000 },
+  { "slug": "rama9", "name_th": "พระราม 9", "lat": 13.7570, "lng": 100.5650, "radius_m": 1200 },
+  { "slug": "sukhumvit", "name_th": "สุขุมวิท", "lat": 13.7380, "lng": 100.5600, "radius_m": 2500 },
+  { "slug": "nana", "name_th": "นานา", "lat": 13.7405, "lng": 100.5550, "radius_m": 700 },
+  { "slug": "asok", "name_th": "อโศก", "lat": 13.7370, "lng": 100.5605, "radius_m": 800 },
+  { "slug": "phrom-phong", "name_th": "พร้อมพงษ์", "lat": 13.7305, "lng": 100.5697, "radius_m": 900 },
+  { "slug": "khaosan", "name_th": "ข้าวสาร", "lat": 13.7588, "lng": 100.4972, "radius_m": 800 },
+  { "slug": "pradiphat", "name_th": "ประดิพัทธ์", "lat": 13.7880, "lng": 100.5420, "radius_m": 700 },
+  { "slug": "nimman", "name_th": "นิมมานเหมินท์", "lat": 18.7990, "lng": 98.9680, "radius_m": 1000 },
+  { "slug": "pattaya-walking-street", "name_th": "วอล์คกิ้งสตรีทพัทยา", "lat": 12.9270, "lng": 100.8720, "radius_m": 800 }
+]

@@ -1,4 +1,4 @@
-import { ArrowsLeftRight, CaretRight } from '@phosphor-icons/react';
+import { ArrowsLeftRight, CaretRight, Chair, SquaresFour } from '@phosphor-icons/react';
 import type * as C from '@nightout/contracts';
 import { checkInWindow } from '@nightout/utils';
 import { App, Button, Drawer, Grid, Modal, Popconfirm, Tag } from 'antd';
@@ -9,6 +9,7 @@ import { setBookingStatus, setTableOccupancy } from '../api';
 import { PR_LABEL, bookingWho, hhmm, isHolding, type BoardTableRef } from '../utils/board';
 import { StatusPill } from './floorLegend';
 import { TimingLine } from './tableCard';
+import { MetaList } from '@/ui/components/metaList';
 
 /** การ์ดการจองปัจจุบันของโต๊ะ (ไม่มียอดเงิน / เบอร์โทร) */
 function CurrentBooking({ booking, now }: { booking: C.TableBoardBooking; now: number }) {
@@ -114,7 +115,12 @@ export function TableDrawer({
               <span className="flex min-w-0 flex-1 flex-col">
                 <span className="truncate">โต๊ะ {table.name}</span>
                 <span className="text-xs font-normal text-muted">
-                  {target.zone.name} · {table.seats} ที่นั่ง
+                  <MetaList
+                    items={[
+                      { icon: <SquaresFour weight="fill" />, label: 'โซน', value: target.zone.name },
+                      { icon: <Chair weight="fill" />, label: 'ที่นั่ง', value: `${table.seats} ที่นั่ง` },
+                    ]}
+                  />
                 </span>
               </span>
               <StatusPill status={table.status} />
@@ -165,7 +171,7 @@ export function TableDrawer({
                     }
                   >
                     <Button type="primary" size="large" block loading={busy === 'complete'}>
-                      ลูกค้ากลับแล้ว · ปิดโต๊ะ
+                      ลูกค้ากลับแล้ว ปิดโต๊ะ
                     </Button>
                   </Popconfirm>
                   {moveButton(current)}
@@ -176,11 +182,11 @@ export function TableDrawer({
                 <>
                   <div className="flex flex-col gap-1 rounded-[14px] border border-border bg-surface p-3 text-[13px]">
                     <b className="text-[15px]">
-                      กำลังใช้ (ไม่มีการจอง){table.occupancy.pax ? ` · ${table.occupancy.pax} คน` : ''}
+                      กำลังใช้ (ไม่มีการจอง){table.occupancy.pax ? ` ${table.occupancy.pax} คน` : ''}
                     </b>
                     <span className="text-muted">
                       ตั้งแต่ {hhmm(table.occupancy.started_at)}
-                      {table.occupancy.started_by_name ? ` · โดย ${table.occupancy.started_by_name}` : ''}
+                      {table.occupancy.started_by_name ? ` โดย ${table.occupancy.started_by_name}` : ''}
                     </span>
                     {table.occupancy.note && <span>หมายเหตุ: {table.occupancy.note}</span>}
                   </div>
@@ -265,7 +271,7 @@ export function TableDrawer({
       >
         {current && table && (
           <p className="m-0">
-            {bookingWho(current)} · {current.code} — โต๊ะ {table.name} จะเป็น &quot;กำลังใช้&quot;
+            {bookingWho(current)} รหัส {current.code} โต๊ะ {table.name} จะเป็น &quot;กำลังใช้&quot;
           </p>
         )}
       </Modal>

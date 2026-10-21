@@ -99,7 +99,7 @@ export function BarLocationFields({
           maxLength={PARKING_NOTE_MAX}
           showCount
           disabled={disabled}
-          placeholder="เช่น จอดในซอยได้ประมาณ 10 คัน ฟรี · หรือที่จอดห้าง XX ชั่วโมงละ 20 บาท"
+          placeholder="เช่น จอดในซอยได้ประมาณ 10 คัน ฟรี หรือที่จอดห้าง XX ชั่วโมงละ 20 บาท"
         />
       </Form.Item>
 

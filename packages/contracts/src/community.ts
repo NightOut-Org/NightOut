@@ -20,7 +20,7 @@ export const COMMUNITY_SHOP_NEWS_WINDOW_DAYS = 7;
 /** ป้ายผู้เขียน: บัญชีหลังบ้าน (is_staff) */
 export const COMMUNITY_STAFF_BADGE = 'ทีม NightOut';
 /** ป้ายผู้เขียนที่เป็นทีมร้าน (ใช้ทั้งหน้าเว็บและ Backoffice) */
-export const communityTeamBadge = (barName: string) => `ทีมร้าน · ${barName}`;
+export const communityTeamBadge = (barName: string) => `ทีมร้าน ${barName}`;
 
 /** ไฟล์ 1 ชิ้น (อัปโหลดเข้า bucket community-media/<user_id>/… ก่อน แล้วส่ง path) */
 export const CommunityMediaItem = z.object({
@@ -127,7 +127,7 @@ export type CommunityDraftPayload = z.infer<typeof CommunityDraftPayload>;
 /** PUT /me/community/drafts */
 export const SaveCommunityDraftBody = z
   .object({ kind: CommunityDraftKind, thread_id: uuid.nullish(), payload: CommunityDraftPayload })
-  .refine((b) => (b.kind === 'NEW') === !b.thread_id, { message: 'ร่างกระทู้ใหม่ไม่มี thread_id · ร่างตอบ/แก้ต้องมี', path: ['thread_id'] })
+  .refine((b) => (b.kind === 'NEW') === !b.thread_id, { message: 'ร่างกระทู้ใหม่ไม่มี thread_id ร่างตอบ/แก้ต้องมี', path: ['thread_id'] })
   .refine((b) => b.kind !== 'EDIT_COMMENT' || !!b.payload.comment_id, {
     message: 'ร่างแก้ความเห็นต้องมี comment_id',
     path: ['payload', 'comment_id'],

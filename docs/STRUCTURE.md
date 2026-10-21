@@ -12,7 +12,6 @@
 | โมดูล | ทำอะไร | route | โดเมน API | หน้าคู่ (admin) | Phase |
 |---|---|---|---|---|---|
 | `home` | หน้าแรก: Hero (ค้นหาตามงบ: คำค้น + ย่าน + งบต่อหัว + จำนวนคน → `/search`), หมวด "คืนนี้อยากได้ฟีลไหน", ร้านแนะนำ | `/` | `catalog` · `site-content` · `mini-ads` | `homeContent` · `miniAds` | 1A (เนื้อหาแก้ได้: นอก MVP — ยังไม่ระบุวันอนุมัติ) |
-| `map` | แผนที่ร้านเต็มจอ (Leaflet + OpenFreeMap) | `/map` | `catalog` | — | กฎธุรกิจ |
 | `login` | redirect `/login` → `/` แล้วเปิด modal เข้าสู่ระบบ (`ui/components/authModal.tsx`) | `/login` | Supabase Auth | — | 1A |
 | `register` | สมัครสมาชิก | `/register` | Supabase Auth · `account` | — | 1A |
 | `verifyEmail` | ยืนยันอีเมล | `/verify-email` | Supabase Auth | — | 1A |

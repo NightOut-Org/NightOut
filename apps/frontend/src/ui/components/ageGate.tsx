@@ -42,7 +42,9 @@ export function AgeGate() {
         <div className="py-2 text-center">
           <Typography.Title level={3}>คุณอายุ 20 ปีขึ้นไปหรือไม่?</Typography.Title>
           <Typography.Paragraph type="secondary">
-            เว็บไซต์นี้มีข้อมูลเกี่ยวกับสถานบันเทิง · ดื่มไม่ขับ
+            เว็บไซต์นี้มีข้อมูลเกี่ยวกับสถานบันเทิง
+            <br />
+            ดื่มไม่ขับ
           </Typography.Paragraph>
           <div className="mt-4 flex justify-center gap-3">
             <Button onClick={() => setDenied(true)}>ยังไม่ถึง</Button>

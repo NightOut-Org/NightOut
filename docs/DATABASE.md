@@ -2,7 +2,7 @@
 
 > สถานะ: **v1.1** (ทำตาม [`DATABASE_CHANGES.md`](DATABASE_CHANGES.md)) · ใช้คู่กับ [`ARCHITECTURE.md`](ARCHITECTURE.md) และ [`SITEMAP.md`](SITEMAP.md)
 > Migration: `apps/backend/supabase/migrations/20261002000100_*.sql` … `20261002001500_*.sql` (15 ไฟล์ แยกตามโดเมน)
-> Seed: `apps/backend/supabase/seed.sql` (master data + ร้านเดโม 16 ร้าน — สร้างด้วย `db:seed:gen`)
+> Seed: `apps/backend/supabase/seed.sql` (master data เท่านั้น — ไม่มีร้านเดโม · ร้านเดโมเดิมลบด้วย migration `20261020000100_demo_bars_cleanup`)
 > Types: `packages/types/src/database.generated.ts` (จาก `supabase gen types` — ห้ามแก้มือ) + `database.ts` (override ของ view) → `import { Db } from '@nightout/types'`
 > migration ทีมรุ่นแรก (0001–0003) เก็บไว้อ้างอิงที่ `docs/legacy-migrations/`
 
@@ -99,6 +99,14 @@
 | `…20261005000200_roles` | ชั้นบัญชี (ADR 0005) | ตาราง `roles` (`code` · `label_th` · `can_enter_backoffice` · `sort_order`) + FK `users.role → roles.code` · `is_admin` / `admin_assert` / แจ้งเตือนแอดมิน / storage policy สลิป อ่านธง `can_enter_backoffice` แทนการเทียบ `'ADMIN'` · authenticated อ่านได้ |
 | `…20261006000400_super_admin_enum` · `…000500_super_admin_rules` | Super Admin (ADR 0005) | enum `SUPER_ADMIN` + แถว ซูเปอร์แอดมิน · `super_admin_assert` · `assert_keeps_super_admin` (ห้ามเหลือศูนย์ — ทั้งแก้ชั้นและ `app_delete_account`) · `admin_set_user_role` เฉพาะ Super Admin + ชั้นใหม่เป็นลูกค้า/แอดมิน/ซูเปอร์แอดมิน → หลุดจากทุกร้าน · `admin_finish_new_user` สร้างแอดมิน/ซูเปอร์แอดมินได้เฉพาะ Super Admin |
 | `…001800_team_members` | หน้า /about | team_members (ทีมงาน: ชื่อเล่น, ชื่อจริง, ตำแหน่ง, bio, สกิล, รูป, `contacts` jsonb) · view `public_team` (เฉพาะ active เรียง sort_order) · RLS อ่านได้เฉพาะ active · revoke write · ทีมตั้งต้น 7 คน |
+| `…20261020000300_catalog_admin_areas` | พื้นที่ร้านครบทั้งประเทศ (นอก MVP — อนุมัติ 2026-10-20) | ตาราง **provinces** / **amphoes** / **tambons** (pcode OCHA · ชื่อไทย/อังกฤษ · จุดกลาง · `tambons.geom` MultiPolygon + GiST) · RLS อ่านได้ทุกคน + `admin_read` · revoke write · `districts` (ย่าน) เพิ่ม `amphoe_code` `center` `radius_m` `priority` (SEED 30 · OSM suburb 20 / quarter 15 / neighbourhood 10) `source` `osm_id` · `bars.tambon_code` · `tambon_at(lat, lng)` (point-in-polygon · ตกร่องขอบเขต = ตำบลใกล้สุด ≤ ~500 ม.) · `district_near(lat, lng)` (ย่านที่อยู่ในรัศมี: priority สูง → รัศมีแคบสุด → ใกล้จุดกลาง) · `area_at_point(lat, lng)` (anon + authenticated) |
+| `…20261020000400_catalog_admin_areas_data` | ข้อมูลพื้นที่ (สร้างด้วย `apps/backend/scripts/areas` · ห้ามแก้มือ) | 77 จังหวัด · 928 อำเภอ/เขต · 7,425 ตำบล/แขวง จาก OCHA COD-AB Thailand (CC BY-IGO · ขอบเขตลดความละเอียด 0.0002° เก็บเป็น TWKB) · ย่าน 850 = ทีมคัดเอง 17 (10 ย่านเดิม upsert ตาม slug + ย่านดังที่ OSM ไม่มี) + OpenStreetMap 833 (ODbL · ตัดชุมชน/หมู่บ้าน/ชื่อซ้ำอำเภอ-ตำบล) · ไฟล์ ~6 MB |
+| `…20261020000500_catalog_bar_areas` | ร้านไม่ต้องเลือกย่านเอง | trigger `bars_set_area` (before insert / update of lat, lng, district_id) ตั้ง `tambon_code` + `district_id` จากหมุดทุกครั้ง — `district_id` ที่ `app_merchant_join` / `app_update_bar_info` / `admin_save_bar_details` รับมาถูกแทน (คง signature เดิม) · เติมให้ร้านเดิม · view `bar_areas` (ตำบล/อำเภอ/จังหวัดของร้าน · RLS ของ bars) · view `admin_bar_areas` (Backoffice `/ranking`) |
+| `…20261021000100_catalog_search_tambons` | ค้นตำบล/แขวงทั้งประเทศ | index trigram `tambons_name_trgm` · `search_tambons(p_q, p_code, p_limit)` (security invoker · anon + authenticated · ชื่อ ≥ 2 ตัวอักษร escape `% _ \` · ชื่อตรงก่อน → ขึ้นต้นด้วยคำค้น · สูงสุด 50) → `GET /public/tambons` |
+| `…20261021000200_notify_text_no_dots` | ข้อความที่ DB สร้างเลิกใช้ " · " (กฎข้อความ UI 2026-10-20) | ประกาศฟังก์ชันตัวล่าสุดซ้ำ 29 ตัว (แจ้งเตือนการจอง/สลิป/โปรโมชัน/ร้าน/ชุมชน/บัญชี/การชำระ + `app_create_booking_core` ที่เดิมเป็น `app_create_booking` ของ `…001700`) เปลี่ยนเฉพาะสตริงที่มีตัวคั่นเป็นวรรค · ตรวจด้วยการเทียบ prosrc ก่อน/หลังแล้วต่างกันแค่ข้อความ · แจ้งเตือนที่ส่งไปแล้วไม่แก้ย้อนหลัง · ไฟล์นี้กลายเป็นตัวล่าสุดของทั้ง 29 ฟังก์ชัน |
+| `…20261021000300_account_notifications_orphan_cleanup` | ล้างแจ้งเตือนที่ค้างจากร้าน/การจองที่ถูกลบ (FK `bar_id`/`booking_id` เป็น `on delete set null` → แถวเหลือในกระดิ่ง) | ลบครั้งเดียวเฉพาะแถวที่รู้แน่ว่าเป้าหมายไม่มีแล้ว: ลิงก์ `/merchant…` แต่ `bar_id` ว่าง · ลิงก์ `/bookings/<id>` / `?booking=<id>` ที่ไม่มีการจอง · `/share/<token>` ที่ไม่มีลิงก์แชร์ · `?bar=<id>` ที่ไม่มีร้าน · แจ้งเตือนที่ไม่เคยผูกร้าน/การจองไม่ถูกแตะ · ไม่เปลี่ยน FK (ดู `…000400`) |
+| `…20261021000400_account_notifications_cascade` | แจ้งเตือนถูกลบตามเมื่อลบร้าน/การจอง | FK `notifications_bar_fk` / `notifications_booking_fk` เปลี่ยนจาก `on delete set null` เป็น `on delete cascade` (`notification_deliveries` หายตาม) · ไม่ต้องตามล้างแถวค้างอีก |
+| `…20261020000200_account_role_requires_bar` | เปลี่ยนชั้นบัญชีเป็นร้าน/พนักงานต้องมีร้าน | `admin_set_user_role`: ตั้ง MERCHANT ต้องเป็น OWNER/MANAGER ที่รับเชิญแล้วและยังไม่ถูกถอด · STAFF ต้องอยู่ในทีมร้าน · ไม่ผ่าน = `ROLE_NEEDS_BAR` (กันบัญชีชั้นร้านที่ไม่มีร้าน) |
 
 view ในเฟส 1 เรียกฟังก์ชัน stub (`bar_is_promoted`, `booking_deposit_summary`) ที่เฟส 2 แทนที่ → เฟส 1 ใช้งานได้เองโดยไม่พึ่งตารางเฟส 2
 
@@ -181,63 +189,70 @@ stateDiagram-v2
 |---|---|---|
 | `catalog` | `admin_recompute_ranking` · `public_ranking` · `run_tier_scores` (job `/jobs/tier` ทุกคืน — แทนบรรทัด `/jobs/tier?period=WEEKLY` ในหัวไฟล์ `…20261002001400`) · view `admin_ranking` | `20261013001030_catalog_ranking_scores` |
 |  | `admin_save_styles` · view `admin_styles` | `20261013001020_catalog_styles_manage` |
-| `booking` | `app_extend_booking` · `app_join_share` · `booking_check_in_window` (trigger `bookings_check_in_window`) · `get_share_card` · `run_booking_timeouts` · view `booking_detail` | `20261013000500_booking_timing_rules` |
-|  | `booking_transition_allowed` · `handle_booking_status_effects` (trigger) | `20261013001100_payment_intents` |
+|  | `tambon_at` · `district_near` · `area_at_point` | `20261020000300_catalog_admin_areas` |
+|  | `bars_set_area` (trigger `bars_set_area`) · view `bar_areas` · view `admin_bar_areas` | `20261020000500_catalog_bar_areas` |
+|  | `search_tambons` | `20261021000100_catalog_search_tambons` |
+| `booking` | `booking_check_in_window` (trigger `bookings_check_in_window`) · `get_share_card` · view `booking_detail` | `20261013000500_booking_timing_rules` |
+|  | `booking_transition_allowed` | `20261013001100_payment_intents` |
 |  | `bar_check_in_preview` | `20261013000710_booking_check_in_preview` |
 |  | `bar_table_board` · `app_team_set_table_occupancy` · `close_table_occupancy_on_check_in` (trigger `bookings_checkin_close_occupancy`) | `20261013001200_booking_table_board` |
-|  | `app_team_report_no_table` | `20261013000700_bar_blacklist_strikes` |
-|  | `app_cancel_booking` · `app_check_in` · `app_team_set_booking_status` · `zone_availability` | `20261002001700_app_actions` |
+|  | `app_check_in` · `app_team_set_booking_status` · `zone_availability` | `20261002001700_app_actions` |
 |  | `booking_customer_name` | `20261017000200_booking_customer_name_scope` |
-|  | `app_create_booking` · `app_create_booking_core` | `20261006000200_checkout_deposit_consent` |
-|  | `app_team_move_booking` · `bar_booking_table_options` | `20261006000300_merchant_move_table_refund` |
+|  | `app_create_booking` | `20261006000200_checkout_deposit_consent` |
+|  | `bar_booking_table_options` | `20261006000300_merchant_move_table_refund` |
 |  | `booking_ban_check` | `20261006000100_slip_reject_reasons_fake_slip_ban` |
 |  | `zone_remaining_pax` | `20261002000600_tables_bookings` |
 |  | `bar_sales_period` · `bar_sales_stats` | `20261013001400_booking_sales_stats` |
 |  | `app_team_forfeit_booking` | `20261013001500_booking_team_forfeit` |
+|  | `app_extend_booking` · `app_join_share` · `run_booking_timeouts` · `handle_booking_status_effects` (trigger) · `app_team_report_no_table` · `app_cancel_booking` · `app_create_booking_core` · `app_team_move_booking` | `20261021000200_notify_text_no_dots` |
 | `deposit` | `booking_deposit_summary` · view `admin_deposits` | `20261013001100_payment_intents` |
-|  | `admin_review_deposit` · `app_submit_deposit` · `apply_fake_slip_flag` · `deposit_reject_label` | `20261006000100_slip_reject_reasons_fake_slip_ban` |
+|  | `admin_review_deposit` · `apply_fake_slip_flag` · `deposit_reject_label` | `20261006000100_slip_reject_reasons_fake_slip_ban` |
 |  | `admin_settle_deposit` | `20261002001600_admin` |
-|  | `app_team_refund_deposit` | `20261006000300_merchant_move_table_refund` |
 |  | `bar_deposit_ledger` | `20261013000100_bar_team_money_rbac` |
-| `payment` | `admin_payment_mark_refunded` · `app_payment_attach` · `app_payment_start` · `my_payment_intents` · `payment_apply_event` · `payment_close_on_booking_end` (trigger `bookings_close_payment_intents`) · view `admin_payment_intents` · `admin_payment_unmatched` | `20261013001100_payment_intents` |
+|  | `app_submit_deposit` · `app_team_refund_deposit` | `20261021000200_notify_text_no_dots` |
+| `payment` | `app_payment_attach` · `app_payment_start` · `my_payment_intents` · `payment_close_on_booking_end` (trigger `bookings_close_payment_intents`) · view `admin_payment_intents` · `admin_payment_unmatched` | `20261013001100_payment_intents` |
+|  | `admin_payment_mark_refunded` · `payment_apply_event` | `20261021000200_notify_text_no_dots` |
 | `review` | `admin_moderate_review` | `20261002001600_admin` |
 |  | `check_review_booking` (trigger) | `20261011000200_review_allow_confirmed` |
 |  | `app_add_review` · `refresh_bar_rating` · `reviews_refresh_bar_rating` (trigger) | `20261016000200_review_rating_stats` |
 |  | `app_report_review` | `20261002001700_app_actions` |
-| `bar` | `admin_save_bar_details` · `bar_info_apply` · `bar_menu_apply` · view `admin_bar_details` | `20261013001010_bar_admin_edit_details` |
-|  | `admin_review_bar_location` · `admin_set_bar_location` · `admin_set_bar_status` · `app_cancel_bar_location_request` · `app_merchant_join` · `app_request_bar_location` · `app_update_bar_info` · `bar_location_apply` · `bar_location_from_json` · `bar_location_snapshot` · view `admin_bar_locations` · `admin_bar_location_requests` | `20261013000600_bar_location_pins` |
-|  | `admin_blacklist_bar` · `admin_report_no_table` · `admin_unblacklist_bar` · `bars_blacklist_guard` (trigger `bars_blacklist_guard`) · `bars_owner_blacklist_notify` (trigger `bars_owner_blacklist_notify`) · `handle_bar_status_notify` (trigger `bars_status_notify`) · view `admin_bar_blacklist` | `20261013000700_bar_blacklist_strikes` |
-|  | `admin_inspect_safety` · `admin_verify_safety` · `bar_safety_features_verify_method` (trigger `bar_safety_features_verify_method`) · `bar_safety_inspection_latest` · `safety_inspection_photo_ok` · view `bar_detail` · `my_bar_detail` · `admin_safety_queue` · `admin_bar_safety` · `admin_safety_inspections` | `20261013000800_bar_safety_inspections` |
+| `bar` | `bar_info_apply` · `bar_menu_apply` · view `admin_bar_details` | `20261013001010_bar_admin_edit_details` |
+|  | `admin_review_bar_location` · `admin_set_bar_location` · `admin_set_bar_status` · `app_cancel_bar_location_request` · `app_update_bar_info` · `bar_location_apply` · `bar_location_from_json` · `bar_location_snapshot` · view `admin_bar_locations` · `admin_bar_location_requests` | `20261013000600_bar_location_pins` |
+|  | `admin_unblacklist_bar` · `bars_blacklist_guard` (trigger `bars_blacklist_guard`) · view `admin_bar_blacklist` | `20261013000700_bar_blacklist_strikes` |
+|  | `admin_verify_safety` · `bar_safety_features_verify_method` (trigger `bar_safety_features_verify_method`) · `bar_safety_inspection_latest` · `safety_inspection_photo_ok` · view `bar_detail` · `my_bar_detail` · `admin_safety_queue` · `admin_bar_safety` · `admin_safety_inspections` | `20261013000800_bar_safety_inspections` |
 |  | `app_save_settings_page` | `20261012000700_bar_save_settings_page` |
 |  | `app_save_promotions_page` | `20261012000500_bar_save_promotions_page` |
-|  | `app_save_safety` | `20261012000400_bar_save_safety` |
 |  | `admin_save_bar_media` · `admin_set_bars_status` · `app_save_bar_store` | `20261012000100_bar_save_page_batch` |
 |  | `admin_set_bar_media` · `admin_set_menu_item_image` · `app_set_bar_media` · `app_set_menu` · `bar_media_path_ok` · `bar_media_save` · `bar_media_unused` · `menu_image_check` | `20261009000100_bar_media_images` |
-|  | `admin_moderate_bar_promotion` · `app_set_bar_promotions` · `app_set_crowd` · `app_set_fees` · `app_set_payout_account` · `app_set_safety` · `app_set_safety_evidence` · `app_set_zones` · `app_update_booking_settings` | `20261002001700_app_actions` |
+|  | `app_set_crowd` · `app_set_fees` · `app_set_payout_account` · `app_set_safety` · `app_set_zones` · `app_update_booking_settings` | `20261002001700_app_actions` |
 |  | `bar_is_public` · `is_bar_member` · `is_bar_member_path` | `20261002000400_bars` |
+|  | `admin_save_bar_details` · `app_merchant_join` · `app_request_bar_location` · `admin_blacklist_bar` · `admin_report_no_table` · `bars_owner_blacklist_notify` (trigger `bars_owner_blacklist_notify`) · `handle_bar_status_notify` (trigger `bars_status_notify`) · `admin_inspect_safety` · `app_save_safety` · `admin_moderate_bar_promotion` · `app_set_bar_promotions` · `app_set_safety_evidence` | `20261021000200_notify_text_no_dots` |
 | `bar-team` | `is_bar_manager` | `20261013000100_bar_team_money_rbac` |
 |  | `app_assert_manager` · `app_invite_staff` · `app_remove_staff` · `app_respond_invite` · `app_team_role` · `bar_team` · `my_invites` | `20261002001700_app_actions` |
 | `account` | `app_complete_oauth_signup` · `app_create_customer_profile` · `handle_new_auth_user` | `20261015000200_account_oauth_signup` |
-|  | `admin_ban_user` · `admin_unban_user` · `community_block_banned` (trigger `<ตาราง>_block_banned` × 7 ตารางชุมชน) | `20261013001000_account_manual_ban` |
-|  | `app_set_avatar` · `app_remove_avatar` · `admin_remove_user_avatar` | `20261016000100_account_avatar` |
+|  | `admin_unban_user` · `community_block_banned` (trigger `<ตาราง>_block_banned` × 7 ตารางชุมชน) | `20261013001000_account_manual_ban` |
+|  | `app_set_avatar` · `app_remove_avatar` | `20261016000100_account_avatar` |
 |  | `admin_save_role_colors` · คอลัมน์ `roles.color` | `20261017000100_account_role_colors` |
 |  | `admin_set_users_role` | `20261012000300_account_set_users_role` |
 |  | `admin_assert` · `is_admin` | `20261005000200_roles` |
 |  | `admin_booking_contact_phone` | `20261006000200_checkout_deposit_consent` |
 |  | `admin_delete_user` · `admin_update_user_account` | `20261006000700_admin_user_permissions` |
-|  | `admin_finish_new_user` · `admin_set_user_role` · `app_delete_account` · `super_admin_assert` | `20261006000500_super_admin_rules` |
+|  | `admin_finish_new_user` · `app_delete_account` · `super_admin_assert` | `20261006000500_super_admin_rules` |
+|  | `admin_set_user_role` | `20261020000200_account_role_requires_bar` |
 |  | `app_assert_user` · `app_mark_notifications_read` · `app_toggle_favorite` · `app_update_profile` | `20261002001700_app_actions` |
 |  | `run_retention_jobs` | `20261002001400_retention_jobs` |
+|  | `admin_ban_user` · `admin_remove_user_avatar` | `20261021000200_notify_text_no_dots` |
 | `promotion` | `admin_review_promotion` | `20261002001600_admin` |
-|  | `app_order_promotion` | `20261002001700_app_actions` |
 |  | `bar_is_promoted` | `20261002001200_promoted_listings` |
+|  | `app_order_promotion` | `20261021000200_notify_text_no_dots` |
 | `site-team` | `admin_save_team_page` | `20261012000200_site_team_save_page` |
 |  | `admin_delete_team_member` · `admin_reorder_team_members` · `admin_save_team_member` · `team_member_is_own` | `20261008000200_site_team_super_admin_rules` |
 | `site-content` | `admin_save_site_nav` | `20261015000300_site_content_nav` (ฟังก์ชันเขียนหน้าแรก `admin_save_home_*` / `home_*_check` / `home_image_ok` ถูก drop ใน `20261015000400_site_content_drop_home_page_writes`) |
-| `community` | `app_community_add_comment` · `app_community_create_thread` · `app_community_set_comment_like` · `app_community_set_like` · `app_community_update_thread` · `community_categories_list` · `community_is_team` · `community_refresh_likes` · `community_shop_news_used` · `community_team_badge` · `community_team_bar` · `community_team_rules` · `community_thread` · `community_thread_row` · `community_trending_bars` · `my_community_team` · view `admin_community_threads` · view `admin_community_comments` | `20261013000900_community_shop_team` |
-|  | `admin_community_moderate` · `app_community_report` · `app_community_set_pin` · `app_community_set_save` · `community_add_view` · `community_author` · `community_bar` · `community_feed` · `community_refresh_counts` · `community_thread_check` · `my_community_drafts` | `20261010000100_community_threads` |
+| `community` | `app_community_create_thread` · `app_community_set_comment_like` · `app_community_set_like` · `app_community_update_thread` · `community_categories_list` · `community_is_team` · `community_refresh_likes` · `community_shop_news_used` · `community_team_badge` · `community_team_bar` · `community_team_rules` · `community_thread` · `community_thread_row` · `community_trending_bars` · `my_community_team` · view `admin_community_threads` · view `admin_community_comments` | `20261013000900_community_shop_team` |
+|  | `app_community_report` · `app_community_set_pin` · `app_community_set_save` · `community_add_view` · `community_author` · `community_bar` · `community_feed` · `community_refresh_counts` · `community_thread_check` · `my_community_drafts` | `20261010000100_community_threads` |
 |  | `app_community_delete_draft` · `community_media_json` · `community_media_norm` · `community_media_path_ok` · `community_media_paths` · `community_media_set` | `20261011000100_community_media` |
 |  | `app_community_delete_comment` · `app_community_delete_thread` · `app_community_save_draft` · `app_community_update_comment` · `community_history` · `community_media_path_is_public` · `community_media_sig` · `community_media_snapshot` · `community_paths_unused` · `community_revision_paths` | `20261012000800_community_edit_history` |
+|  | `app_community_add_comment` · `admin_community_moderate` | `20261021000200_notify_text_no_dots` |
 | `backoffice` | `admin_dashboard` | `20261013000500_booking_timing_rules` |
 |  | `is_super_admin` | `20261013000200_backoffice_super_admin_reads` |
 | `mini-ads` | `admin_delete_mini_ad` · `admin_save_mini_ad` · `mini_ad_check` · `mini_ad_is_live` · `mini_ad_track` · `mini_ad_unused_image_paths` · `mini_ads_live` · view `admin_mini_ads` | `20261013001300_mini_ads_banners` |
@@ -252,6 +267,9 @@ stateDiagram-v2
 |---|---|---|---|
 | `bar_cards` | ลิสต์ร้าน, แผนที่, ranking | anon + authenticated | `Db.BarCard` |
 | `bar_detail` | หน้าร้าน (รวมเมนู/เซ็ต/โปร/โซน-โต๊ะ/ค่าธรรมเนียม/ความปลอดภัย/ตั้งค่าการจอง · ที่จอดรถ `parking_note` + รถไฟฟ้าใกล้สุด `transit_line` / `transit_station` / `transit_walk_minutes` — `…20261013000600` · `safety[].verify_method` EVIDENCE ตรวจหลักฐาน / ON_SITE ลงพื้นที่ — `…20261013000800`) | anon + authenticated | `Db.BarDetail` |
+| `bar_areas` | ตำบล/อำเภอ/จังหวัดของร้าน (`GET /public/catalog` `areas` → หน้าเว็บรวมเข้าร้าน · กรอง/แสดงพื้นที่) — `…20261020000500` | anon + authenticated | `C.BarAreaRow` |
+| `rpc('area_at_point', {p_lat, p_lng})` | `GET /public/area` — พื้นที่ของหมุดตอนร้านปักหมุด (`/merchant/join` · `/merchant/store`) | anon + authenticated | `C.AreaAtPointResult` |
+| `rpc('search_tambons', {p_q, p_code, p_limit})` | `GET /public/tambons` — ตัวกรองพื้นที่ของ `/search` ค้นตำบล/แขวงตอนพิมพ์ · `?code=` ขอชื่อจากรหัส (`?tambon=` ใน URL) | anon + authenticated | `C.TambonOption` |
 | `public_reviews` | รีวิวในหน้าร้าน (rating, comment, created_at, display_name, media) | anon + authenticated | `Db.PublicReview` |
 | `my_bars` | ร้านที่ฉันอยู่ในทีม (ทุกสถานะ + staff_role) | authenticated | `Db.MyBar` |
 | `my_bookings` | รายการจองของฉัน | authenticated | `Db.MyBooking` |
@@ -345,7 +363,7 @@ error เป็นรหัส (`NOT_ADMIN`, `MFA_REQUIRED`, `*_NOT_FOUND` → 4
 
 ### 5.2 แอปลูกค้า / ร้าน (`…001700_app_actions` · backend `domains/<domain>/*.{me,merchant}.controller.ts`)
 
-**อ่าน** — หน้าบ้านอ่านผ่าน API (`GET /api/public/catalog`, `/api/me/overview` — ADR 0002 · backend อ่านในนามผู้เรียก RLS คุม) ใน `apps/frontend/src/services/sync.ts` แล้วใส่ store ของ `@nightout/mock` (ใช้เป็น cache) → หน้าเว็บเรียก `listBars()`, `myBookings()`, `barReviews()` … ได้เหมือนเดิม
+**อ่าน** — หน้าบ้านอ่านผ่าน API (`GET /api/public/catalog`, `/api/me/overview` — ADR 0002 · backend อ่านในนามผู้เรียก RLS คุม) ใน `apps/frontend/src/services/sync.ts` แล้วใส่ cache (`services/cache.ts`) → หน้าเว็บเรียก `listBars()`, `myBookings()`, `barReviews()` … ได้เหมือนเดิม
 
 | ตอนไหน | อ่านอะไร |
 |---|---|
@@ -430,7 +448,7 @@ error เป็นรหัสตัวใหญ่ (`ZONE_FULL`, `NOT_BAR_MANAG
 
 ## 7. Seed · Job
 
-- `seed.sql`: districts 10, styles 9, safety_features **9 ข้อ** (weight รวม 100), platform_settings (PromptPay, retention), legal_documents (Terms / Privacy / Cookie / Age v1 `is_current`), promotion_packages 5 แบบ + ร้านเดโม 16 ร้านจาก `@nightout/mock`
+- `seed.sql`: styles 9, safety_features **9 ข้อ** (weight รวม 100), platform_settings (PromptPay, retention), legal_documents (Terms / Privacy / Cookie / Age v1 `is_current`), promotion_packages 5 แบบ · จังหวัด/อำเภอ/ตำบล + ย่านอยู่ใน migration `…20261020000400` (ใช้ทั้ง local และ production)
 - ตัวรัน job (ข้อ 8.2): **pg_cron เรียกฟังก์ชันใน DB ตรง** (`…20261014000100_booking_cron_jobs` · ไม่ผ่าน HTTP/NestJS · ไม่ต้องตั้ง Vault): `run_booking_timeouts()` ทุกนาที · `run_tier_scores()` 00:05 เวลาไทย · ล้าง log ของ job ทุกคืน — ดูสถานะ `select * from cron.job` / `cron.job_run_details` · `/api/jobs/*` ยังเรียกมือได้ (`x-job-secret`) · `run_retention_jobs()` ยังไม่ได้ตั้งเวลา (คำสั่งในหัวไฟล์ `…001400`) · เคยไม่มีตัวรันบนเว็บจริง และ backend dev ทุกเครื่องยิง rpc ทุกนาทีซ้ำกันจน API log เต็ม → ปิด `LocalJobsScheduler` เป็นค่าเริ่มต้น
 - คะแนน/ดาว/อันดับ (`…20261013001030`): `select cron.schedule('nightout-tier', '5 17 * * *', $$ select net.http_post(url := (select decrypted_secret from vault.decrypted_secrets where name = 'api_url') || '/api/jobs/tier', headers := jsonb_build_object('x-job-secret', (select decrypted_secret from vault.decrypted_secrets where name = 'job_secret'))) $$);` (00:05 เวลาไทยทุกคืน · แทนบรรทัด `/jobs/tier?period=WEEKLY` ในหัวไฟล์ `…001400`) · **ครั้งแรกหลัง `db:push` / `supabase db reset`: กด "คำนวณใหม่" ที่ Backoffice `/ranking` หรือเรียก `/api/jobs/tier`** (seed ไม่มี `tier_scores` → หน้าอันดับว่างจนกว่า job รันครั้งแรก) · ร้านเดโมไม่มีเช็กอิน → ใช้สูตร (รีวิว + Safety) × 100 / 70
 - `run_retention_jobs()` (รันวันละครั้ง): anonymize บัญชีที่ `deleted_at` เลย `account_retention_days` (30) + ล้าง `contact_phone` ที่เลย `contact_phone_retention_days` (90) · บันทึกใน `job_runs` · บัญชีใน `auth.users` ให้ NestJS ปิด/เปลี่ยนอีเมลผ่าน Admin API (ห้ามลบ เพราะการจองยังอ้างถึง)
@@ -465,5 +483,5 @@ error เป็นรหัสตัวใหญ่ (`ZONE_FULL`, `NOT_BAR_MANAG
 | PR เพศ LGBTQ | แสดงในป้าย PR + ร้านกรอกได้ใน `/merchant/settings` |
 | การเขียนจากหน้าบ้าน | RLS ปิดทั้งหมด · เขียนผ่าน NestJS → `app_*` (หัวข้อ 5.2) |
 | 10.3 ถือเงินมัดจำแทนร้าน | ตาราง deposits/payouts เป็น DRAFT — **ห้ามเปิดรับเงินจริงก่อนได้คำตอบจากที่ปรึกษากฎหมาย** |
-| 10.8 โปรแอลกอฮอล์ | ร้านเดโมยังมี "โปรเบียร์ก่อน 2 ทุ่ม" (มาจาก `@nightout/mock`) — รอตัดสินใจ |
+| 10.8 โปรแอลกอฮอล์ | ร้านเดโมถูกลบแล้ว (2026-10-20) — โปรของร้านจริงใช้คำเตือน `alcoholWordsIn()` |
 | 10.1, 10.2, 10.4–10.7, 10.9 | ยังเลื่อน/รอตัดสินใจตาม spec |

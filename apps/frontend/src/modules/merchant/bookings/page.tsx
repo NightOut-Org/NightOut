@@ -81,8 +81,9 @@ export function MerchantBookingsPage() {
   const open = (b: Booking, move = false) => navigate(`/merchant/bookings/${b.id}${move ? '?move=1' : ''}`);
   const zoneTable = (b: Booking) =>
     [bar.zones.find((z) => z.id === b.zoneId)?.name, bar.zones.flatMap((z) => z.tables).find((t) => t.id === b.tableId)?.name]
+      .map((name, i) => (name && i === 1 ? `โต๊ะ ${name}` : name))
       .filter(Boolean)
-      .join(' · ');
+      .join(' ');
 
   const run = async (b: Booking, a: RowAction) => {
     if (a.to === 'view') return open(b);
@@ -233,7 +234,7 @@ export function MerchantBookingsPage() {
                     <th className="w-[110px] font-normal">รหัส</th>
                     <th className="font-normal">ลูกค้า</th>
                     <th className="w-[50px] font-normal">คน</th>
-                    <th className="font-normal">โซน · โต๊ะ</th>
+                    <th className="font-normal">โซนและโต๊ะ</th>
                     <th className="font-normal">สถานะ</th>
                     <th className="pr-[18px]">
                       <span className="sr-only">จัดการ</span>
@@ -335,9 +336,10 @@ export function MerchantBookingsPage() {
                   <b className="w-[46px] shrink-0 text-base tabular-nums">{hhmm(b.datetime)}</b>
                   <span className="flex min-w-0 flex-1 flex-col gap-0.5 text-sm">
                     <span className="truncate">
-                      {b.userName} · {b.pax} คน
+                      {b.userName}
+                      <span className="ml-1.5 text-muted">{b.pax} คน</span>
                     </span>
-                    <span className="truncate text-xs text-muted">{zoneTable(b).replace(' · ', ' ')}</span>
+                    <span className="truncate text-xs text-muted">{zoneTable(b)}</span>
                   </span>
                   <BookingStatusTag status={b.status} />
                 </div>

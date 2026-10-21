@@ -21,7 +21,7 @@ export function AccountBannedBanner() {
       // relative z-10: หน้าที่มีพื้นหลัง EmbersBackdrop (container `relative isolate` มาทีหลังใน DOM เช่น /community) จะวาดทับแถบนี้ถ้าอยู่ระดับ z-auto เท่ากัน
       className="!mb-4 relative z-10"
       title="บัญชีของคุณถูกระงับ"
-      description={`จองโต๊ะไม่ได้ และชุมชนอ่านได้อย่างเดียว${reason ? ` · เหตุผล: ${reason}` : ''} — ติดต่อ NightOut หากคิดว่าเป็นความผิดพลาด`}
+      description={`จองโต๊ะไม่ได้ และชุมชนอ่านได้อย่างเดียว${reason ? ` (เหตุผล: ${reason})` : ''} ติดต่อ NightOut หากคิดว่าเป็นความผิดพลาด`}
     />
   );
 }

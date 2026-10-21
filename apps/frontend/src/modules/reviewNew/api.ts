@@ -1,5 +1,5 @@
 import type * as C from '@nightout/contracts';
-import type { ReviewMedia } from '@nightout/mock';
+import type { ReviewMedia } from '@/services/models';
 import { Rest } from '@nightout/utils/rest';
 import { uploadReviewMedia } from '@/services/api/storage';
 import { me } from '@/services/sync';

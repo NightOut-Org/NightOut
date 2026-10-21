@@ -12,6 +12,7 @@ import { SURFACE, SURFACE_HOVER } from '../utils/surface';
 import { useDiagonalVar } from '../utils/useDiagonalVar';
 import { useOffscreenPause } from '../utils/useOffscreenPause';
 import { PromotedTag } from './promotedTag';
+import { barPlace } from '@/ui/utils/area';
 import './weeklySpotlight.css';
 
 /** ป้ายสถานะคนบนรูป — เกิน 60 นาทีถือว่าไม่ทราบ (กติกาจาก useCrowdStatus) */
@@ -34,7 +35,7 @@ function BarMeta({ bar, className = '' }: { bar: RankedBar; className?: string }
       <BarRating bar={bar} compact />
       <span className="inline-flex items-center gap-1">
         <MapPin size={15} aria-hidden />
-        {bar.district}
+        {barPlace(bar)}
       </span>
       <span className="inline-flex items-center gap-1">
         <ShieldCheck size={15} aria-hidden />

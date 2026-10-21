@@ -1,14 +1,18 @@
-import { Info, Plus } from '@phosphor-icons/react';
+import { Chair, Plus, SquaresFour, Timer, UsersThree } from '@phosphor-icons/react';
 import { BOOKING_EXTENSION_MINUTES } from '@nightout/utils';
 import { App, Empty, Form, Input, InputNumber, Modal, Popconfirm } from 'antd';
 import { useState } from 'react';
 import { Link } from 'react-router';
+import { HEADER_ADD_CLASS, HEADER_SAVE_CLASS } from '@/ui/utils/buttonClasses';
 import { useMerchantBar } from '@/hooks/useMerchantBar';
 import { useUnsavedGuard } from '@/hooks/useUnsavedGuard';
 import { Tile } from '@/ui/components/merchantUi';
 import { baht } from '@/ui/utils/format';
 import { setZones } from './api';
 import { isNewId, useZonesDraft, type Zone } from './utils/useZonesDraft';
+import { MetaList } from '@/ui/components/metaList';
+import { DraftChip } from '@/ui/components/statusChip';
+import { RuleList } from '@/ui/components/ruleList';
 
 interface NewZone {
   name: string;
@@ -60,9 +64,7 @@ export function MerchantTablesPage() {
   const zoneTag = (z: Zone) => {
     const st = draft.zoneState(z);
     return st ? (
-      <span className="rounded-full bg-gold/15 px-2 py-0.5 text-[11px] font-normal text-gold-text">
-        {st === 'new' ? 'ใหม่ · ยังไม่บันทึก' : 'ยังไม่บันทึก'}
-      </span>
+      <DraftChip state={st === 'new' ? 'new' : 'changed'} />
     ) : null;
   };
 
@@ -105,7 +107,7 @@ export function MerchantTablesPage() {
     <Popconfirm
       key={t.id}
       title={`ปิดใช้โต๊ะ ${t.name}?`}
-      description="การจองเดิมยังอยู่ · ลูกค้าจองโต๊ะนี้ใหม่ไม่ได้"
+      description="การจองเดิมยังอยู่ แต่ลูกค้าจองโต๊ะนี้ใหม่ไม่ได้"
       okText="ปิดใช้"
       cancelText="ยกเลิก"
       okButtonProps={{ danger: true }}
@@ -135,8 +137,14 @@ export function MerchantTablesPage() {
         <div className="min-w-0">
           <h1 className="text-[17px] font-bold lg:font-display lg:text-[30px]">โซน / โต๊ะ</h1>
           <p className="mt-1 text-xs text-muted lg:text-sm">
-            {draft.zones.length} โซน · {tableCount} โต๊ะ · รับได้ {pax} คน
-            <span className="hidden lg:inline"> · ระบบกันจองซ้อนตามระยะเวลาจอง</span>
+            <MetaList
+              items={[
+                { icon: <SquaresFour weight="fill" />, label: 'โซน', value: `${draft.zones.length} โซน` },
+                { icon: <Chair weight="fill" />, label: 'โต๊ะ', value: `${tableCount} โต๊ะ` },
+                { icon: <UsersThree weight="fill" />, label: 'รับได้', value: `รับได้ ${pax} คน` },
+              ]}
+            />
+            <span className="ml-3 hidden lg:inline">ระบบกันจองซ้อนตามระยะเวลาจอง</span>
           </p>
         </div>
         <div className="flex items-center gap-1 lg:gap-3">
@@ -158,12 +166,12 @@ export function MerchantTablesPage() {
             type="button"
             disabled={saving}
             onClick={() => setOpen(true)}
-            className="merchant-pill hidden h-10 items-center gap-2 rounded-xl bg-gold px-[18px] text-sm font-semibold text-on-gold disabled:opacity-60 lg:inline-flex"
+            className={HEADER_ADD_CLASS}
           >
             <Plus /> เพิ่มโซน
           </button>
           {saveButton(
-            'hidden h-10 items-center rounded-xl bg-gold px-[18px] text-sm font-semibold text-on-gold lg:inline-flex',
+            HEADER_SAVE_CLASS,
             'บันทึกการเปลี่ยนแปลง',
           )}
           <button
@@ -206,7 +214,7 @@ export function MerchantTablesPage() {
                   </span>
                 </div>
                 <span className="text-[13px] text-muted">
-                  โต๊ะ ({z.tables.length}) · {hoursLabel(z.defaultDurationMinutes)} ต่อรอบ
+                  โต๊ะ ({z.tables.length}) รอบละ {hoursLabel(z.defaultDurationMinutes)}
                 </span>
                 {z.tables.length === 0 ? (
                   <span className="text-sm text-muted">ยังไม่มีโต๊ะ — ลูกค้าจองเป็นโซน</span>
@@ -237,8 +245,13 @@ export function MerchantTablesPage() {
                     {zoneTag(z)}
                   </span>
                   <span className="text-xs text-muted">
-                    {z.tables.length} โต๊ะ · {z.capacityPax} คน ·{' '}
-                    {hoursLabel(z.defaultDurationMinutes)}
+                    <MetaList
+                      items={[
+                        { icon: <Chair weight="fill" />, label: 'โต๊ะ', value: `${z.tables.length} โต๊ะ` },
+                        { icon: <UsersThree weight="fill" />, label: 'รับได้', value: `${z.capacityPax} คน` },
+                        { icon: <Timer weight="fill" />, label: 'เวลาต่อรอบ', value: hoursLabel(z.defaultDurationMinutes) },
+                      ]}
+                    />
                   </span>
                 </span>
                 <div className="grid grid-cols-6 gap-1.5">
@@ -260,11 +273,14 @@ export function MerchantTablesPage() {
       )}
 
       <div className="flex items-center gap-3 rounded-2xl border border-border bg-surface px-[18px] py-3.5 text-sm text-muted">
-        <Info size={18} className="shrink-0 text-link" />
-        <span className="flex-1">
-          ลูกค้าเลือกได้ทั้งโซนหรือโต๊ะ · ถ้าไม่มาเช็กอินเกิน grace period ({bar.gracePeriodMinutes}{' '}
-          นาที) ระบบปลดโต๊ะ (Forfeited) อัตโนมัติ · ลูกค้าขอต่อเวลาได้อีก {BOOKING_EXTENSION_MINUTES} นาที 1 ครั้ง
-        </span>
+        <RuleList
+          className="flex-1"
+          rules={[
+            'ลูกค้าเลือกได้ทั้งโซนหรือโต๊ะ',
+            { tone: 'warn', text: `ไม่มาเช็กอินเกิน grace period (${bar.gracePeriodMinutes} นาที) ระบบปลดโต๊ะ (Forfeited) อัตโนมัติ` },
+            { tone: 'check', text: `ลูกค้าขอต่อเวลาได้อีก ${BOOKING_EXTENSION_MINUTES} นาที 1 ครั้ง` },
+          ]}
+        />
         <Link to="/merchant/settings" className="hidden shrink-0 lg:inline">
           ตั้งค่าการจอง →
         </Link>

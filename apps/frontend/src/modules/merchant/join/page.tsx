@@ -1,21 +1,33 @@
-import { Armchair, ArrowLeft, ArrowRight, CheckCircle, ForkKnife, MusicNotes, X } from '@phosphor-icons/react';
+import {
+  Armchair,
+  ArrowLeft,
+  ArrowRight,
+  Check,
+  CheckCircle,
+  ForkKnife,
+  MapPin,
+  MusicNotes,
+  X,
+} from '@phosphor-icons/react';
 import type { BarCategory } from '@nightout/types';
 import { formatTransit } from '@nightout/utils';
-import { App, Form, Input, Select } from 'antd';
+import { App, Form, Input } from 'antd';
 import { useState, type ReactNode } from 'react';
 import { Link, useNavigate } from 'react-router';
-import { CATEGORY_LABELS, MASTER } from '@/services/data';
+import { CATEGORY_LABELS } from '@/services/data';
 import { useAuth } from '@/services/auth';
 import { BarLocationFields } from '@/ui/components/barLocationFields';
 import { LocationPicker } from '@/ui/components/locationPicker';
+import { MetaList } from '@/ui/components/metaList';
+import { PinAreaCard, pinAreaParts } from '@/ui/components/pinAreaCard';
+import { RuleList } from '@/ui/components/ruleList';
 import { fillEmptyAddress, toLocationBody, type LocationFormValues } from '@/ui/utils/barLocation';
-import { merchantJoin, reversePlace, searchPlace } from './api';
+import { merchantJoin, reversePlace, searchPlace, usePinArea } from './api';
 
 /** ข้อมูลร้าน + เอกสาร + ตำแหน่งร้าน (หมุด · ที่อยู่ · ที่จอดรถ · รถไฟฟ้า — ชื่อช่องจาก LocationFormValues) */
 interface JoinValues extends LocationFormValues {
   name: string;
   category: BarCategory;
-  district?: string;
   license: string;
 }
 
@@ -26,30 +38,49 @@ const CATEGORY_ICON: Record<BarCategory, ReactNode> = {
 };
 
 /** 4 ขั้น: ฟิลด์ที่ต้องผ่านก่อนไปขั้นถัดไป */
-const STEPS: { title: string; fields: (keyof JoinValues)[]; next: string; nextHint: string }[] = [
+const STEPS: { title: string; desc: string; fields: (keyof JoinValues)[]; next: string }[] = [
   {
     title: 'ข้อมูลร้าน',
-    fields: ['name', 'category', 'district'],
+    desc: 'ชื่อและประเภทของร้าน',
+    fields: ['name', 'category'],
     next: 'ตำแหน่งร้าน',
-    nextHint: 'ปักหมุดร้านบนแผนที่ + ที่อยู่ ที่จอดรถ และรถไฟฟ้าใกล้สุด',
   },
   {
     title: 'ตำแหน่งร้าน',
-    fields: ['pin', 'address', 'parking_note', 'transit_line', 'transit_station', 'transit_walk_minutes'],
+    desc: 'ปักหมุด (ระบบหาย่านให้) ที่อยู่ ที่จอดรถ และรถไฟฟ้าใกล้สุด',
+    fields: [
+      'pin',
+      'address',
+      'parking_note',
+      'transit_line',
+      'transit_station',
+      'transit_walk_minutes',
+    ],
     next: 'เอกสาร',
-    nextHint: 'เลขใบอนุญาตสถานบริการ หรือทะเบียนพาณิชย์ของร้าน',
   },
   {
     title: 'เอกสาร',
+    desc: 'เลขใบอนุญาตสถานบริการหรือทะเบียนพาณิชย์',
     fields: ['license'],
     next: 'ส่งตรวจ',
-    nextHint: 'ตรวจข้อมูลอีกครั้ง แล้วส่งให้ทีม NightOut ตรวจภายใน 1–2 วันทำการ',
   },
-  { title: 'ส่งตรวจ', fields: [], next: '', nextHint: 'หลังส่งตรวจ เตรียมเมนู โต๊ะ และตั้งค่าการจองได้เลยระหว่างรอ' },
+  { title: 'ส่งตรวจ', desc: 'ตรวจข้อมูลอีกครั้ง แล้วส่งให้ทีม NightOut', fields: [], next: '' },
 ];
 
+const CATEGORY_HINT: Record<BarCategory, string> = {
+  PUB_BAR: 'ดนตรี เต้น ปาร์ตี้',
+  CHILL: 'นั่งคุย บรรยากาศสบาย',
+  RESTAURANT: 'อาหารเป็นหลัก มีเครื่องดื่ม',
+};
+
 /** ปุ่มเลือกประเภทร้านแบบการ์ด — ใช้เป็น control ของ Form.Item */
-function CategoryPicker({ value, onChange }: { value?: BarCategory; onChange?: (v: BarCategory) => void }) {
+function CategoryPicker({
+  value,
+  onChange,
+}: {
+  value?: BarCategory;
+  onChange?: (v: BarCategory) => void;
+}) {
   return (
     <div role="radiogroup" aria-label="ประเภทร้าน" className="grid gap-2.5 lg:grid-cols-3">
       {(Object.keys(CATEGORY_LABELS) as BarCategory[]).map((c) => {
@@ -60,14 +91,28 @@ function CategoryPicker({ value, onChange }: { value?: BarCategory; onChange?: (
             type="button"
             role="radio"
             aria-checked={on}
+            aria-label={`${CATEGORY_LABELS[c]} (${CATEGORY_HINT[c]})`}
             onClick={() => onChange?.(c)}
-            className={`merchant-pill flex h-[52px] items-center gap-2.5 rounded-xl px-3.5 text-left text-[15px] text-text lg:h-auto lg:rounded-[14px] lg:p-3.5 lg:text-sm ${
-              on ? 'border-2 border-gold bg-gold/10' : 'border border-border'
+            className={`merchant-pill relative flex items-center gap-3 rounded-[14px] border p-3.5 text-left text-text transition-colors lg:flex-col lg:items-start lg:gap-2 ${
+              on
+                ? 'border-gold bg-gold/12 shadow-[inset_0_0_0_1px_var(--gold)]'
+                : 'border-border md:hover:border-muted/60'
             }`}
           >
-            <span className={on ? 'text-gold' : 'text-muted'}>{CATEGORY_ICON[c]}</span>
-            {CATEGORY_LABELS[c]}
-            {on && <CheckCircle weight="fill" className="ml-auto text-gold lg:hidden" />}
+            <span
+              className={`grid size-10 shrink-0 place-items-center rounded-xl ${on ? 'bg-gold text-on-gold' : 'bg-surface text-muted'}`}
+            >
+              {CATEGORY_ICON[c]}
+            </span>
+            <span className="flex min-w-0 flex-col">
+              <b className="text-[15px] font-semibold">{CATEGORY_LABELS[c]}</b>
+              <span className="text-xs text-muted">{CATEGORY_HINT[c]}</span>
+            </span>
+            <CheckCircle
+              weight="fill"
+              aria-hidden
+              className={`ml-auto size-5 shrink-0 text-gold transition-opacity lg:absolute lg:right-3 lg:top-3 ${on ? 'opacity-100' : 'opacity-0'}`}
+            />
           </button>
         );
       })}
@@ -75,26 +120,79 @@ function CategoryPicker({ value, onChange }: { value?: BarCategory; onChange?: (
   );
 }
 
-/** ตัวบอกขั้น 1 — 2 — 3 — 4 (Desktop) */
-function StepDots({ step }: { step: number }) {
+/** แผงขั้นตอนแนวตั้ง (Desktop) — ขั้นที่ผ่านแล้วกดย้อนไปแก้ได้ · ขั้นถัดไปต้องผ่านการตรวจช่องก่อน */
+function StepRail({ step, onGo }: { step: number; onGo: (i: number) => void }) {
   return (
-    <ol className="m-0 flex list-none items-center gap-2.5 p-0 text-sm" aria-label="ขั้นตอนสมัคร">
-      {STEPS.map((s, i) => (
-        <li key={s.title} className="flex items-center gap-2.5" aria-current={i === step ? 'step' : undefined}>
-          <span className={`flex items-center gap-2 ${i <= step ? 'text-gold-text' : 'text-muted'}`}>
-            <span
-              className={`grid size-[26px] place-items-center rounded-full text-[13px] ${
-                i <= step ? 'bg-gold font-bold text-on-gold' : 'border border-border'
-              }`}
-            >
-              {i + 1}
-            </span>
-            {s.title}
-          </span>
-          {i < STEPS.length - 1 && <span className="h-px w-10 bg-border" />}
-        </li>
-      ))}
-    </ol>
+    <nav aria-label="ขั้นตอนสมัคร" className="flex flex-col gap-5">
+      <div className="flex flex-col gap-2">
+        <span className="text-[13px] text-muted">
+          ขั้น {step + 1} จาก {STEPS.length}
+        </span>
+        <span className="block h-1.5 overflow-hidden rounded-full bg-border/70">
+          <span
+            className="block h-full rounded-full bg-gold transition-[width] duration-300"
+            style={{ width: `${((step + 1) / STEPS.length) * 100}%` }}
+          />
+        </span>
+      </div>
+      <ol className="m-0 flex list-none flex-col p-0">
+        {STEPS.map((s, i) => {
+          const done = i < step;
+          const current = i === step;
+          const body = (
+            <>
+              <span className="flex flex-col items-center self-stretch">
+                <span
+                  className={`grid size-8 shrink-0 place-items-center rounded-full text-[13px] font-semibold ${
+                    current
+                      ? 'bg-gold text-on-gold shadow-[0_0_0_4px_color-mix(in_srgb,var(--gold)_22%,transparent)]'
+                      : done
+                        ? 'bg-gold/15 text-gold-text'
+                        : 'border border-border text-muted'
+                  }`}
+                >
+                  {done ? <Check weight="bold" /> : i + 1}
+                </span>
+                {i < STEPS.length - 1 && (
+                  <span className={`my-1 w-px flex-1 ${done ? 'bg-gold/50' : 'bg-border'}`} />
+                )}
+              </span>
+              <span
+                className={`flex min-w-0 flex-col pb-5 pt-1 ${current || done ? '' : 'opacity-70'}`}
+              >
+                <b className={`text-sm font-semibold ${current ? 'text-gold-text' : 'text-text'}`}>
+                  {s.title}
+                </b>
+                <span className="text-xs text-muted">{s.desc}</span>
+              </span>
+            </>
+          );
+          return (
+            <li key={s.title} aria-current={current ? 'step' : undefined}>
+              {done ? (
+                <button
+                  type="button"
+                  onClick={() => onGo(i)}
+                  className="flex w-full gap-3 bg-transparent p-0 text-left md:hover:[&_b]:underline"
+                >
+                  {body}
+                </button>
+              ) : (
+                <div className="flex gap-3">{body}</div>
+              )}
+            </li>
+          );
+        })}
+      </ol>
+      <RuleList
+        boxed
+        className="!text-xs"
+        rules={[
+          'ทีม NightOut ตรวจภายใน 1–2 วันทำการ',
+          { tone: 'check', text: 'ระหว่างรอตรวจ เตรียมเมนู โต๊ะ และตั้งค่าการจองได้เลย' },
+        ]}
+      />
+    </nav>
   );
 }
 
@@ -107,7 +205,8 @@ export function MerchantJoinPage() {
   const [step, setStep] = useState(0);
   const [form] = Form.useForm<JoinValues>();
   const v = (Form.useWatch([], { form, preserve: true }) ?? {}) as Partial<JoinValues>;
-  const district = MASTER.districts.find((d) => d.id === v.district)?.name;
+  const pinArea = usePinArea(v.pin);
+  const place = pinAreaParts(pinArea.data);
   const cur = STEPS[step]!;
   const last = step === STEPS.length - 1;
 
@@ -123,7 +222,6 @@ export function MerchantJoinPage() {
       await merchantJoin({
         name: values.name,
         category: values.category,
-        district_id: values.district ?? null,
         license: values.license,
         ...toLocationBody(values),
       });
@@ -148,12 +246,16 @@ export function MerchantJoinPage() {
 
   const nextLabel = last ? (sending ? 'กำลังส่ง…' : 'ส่งให้ทีมตรวจ') : `ถัดไป: ${cur.next}`;
   const transit = v.transit_line
-    ? formatTransit({ line: v.transit_line, station: v.transit_station ?? '', walkMinutes: v.transit_walk_minutes })
+    ? formatTransit({
+        line: v.transit_line,
+        station: v.transit_station ?? '',
+        walkMinutes: v.transit_walk_minutes,
+      })
     : null;
   const summary: [string, string | undefined][] = [
     ['ชื่อร้าน', v.name],
     ['ประเภทร้าน', v.category && CATEGORY_LABELS[v.category]],
-    ['ย่าน', district],
+    ['พื้นที่', place.found ? `${place.head} ${place.rest}` : undefined],
     ['ที่อยู่', v.address],
     ['ตำแหน่ง', v.pin ? `${v.pin.lat.toFixed(5)}, ${v.pin.lng.toFixed(5)}` : undefined],
     ['รถไฟฟ้าใกล้สุด', transit ?? undefined],
@@ -162,16 +264,30 @@ export function MerchantJoinPage() {
   ];
 
   const fields = (
-    <Form<JoinValues> form={form} layout="vertical" size="large" requiredMark={false} preserve className="merchant-join-form">
+    <Form<JoinValues>
+      form={form}
+      layout="vertical"
+      size="large"
+      requiredMark={false}
+      preserve
+      className="merchant-join-form"
+    >
       <div className={step === 0 ? 'grid gap-x-5 lg:grid-cols-2' : 'hidden'}>
-        <Form.Item name="name" label="ชื่อร้าน" rules={[{ required: true, message: 'กรอกชื่อร้าน' }]} className="lg:col-span-2">
-          <Input autoComplete="organization" />
+        <Form.Item
+          name="name"
+          label="ชื่อร้าน"
+          rules={[{ required: true, message: 'กรอกชื่อร้าน' }]}
+          className="lg:col-span-2"
+        >
+          <Input autoComplete="organization" placeholder="ชื่อที่ลูกค้าจะเห็นบนการ์ดร้าน" />
         </Form.Item>
-        <Form.Item name="category" label="ประเภทร้าน" rules={[{ required: true, message: 'เลือกประเภทร้าน' }]} className="lg:col-span-2">
+        <Form.Item
+          name="category"
+          label="ประเภทร้าน"
+          rules={[{ required: true, message: 'เลือกประเภทร้าน' }]}
+          className="lg:col-span-2"
+        >
           <CategoryPicker />
-        </Form.Item>
-        <Form.Item name="district" label="ย่าน" rules={[{ required: true, message: 'เลือกย่าน' }]}>
-          <Select showSearch={{ optionFilterProp: 'label' }} options={MASTER.districts.map((d) => ({ label: d.name, value: d.id }))} />
         </Form.Item>
       </div>
       {/* แผนที่ mount ตอนถึงขั้นนี้ (ไม่ซ่อนไว้ใน hidden — Leaflet ที่สร้างตอนขนาด 0 จะจัดกลางเพี้ยน) · ค่าในฟอร์มยังอยู่ (preserve) */}
@@ -185,6 +301,9 @@ export function MerchantJoinPage() {
           >
             <LocationPicker search={searchPlace} onPickPlace={(p) => fillEmptyAddress(form, p)} />
           </Form.Item>
+          <div className="mb-6">
+            <PinAreaCard area={pinArea.data} loading={pinArea.isFetching} hasPin={!!v.pin} />
+          </div>
           <BarLocationFields reverse={reversePlace} disabled={sending} />
         </div>
       )}
@@ -193,18 +312,23 @@ export function MerchantJoinPage() {
           name="license"
           label="เลขใบอนุญาตสถานบริการ / ทะเบียนพาณิชย์"
           rules={[{ required: true, message: 'กรอกเลขใบอนุญาตหรือทะเบียนพาณิชย์' }]}
-          extra="ทีม NightOut ใช้ตรวจว่าร้านเปิดถูกต้องตามกฎหมาย · ไม่แสดงให้ลูกค้าเห็น"
+          extra="ทีม NightOut ใช้ตรวจว่าร้านเปิดถูกต้องตามกฎหมาย และไม่แสดงให้ลูกค้าเห็น"
         >
           <Input autoCapitalize="characters" />
         </Form.Item>
       </div>
       {step === 3 && (
         <>
-          <dl className="m-0 grid gap-3.5">
+          <dl className="m-0 grid overflow-hidden rounded-2xl border border-border sm:grid-cols-2 [&>*:last-child]:border-b-0 sm:[&>*:nth-last-child(-n+2)]:border-b-0">
             {summary.map(([k, val]) => (
-              <div key={k} className="flex flex-col gap-0.5">
+              <div
+                key={k}
+                className="flex flex-col gap-0.5 border-b border-border px-4 py-3 sm:odd:border-r"
+              >
                 <dt className="text-[13px] text-muted">{k}</dt>
-                <dd className="m-0 break-words text-[15px]">{val || '-'}</dd>
+                <dd className={`m-0 break-words text-[15px] ${val ? '' : 'text-muted'}`}>
+                  {val || 'ยังไม่กรอก'}
+                </dd>
               </div>
             ))}
           </dl>
@@ -215,18 +339,42 @@ export function MerchantJoinPage() {
   );
 
   const preview = (
-    <div
-      className="flex min-h-[220px] flex-1 flex-col justify-end rounded-[20px] border border-border bg-cover bg-center p-5 text-white"
-      style={{
-        backgroundImage:
-          "linear-gradient(to top, rgba(7,7,13,.92), rgba(7,7,13,.15)), url('/images/bars/placeholder.webp')",
-      }}
-    >
-      <span className="text-xs text-white/75">ตัวอย่างการ์ดร้านที่ลูกค้าเห็น</span>
-      <b className="break-words font-display text-[26px] font-bold text-white">{v.name || 'ชื่อร้านของคุณ'}</b>
-      <span className="text-[13px] text-white/80">
-        {[v.category ? CATEGORY_LABELS[v.category] : 'ประเภทร้าน', district, 'ร้านใหม่'].filter(Boolean).join(' · ')}
-      </span>
+    <div className="flex flex-col gap-2">
+      <span className="text-[13px] text-muted">ตัวอย่างการ์ดร้านที่ลูกค้าเห็น</span>
+      <div className="overflow-hidden rounded-[20px] border border-border bg-card">
+        <div
+          className="aspect-[16/10] bg-cover bg-center"
+          style={{ backgroundImage: "url('/images/bars/placeholder.webp')" }}
+          role="img"
+          aria-label="รูปปกร้าน (เพิ่มได้หลังสมัคร)"
+        />
+        <div className="flex flex-col gap-1.5 p-4">
+          <span className="self-start rounded-full bg-purple/15 px-2 text-xs font-medium leading-5 text-link">
+            ร้านใหม่
+          </span>
+          <b
+            className={`break-words font-display text-[22px] font-bold leading-tight ${v.name ? '' : 'text-muted'}`}
+          >
+            {v.name || 'ชื่อร้านของคุณ'}
+          </b>
+          <MetaList
+            className="text-[13px] text-muted"
+            items={[
+              {
+                icon: v.category ? CATEGORY_ICON[v.category] : <MusicNotes />,
+                label: 'ประเภทร้าน',
+                value: v.category ? CATEGORY_LABELS[v.category] : 'ประเภทร้าน',
+              },
+              {
+                icon: <MapPin weight="fill" />,
+                label: 'พื้นที่',
+                value: place.found ? place.head : 'พื้นที่จากหมุด',
+              },
+            ]}
+          />
+        </div>
+      </div>
+      <span className="text-xs text-muted">รูปปก เมนู และโต๊ะ เพิ่มได้หลังสมัคร</span>
     </div>
   );
 
@@ -234,7 +382,7 @@ export function MerchantJoinPage() {
     <button
       type="button"
       onClick={() => setStep(step - 1)}
-      className="merchant-pill inline-flex h-10 items-center gap-2 rounded-xl border border-border px-4 text-sm"
+      className="merchant-pill inline-flex h-11 items-center gap-2 rounded-xl border border-border px-4 text-sm"
     >
       <ArrowLeft />
       ย้อนกลับ
@@ -242,16 +390,25 @@ export function MerchantJoinPage() {
   );
 
   return (
-    <div>
+    <div className="lg:mx-auto lg:max-w-[1240px]">
       {/* มือถือ — แถบบน: ปิด/ย้อน · ชื่อ · ขั้น + แถบความคืบหน้า */}
       <header className="merchant-appbar sticky top-0 z-40 border-b border-border bg-surface lg:hidden">
         <div className="flex h-14 items-center gap-2.5 px-2">
           {step === 0 ? (
-            <Link to="/" aria-label="ปิด" className="grid size-10 place-items-center text-xl text-text">
+            <Link
+              to="/"
+              aria-label="ปิด"
+              className="grid size-10 place-items-center text-xl text-text"
+            >
               <X />
             </Link>
           ) : (
-            <button type="button" aria-label="ย้อนกลับ" onClick={() => setStep(step - 1)} className="grid size-10 place-items-center text-xl">
+            <button
+              type="button"
+              aria-label="ย้อนกลับ"
+              onClick={() => setStep(step - 1)}
+              className="grid size-10 place-items-center text-xl"
+            >
               <ArrowLeft />
             </button>
           )}
@@ -262,42 +419,58 @@ export function MerchantJoinPage() {
         </div>
       </header>
       <div className="h-1 bg-border/60 lg:hidden">
-        <span className="block h-full bg-gold transition-[width] duration-300" style={{ width: `${((step + 1) / STEPS.length) * 100}%` }} />
+        <span
+          className="block h-full bg-gold transition-[width] duration-300"
+          style={{ width: `${((step + 1) / STEPS.length) * 100}%` }}
+        />
       </div>
 
-      {/* Desktop — หัวข้อ + ตัวบอกขั้น */}
-      <div className="mb-4 hidden items-center justify-between gap-6 lg:flex">
-        <div>
-          <h1 className="font-display text-[30px] font-bold">เปิดร้านบน NightOut</h1>
-          <p className="mt-1 text-sm text-muted">ทีม NightOut ตรวจภายใน 1–2 วันทำการ · ระหว่างนี้เตรียมเมนูและโต๊ะได้เลย</p>
-        </div>
-        <StepDots step={step} />
+      {/* Desktop — หัวข้อหน้า */}
+      <div className="mb-6 hidden lg:block">
+        <h1 className="font-display text-[30px] font-bold">เปิดร้านบน NightOut</h1>
+        <p className="mt-1 text-sm text-muted">กรอก 4 ขั้น ใช้เวลาประมาณ 5 นาที</p>
       </div>
 
-      <div className="grid gap-4 px-4 pb-32 pt-[18px] lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] lg:p-0">
-        <div className="min-w-0 lg:rounded-[20px] lg:border lg:border-border lg:bg-card lg:p-6">
-          <h1 className="mb-3.5 font-display text-[26px] font-bold lg:hidden">{cur.title}</h1>
-          {fields}
-        </div>
-        <div className={`flex-col gap-4 ${step === 3 ? 'flex' : 'hidden lg:flex'}`}>
-          {preview}
-          <div className="hidden flex-col gap-2 rounded-[20px] border border-border bg-surface p-[18px] text-[13px] text-muted lg:flex">
-            <b className="text-sm font-semibold text-text">{last ? 'หลังส่งตรวจ' : `ขั้นถัดไป: ${cur.next}`}</b>
-            <span>{cur.nextHint}</span>
-          </div>
-          <div className="hidden justify-end gap-2 lg:flex">
-            {backButton}
+      <div className="grid gap-6 px-4 pb-32 pt-[18px] lg:grid-cols-[220px_minmax(0,1fr)_300px] lg:items-start lg:p-0 xl:grid-cols-[240px_minmax(0,1fr)_320px]">
+        <aside className="hidden lg:sticky lg:top-24 lg:block">
+          <StepRail step={step} onGo={setStep} />
+        </aside>
+
+        <section className="min-w-0 lg:rounded-[20px] lg:border lg:border-border lg:bg-card">
+          <header className="mb-4 lg:mb-0 lg:border-b lg:border-border lg:px-6 lg:py-5">
+            <h2 className="m-0 font-display text-[26px] font-bold lg:text-[22px]">{cur.title}</h2>
+            <p className="m-0 mt-1 text-sm text-muted">{cur.desc}</p>
+          </header>
+          <div className="lg:px-6 lg:pt-5">{fields}</div>
+          {step === 3 && (
+            <RuleList
+              boxed
+              className="mt-4 lg:mx-6"
+              rules={[
+                'ทีม NightOut ตรวจภายใน 1–2 วันทำการ และแจ้งผลทางการแจ้งเตือน',
+                { tone: 'check', text: 'ระหว่างรอตรวจ เตรียมเมนู โต๊ะ และตั้งค่าการจองได้เลย' },
+              ]}
+            />
+          )}
+          <footer className="hidden items-center justify-between gap-3 lg:mt-2 lg:flex lg:border-t lg:border-border lg:px-6 lg:py-4">
+            {backButton || <span />}
             <button
               type="button"
               disabled={sending}
               onClick={() => void next()}
-              className="merchant-pill inline-flex h-10 items-center gap-2 rounded-xl bg-gold px-[18px] text-sm font-semibold text-on-gold disabled:opacity-70"
+              className="merchant-pill inline-flex h-11 items-center gap-2 rounded-xl bg-gold px-5 text-sm font-semibold text-on-gold disabled:opacity-70"
             >
-              {last ? nextLabel : 'ถัดไป'}
+              {nextLabel}
               {!last && <ArrowRight />}
             </button>
-          </div>
-        </div>
+          </footer>
+        </section>
+
+        <aside
+          className={`flex-col gap-4 lg:sticky lg:top-24 ${step === 3 ? 'flex' : 'hidden lg:flex'}`}
+        >
+          {preview}
+        </aside>
       </div>
 
       {/* มือถือ — ปุ่มล่าง */}

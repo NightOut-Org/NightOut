@@ -1,8 +1,8 @@
-import type { Review, ReviewMedia } from '@nightout/mock';
+import type { Review, ReviewMedia } from '@/services/models';
 import { signedUrls } from '@/services/api/storage';
 import { log } from '@/services/log';
 
-/** review — แถวจาก view public_reviews / my_reviews → รูปแบบที่หน้าเว็บใช้ (ชนิด Review ของ @nightout/mock) */
+/** review — แถวจาก view public_reviews / my_reviews → รูปแบบที่หน้าเว็บใช้ (ชนิด Review ใน services/models.ts) */
 export interface MediaRow {
   id: string;
   kind: 'IMAGE' | 'VIDEO';

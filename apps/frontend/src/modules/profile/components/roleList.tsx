@@ -1,4 +1,5 @@
-import { CheckCircle } from '@phosphor-icons/react';
+import { CaretRight, CheckCircle, Storefront } from '@phosphor-icons/react';
+import { Link } from 'react-router';
 import type { UserRole } from '@nightout/types';
 import { ROLE_META, visibleRoles } from '@/configs/roles';
 import { useRoles } from '@/hooks/useRoles';
@@ -45,6 +46,21 @@ export function RoleList({ role, roleLabel }: { role: UserRole; roleLabel: strin
           );
         })}
       </ul>
+      {role === 'CUSTOMER' && (
+        <Link
+          to="/merchant/join"
+          className="group flex items-center gap-3.5 rounded-[14px] border border-dashed border-gold/45 px-[18px] py-3.5 !text-text md:hover:border-gold"
+        >
+          <span className="grid size-10 shrink-0 place-items-center rounded-[10px] bg-gold/15 text-gold-text">
+            <Storefront size={20} weight="fill" />
+          </span>
+          <span className="flex min-w-0 flex-1 flex-col">
+            <b className="text-[15px]">เปิดร้านกับ NightOut</b>
+            <span className="text-[13px] text-muted">สมัครร้านแล้วทีม NightOut ตรวจภายใน 1–2 วันทำการ</span>
+          </span>
+          <CaretRight className="shrink-0 text-muted transition-transform md:group-hover:translate-x-0.5" />
+        </Link>
+      )}
     </div>
   );
 }

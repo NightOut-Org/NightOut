@@ -12,7 +12,7 @@ export function MenuEditor({ draft, disabled }: { draft: BarDetailsDraft; disabl
   return (
     <div className="flex flex-col gap-3">
       <Typography.Text type="secondary" className="text-xs">
-        ราคาแสดงเพื่อประเมินงบเท่านั้น (ไม่มีสั่งล่วงหน้า) · รูปเมนูคงเดิม — จัดการที่หน้ารูปร้าน
+        ราคาแสดงเพื่อประเมินงบเท่านั้น (ไม่มีสั่งล่วงหน้า) รูปเมนูคงเดิม — จัดการที่หน้ารูปร้าน
       </Typography.Text>
       <Table<MenuRow>
         rowKey="key"

@@ -1,3 +1,4 @@
+import { ClockClockwise, Timer, WarningCircle } from '@phosphor-icons/react';
 import { useDroppable } from '@dnd-kit/core';
 import type * as C from '@nightout/contracts';
 import { TABLE_BOARD_RESERVED_LEAD_MINUTES } from '@nightout/utils';
@@ -6,6 +7,7 @@ import { TABLE_STATUS_META, bookingWho, hhmm, isUnpaid, minutesUntil } from '../
 import type { DropData } from '../utils/useBoardMove';
 import { BookingChip } from './bookingChip';
 import { StatusPill } from './floorLegend';
+import { StatusChip } from '@/ui/components/statusChip';
 
 /** สถานะเมื่อกำลังลาก/เลือกการจองเพื่อย้าย: valid = วางได้ · invalid = วางไม่ได้ */
 export type DropState = 'valid' | 'invalid' | undefined;
@@ -18,13 +20,17 @@ export function TimingLine({ booking, now }: { booking: C.TableBoardBooking; now
       {until > 0 ? (
         <span className="text-xs text-muted">อีก {until} นาที</span>
       ) : until === 0 ? (
-        <span className="text-xs font-medium text-gold-text">ถึงเวลานัด · ปลดโต๊ะ {hhmm(booking.auto_cancel_at)}</span>
+        <StatusChip icon={<Timer weight="fill" />} value={hhmm(booking.auto_cancel_at)}>
+          ถึงเวลานัด ปลดโต๊ะ
+        </StatusChip>
       ) : (
-        <span className="text-xs font-medium text-(--crowd-full)">
-          สาย {-until} นาที · ปลดโต๊ะ {hhmm(booking.auto_cancel_at)}
-        </span>
+        <StatusChip tone="danger" icon={<WarningCircle weight="fill" />} value={hhmm(booking.auto_cancel_at)}>
+          สาย {-until} นาที ปลดโต๊ะ
+        </StatusChip>
       )}
-      {booking.extended_at && <span className="text-xs font-medium text-gold-text">ต่อเวลาแล้ว</span>}
+      {booking.extended_at && (
+        <StatusChip icon={<ClockClockwise weight="bold" />}>ต่อเวลาแล้ว</StatusChip>
+      )}
       {isUnpaid(booking.status) && <span className="text-xs text-gold-text">{BOOKING_STATUS[booking.status].label}</span>}
     </>
   );
@@ -73,7 +79,7 @@ export function TableCard({
       <button
         type="button"
         onClick={onOpen}
-        aria-label={`โต๊ะ ${table.name} · ${meta.label} · ${table.seats} ที่นั่ง`}
+        aria-label={`โต๊ะ ${table.name} ${meta.label} ${table.seats} ที่นั่ง`}
         className="floor-card-button absolute inset-0 rounded-[14px]"
       />
       <div className="pointer-events-none relative flex h-full flex-col gap-2 p-3">
@@ -89,7 +95,8 @@ export function TableCard({
           <div className="pointer-events-auto">
             <BookingChip booking={current} label={`${current.code} ${bookingWho(current)}`} onTap={onOpen}>
               <span className="truncate font-medium">
-                {hhmm(current.booking_datetime)} · {bookingWho(current)}
+                <span className="mr-2 tabular-nums">{hhmm(current.booking_datetime)}</span>
+                {bookingWho(current)}
               </span>
               <TimingLine booking={current} now={now} />
             </BookingChip>
@@ -105,7 +112,7 @@ export function TableCard({
         )}
         {manual && table.occupancy && (
           <span className="text-[13px] text-muted">
-            ไม่มีการจอง{table.occupancy.pax ? ` · ${table.occupancy.pax} คน` : ''} · ตั้งแต่ {hhmm(table.occupancy.started_at)}
+            นั่งโดยไม่มีการจอง{table.occupancy.pax ? ` (${table.occupancy.pax} คน)` : ''} ตั้งแต่ {hhmm(table.occupancy.started_at)}
           </span>
         )}
         {table.status === 'FREE' && <span className="text-[13px] text-muted">ว่าง</span>}

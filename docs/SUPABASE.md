@@ -2,7 +2,7 @@
 
 > Project จริง: **Nightout Project** · ref `pxueavqyykdipcjqbxyd` · Tokyo (ap-northeast-1) · URL `https://pxueavqyykdipcjqbxyd.supabase.co`
 
-สถานะตอนนี้: แอปทำงานใน **โหมดเดโม** (`@nightout/mock` เก็บใน localStorage) ถ้ามี `VITE_SUPABASE_URL` + `VITE_SUPABASE_ANON_KEY` ระบบ **สมัคร/เข้าสู่ระบบ** จะไปที่ Supabase Auth ทันที ส่วนข้อมูลร้าน/การจองยังเป็นเดโมจนกว่าจะย้ายทีละหน้า (ดูข้อ 5)
+สถานะตอนนี้: ทุกหน้าอ่าน/เขียนข้อมูลจริงผ่าน NestJS + Supabase แล้ว ไม่มีโหมดเดโม
 
 ## 1. เอาค่ามาจากไหน
 
@@ -50,7 +50,7 @@ migration ที่มี (แยกตามโดเมน — รายละ
 
 หลังแก้ migration ทุกครั้ง: `pnpm --filter @nightout/backend db:types` (สร้าง `packages/types/src/database.generated.ts` ใหม่)
 
-ข้อมูลร้านเดโม: `supabase/seed.sql` (สร้างจาก `@nightout/mock` → `pnpm --filter @nightout/backend db:seed:gen`)
+Seed: `supabase/seed.sql` เป็น master data เท่านั้น (ไม่มีร้านเดโม · แก้ไฟล์ตรงได้)
 
 ### เปลี่ยน schema ทั้งชุด / ใส่ร้านเดโมใหม่ (⚠️ ลบข้อมูลทั้งหมดใน DB)
 ```bash
@@ -136,4 +136,4 @@ Supabase → Authentication → URL Configuration: ใส่ Site URL = โด�
 
 ## 6. สถานะ
 
-ทุกหน้า (ลูกค้า · ร้าน · แอดมิน) อ่าน/เขียนข้อมูลจริงแล้ว — ไม่มีข้อมูลเดโมใน localStorage (`@nightout/mock` เหลือเป็นแค่ cache/type ของหน้าเว็บ) · การโอนเงินมัดจำให้ร้าน/คืนลูกค้าจริงยังเป็น DRAFT รอข้อ 10.3
+ทุกหน้า (ลูกค้า · ร้าน · แอดมิน) อ่าน/เขียนข้อมูลจริงแล้ว — ไม่มีข้อมูลเดโมใน localStorage (cache ของหน้าเว็บอยู่ `apps/frontend/src/services/cache.ts`) · การโอนเงินมัดจำให้ร้าน/คืนลูกค้าจริงยังเป็น DRAFT รอข้อ 10.3

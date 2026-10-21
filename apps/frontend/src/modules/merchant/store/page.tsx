@@ -1,22 +1,30 @@
 import type * as C from '@nightout/contracts';
 import { InstagramLogo, TiktokLogo } from '@phosphor-icons/react';
-import { App, Form, Input, Select, Switch, TimePicker } from 'antd';
+import { App, Form, Input, Switch, TimePicker } from 'antd';
 import dayjs from 'dayjs';
 import { useState } from 'react';
 import { Link } from 'react-router';
 import { MASTER, type Bar } from '@/services/data';
 import { useFormDirty } from '@/hooks/useFormDirty';
+import { HEADER_SAVE_CLASS } from '@/ui/utils/buttonClasses';
 import { useMerchantBar } from '@/hooks/useMerchantBar';
 import { useUnsavedGuard } from '@/hooks/useUnsavedGuard';
 import { Tile } from '@/ui/components/merchantUi';
-import { saveStore } from './api';
+import { PinAreaCard } from '@/ui/components/pinAreaCard';
+import { saveStore, usePinArea } from './api';
 import { BarPhotos } from './components/barPhotos';
 import { useGalleryDraft } from './utils/useGalleryDraft';
 
 const DAYS = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'];
 
 /** สไตล์ร้านแบบชิปกดเลือก (ตัวที่เลือก = ทอง) — control ของ Form.Item */
-function StyleChips({ value = [], onChange }: { value?: string[]; onChange?: (v: string[]) => void }) {
+function StyleChips({
+  value = [],
+  onChange,
+}: {
+  value?: string[];
+  onChange?: (v: string[]) => void;
+}) {
   return (
     <div className="flex flex-wrap gap-1.5" role="group" aria-label="สไตล์ร้าน">
       {MASTER.styles.map((s) => {
@@ -42,7 +50,6 @@ function StyleChips({ value = [], onChange }: { value?: string[]; onChange?: (v:
 type StoreForm = {
   name: string;
   description?: string;
-  district?: string;
   styles?: string[];
   instagram?: string;
   tiktok?: string;
@@ -56,7 +63,6 @@ type StoreForm = {
 const toInfo = (v: StoreForm, links: Bar['links']): C.BarInfoBody => ({
   name: v.name,
   description: v.description || null,
-  district_id: v.district ?? null,
   style_keys: v.styles ?? [],
   links: [
     ...(v.instagram ? [{ type: 'INSTAGRAM' as const, url: v.instagram }] : []),
@@ -75,14 +81,14 @@ const toInfo = (v: StoreForm, links: Bar['links']): C.BarInfoBody => ({
 const toForm = (bar: Bar): StoreForm => ({
   name: bar.name,
   description: bar.description,
-  district: bar.districtId,
   styles: MASTER.styles.filter((st) => bar.styles.includes(st.label)).map((st) => st.key),
   instagram: bar.links.find((l) => l.type === 'INSTAGRAM')?.url,
   tiktok: bar.links.find((l) => l.type === 'TIKTOK')?.url,
   // ครบ 7 วันเสมอ (ร้านใหม่ยังไม่มีเวลาเปิด-ปิด → ค่าเริ่มต้น 18:00–02:00)
   hours: Array.from(
     { length: 7 },
-    (_, day) => bar.hours.find((h) => h.day === day) ?? { day, open: '18:00', close: '02:00', closed: false },
+    (_, day) =>
+      bar.hours.find((h) => h.day === day) ?? { day, open: '18:00', close: '02:00', closed: false },
   ).map((h) => ({ closed: !!h.closed, range: [dayjs(h.open, 'HH:mm'), dayjs(h.close, 'HH:mm')] })),
 });
 
@@ -95,6 +101,7 @@ export function MerchantStorePage() {
   const { message } = App.useApp();
   const [form] = Form.useForm<StoreForm>();
   const gallery = useGalleryDraft(bar);
+  const pinArea = usePinArea({ lat: bar.lat, lng: bar.lng });
   const initial = toForm(bar);
   const formDirty = useFormDirty(form, initial, (v) => toInfo(v, bar.links));
   const [progress, setProgress] = useState<string | null>(null);
@@ -121,14 +128,19 @@ export function MerchantStorePage() {
       let media: C.BarMediaBody | undefined;
       if (gallery.changed) {
         try {
-          media = await gallery.upload((done, total) => setProgress(done < total ? `กำลังอัปโหลด ${done + 1}/${total}` : 'กำลังบันทึก…'));
+          media = await gallery.upload((done, total) =>
+            setProgress(done < total ? `กำลังอัปโหลด ${done + 1}/${total}` : 'กำลังบันทึก…'),
+          );
         } catch (e) {
           // รูปที่อัปโหลดสำเร็จแล้วอยู่ใน draft — กดบันทึกใหม่ไม่อัปโหลดซ้ำ
           void message.error(`อัปโหลดรูปไม่สำเร็จ — ${(e as Error).message}`);
           return;
         }
       }
-      await saveStore(bar.id, { ...(values ? { info: toInfo(values, bar.links) } : {}), ...(media ? { media } : {}) });
+      await saveStore(bar.id, {
+        ...(values ? { info: toInfo(values, bar.links) } : {}),
+        ...(media ? { media } : {}),
+      });
       gallery.reset();
       void message.success('บันทึกข้อมูลร้านแล้ว');
     } catch (e) {
@@ -155,7 +167,7 @@ export function MerchantStorePage() {
         <div>
           <h1 className="text-[17px] font-bold lg:font-display lg:text-[30px]">ข้อมูลร้าน</h1>
           <p className="mt-1 hidden text-sm text-muted lg:block">
-            แก้รูปและข้อความได้ทั้งหน้า แล้วกดบันทึกครั้งเดียว · ห้ามชักชวนให้ดื่ม (ดูนโยบายถ้อยคำ)
+            แก้รูปและข้อความได้ทั้งหน้า แล้วกดบันทึกครั้งเดียว และห้ามชักชวนให้ดื่ม (ดูนโยบายถ้อยคำ)
           </p>
         </div>
         <div className="flex items-center gap-1 lg:gap-3">
@@ -173,7 +185,10 @@ export function MerchantStorePage() {
               </button>
             </>
           )}
-          {saveButton('hidden h-10 items-center rounded-xl bg-gold px-[18px] text-sm font-semibold text-on-gold lg:inline-flex', 'บันทึกการเปลี่ยนแปลง')}
+          {saveButton(
+            HEADER_SAVE_CLASS,
+            'บันทึกการเปลี่ยนแปลง',
+          )}
           {saveButton('px-2 py-1 text-sm font-semibold text-gold-text lg:hidden', 'บันทึก')}
         </div>
       </div>
@@ -190,14 +205,18 @@ export function MerchantStorePage() {
             initialValues={initial}
             disabled={saving}
           >
-            <Form.Item name="name" label="ชื่อร้าน" rules={[{ required: true, message: 'กรอกชื่อร้าน' }]}>
+            <Form.Item
+              name="name"
+              label="ชื่อร้าน"
+              rules={[{ required: true, message: 'กรอกชื่อร้าน' }]}
+            >
               <Input />
             </Form.Item>
-            <div className="grid gap-x-3 sm:grid-cols-2">
-              <Form.Item name="district" label="ย่าน">
-                <Select allowClear options={MASTER.districts.map((d) => ({ label: d.name, value: d.id }))} />
-              </Form.Item>
-              {/* ที่อยู่ดูอย่างเดียว — แก้พร้อมหมุดที่หน้าตำแหน่งร้าน (ต้องรอทีม NightOut ตรวจ) */}
+            {/* ย่าน/เขต/จังหวัด ระบบหาจากหมุดที่ผ่านการตรวจแล้ว · ที่อยู่ดูอย่างเดียว — แก้พร้อมหมุดที่หน้าตำแหน่งร้าน (ต้องรอทีม NightOut ตรวจ) */}
+            <div className="mb-6">
+              <PinAreaCard area={pinArea.data} loading={pinArea.isFetching} hasPin />
+            </div>
+            <div>
               <div className="mb-6 flex min-w-0 flex-col gap-1">
                 <span className="text-sm">ที่อยู่</span>
                 <span className="break-words text-sm text-muted">{bar.address || '-'}</span>
@@ -220,7 +239,11 @@ export function MerchantStorePage() {
                         <span className="w-[72px] shrink-0 text-sm text-muted">{DAYS[i]}</span>
                         <Form.Item noStyle shouldUpdate>
                           {() => {
-                            const closed = form.getFieldValue(['hours', f.name, 'closed']) as boolean;
+                            const closed = form.getFieldValue([
+                              'hours',
+                              f.name,
+                              'closed',
+                            ]) as boolean;
                             return closed ? (
                               <span className="flex-1 text-sm text-muted">ปิดทั้งวัน</span>
                             ) : (
@@ -261,11 +284,27 @@ export function MerchantStorePage() {
             </Form.Item>
             <Form.Item label="ลิงก์ (แสดงเป็นลิงก์เท่านั้น)" className="!mb-0">
               <div className="flex flex-col gap-2">
-                <Form.Item name="instagram" noStyle rules={[{ type: 'url', message: 'ใส่ลิงก์เต็ม เช่น https://instagram.com/…' }]}>
-                  <Input prefix={<InstagramLogo className="text-muted" />} placeholder="https://instagram.com/…" aria-label="Instagram" />
+                <Form.Item
+                  name="instagram"
+                  noStyle
+                  rules={[{ type: 'url', message: 'ใส่ลิงก์เต็ม เช่น https://instagram.com/…' }]}
+                >
+                  <Input
+                    prefix={<InstagramLogo className="text-muted" />}
+                    placeholder="https://instagram.com/…"
+                    aria-label="Instagram"
+                  />
                 </Form.Item>
-                <Form.Item name="tiktok" noStyle rules={[{ type: 'url', message: 'ใส่ลิงก์เต็ม เช่น https://tiktok.com/@…' }]}>
-                  <Input prefix={<TiktokLogo className="text-muted" />} placeholder="https://tiktok.com/@…" aria-label="TikTok" />
+                <Form.Item
+                  name="tiktok"
+                  noStyle
+                  rules={[{ type: 'url', message: 'ใส่ลิงก์เต็ม เช่น https://tiktok.com/@…' }]}
+                >
+                  <Input
+                    prefix={<TiktokLogo className="text-muted" />}
+                    placeholder="https://tiktok.com/@…"
+                    aria-label="TikTok"
+                  />
                 </Form.Item>
               </div>
             </Form.Item>

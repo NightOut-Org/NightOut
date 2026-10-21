@@ -29,7 +29,7 @@ function subLine(key: Key, kind: 'est' | 'fee', cur: C.SalesStatsPeriod, prev: C
   const d = before == null ? null : delta(value, before, '%');
   const text = d ? `${d.text} จาก ${days} วันก่อน` : 'ยังไม่มีข้อมูลช่วงก่อนหน้า';
   return {
-    text: key === 'table_fee_total' ? `${cur.table_fee_bookings.toLocaleString('th-TH')} การจอง · ${text}` : text,
+    text: key === 'table_fee_total' ? `${cur.table_fee_bookings.toLocaleString('th-TH')} การจอง (${text})` : text,
     cls: d?.cls ?? 'text-muted',
   };
 }
@@ -90,8 +90,8 @@ export function SalesSection({ barId, days }: { barId: string; days: number }) {
 
       <p className="text-[11px] text-muted lg:text-xs">
         ยอดใช้จ่ายเป็นการประมาณ: ราคาที่ลูกค้าประเมินตอนจอง (ถ้ามี) หรือราคาต่อคนโดยประมาณของร้าน × จำนวนคนที่เช็กอินจริง —
-        NightOut ไม่เห็นบิลจริงของร้าน · {TABLE_FEE_SHORT} = ค่าธรรมเนียมจองโต๊ะที่ลูกค้าจ่ายผ่านแอปและร้านได้รับ
-        (รวมที่รอโอน · ไม่รวมที่คืนลูกค้า)
+        NightOut ไม่เห็นบิลจริงของร้าน ส่วน {TABLE_FEE_SHORT} คือค่าธรรมเนียมจองโต๊ะที่ลูกค้าจ่ายผ่านแอปและร้านได้รับ
+        (รวมที่รอโอน แต่ไม่รวมที่คืนลูกค้า)
       </p>
     </section>
   );

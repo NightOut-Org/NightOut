@@ -121,7 +121,7 @@ export function ReviewMediaPicker({
         )}
       </div>
       <p className="mt-2 text-xs text-muted">
-        สูงสุด {MEDIA_LIMITS.maxFiles} ไฟล์ · วิดีโอไม่เกิน {MEDIA_LIMITS.videoSeconds} วินาที · ห้ามถ่ายหน้าคนอื่นโดยไม่ได้รับอนุญาต
+        สูงสุด {MEDIA_LIMITS.maxFiles} ไฟล์ วิดีโอไม่เกิน {MEDIA_LIMITS.videoSeconds} วินาที และห้ามถ่ายหน้าคนอื่นโดยไม่ได้รับอนุญาต
       </p>
     </div>
   );

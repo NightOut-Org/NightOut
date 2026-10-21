@@ -49,9 +49,9 @@ function barStyle(bar: Bar): React.CSSProperties {
 }
 
 function barLabel(bar: Bar) {
-  if (bar.manual) return `กำลังใช้ (ไม่มีการจอง)${bar.manual.pax ? ` · ${bar.manual.pax} คน` : ''}`;
+  if (bar.manual) return `กำลังใช้ (ไม่มีการจอง)${bar.manual.pax ? ` ${bar.manual.pax} คน` : ''}`;
   const b = bar.booking!;
-  const forfeited = b.status === 'NO_SHOW' ? ` · ${BOOKING_STATUS.NO_SHOW.text}` : '';
+  const forfeited = b.status === 'NO_SHOW' ? ` (${BOOKING_STATUS.NO_SHOW.text})` : '';
   return `${hhmm(b.booking_datetime)} ${b.customer_name ?? 'ลูกค้า'}·${b.pax}${forfeited}`;
 }
 
@@ -100,7 +100,7 @@ function Row({
                 key={bar.booking?.id ?? bar.manual?.id}
                 title={
                   bar.booking
-                    ? `${bar.booking.code} · ${text} · ${BOOKING_STATUS[bar.booking.status].text}`
+                    ? `${bar.booking.code} ${text} (${BOOKING_STATUS[bar.booking.status].text})`
                     : text
                 }
                 className="absolute flex items-center overflow-hidden rounded-md px-1.5 text-xs whitespace-nowrap"
@@ -199,7 +199,7 @@ export function BoardTimeline({ board, groups }: { board: C.TableBoard; groups: 
                 <Row
                   key={t.id}
                   label={t.name}
-                  sub={`${t.seats} ที่ · ${STATUS_META[t.status].label}`}
+                  sub={`${t.seats} ที่ ${STATUS_META[t.status].label}`}
                   dot={STATUS_META[t.status].color}
                   bars={bars}
                   range={range}

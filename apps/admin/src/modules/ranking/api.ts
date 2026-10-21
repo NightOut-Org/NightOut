@@ -5,5 +5,11 @@ import { useAdminView, type AdminActionInput } from '@/services/adminData';
 /** GET /admin/views/admin_ranking — ร้านที่แสดงอยู่ + คะแนนรอบสัปดาห์ล่าสุด (แยกส่วน) + โหวตสัปดาห์/เดือน (หน้าเรียงเอง) */
 export const useRanking = () => useAdminView('admin_ranking');
 
+/** GET /admin/views/admin_bar_areas — จังหวัด/อำเภอของร้าน (ไว้กรองตาราง) */
+export const useBarAreas = () => useAdminView('admin_bar_areas');
+
 /** POST /admin/ranking/recompute — คำนวณดาว/อันดับของทุกร้านใหม่ทันที (เหมือน job ทุกคืน · audit) */
-export const recomputeRankingAction = (): AdminActionInput => ({ method: 'POST', path: 'ranking/recompute' });
+export const recomputeRankingAction = (): AdminActionInput => ({
+  method: 'POST',
+  path: 'ranking/recompute',
+});

@@ -134,7 +134,7 @@ export function MerchantStaffPage() {
             <span className="flex min-w-0 flex-1 flex-col">
               <span className="truncate">{m.email}</span>
               <span className="text-xs text-muted">
-                {ROLE[m.role].label} · ส่งเมื่อ {dayjs(m.invited_at).format('D MMM')}
+                {ROLE[m.role].label} ส่งคำเชิญเมื่อ {dayjs(m.invited_at).format('D MMM')}
               </span>
             </span>
             <Popconfirm
@@ -159,7 +159,7 @@ export function MerchantStaffPage() {
         <div>
           <h1 className="text-[17px] font-bold lg:font-display lg:text-[30px]">พนักงาน</h1>
           <p className="mt-1 hidden text-sm text-muted lg:block">
-            {members.length} คน · Staff เห็นเฉพาะ คืนนี้ · ผังโต๊ะ · การจอง · ผู้จัดการแก้ข้อมูลร้านได้
+            ทีม {members.length} คน Staff เห็นเฉพาะหน้าคืนนี้ ผังโต๊ะ และการจอง ส่วนผู้จัดการแก้ข้อมูลร้านได้
           </p>
         </div>
         <button type="button" aria-label="เชิญพนักงาน" onClick={() => setInviteOpen(true)} className="grid size-10 place-items-center text-xl text-gold lg:hidden">

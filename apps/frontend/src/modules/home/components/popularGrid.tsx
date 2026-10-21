@@ -10,6 +10,7 @@ import { barImage } from '@/ui/utils/barImage';
 import { baht } from '@/ui/utils/format';
 import { SURFACE, SURFACE_HOVER } from '../utils/surface';
 import { PromotedTag } from './promotedTag';
+import { barPlace } from '@/ui/utils/area';
 
 /** ป้ายมุมซ้ายบนรูป (ไม่ใช่โฆษณา) — ร้านโปรโมทใช้ <PromotedTag> แทนและมาก่อนเสมอ · ไม่เข้าเงื่อนไขก็ไม่แสดง */
 function badgeOf(bar: BarWithTier): { label: string; className: string } | null {
@@ -30,7 +31,7 @@ function CrowdLine({ bar }: { bar: BarWithTier }) {
         aria-label={`สถานะ: ${crowd.label}`}
       />
       <span className="truncate">
-        {CATEGORY_LABELS[bar.category]} · {bar.district}
+        {CATEGORY_LABELS[bar.category]} {barPlace(bar)}
       </span>
     </p>
   );

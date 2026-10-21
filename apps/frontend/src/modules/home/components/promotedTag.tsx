@@ -18,7 +18,7 @@ export function PromotedTag({
       title="ร้านโปรโมท (โฆษณา)"
       className={`inline-flex shrink-0 items-center ${look} ${className}`}
     >
-      แนะนำ<span className="sr-only"> · โฆษณา</span>
+      แนะนำ<span className="sr-only"> (โฆษณา)</span>
     </span>
   );
 }

@@ -2,6 +2,7 @@ import {
   Bell,
   CalendarCheck,
   CaretDown,
+  CaretRight,
   ChartLine,
   ChatCircleText,
   DotsThreeOutline,
@@ -21,7 +22,7 @@ import {
   Wallet,
 } from '@phosphor-icons/react';
 import { getBar } from '@/services/data';
-import { Alert, Drawer, Dropdown, Result } from 'antd';
+import { Alert, Drawer, Dropdown } from 'antd';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router';
@@ -102,6 +103,64 @@ const isActive = (path: string, key: string) =>
 /** หน้าที่มีแถบปุ่มล่างของตัวเอง → ซ่อนแท็บล่าง */
 const OWN_BOTTOM_BAR = /^\/merchant\/bookings\/[^/]+$/;
 
+/**
+ * บัญชีชั้นร้านที่ยังไม่มีร้านในทีม (เช่น แอดมินตั้งชั้นบัญชีก่อนผูกร้าน) — บอกทางไปต่อ 2 ทาง: เปิดร้านใหม่ / ตอบรับคำเชิญ
+ */
+function NoBarLinked() {
+  const choices = [
+    {
+      to: '/merchant/join',
+      icon: <Storefront weight="fill" />,
+      title: 'เปิดร้านใหม่',
+      desc: 'กรอกข้อมูลร้าน ปักหมุด แล้วส่งให้ทีม NightOut ตรวจ ใช้เวลา 1–2 วันทำการ',
+    },
+    {
+      to: '/accept-invite',
+      icon: <UsersThree weight="fill" />,
+      title: 'เข้าร่วมทีมร้าน',
+      desc: 'ดูคำเชิญจากเจ้าของหรือผู้จัดการร้าน แล้วกดตอบรับ',
+    },
+  ];
+  return (
+    <div className="embers-glass relative isolate min-w-0 px-4 py-10 lg:py-16">
+      <EmbersBackdrop />
+      <div className="mx-auto flex max-w-lg flex-col gap-6">
+        <div className="flex flex-col items-start gap-3">
+          <span className="grid size-12 place-items-center rounded-2xl bg-gold/15 text-2xl text-gold-text">
+            <Storefront weight="fill" />
+          </span>
+          <h1 className="m-0 font-display text-2xl font-bold lg:text-[30px]">บัญชีนี้ยังไม่มีร้าน</h1>
+          <p className="m-0 text-sm text-muted">
+            เปิดร้านของคุณเองกับ NightOut หรือถ้าร้านเชิญคุณเข้าทีมแล้ว ตอบรับคำเชิญเพื่อเริ่มใช้งาน
+          </p>
+        </div>
+        <ul className="m-0 flex list-none flex-col gap-3 p-0">
+          {choices.map((c) => (
+            <li key={c.to}>
+              <Link
+                to={c.to}
+                className="group flex items-center gap-4 rounded-[20px] border border-border bg-card p-4 !text-text transition-colors md:hover:border-gold/60"
+              >
+                <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-surface text-xl text-gold-text">
+                  {c.icon}
+                </span>
+                <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                  <b className="font-semibold">{c.title}</b>
+                  <span className="text-[13px] text-muted">{c.desc}</span>
+                </span>
+                <CaretRight className="shrink-0 text-muted transition-transform md:group-hover:translate-x-0.5" />
+              </Link>
+            </li>
+          ))}
+        </ul>
+        <p className="m-0 text-xs text-muted">
+          ถ้าบัญชีนี้ควรมีร้านอยู่แล้ว <Link to="/about">ติดต่อทีม NightOut</Link>
+        </p>
+      </div>
+    </div>
+  );
+}
+
 /** Layout ฝั่งร้าน — Desktop แถบแคปซูลใต้ navbar · มือถือแถบบน + แท็บล่าง 5 ช่อง · Staff เห็นแค่ แดชบอร์ด Lite · คืนนี้ · ผังโต๊ะ · การจอง */
 export function MerchantLayout() {
   useDemo();
@@ -110,14 +169,7 @@ export function MerchantLayout() {
   const navigate = useNavigate();
   const [sheet, setSheet] = useState<'store' | 'more' | null>(null);
   const bar = user?.barId ? getBar(user.barId) : null;
-  if (!bar)
-    return (
-      <Result
-        status="info"
-        title="บัญชีนี้ยังไม่ได้ผูกกับร้าน"
-        subTitle="สมัครเป็นร้านค้าเพื่อเริ่มใช้งาน"
-      />
-    );
+  if (!bar) return <NoBarLinked />;
   const isStaff = bar.staffRole === 'STAFF';
   // Staff ไม่มี dropdown "ร้าน" → ตำแหน่งร้านเป็นปุ่มบนแถบ (มือถือ: เข้าจากลิงก์ในแจ้งเตือน)
   const primary = isStaff ? [...PRIMARY.filter((i) => i.staff), LOCATION_ITEM] : PRIMARY;
@@ -197,7 +249,13 @@ export function MerchantLayout() {
             >
               <button type="button" className={pill(!!current)}>
                 {g.icon}
-                {current ? `${g.label} · ${current.label}` : g.label}
+                {current ? (
+                  <>
+                    <span className="opacity-70">{g.label}</span> {current.label}
+                  </>
+                ) : (
+                  g.label
+                )}
                 <CaretDown size={11} />
               </button>
             </Dropdown>

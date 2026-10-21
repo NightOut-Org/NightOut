@@ -68,8 +68,8 @@ function BarPromotionReview() {
             title: 'เงื่อนไข',
             key: 'cond',
             render: (_, p) =>
-              `${p.cutoff_time ? `เช็กอินก่อน ${p.cutoff_time.slice(0, 5)} น.` : 'ทั้งคืน'} · ${
-                p.days_of_week.length >= 7 ? 'ทุกวัน' : p.days_of_week.map((d) => DAYS[d]).join(' ')
+              `${p.cutoff_time ? `เช็กอินก่อน ${p.cutoff_time.slice(0, 5)} น.` : 'ทั้งคืน'} ${
+                p.days_of_week.length >= 7 ? 'ทุกวัน' : `วัน${p.days_of_week.map((d) => DAYS[d]).join(' ')}`
               }`,
           },
           {
@@ -137,7 +137,7 @@ export function PromotionsPage() {
                     {
                       title: 'แพ็กเกจ',
                       key: 'pkg',
-                      render: (_, p) => `${p.package.name} · ${p.package.duration_days} วัน`,
+                      render: (_, p) => `${p.package.name} (${p.package.duration_days} วัน)`,
                     },
                     {
                       title: 'ตำแหน่ง',

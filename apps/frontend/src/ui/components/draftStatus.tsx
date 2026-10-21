@@ -32,7 +32,7 @@ export function DraftStatus({
       return (
         <span className={base} aria-live="polite">
           <CloudSlash size={13} />
-          ออฟไลน์ · จะบันทึกร่างเมื่อกลับมาออนไลน์
+          ออฟไลน์ จะบันทึกร่างเมื่อกลับมาออนไลน์
         </span>
       );
     case 'error':

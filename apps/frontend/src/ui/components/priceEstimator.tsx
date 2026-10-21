@@ -61,7 +61,7 @@ export function PriceEstimator({
             <Radio value="">ไม่เลือกแพ็กเกจ (สั่งเอง)</Radio>
             {bar.packages.map((p) => (
               <Radio key={p.id} value={p.id}>
-                {p.name} ·{' '}
+                {p.name}{' '}
                 <span className="font-semibold text-gold-text">{baht(p.totalPrice)}</span>
               </Radio>
             ))}

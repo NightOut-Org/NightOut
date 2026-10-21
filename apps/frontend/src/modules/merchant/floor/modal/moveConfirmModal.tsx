@@ -1,8 +1,10 @@
+import { Clock, Ticket, User } from '@phosphor-icons/react';
 import type * as C from '@nightout/contracts';
 import { Alert, App, Input, Modal, Typography } from 'antd';
 import { useState } from 'react';
 import { moveBooking } from '../api';
 import { bookingWho, hhmm, type BoardTableRef } from '../utils/board';
+import { MetaList } from '@/ui/components/metaList';
 
 /**
  * ยืนยันย้ายโต๊ะจากผัง (ลากวาง / แตะเพื่อย้าย) — เวลาเดิม เปลี่ยนแค่โต๊ะ · DB ตรวจซ้ำ (TABLE_TAKEN / ZONE_FULL)
@@ -35,7 +37,7 @@ export function MoveConfirmModal({
     setSaving(true);
     try {
       const r = await moveBooking(booking.id, target.zone.id, target.table.id, reason);
-      message.success(`ย้ายไป ${r.zone_name}${r.table_name ? ` · โต๊ะ ${r.table_name}` : ''} แล้ว — แจ้งลูกค้าให้แล้ว`);
+      message.success(`ย้ายไป ${r.zone_name}${r.table_name ? ` โต๊ะ ${r.table_name}` : ''} แล้ว — แจ้งลูกค้าให้แล้ว`);
       close();
     } catch (e) {
       message.error((e as Error).message);
@@ -61,15 +63,21 @@ export function MoveConfirmModal({
       {booking && target && (
         <div className="space-y-4">
           <Typography.Text type="secondary" className="block text-sm">
-            {booking.code} · {bookingWho(booking)} · {hhmm(booking.reserved_from)}–{hhmm(booking.reserved_until)}
+            <MetaList
+              items={[
+                { icon: <User weight="fill" />, label: 'ลูกค้า', value: bookingWho(booking), strong: true },
+                { icon: <Clock weight="fill" />, label: 'ช่วงเวลา', value: `${hhmm(booking.reserved_from)}–${hhmm(booking.reserved_until)}` },
+                { icon: <Ticket weight="fill" />, label: 'รหัสจอง', value: booking.code },
+              ]}
+            />
           </Typography.Text>
           <p className="m-0 text-[15px]">
-            จาก {booking.zone_name} · {booking.table_name ? `โต๊ะ ${booking.table_name}` : 'ยังไม่ระบุโต๊ะ'}
+            จาก {booking.zone_name} {booking.table_name ? `โต๊ะ ${booking.table_name}` : 'ยังไม่ระบุโต๊ะ'}
             <span className="mx-1.5 text-gold" aria-label="ไปที่">
               →
             </span>
             <b>
-              {target.zone.name} · โต๊ะ {target.table.name}
+              {target.zone.name} โต๊ะ {target.table.name}
             </b>
           </p>
           {target.table.seats < booking.pax && (
@@ -88,7 +96,7 @@ export function MoveConfirmModal({
             </label>
             <Input
               id="floor-move-reason"
-              placeholder="เช่น ลูกค้ามาเพิ่ม · แอร์โต๊ะเดิมเสีย"
+              placeholder="เช่น ลูกค้ามาเพิ่ม หรือแอร์โต๊ะเดิมเสีย"
               maxLength={200}
               value={reason}
               onChange={(e) => setReason(e.target.value)}

@@ -1,5 +1,5 @@
 import type * as C from '@nightout/contracts';
-import type { BarPromotion } from '@nightout/mock';
+import type { BarPromotion } from '@/services/models';
 import { Rest } from '@nightout/utils/rest';
 
 /** API ของหน้าโปรโมชันของร้าน + ค่าธรรมเนียม · backend: domains/bar */

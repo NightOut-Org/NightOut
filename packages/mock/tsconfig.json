@@ -1,1 +1,0 @@
-{ "extends": "@nightout/config/tsconfig/library.json", "include": ["src"] }

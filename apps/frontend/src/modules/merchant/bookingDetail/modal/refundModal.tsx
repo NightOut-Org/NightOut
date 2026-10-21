@@ -1,3 +1,4 @@
+import { Ticket, User, UsersThree } from '@phosphor-icons/react';
 import { App, Alert, Modal, Typography } from 'antd';
 import { useState } from 'react';
 import { type Booking } from '@/services/data';
@@ -5,6 +6,7 @@ import { refundDeposit, reportNoTable } from '../api';
 import { ReasonPicker } from '../components/reasonPicker';
 import { isReasonValid, noTableDoneText, reasonText, type MerchantCancelReason } from '../utils/cancelReasons';
 import { baht } from '@/ui/utils/format';
+import { MetaList } from '@/ui/components/metaList';
 
 /** มัดจำที่ร้านอนุมัติคืนได้: ตรวจสลิปแล้ว และยังไม่โอนให้ร้าน */
 export const canRefund = (b: Booking) =>
@@ -64,13 +66,19 @@ export function RefundModal({ booking, onClose }: { booking: Booking | null; onC
       {booking && (
         <div className="space-y-4">
           <Typography.Text type="secondary" className="block text-sm">
-            {booking.code} · {booking.userName} · {booking.pax} คน
+            <MetaList
+              items={[
+                { icon: <User weight="fill" />, label: 'ลูกค้า', value: booking.userName, strong: true },
+                { icon: <UsersThree weight="fill" />, label: 'จำนวนคน', value: `${booking.pax} คน` },
+                { icon: <Ticket weight="fill" />, label: 'รหัสจอง', value: booking.code },
+              ]}
+            />
           </Typography.Text>
           <Alert
             type="warning"
             showIcon
             title={cancels ? 'การจองนี้จะถูกยกเลิกและปล่อยโต๊ะ' : 'สถานะการจองคงเดิม'}
-            description={`Table Fee ${baht(booking.deposit?.amount ?? 0)} จะไม่ถูกโอนให้ร้าน NightOut จะโอนคืนลูกค้าโดยตรง และแจ้งลูกค้าให้ทันที · ทำแล้วย้อนกลับไม่ได้`}
+            description={`Table Fee ${baht(booking.deposit?.amount ?? 0)} จะไม่ถูกโอนให้ร้าน NightOut จะโอนคืนลูกค้าโดยตรง และแจ้งลูกค้าให้ทันที และทำแล้วย้อนกลับไม่ได้`}
           />
           <ReasonPicker
             value={reason}

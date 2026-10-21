@@ -88,7 +88,7 @@ export function BarDetailPage() {
       <Drawer
         open={estOpen}
         onClose={() => setEstOpen(false)}
-        title={`ประเมินราคา · ${bar.name}`}
+        title={`ประเมินราคาที่ ${bar.name}`}
         placement="right"
         size="large"
         footer={

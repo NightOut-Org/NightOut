@@ -65,7 +65,7 @@ export function BarPhotos({
       <span className="flex justify-between gap-3 text-sm">
         <b className="font-semibold">รูปร้าน</b>
         <span className="text-muted tabular-nums">
-          {ordered.length} / {BAR_GALLERY_MAX} · รูปแรกเป็นปก
+          {ordered.length}/{BAR_GALLERY_MAX} รูป (รูปแรกเป็นปก)
         </span>
       </span>
 
@@ -88,7 +88,7 @@ export function BarPhotos({
                   <span className="rounded-full bg-gold px-2.5 py-0.5 text-xs font-semibold text-on-gold">ปก</span>
                 )}
                 {gallery.isNew(sel) && (
-                  <span className="rounded-full bg-black/60 px-2.5 py-0.5 text-xs text-gold-text">ใหม่ · ยังไม่บันทึก</span>
+                  <span className="rounded-full bg-black/60 px-2.5 py-0.5 text-xs text-gold-text">เพิ่มใหม่ รอบันทึก</span>
                 )}
                 <span className="rounded-full bg-black/60 px-2.5 py-0.5 text-xs text-white tabular-nums">
                   {selIndex + 1} / {ordered.length}
@@ -134,7 +134,7 @@ export function BarPhotos({
                 <span className="mt-auto flex items-center gap-2 text-sm text-text">
                   <ImageSquare size={22} className="text-gold-text" aria-hidden /> ยังไม่มีรูปร้าน
                 </span>
-                <span className="text-xs">แตะเพื่อเพิ่ม · รูปแรกจะเป็นปก (ตอนนี้ลูกค้าเห็นรูปแทนของ NightOut)</span>
+                <span className="text-xs">แตะเพื่อเพิ่ม รูปแรกจะเป็นปก (ตอนนี้ลูกค้าเห็นรูปแทนของ NightOut)</span>
               </span>,
               'block w-full [&_.ant-upload]:block [&_.ant-upload]:w-full',
               'เพิ่มรูปร้าน',
@@ -182,7 +182,7 @@ export function BarPhotos({
           </ul>
       </div>
 
-      <p className="text-xs text-muted">JPG, PNG หรือ WebP ไม่เกิน 15MB ต่อรูป · ใช้รูปบรรยากาศจริง ห้ามมีข้อความชวนดื่ม · อัปโหลดตอนกดบันทึก</p>
+      <p className="text-xs text-muted">JPG, PNG หรือ WebP ไม่เกิน 15MB ต่อรูป ใช้รูปบรรยากาศจริง ห้ามมีข้อความชวนดื่ม และอัปโหลดตอนกดบันทึก</p>
     </div>
   );
 }

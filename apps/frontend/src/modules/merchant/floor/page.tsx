@@ -115,7 +115,7 @@ export function MerchantFloorPage() {
           <h1 className="m-0 font-display text-2xl font-bold">ผังโต๊ะ</h1>
           {data && (
             <p className="m-0 text-[13px] text-muted">
-              {nightLabel(data.night)} · อัปเดต {hhmmss(board.dataUpdatedAt)}
+              {nightLabel(data.night)} อัปเดตล่าสุด {hhmmss(board.dataUpdatedAt)}
             </p>
           )}
         </div>
@@ -195,7 +195,7 @@ export function MerchantFloorPage() {
           >
             <ArrowsLeftRight size={20} className="shrink-0 text-gold" aria-hidden />
             <span className="min-w-0 flex-1 text-[13px]">
-              แตะโต๊ะปลายทางสำหรับ <b>{move.moving.code}</b> · {bookingWho(move.moving)}
+              แตะโต๊ะปลายทางสำหรับ <b>{move.moving.code}</b> ({bookingWho(move.moving)})
             </span>
             <Button onClick={move.cancelTapMove} className="!h-11 shrink-0">
               ยกเลิก
@@ -233,7 +233,8 @@ export function MerchantFloorPage() {
             <div className="floor-overlay w-56">
               <ChipFace booking={move.dragging}>
                 <span className="truncate font-medium">
-                  {hhmm(move.dragging.booking_datetime)} · {bookingWho(move.dragging)}
+                  <span className="mr-2 tabular-nums">{hhmm(move.dragging.booking_datetime)}</span>
+                  {bookingWho(move.dragging)}
                 </span>
                 <span className="truncate text-xs text-muted">{move.dragging.code}</span>
               </ChipFace>

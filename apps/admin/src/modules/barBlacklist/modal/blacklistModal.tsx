@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { useAdminAction } from '@/services/adminData';
 import { date } from '@/ui/utils/format';
 import { blacklistBarAction, liftBlacklistAction } from '../api';
+import { RuleList } from '@/ui/components/RuleList';
 
 export type BlacklistMode = 'blacklist' | 'lift';
 export interface BlacklistTarget {
@@ -49,7 +50,7 @@ export function BlacklistModal({
               const r = res as BarBlacklistResult;
               return `Blacklist ${name} แล้ว — ซ่อนจากเว็บและปิดรับจอง${
                 r.upcoming_bookings
-                  ? ` · ยังมีการจองที่ไม่ถึงเวลา ${r.upcoming_bookings} รายการ`
+                  ? ` (ยังมีการจองที่ไม่ถึงเวลา ${r.upcoming_bookings} รายการ)`
                   : ''
               }`;
             },
@@ -79,7 +80,14 @@ export function BlacklistModal({
             type="warning"
             showIcon
             title="ร้านจะถูกซ่อนจากหน้าค้นหาและหน้าร้าน และรับจองใหม่ไม่ได้ทันที"
-            description="การจองที่ยืนยันแล้วยังอยู่ ร้านต้องรับลูกค้าตามเดิม · แจ้งทีมร้าน + บันทึก Audit Log"
+            description={
+              <RuleList
+                rules={[
+                  'การจองที่ยืนยันแล้วยังอยู่ ร้านต้องรับลูกค้าตามเดิม',
+                  'ระบบแจ้งทีมร้านและบันทึก Audit Log',
+                ]}
+              />
+            }
           />
         )}
         {bar && (
@@ -102,8 +110,8 @@ export function BlacklistModal({
             required
             extra={
               lift
-                ? 'อย่างน้อย 3 ตัวอักษร · ทีมร้านเห็นข้อความนี้ในแจ้งเตือน'
-                : 'อย่างน้อย 3 ตัวอักษร · ทีมร้านเห็นข้อความนี้ในแจ้งเตือนและหน้าสถานะร้าน'
+                ? 'อย่างน้อย 3 ตัวอักษร ทีมร้านเห็นข้อความนี้ในแจ้งเตือน'
+                : 'อย่างน้อย 3 ตัวอักษร ทีมร้านเห็นข้อความนี้ในแจ้งเตือนและหน้าสถานะร้าน'
             }
             className="!mb-0"
           >

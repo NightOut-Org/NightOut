@@ -1,4 +1,4 @@
-import { CheckCircle, Clock, ClockClockwise, ChatCircleDots, MapPin, ShareNetwork } from '@phosphor-icons/react';
+import { ChatCircleDots, Clock, ClockClockwise, MapPin, ShareNetwork } from '@phosphor-icons/react';
 import { autoCancelAt, getBar, getBooking } from '@/services/data';
 import { cancelBooking, extendBooking } from './api';
 import { App, Button, Card, Timeline } from 'antd';
@@ -19,6 +19,7 @@ import {
   isReviewableStatus,
   TABLE_FEE_LABEL,
 } from '@nightout/utils';
+import { StatusChip } from '@/ui/components/statusChip';
 
 /** เวลาที่เหลือ → "1 ชม. 5 นาที 3 วินาที" (หมดแล้ว = null) */
 function countdownText(ms: number) {
@@ -72,7 +73,7 @@ export function BookingDetailPage() {
       onOk: async () => {
         try {
           const r = await extendBooking(b.id);
-          message.success(`ต่อเวลาแล้ว · เก็บโต๊ะถึง ${hhmm(r.auto_cancel_at)} น.`);
+          message.success(`ต่อเวลาแล้ว เก็บโต๊ะถึง ${hhmm(r.auto_cancel_at)} น.`);
         } catch (e) {
           message.error((e as Error).message);
         }
@@ -81,7 +82,7 @@ export function BookingDetailPage() {
   };
 
   const share = async () => {
-    const text = `ไป ${bar.name} กัน! ${dateTime(b.datetime)} · ${zone?.name}\n${shareUrl}`;
+    const text = `ไป ${bar.name} กัน! ${dateTime(b.datetime)} โซน ${zone?.name}\n${shareUrl}`;
     if (navigator.share) {
       await navigator
         .share({ title: 'บัตรจอง NightOut', text, url: shareUrl })
@@ -190,7 +191,14 @@ export function BookingDetailPage() {
         <Card title="ประวัติสถานะ">
           <Timeline
             items={b.history.map((h) => ({
-              content: `${BOOKING_STATUS[h.to].label} · ${h.by} · ${dateTime(h.at)}`,
+              content: (
+                <>
+                  <span className="font-medium">{BOOKING_STATUS[h.to].label}</span>
+                  <span className="block text-xs text-muted">
+                    {dateTime(h.at)} โดย {h.by}
+                  </span>
+                </>
+              ),
             }))}
           />
         </Card>
@@ -220,8 +228,10 @@ export function BookingDetailPage() {
                 ขอต่อเวลา {BOOKING_EXTENSION_MINUTES} นาที
               </Button>
             ) : b.extendedAt ? (
-              <p className="mt-2 flex items-center justify-center gap-1 text-sm text-gold-text">
-                <CheckCircle weight="fill" /> ต่อเวลาแล้ว · เก็บโต๊ะถึง {hhmm(releaseAt)} น.
+              <p className="mt-2 flex justify-center">
+                <StatusChip icon={<ClockClockwise weight="bold" />} value={`${hhmm(releaseAt)} น.`} className="!text-sm">
+                  ต่อเวลาแล้ว เก็บโต๊ะถึง
+                </StatusChip>
               </p>
             ) : (
               now < extendOpensAt && (
@@ -239,7 +249,7 @@ export function BookingDetailPage() {
             <p className="mb-2 text-lg">QR เช็กอิน</p>
             <p className="text-sm">
               {b.status === 'CHECKED_IN' || b.status === 'COMPLETED'
-                ? `เช็กอินแล้ว${b.checkedInAt ? ` · ${dateTime(b.checkedInAt)}` : ''} ขอให้สนุกนะ!`
+                ? `เช็กอินแล้ว${b.checkedInAt ? ` เมื่อ ${dateTime(b.checkedInAt)}` : ''} ขอให้สนุกนะ!`
                 : b.status === 'AWAITING_DEPOSIT'
                   ? 'จะแสดงเมื่อชำระ Table Fee สำเร็จ'
                   : ['PENDING', 'DEPOSIT_SUBMITTED'].includes(b.status)

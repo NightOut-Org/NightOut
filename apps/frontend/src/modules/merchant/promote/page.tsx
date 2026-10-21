@@ -11,7 +11,7 @@ import { orderPromotion } from './api';
 
 type Placement = 'HOME_BANNER' | 'HOME_RECOMMENDED' | 'SEARCH_TOP';
 const PLACEMENT: Record<Placement, { label: string; desc: string; icon: ReactNode }> = {
-  HOME_RECOMMENDED: { label: 'หน้าแรก · แนะนำ', desc: 'การ์ดร้านในส่วน "แนะนำ" บนหน้าแรก', icon: <House /> },
+  HOME_RECOMMENDED: { label: 'แนะนำบนหน้าแรก', desc: 'การ์ดร้านในส่วน "แนะนำ" บนหน้าแรก', icon: <House /> },
   HOME_BANNER: { label: 'แบนเนอร์หน้าแรก', desc: 'แบนเนอร์ใหญ่ด้านบนหน้าแรก', icon: <ImageIcon /> },
   SEARCH_TOP: { label: 'ผลค้นหา', desc: 'ขึ้นบนสุดเมื่อค้นหาย่านหรือประเภทร้าน', icon: <MagnifyingGlass /> },
 };
@@ -89,15 +89,15 @@ export function MerchantPromotePage() {
       <div>
         <h1 className="text-[17px] font-bold lg:font-display lg:text-[30px]">โปรโมทร้าน</h1>
         <p className="mt-1 hidden text-sm text-muted lg:block">
-          ได้ป้าย “แนะนำ · โฆษณา” และตำแหน่งพิเศษ · จ่ายผ่าน PromptPay · ไม่มีผลต่อดาวหรือคะแนนรีวิว
+          ได้ป้าย “แนะนำ (โฆษณา)” และตำแหน่งพิเศษ จ่ายผ่าน PromptPay และไม่มีผลต่อดาวหรือคะแนนรีวิว
         </p>
       </div>
 
       <div className="grid gap-2.5 lg:grid-cols-4 lg:gap-4">
         {/* แคมเปญปัจจุบัน */}
-        <div className="flex flex-col gap-2 rounded-[20px] border border-gold/35 bg-[linear-gradient(160deg,color-mix(in_srgb,var(--gold)_14%,var(--card)),var(--card))] p-4 lg:col-span-2 lg:gap-2.5 lg:p-[22px]">
+        <Tile className="flex flex-col gap-2 lg:col-span-2 lg:gap-2.5 lg:!p-[22px]">
           <span className="flex items-center justify-between gap-2">
-            <span className="rounded-md border border-gold/40 px-2 py-0.5 text-[11px] text-gold-text lg:text-xs">แนะนำ · โฆษณา</span>
+            <span className="rounded-md border border-gold/40 px-2 py-0.5 text-[11px] text-gold-text lg:text-xs">แนะนำ (โฆษณา)</span>
             {current ? (
               <span className={`inline-flex items-center gap-1.5 text-xs lg:text-[13px] ${STATUS[current.status]?.cls}`}>
                 <span className="size-2 rounded-full bg-current" />
@@ -110,10 +110,10 @@ export function MerchantPromotePage() {
           {current ? (
             <>
               <b className="text-lg font-semibold lg:text-[22px]">
-                {PLACEMENT[current.placement].label} · {current.days} วัน
+                {PLACEMENT[current.placement].label} {current.days} วัน
               </b>
               <span className="text-[13px] text-muted">
-                สั่งซื้อ {dayjs(current.createdAt).format('D MMM')} · แสดง {current.days} วันนับจากทีม NightOut อนุมัติสลิป
+                สั่งซื้อ {dayjs(current.createdAt).format('D MMM')} แสดง {current.days} วันนับจากทีม NightOut อนุมัติสลิป
               </span>
             </>
           ) : (
@@ -127,12 +127,12 @@ export function MerchantPromotePage() {
             {stat('มาเช็กอินแล้ว', 'เช็กอิน', freshIn.length)}
             {stat('ลูกค้าที่มาจริง (คน)', 'คน', freshIn.reduce((a, b) => a + b.pax, 0))}
           </div>
-        </div>
+        </Tile>
 
         {/* การจองใหม่รายวัน */}
         <Tile className="hidden flex-col gap-2.5 lg:col-span-2 lg:flex lg:!p-[22px]">
           <b className="text-sm font-semibold">
-            การจองใหม่รายวัน <span className="text-xs font-normal text-muted">· 7 วันล่าสุด</span>
+            การจองใหม่รายวัน <span className="ml-1 text-xs font-normal text-muted">7 วันล่าสุด</span>
           </b>
           <div className="flex min-h-36 flex-1 items-end gap-3" role="img" aria-label={days.map((d) => `${d.label} ${d.n}`).join(', ')}>
             {days.map((d) => (
@@ -169,9 +169,9 @@ export function MerchantPromotePage() {
               <button
                 type="button"
                 onClick={() => pick(p.id)}
-                className={`merchant-pill h-9 shrink-0 rounded-xl px-3 text-sm font-semibold lg:h-[38px] ${
-                  isHot ? 'bg-gold text-on-gold' : 'border border-border'
-                } ${canBuy ? '' : 'opacity-60'}`}
+                className={`merchant-pill h-9 shrink-0 rounded-xl bg-gold px-3 text-sm font-semibold text-on-gold lg:h-[38px] ${
+                  canBuy ? '' : 'opacity-60'
+                }`}
               >
                 <span className="lg:hidden">เลือก</span>
                 <span className="hidden lg:inline">เลือกแพ็กเกจ</span>
@@ -193,10 +193,10 @@ export function MerchantPromotePage() {
                 <Megaphone className="shrink-0 text-gold" />
                 <span className="flex min-w-0 flex-1 flex-col">
                   <span className="truncate">
-                    {o.packageName} · {PLACEMENT[o.placement].label}
+                    {o.packageName} ({PLACEMENT[o.placement].label})
                   </span>
                   <span className="text-xs text-muted">
-                    {dayjs(o.createdAt).format('D MMM YY')} · {o.days} วัน
+                    {dayjs(o.createdAt).format('D MMM YY')} แสดง {o.days} วัน
                   </span>
                 </span>
                 <span className="font-semibold">{baht(o.price)}</span>

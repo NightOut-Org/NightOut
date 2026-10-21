@@ -166,7 +166,7 @@ export function ProfileHeader({ user }: { user: AppUser }) {
       >
         <RoleIcon size={18} weight="fill" />
         {label}
-        <span className="font-normal opacity-75">· {scope}</span>
+        <span className="ml-1 font-normal opacity-75">{scope}</span>
       </span>
     </header>
   );

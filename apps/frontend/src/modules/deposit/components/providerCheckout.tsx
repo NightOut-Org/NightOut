@@ -127,14 +127,15 @@ export function ProviderCheckout({
 
   return (
     <div className="mx-auto max-w-2xl">
-      <PageHeader title="ชำระ Table Fee" subtitle={`${bar.name} · รหัสจอง ${b.code}`} />
+      <PageHeader title="ชำระ Table Fee" subtitle={`${bar.name} รหัสจอง ${b.code}`} />
       <StatusAlert status={status} />
       <Card>
         <p className="text-muted">{TABLE_FEE_LABEL}</p>
         <p className="text-4xl font-bold text-gold-text">{baht(b.depositRequired ?? 0)}</p>
         <p className="mt-2 text-sm text-muted">
-          ชำระผ่าน {config.provider_label} · NightOut ถือเงินไว้ให้ และส่งต่อให้ร้านหลังคุณเช็กอิน ·
-          ยกเลิกตามเงื่อนไขได้เงินคืนจากเราโดยตรง
+          ชำระผ่าน {config.provider_label}
+          <span className="block">NightOut ถือเงินไว้ให้ และส่งต่อให้ร้านหลังคุณเช็กอิน</span>
+          <span className="block">ถ้ายกเลิกตามเงื่อนไข คุณได้เงินคืนจากเราโดยตรง</span>
         </p>
         <Alert
           className="mt-4"

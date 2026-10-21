@@ -58,7 +58,7 @@ export function BookingChip({
     <div
       ref={setNodeRef}
       {...a11y}
-      aria-label={draggable ? `${label} · ลากเพื่อย้ายโต๊ะ` : label}
+      aria-label={draggable ? `${label} (ลากเพื่อย้ายโต๊ะ)` : label}
       onClick={onTap}
       onKeyDown={(e) => {
         if (!draggable && (e.key === 'Enter' || e.key === ' ')) {

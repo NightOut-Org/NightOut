@@ -1,16 +1,20 @@
+import { CalendarBlank, Ticket, User, UsersThree } from '@phosphor-icons/react';
 import { App, Alert, Input, Modal, Select, Typography } from 'antd';
 import { useMemo, useState } from 'react';
 import { type Booking } from '@/services/data';
 import { moveBooking, useTableOptions, type TableOption } from '../api';
 import { dateTime } from '@/ui/utils/format';
+import { MetaList } from '@/ui/components/metaList';
 
 const keyOf = (o: Pick<TableOption, 'zone_id' | 'table_id'>) => `${o.zone_id}:${o.table_id ?? ''}`;
 
 function optionLabel(o: TableOption, pax: number) {
   const name = o.table_name ? `โต๊ะ ${o.table_name}` : 'ไม่ระบุโต๊ะ';
-  const seats = o.seats ? ` · ${o.seats} ที่นั่ง${o.seats < pax ? ' (น้อยกว่าจำนวนคน)' : ''}` : '';
-  const state = o.is_current ? ' · ที่นั่งปัจจุบัน' : o.available ? '' : ' · ไม่ว่าง';
-  return `${name}${seats}${state}`;
+  const notes = [
+    o.seats && `${o.seats} ที่นั่ง${o.seats < pax ? ' น้อยกว่าจำนวนคน' : ''}`,
+    o.is_current ? 'ที่นั่งปัจจุบัน' : !o.available && 'ไม่ว่าง',
+  ].filter(Boolean);
+  return notes.length ? `${name} (${notes.join(', ')})` : name;
 }
 
 /**
@@ -35,7 +39,7 @@ export function MoveTableModal({
   const groups = useMemo(() => {
     const byZone = new Map<string, { label: string; options: { value: string; label: string; disabled: boolean }[] }>();
     for (const o of options.data ?? []) {
-      const g = byZone.get(o.zone_id) ?? { label: `${o.zone_name} · ว่าง ${o.zone_remaining_pax} คน`, options: [] };
+      const g = byZone.get(o.zone_id) ?? { label: `${o.zone_name} ว่าง ${o.zone_remaining_pax} คน`, options: [] };
       g.options.push({ value: keyOf(o), label: optionLabel(o, booking?.pax ?? 0), disabled: !o.available || o.is_current });
       byZone.set(o.zone_id, g);
     }
@@ -55,7 +59,7 @@ export function MoveTableModal({
     setSaving(true);
     try {
       const r = await moveBooking(booking.id, picked.zone_id, picked.table_id, reason);
-      message.success(`ย้ายไป ${r.zone_name}${r.table_name ? ` · โต๊ะ ${r.table_name}` : ''} แล้ว — แจ้งลูกค้าให้แล้ว`);
+      message.success(`ย้ายไป ${r.zone_name}${r.table_name ? ` โต๊ะ ${r.table_name}` : ''} แล้ว — แจ้งลูกค้าให้แล้ว`);
       close();
     } catch (e) {
       message.error((e as Error).message);
@@ -81,7 +85,14 @@ export function MoveTableModal({
       {booking && (
         <div className="space-y-4">
           <Typography.Text type="secondary" className="block text-sm">
-            {booking.code} · {booking.userName} · {booking.pax} คน · {dateTime(booking.datetime)}
+            <MetaList
+              items={[
+                { icon: <User weight="fill" />, label: 'ลูกค้า', value: booking.userName, strong: true },
+                { icon: <UsersThree weight="fill" />, label: 'จำนวนคน', value: `${booking.pax} คน` },
+                { icon: <CalendarBlank weight="fill" />, label: 'วันเวลา', value: dateTime(booking.datetime) },
+                { icon: <Ticket weight="fill" />, label: 'รหัสจอง', value: booking.code },
+              ]}
+            />
           </Typography.Text>
           {options.error && <Alert type="error" showIcon title={(options.error as Error).message} />}
           {!options.isLoading && !options.error && freeCount === 0 && (
@@ -109,7 +120,7 @@ export function MoveTableModal({
             </label>
             <Input
               id="move-reason"
-              placeholder="เช่น ลูกค้ามาเพิ่ม · แอร์โต๊ะเดิมเสีย"
+              placeholder="เช่น ลูกค้ามาเพิ่ม หรือแอร์โต๊ะเดิมเสีย"
               maxLength={200}
               value={reason}
               onChange={(e) => setReason(e.target.value)}

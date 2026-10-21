@@ -1,25 +1,13 @@
-import {
-  Car,
-  CheckCircle,
-  Circle,
-  DoorOpen,
-  FirstAidKit,
-  GenderFemale,
-  IdentificationCard,
-  Lightbulb,
-  Paperclip,
-  Phone,
-  SealCheck,
-  UserFocus,
-  VideoCamera,
-  XCircle,
-} from '@phosphor-icons/react';
+import { Car, CheckCircle, Circle, DoorOpen, Files, FirstAidKit, Footprints, GenderFemale, IdentificationCard, Lightbulb, Paperclip, Phone, SealCheck, UserFocus, VideoCamera, XCircle } from '@phosphor-icons/react';
 import { SAFETY_CHECK_LABELS } from '@nightout/utils';
 import { App, Upload } from 'antd';
 import { useMemo, useState, type ReactNode } from 'react';
 import { SAFETY_LABELS, type SafetyValue } from '@/services/data';
+import { StatusChip } from '@/ui/components/statusChip';
+import { RuleList } from '@/ui/components/ruleList';
 
 type SafetyKey = keyof typeof SAFETY_LABELS;
+import { HEADER_SAVE_CLASS } from '@/ui/utils/buttonClasses';
 import { useMerchantBar } from '@/hooks/useMerchantBar';
 import { useUnsavedGuard } from '@/hooks/useUnsavedGuard';
 import { Ring, Tile } from '@/ui/components/merchantUi';
@@ -46,10 +34,18 @@ const ICON: Record<SafetyKey, ReactNode> = {
   EMERGENCY_CONTACT: <Phone />,
 };
 
+/**
+ * สีของปุ่มที่เลือก — ใส่ `!` เพราะธีมมืด `.embers-glass .bg-card .merchant-pill` ทับพื้นเป็นกระจกใส
+ * (เดิมปุ่มที่เลือกจึงไม่มีสี) · ไม่ระบุ = พื้นเทาทึบ + ขอบ ให้ต่างจากปุ่มที่ไม่ได้เลือก
+ */
 const OPTIONS: { value: SafetyValue; label: string; on: string }[] = [
-  { value: 'YES', label: 'มี', on: 'bg-(--crowd-available) text-on-gold font-semibold' },
-  { value: 'NO', label: 'ไม่มี', on: 'bg-(--crowd-full) text-white font-semibold' },
-  { value: 'UNKNOWN', label: 'ไม่ระบุ', on: 'bg-border text-text' },
+  { value: 'YES', label: 'มี', on: '!bg-(--crowd-available) !text-on-gold font-semibold' },
+  { value: 'NO', label: 'ไม่มี', on: '!bg-(--crowd-full) !text-white font-semibold' },
+  {
+    value: 'UNKNOWN',
+    label: 'ไม่ระบุ',
+    on: '!bg-text/15 !text-text font-semibold ring-1 ring-inset ring-text/30',
+  },
 ];
 
 /**
@@ -89,7 +85,7 @@ export function MerchantSafetyPage() {
       }
       const r = await saveSafety(bar.id, body);
       draft.reset();
-      void message.success(r.evidence_added ? 'บันทึกแล้ว · ส่งหลักฐานให้ทีม NightOut ตรวจแล้ว' : 'บันทึกแล้ว');
+      void message.success(r.evidence_added ? 'บันทึกแล้ว และส่งหลักฐานให้ทีม NightOut ตรวจแล้ว' : 'บันทึกแล้ว');
     } catch (e) {
       void message.error((e as Error).message);
     } finally {
@@ -121,10 +117,10 @@ export function MerchantSafetyPage() {
     return draft.valueOf(s) === 'YES'
       ? checked
         ? { text: `${VERIFIED_BY_LABEL[method ?? 'EVIDENCE']}${when}`, cls: 'text-(--crowd-available)' }
-        : { text: 'ร้านแจ้ง · แนบหลักฐานให้ทีมตรวจ', cls: 'text-(--crowd-almost-full)' }
+        : { text: 'ร้านแจ้งและแนบหลักฐานให้ทีมตรวจ', cls: 'text-(--crowd-almost-full)' }
       : draft.valueOf(s) === 'NO'
         ? checked && method === 'ON_SITE'
-          ? { text: 'ทีมงานลงพื้นที่แล้วไม่พบ · ลูกค้าเห็นว่า "ไม่มี"', cls: 'text-(--crowd-full)' }
+          ? { text: 'ทีมงานลงพื้นที่แล้วไม่พบ ลูกค้าเห็นว่า "ไม่มี"', cls: 'text-(--crowd-full)' }
           : { text: 'ลูกค้าเห็นว่า "ไม่มี"', cls: 'text-muted' }
         : { text: 'ยังไม่มีข้อมูล', cls: 'text-muted' };
   };
@@ -143,9 +139,14 @@ export function MerchantSafetyPage() {
       <div className="flex items-center justify-between gap-3">
         <div>
           <h1 className="text-[17px] font-bold lg:font-display lg:text-[30px]">ความปลอดภัย</h1>
-          <p className="mt-1 hidden text-sm text-muted lg:block">
-            ลูกค้าเห็นทุกข้อในชื่อ "ข้อมูลอ้างอิงจากร้านค้า (Merchant Declared)" · มีผลต่อดาวของร้าน · ทีมงาน NightOut ตรวจหลักฐานที่แนบหรือลงพื้นที่ตรวจ แล้วผลตรวจจะแสดงที่นี่ · แก้ได้หลายข้อแล้วกดบันทึกครั้งเดียว
-          </p>
+          <RuleList
+            className="mt-2 hidden text-sm text-muted lg:block"
+            rules={[
+              'ลูกค้าเห็นทุกข้อในชื่อ "ข้อมูลอ้างอิงจากร้านค้า (Merchant Declared)" และมีผลต่อดาวของร้าน',
+              'ทีมงาน NightOut ตรวจหลักฐานที่แนบหรือลงพื้นที่ตรวจ แล้วผลตรวจจะแสดงที่นี่',
+              { tone: 'check', text: 'แก้ได้หลายข้อแล้วกดบันทึกครั้งเดียว' },
+            ]}
+          />
         </div>
         <div className="flex items-center gap-1 lg:gap-3">
           {draft.count > 0 && !saving && (
@@ -162,7 +163,7 @@ export function MerchantSafetyPage() {
               </button>
             </>
           )}
-          {saveButton('hidden h-10 items-center rounded-xl bg-gold px-[18px] text-sm font-semibold text-on-gold lg:inline-flex', 'บันทึกการเปลี่ยนแปลง')}
+          {saveButton(HEADER_SAVE_CLASS, 'บันทึกการเปลี่ยนแปลง')}
           {saveButton('px-2 py-1 text-sm font-semibold text-gold-text lg:hidden', 'บันทึก')}
         </div>
       </div>
@@ -193,7 +194,10 @@ export function MerchantSafetyPage() {
               </span>
               {verified > 0 && (
                 <span className="text-xs text-muted">
-                  ลงพื้นที่ {verifiedOnSite} · ตรวจหลักฐาน {verified - verifiedOnSite}
+                  <span className="flex flex-wrap gap-1.5">
+                    <StatusChip tone="success" icon={<Footprints weight="fill" />} value={verifiedOnSite}>ลงพื้นที่</StatusChip>
+                    <StatusChip tone="purple" icon={<Files weight="fill" />} value={verified - verifiedOnSite}>ตรวจหลักฐาน</StatusChip>
+                  </span>
                 </span>
               )}
             </span>
@@ -241,14 +245,14 @@ export function MerchantSafetyPage() {
                         className={`break-words text-[11px] lg:text-xs ${checked.result === 'PASS' ? 'text-(--crowd-available)' : 'text-(--crowd-full)'}`}
                       >
                         ลงพื้นที่ {shortDate(inspection.inspected_at)}: {SAFETY_CHECK_LABELS[checked.result]}
-                        {checked.note ? ` · ${checked.note}` : ''}
+                        {checked.note ? ` (${checked.note})` : ''}
                       </span>
                       <InspectionPhotos paths={checked.photo_paths} urls={photoUrls} />
                     </>
                   )}
                   {(draft.valueChanged(s) || file) && (
                     <span className="text-[11px] text-gold-text lg:text-xs">
-                      ยังไม่บันทึก{file ? ` · หลักฐาน ${file}` : ''}
+                      ยังไม่บันทึก{file ? ` (หลักฐาน ${file})` : ''}
                     </span>
                   )}
                 </span>
@@ -268,7 +272,7 @@ export function MerchantSafetyPage() {
                         aria-checked={on}
                         disabled={saving}
                         onClick={() => !on && draft.setValue(s, o.value)}
-                        className={`merchant-pill min-h-9 flex-1 rounded-[7px] px-2.5 lg:min-h-0 lg:py-1 ${on ? o.on : 'text-muted'}`}
+                        className={`merchant-pill min-h-9 flex-1 rounded-[7px] px-2.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold lg:min-h-0 lg:py-1 ${on ? o.on : 'text-muted hover:text-text'}`}
                       >
                         {o.label}
                       </button>

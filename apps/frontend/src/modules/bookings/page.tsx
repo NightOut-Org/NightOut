@@ -1,3 +1,4 @@
+import { CalendarBlank, MagnifyingGlass, Ticket, UsersThree } from '@phosphor-icons/react';
 import { getBar, myBookings } from '@/services/data';
 import { Card, Empty, Tabs } from 'antd';
 import { Link } from 'react-router';
@@ -6,6 +7,8 @@ import { PageHeader } from '@/ui/components/pageHeader';
 import { useDemo } from '@/hooks/useDemo';
 import { dateTime } from '@/ui/utils/format';
 import { EmbersBackdrop } from '@/ui/components/embersBackdrop';
+import { MetaList } from '@/ui/components/metaList';
+import { EMPTY_CTA_CLASS } from '@/ui/utils/buttonClasses';
 
 const UPCOMING = ['PENDING', 'AWAITING_DEPOSIT', 'DEPOSIT_SUBMITTED', 'CONFIRMED', 'CHECKED_IN'];
 const CANCELLED = [
@@ -40,7 +43,13 @@ export function BookingsPage() {
                   <div className="flex-1">
                     <p className="font-semibold">{bar?.name}</p>
                     <p className="text-sm text-muted">
-                      {dateTime(b.datetime)} · {b.pax} คน · {b.code}
+                      <MetaList
+                        items={[
+                          { icon: <CalendarBlank weight="fill" />, label: 'วันเวลา', value: dateTime(b.datetime) },
+                          { icon: <UsersThree weight="fill" />, label: 'จำนวนคน', value: `${b.pax} คน` },
+                          { icon: <Ticket weight="fill" />, label: 'รหัสจอง', value: b.code },
+                        ]}
+                      />
                     </p>
                   </div>
                   <BookingStatusTag status={b.status} />
@@ -52,7 +61,9 @@ export function BookingsPage() {
       </div>
     ) : (
       <Empty description="ไม่มีรายการ">
-        <Link to="/search">หาร้านเพื่อจอง →</Link>
+        <Link to="/search" className={EMPTY_CTA_CLASS}>
+          <MagnifyingGlass size={16} weight="bold" aria-hidden /> หาร้านเพื่อจอง
+        </Link>
       </Empty>
     );
   return (

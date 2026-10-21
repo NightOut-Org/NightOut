@@ -18,7 +18,6 @@ export interface InfoForm {
   name: string;
   description: string;
   phone: string;
-  district_id: string | null;
   /** เฉพาะสไตล์ที่แสดงอยู่ — สไตล์ที่ซ่อนแล้วไม่ส่ง (DB เก็บลิงก์เดิมไว้) */
   style_keys: string[];
   /** ครบ 7 วันเสมอ (index = day_of_week) */
@@ -40,7 +39,10 @@ export interface MenuRow {
 const hm = (t: string | null | undefined) => (t ? t.slice(0, 5) : null);
 const toTime = (t: string) => {
   const [h, m] = t.split(':').map(Number);
-  return dayjs().startOf('day').hour(h ?? 0).minute(m ?? 0);
+  return dayjs()
+    .startOf('day')
+    .hour(h ?? 0)
+    .minute(m ?? 0);
 };
 const blank = (s: string | null | undefined) => (s ?? '').trim() || null;
 
@@ -48,10 +50,21 @@ const blank = (s: string | null | undefined) => (s ?? '').trim() || null;
 function serverHours(rows: Db.OpeningHour[]): HourRow[] {
   return DAYS.map((_, day) => {
     const h = rows.find((r) => r.day_of_week === day);
-    if (!h) return { day_of_week: day, open_time: DEFAULT_OPEN, close_time: DEFAULT_CLOSE, is_closed: false };
+    if (!h)
+      return {
+        day_of_week: day,
+        open_time: DEFAULT_OPEN,
+        close_time: DEFAULT_CLOSE,
+        is_closed: false,
+      };
     return h.is_closed
       ? { day_of_week: day, open_time: null, close_time: null, is_closed: true }
-      : { day_of_week: day, open_time: hm(h.open_time), close_time: hm(h.close_time), is_closed: false };
+      : {
+          day_of_week: day,
+          open_time: hm(h.open_time),
+          close_time: hm(h.close_time),
+          is_closed: false,
+        };
   });
 }
 
@@ -61,7 +74,6 @@ function fromServer(d: Db.AdminBarDetails, activeKeys: Set<string>): Required<C.
     name: d.name.trim(),
     description: blank(d.description),
     phone: blank(d.phone),
-    district_id: d.district_id,
     style_keys: d.style_keys.filter((k) => activeKeys.has(k)).sort(),
     hours: serverHours(d.hours),
     links: d.links.map((l) => ({ type: l.type, url: l.url.trim() })),
@@ -74,7 +86,6 @@ function fromForm(v: InfoForm): Required<C.AdminBarInfoBody> {
     name: (v.name ?? '').trim(),
     description: blank(v.description),
     phone: blank(v.phone),
-    district_id: v.district_id ?? null,
     style_keys: [...(v.style_keys ?? [])].sort(),
     hours: DAYS.map((_, day) => {
       const h = v.hours?.[day];
@@ -97,7 +108,6 @@ export function toInfoForm(d: Db.AdminBarDetails, activeKeys: Set<string>): Info
     name: s.name,
     description: s.description ?? '',
     phone: s.phone ?? '',
-    district_id: s.district_id,
     style_keys: s.style_keys,
     hours: s.hours.map((h) => ({
       closed: h.is_closed,
@@ -119,16 +129,25 @@ const toRows = (d: Db.AdminBarDetails): MenuRow[] =>
   }));
 
 const toMenuBody = (rows: MenuRow[]): C.AdminMenuItem[] =>
-  rows.map((r) => ({ id: r.id, category: r.category.trim(), name: r.name.trim(), price: r.price, available: r.available }));
+  rows.map((r) => ({
+    id: r.id,
+    category: r.category.trim(),
+    name: r.name.trim(),
+    price: r.price,
+    available: r.available,
+  }));
 
 const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
-const INFO_KEYS: InfoKey[] = ['name', 'description', 'phone', 'district_id', 'style_keys', 'hours', 'links'];
+const INFO_KEYS: InfoKey[] = ['name', 'description', 'phone', 'style_keys', 'hours', 'links'];
 
 /**
  * draft ของ Drawer "แก้ข้อมูลร้าน" — ฟอร์มข้อมูลร้าน (antd Form ส่งค่าเข้ามาทาง setInfo) + ตารางเมนู
  * แก้กลับเป็นค่าเดิมจาก server = ไม่นับว่าแก้ · body() = PUT /admin/bars/:id/details (info เฉพาะ key ที่ต่าง · menu ทั้งชุด)
  */
-export function useBarDetailsDraft(details: Db.AdminBarDetails | null | undefined, activeKeys: Set<string>) {
+export function useBarDetailsDraft(
+  details: Db.AdminBarDetails | null | undefined,
+  activeKeys: Set<string>,
+) {
   const [info, setInfo] = useState<InfoForm | null>(null);
   const [menu, setMenu] = useState<MenuRow[] | null>(null);
   const [seq, setSeq] = useState(0);
@@ -143,7 +162,8 @@ export function useBarDetailsDraft(details: Db.AdminBarDetails | null | undefine
   const menuChanged = !!details && !same(toMenuBody(rows), toMenuBody(serverRows));
   const menuErrors = rows.filter((r) => !r.name.trim() || !Number.isFinite(r.price)).length;
 
-  const editMenu = (fn: (rows: MenuRow[]) => MenuRow[]) => setMenu((prev) => fn(prev ?? serverRows));
+  const editMenu = (fn: (rows: MenuRow[]) => MenuRow[]) =>
+    setMenu((prev) => fn(prev ?? serverRows));
 
   return {
     infoChanges,
@@ -159,7 +179,15 @@ export function useBarDetailsDraft(details: Db.AdminBarDetails | null | undefine
       setSeq((n) => n + 1);
       editMenu((list) => [
         ...list,
-        { key: id, id, category: list.at(-1)?.category ?? '', name: '', price: 0, available: true, image_path: null },
+        {
+          key: id,
+          id,
+          category: list.at(-1)?.category ?? '',
+          name: '',
+          price: 0,
+          available: true,
+          image_path: null,
+        },
       ]);
     },
     updateItem: (key: string, patch: Partial<Omit<MenuRow, 'key' | 'id' | 'image_path'>>) =>
@@ -171,7 +199,8 @@ export function useBarDetailsDraft(details: Db.AdminBarDetails | null | undefine
       if (values && server) {
         const next = fromForm(values);
         const changed = INFO_KEYS.filter((k) => !same(server[k], next[k]));
-        if (changed.length) out.info = Object.fromEntries(changed.map((k) => [k, next[k]])) as C.AdminBarInfoBody;
+        if (changed.length)
+          out.info = Object.fromEntries(changed.map((k) => [k, next[k]])) as C.AdminBarInfoBody;
       }
       if (menuChanged) out.menu = toMenuBody(rows);
       return out;

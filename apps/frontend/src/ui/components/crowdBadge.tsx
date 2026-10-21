@@ -21,7 +21,7 @@ export function CrowdBadge({
       />
       <span className={stale ? 'text-muted' : ''}>{label}</span>
       {showTime && updatedAt && !stale && (
-        <span className="text-xs text-muted">· {timeAgo(updatedAt)}</span>
+        <span className="ml-1 text-xs text-muted">อัปเดต {timeAgo(updatedAt)}</span>
       )}
     </span>
   );

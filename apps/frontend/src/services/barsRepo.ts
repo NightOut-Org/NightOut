@@ -1,11 +1,11 @@
-import type { Bar, BarLocationRequest, BarTransit } from '@nightout/mock';
+import type { Bar, BarLocationRequest, BarTransit } from '@/services/models';
 import type { Db, TransitLine } from '@nightout/types';
 import { DEFAULT_REFUND_BEFORE_HOURS } from '@nightout/utils';
 import { barMediaUrl } from '@/services/api/storage';
 
 /**
  * แปลงแถวจาก view `bar_detail` (ร้านสาธารณะ) / `my_bar_detail` (ร้านของฉัน ทุกสถานะ) → รูปแบบ Bar ที่หน้าเว็บใช้
- * ข้อมูลร้านมาจาก Supabase เท่านั้น — services/sync.ts เอาไปใส่ store ของ @nightout/mock (ใช้เป็น cache)
+ * ข้อมูลร้านมาจาก Supabase เท่านั้น — services/sync.ts เอาไปใส่ cache (services/cache.ts)
  * หน้าเว็บจึงยังเรียก listBars() / getBarBySlug() ได้เหมือนเดิม
  */
 

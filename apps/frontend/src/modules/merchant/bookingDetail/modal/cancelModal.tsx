@@ -1,3 +1,4 @@
+import { Ticket, User, UsersThree } from '@phosphor-icons/react';
 import { App, Alert, Modal, Typography } from 'antd';
 import { useState } from 'react';
 import { type Booking } from '@/services/data';
@@ -9,6 +10,7 @@ import {
   reasonText,
   type MerchantCancelReason,
 } from '../utils/cancelReasons';
+import { MetaList } from '@/ui/components/metaList';
 
 /** เหตุผลยกเลิก (TeamBookingStatusBody.reason) ยาวได้ 200 ตัวอักษร */
 const CANCEL_REASON_MAX = 200;
@@ -70,12 +72,19 @@ export function CancelModal({
       {booking && (
         <div className="space-y-4">
           <Typography.Text type="secondary" className="block text-sm">
-            {booking.code} · {booking.userName} · {booking.pax} คน
+            <MetaList
+              items={[
+                { icon: <User weight="fill" />, label: 'ลูกค้า', value: booking.userName, strong: true },
+                { icon: <UsersThree weight="fill" />, label: 'จำนวนคน', value: `${booking.pax} คน` },
+                { icon: <Ticket weight="fill" />, label: 'รหัสจอง', value: booking.code },
+              ]}
+            />
           </Typography.Text>
           <Alert
             type="warning"
             showIcon
-            title="ลูกค้าจะได้รับแจ้งทันที · Table Fee ที่จ่ายแล้วเข้าคิวคืนลูกค้าเต็มจำนวน (NightOut โอนคืน) · ทำแล้วย้อนกลับไม่ได้"
+            title="ลูกค้าจะได้รับแจ้งทันที และทำแล้วย้อนกลับไม่ได้"
+            description="Table Fee ที่จ่ายแล้วเข้าคิวคืนลูกค้าเต็มจำนวน (NightOut โอนคืน)"
           />
           <ReasonPicker
             value={reason}

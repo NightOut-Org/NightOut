@@ -223,7 +223,7 @@ function ReplyBox({
                 <VideoCamera size={18} /> วิดีโอ
               </AttachButton>
               <span className="ml-1 text-xs text-muted">
-                {value.media.length}/{COMMUNITY_MEDIA_LIMITS.maxFiles} ไฟล์ · วิดีโอไม่เกิน{' '}
+                {value.media.length}/{COMMUNITY_MEDIA_LIMITS.maxFiles} ไฟล์ วิดีโอไม่เกิน{' '}
                 {COMMUNITY_MEDIA_LIMITS.videoSeconds} วิ / {COMMUNITY_MEDIA_LIMITS.videoMB}MB
               </span>
             </span>

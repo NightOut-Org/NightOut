@@ -1,9 +1,12 @@
+import { CalendarBlank, Ticket } from '@phosphor-icons/react';
 import { Alert, Empty, Skeleton } from 'antd';
 import dayjs from 'dayjs';
 import { useState } from 'react';
 import { useMerchantBar } from '@/hooks/useMerchantBar';
 import { baht } from '@/ui/utils/format';
 import { useBillingEvents, type BillingEventRow } from './api';
+import { MetaList } from '@/ui/components/metaList';
+import { StatusChip } from '@/ui/components/statusChip';
 
 /** สถานะของเดือน (สรุปจากสถานะของรายการในเดือนนั้น) */
 function monthState(rows: BillingEventRow[]) {
@@ -66,7 +69,7 @@ export function MerchantBillingPage() {
       <div>
         <h1 className="text-[17px] font-bold lg:font-display lg:text-[30px]">ค่าคอม</h1>
         <p className="mt-1 text-xs text-muted lg:text-sm">
-          คิดต่อการจองที่ลูกค้าเช็กอินจริง (ยอดประเมินต่อหัว × จำนวนคน) · ปลดโต๊ะ (Forfeited) ไม่คิดค่าคอม ·ค้างชำระ{' '}
+          คิดต่อการจองที่ลูกค้าเช็กอินจริง (ยอดประเมินต่อหัว × จำนวนคน) ส่วนการจองที่ถูกปลดโต๊ะ (Forfeited) ไม่คิดค่าคอม ค้างชำระ{' '}
           <b className="text-gold-text">{baht(outstanding)}</b>
         </p>
       </div>
@@ -85,7 +88,7 @@ export function MerchantBillingPage() {
             <div className="flex flex-col gap-3">{months.map((m) => monthCard(m, false))}</div>
             <div className="min-w-0 self-start overflow-hidden rounded-[20px] border border-border bg-card">
               <div className="flex items-center justify-between gap-3 border-b border-border px-5 py-4">
-                <b className="font-semibold">Billing events · {month && monthName(month)}</b>
+                <b className="font-semibold">Billing events {month && `เดือน${monthName(month)}`}</b>
                 <span className="text-[13px] text-muted">
                   ยอดรวม <b className="text-gold-text">{baht(total(rows))}</b>
                 </span>
@@ -107,7 +110,11 @@ export function MerchantBillingPage() {
                       <td className="font-mono text-xs text-muted">{r.booking?.code ?? '—'}</td>
                       <td>
                         {label(r)}
-                        {r.status === 'WAIVED' && <span className="text-xs text-muted"> · ยกเว้น</span>}
+                        {r.status === 'WAIVED' && (
+                          <StatusChip tone="muted" className="ml-1.5">
+                            ยกเว้น
+                          </StatusChip>
+                        )}
                       </td>
                       <td className="text-[13px] text-muted">ยอดประเมิน {baht(Number(r.base_amount))}</td>
                       <td className={`pr-5 text-right font-semibold ${amountCls(r)}`}>{baht(Number(r.amount))}</td>
@@ -128,7 +135,12 @@ export function MerchantBillingPage() {
                   <span className="flex min-w-0 flex-1 flex-col text-sm">
                     <span>{label(r)}</span>
                     <span className="text-xs text-muted">
-                      {dayjs(r.created_at).format('D MMM')} · {r.booking?.code ?? '—'}
+                      <MetaList
+                        items={[
+                          { icon: <CalendarBlank weight="fill" />, label: 'วันที่', value: dayjs(r.created_at).format('D MMM') },
+                          r.booking?.code && { icon: <Ticket weight="fill" />, label: 'รหัสจอง', value: r.booking.code },
+                        ]}
+                      />
                     </span>
                   </span>
                   <b className={amountCls(r)}>{baht(Number(r.amount))}</b>

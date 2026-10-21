@@ -1,4 +1,5 @@
-import { Images, PencilSimpleLine } from '@phosphor-icons/react';
+import { Images, PencilSimpleLine, Storefront } from '@phosphor-icons/react';
+import { HEADER_LINK_CLASS } from '@/ui/utils/buttonClasses';
 import { barReviews, getBarBySlug, reviewableBooking } from '@/services/data';
 import { Button, Empty, Segmented } from 'antd';
 import { useState } from 'react';
@@ -29,7 +30,12 @@ export function BarReviewsPage() {
       <PageHeader
         title={`รีวิว ${bar.name}`}
         subtitle={<BarRating bar={bar} />}
-        extra={<Link to={`/bars/${bar.slug}`}>← กลับหน้าร้าน</Link>}
+        extra={
+          <Link to={`/bars/${bar.slug}`} className={HEADER_LINK_CLASS}>
+            <Storefront size={18} aria-hidden />
+            กลับหน้าร้าน
+          </Link>
+        }
       />
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <Segmented

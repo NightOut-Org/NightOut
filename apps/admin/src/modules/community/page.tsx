@@ -68,7 +68,7 @@ export function CommunityPage() {
   const editedLink = (r: Row) =>
     r.revisions.length > 0 && (
       <Typography.Link className="!text-xs" onClick={() => setHistory(r)}>
-        แก้ไขแล้ว {r.revisions.length} ครั้ง · ดูประวัติ
+        แก้ไขแล้ว {r.revisions.length} ครั้ง (ดูประวัติ)
       </Typography.Link>
     );
   const { data: urls = {} } = useMediaUrls(mediaPaths);
@@ -234,7 +234,7 @@ export function CommunityPage() {
   return (
     <PageContainer
       title="ชุมชน"
-      subTitle="กระทู้และความคิดเห็นที่ถูกรายงาน · ปักหมุดเป็นของผู้ใช้แต่ละคน (ส่วนตัว) แอดมินไม่ต้องจัดการ"
+      subTitle="กระทู้และความคิดเห็นที่ถูกรายงาน ส่วนการปักหมุดเป็นของผู้ใช้แต่ละคน (ส่วนตัว) แอดมินไม่ต้องจัดการ"
     >
       <LoadError
         error={threads.error ?? comments.error}

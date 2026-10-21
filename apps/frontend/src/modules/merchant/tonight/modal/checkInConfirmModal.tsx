@@ -1,4 +1,4 @@
-import { CheckCircle } from '@phosphor-icons/react';
+import { Armchair, CheckCircle, Clock, Ticket } from '@phosphor-icons/react';
 import type * as C from '@nightout/contracts';
 import { CHECK_IN_EARLY_HOURS } from '@nightout/utils';
 import { Alert, App, Button, Modal, Skeleton } from 'antd';
@@ -6,6 +6,7 @@ import dayjs from 'dayjs';
 import { useState } from 'react';
 import { BOOKING_STATUS } from '@/ui/utils/format';
 import { checkIn, useCheckInPreview } from '../api';
+import { MetaList } from '@/ui/components/metaList';
 
 /**
  * ขั้นยืนยันก่อนเช็กอิน (requirement "สแกนเช็กอิน": ยืนยันคิว/สถานะ → ดึงชื่อ/จำนวนคน → กดยืนยัน)
@@ -102,7 +103,13 @@ function PreviewBody({ p }: { p: C.CheckInPreview }) {
         <b className="shrink-0 text-3xl font-bold text-gold-text tabular-nums">{p.pax} คน</b>
       </div>
       <p className="text-sm text-muted">
-        {place} · {start.format(p.is_today ? 'HH:mm' : 'D MMM HH:mm')} · {p.code}
+        <MetaList
+          items={[
+            { icon: <Armchair weight="fill" />, label: 'ที่นั่ง', value: place, strong: true },
+            { icon: <Clock weight="fill" />, label: 'เวลาจอง', value: start.format(p.is_today ? 'HH:mm' : 'D MMM HH:mm') },
+            { icon: <Ticket weight="fill" />, label: 'รหัสจอง', value: p.code },
+          ]}
+        />
       </p>
       {(p.promotion_title || p.customer_note) && (
         <div className="flex flex-col gap-1 text-sm">
@@ -128,7 +135,7 @@ function PreviewBody({ p }: { p: C.CheckInPreview }) {
           role="status"
         >
           <CheckCircle size={20} weight="fill" className="shrink-0" aria-hidden />
-          พร้อมเช็กอิน · เก็บโต๊ะถึง {at(p.auto_cancel_at)}
+          พร้อมเช็กอิน เก็บโต๊ะถึง {at(p.auto_cancel_at)}
         </p>
       )}
       {p.can_check_in && !p.is_today && (

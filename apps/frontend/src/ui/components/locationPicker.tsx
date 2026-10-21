@@ -228,7 +228,7 @@ export function LocationPicker({
   const showGhost = !!current && (moved === null || moved >= SAME_SPOT_M);
   const statusText = pin
     ? `พิกัด ${pin.lat.toFixed(6)}, ${pin.lng.toFixed(6)}${
-        moved !== null && moved >= SAME_SPOT_M ? ` · ห่างจากหมุดเดิม ${formatDistance(moved)}` : ''
+        moved !== null && moved >= SAME_SPOT_M ? ` (ห่างจากหมุดเดิม ${formatDistance(moved)})` : ''
       }`
     : readOnly
       ? 'ยังไม่ได้ปักหมุด'

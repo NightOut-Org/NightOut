@@ -131,12 +131,12 @@ export function LastInspectionTile({
           </p>
         ) : (
           <p className="m-0 text-muted">
-            ทีมงาน NightOut ยังไม่เคยลงพื้นที่ตรวจร้านนี้ · ข้อที่ "มี" แนบหลักฐานไว้ ทีมงานจะนัดลงพื้นที่
+            ทีมงาน NightOut ยังไม่เคยลงพื้นที่ตรวจร้านนี้ แนบหลักฐานในข้อที่ "มี" ไว้ แล้วทีมงานจะนัดลงพื้นที่
           </p>
         )}
         {evidence.length > 0 && (
           <p className="m-0 text-xs text-muted">
-            {SAFETY_VERIFY_METHOD_LABELS.EVIDENCE} {evidence.length} ข้อ{evidenceAt ? ` · ล่าสุด ${shortDate(evidenceAt)}` : ''}
+            {SAFETY_VERIFY_METHOD_LABELS.EVIDENCE} {evidence.length} ข้อ{evidenceAt ? ` (ล่าสุด ${shortDate(evidenceAt)})` : ''}
           </p>
         )}
       </>

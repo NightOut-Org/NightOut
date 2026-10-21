@@ -1,13 +1,16 @@
-import { ArrowRight } from '@phosphor-icons/react';
+import { ArrowRight, MapPin, ShieldCheck, Wallet } from '@phosphor-icons/react';
 import { safetyScore, type BarWithTier } from '@/services/data';
 import { Link } from 'react-router';
 import { baht } from '@/ui/utils/format';
 import { barImage } from '@/ui/utils/barImage';
+import { AdBadge } from './adBadge';
 import { BarRating } from './barRating';
 import { CrowdBadge } from './crowdBadge';
 import { DealBadge } from './dealBadge';
 import { FavoriteButton } from './favoriteButton';
+import { MetaList } from './metaList';
 import { PRBadge } from './prBadge';
+import { barPlace } from '@/ui/utils/area';
 
 /** ภาพปกร้าน — รูปจริง (coverUrl) หรือรูปแทน · ไล่เงาดำด้านล่างให้อ่านชื่อร้านออก */
 export function BarCover({
@@ -51,11 +54,7 @@ export function BarCard({ bar }: { bar: BarWithTier }) {
           barId={bar.id}
           className="!absolute right-2.5 top-2.5 !border-0 !bg-black/40 !text-white backdrop-blur"
         />
-        {bar.promoted && (
-          <span className="absolute left-2.5 top-2.5 rounded-full bg-black/55 px-2.5 py-0.5 text-xs text-gold-highlight backdrop-blur">
-            แนะนำ · โฆษณา
-          </span>
-        )}
+        {bar.promoted && <AdBadge variant="overlay" className="absolute left-2.5 top-2.5" />}
       </div>
 
       <div className="flex flex-1 flex-col px-1.5 pb-1 pt-4">
@@ -64,14 +63,17 @@ export function BarCard({ bar }: { bar: BarWithTier }) {
           <PRBadge pr={bar.pr} compact />
         </div>
         <h3 className="text-lg font-semibold">{bar.name}</h3>
-        <p className="mt-1 flex flex-wrap items-center gap-x-1.5 text-sm text-muted">
+        <p className="mt-1 flex flex-wrap items-center gap-x-3.5 gap-y-1 text-sm text-muted">
           <BarRating bar={bar} compact />
-          <span aria-hidden>•</span>
-          <span>{bar.district}</span>
+          <MetaList items={[{ icon: <MapPin weight="fill" />, label: 'พื้นที่', value: barPlace(bar) }]} />
         </p>
-        <p className="mt-1 text-sm text-muted">
-          ประมาณ {baht(bar.avgPerPerson)} ต่อคน · ความปลอดภัย {safetyScore(bar)}/100
-        </p>
+        <MetaList
+          className="mt-2 text-sm text-muted"
+          items={[
+            { icon: <Wallet weight="fill" />, label: 'ราคาต่อคนโดยประมาณ', value: <><b className="font-semibold text-text">{baht(bar.avgPerPerson)}</b>/คน</> },
+            { icon: <ShieldCheck weight="fill" />, label: 'คะแนนความปลอดภัย', value: <>ปลอดภัย <b className="font-semibold text-text">{safetyScore(bar)}</b>/100</> },
+          ]}
+        />
         <DealBadge bar={bar} className="mt-2" />
         <div className="mt-auto pt-4">
           <span className="inline-flex items-center gap-1.5 rounded-full border border-gold px-4 py-1.5 text-sm font-medium text-gold-text transition-colors group-hover:bg-gold group-hover:text-on-gold">

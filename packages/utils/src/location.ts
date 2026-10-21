@@ -62,7 +62,7 @@ export function formatTransit(t: TransitInfo | null | undefined): string | null 
   const station = t?.station?.trim();
   if (!t || !station) return null;
   const head = `${TRANSIT_LINE_LABELS[t.line] ?? t.line} ${station}`;
-  return t.walkMinutes ? `${head} · เดิน ${t.walkMinutes} นาที` : head;
+  return t.walkMinutes ? `${head} (เดิน ${t.walkMinutes} นาที)` : head;
 }
 
 const EARTH_RADIUS_M = 6_371_000;

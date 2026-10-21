@@ -51,7 +51,7 @@ export function EditDrawer({
     try {
       await act.mutateAsync({
         ...setBarLocationAction(bar.id, { ...toAdminLocationBody(v), note: v.note?.trim() || null }),
-        success: `บันทึกตำแหน่ง ${bar.name} แล้ว · แจ้งทีมร้านแล้ว`,
+        success: `บันทึกตำแหน่ง ${bar.name} และแจ้งทีมร้านแล้ว`,
       });
       onDone();
     } catch {
@@ -69,7 +69,7 @@ export function EditDrawer({
       keyboard={!saving}
       title={
         <span className="flex flex-wrap items-center gap-2">
-          แก้ตำแหน่งแทนร้าน · {bar.name}
+          แก้ตำแหน่งแทนร้าน {bar.name}
           <StatusTag map={BAR_STATUS} value={bar.status} />
         </span>
       }

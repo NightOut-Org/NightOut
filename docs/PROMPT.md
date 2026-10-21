@@ -406,7 +406,6 @@ night-list/
 │   ├── types/              # TypeScript types + Zod schemas (BookingStatus, DTO, API contracts) ใช้ร่วม frontend/NestJS
 │   ├── config/             # eslint, tsconfig, tailwind preset, env schema
 │   ├── utils/              # price calculator, star calculator, date/timezone (Asia/Bangkok), status transition map, formatters
-│   └── mock/               # โหมดเดโม: seed ร้านสมมติ + store (localStorage) + service ที่หน้าเว็บเรียก จนกว่าจะต่อ API จริง
 │
 ├── infra/
 │   └── terraform/

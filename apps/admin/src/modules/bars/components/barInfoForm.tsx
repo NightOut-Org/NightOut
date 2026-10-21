@@ -1,6 +1,16 @@
 import { Images, Plus, Trash } from '@phosphor-icons/react';
 import type { Db } from '@nightout/types';
-import { Button, Form, Input, Select, Switch, Tag, TimePicker, Typography, type FormInstance } from 'antd';
+import {
+  Button,
+  Form,
+  Input,
+  Select,
+  Switch,
+  Tag,
+  TimePicker,
+  Typography,
+  type FormInstance,
+} from 'antd';
 import { useLayoutEffect } from 'react';
 import { Link } from 'react-router';
 import { DAYS, type InfoForm } from '../utils/useBarDetailsDraft';
@@ -16,8 +26,8 @@ const LINK_TYPES: { value: Db.BarLinkItem['type']; label: string; placeholder: s
 const LINKS_MAX = 10;
 
 /**
- * ฟอร์ม "ข้อมูลร้าน" ใน Drawer แก้ข้อมูลร้าน — ชื่อ คำอธิบาย เบอร์ ย่าน สไตล์ เวลาเปิด-ปิด ลิงก์โซเชียล
- * ที่อยู่/หมุดดูอย่างเดียว (แก้ผ่านขั้นตอนตรวจตำแหน่งร้าน) · รูปจัดการที่ /bar-media
+ * ฟอร์ม "ข้อมูลร้าน" ใน Drawer แก้ข้อมูลร้าน — ชื่อ คำอธิบาย เบอร์ สไตล์ เวลาเปิด-ปิด ลิงก์โซเชียล
+ * ที่อยู่/หมุดดูอย่างเดียว (แก้ผ่านขั้นตอนตรวจตำแหน่งร้าน) · ย่าน DB หาเองจากหมุด (แก้ไม่ได้) · รูปจัดการที่ /bar-media
  * สไตล์ที่ถูกซ่อนแต่ร้านเลือกไว้ แสดงเป็นป้ายปิดใช้งาน และไม่ถูกส่ง (DB เก็บลิงก์เดิมไว้)
  */
 export function BarInfoForm({
@@ -25,7 +35,6 @@ export function BarInfoForm({
   bar,
   initialValues,
   styles,
-  districts,
   disabled,
   onChange,
 }: {
@@ -33,7 +42,6 @@ export function BarInfoForm({
   bar: Db.AdminBarDetails;
   initialValues: InfoForm;
   styles: Db.AdminStyle[];
-  districts: Db.Tables<'districts'>[];
   disabled: boolean;
   onChange: (values: InfoForm) => void;
 }) {
@@ -55,7 +63,11 @@ export function BarInfoForm({
       onValuesChange={(_, all) => onChange(all)}
       requiredMark={false}
     >
-      <Form.Item name="name" label="ชื่อร้าน" rules={[{ required: true, whitespace: true, message: 'กรอกชื่อร้าน' }]}>
+      <Form.Item
+        name="name"
+        label="ชื่อร้าน"
+        rules={[{ required: true, whitespace: true, message: 'กรอกชื่อร้าน' }]}
+      >
         <Input maxLength={80} showCount />
       </Form.Item>
       <Form.Item name="description" label="คำอธิบายร้าน">
@@ -65,14 +77,15 @@ export function BarInfoForm({
         <Form.Item name="phone" label="เบอร์โทรร้าน">
           <Input maxLength={30} inputMode="tel" placeholder="เช่น 02 123 4567" />
         </Form.Item>
-        <Form.Item name="district_id" label="ย่าน" normalize={(v: string | undefined) => v ?? null}>
-          <Select
-            allowClear
-            showSearch={{ optionFilterProp: 'label' }}
-            placeholder="ไม่ระบุย่าน"
-            options={districts.map((d) => ({ value: d.id, label: d.name_th }))}
-          />
-        </Form.Item>
+        <div className="mb-6 flex min-w-0 flex-col gap-1">
+          <span className="text-sm">ย่าน</span>
+          <Typography.Text className="break-words">
+            {bar.district?.name_th ? `ย่าน${bar.district.name_th}` : 'ไม่อยู่ในย่านไหน'}
+          </Typography.Text>
+          <Typography.Text type="secondary" className="text-xs">
+            ระบบเลือกจากหมุดร้าน เปลี่ยนหมุดแล้วย่านเปลี่ยนตาม
+          </Typography.Text>
+        </div>
       </div>
 
       <div className="mb-6 flex min-w-0 flex-col gap-1">
@@ -89,7 +102,7 @@ export function BarInfoForm({
         extra={
           hiddenLinked.length > 0 && (
             <span className="mt-2 flex flex-wrap items-center gap-1.5">
-              <span>ร้านเลือกไว้แต่ถูกซ่อนอยู่ (ไม่แสดงบนเว็บ · บันทึกแล้วยังอยู่):</span>
+              <span>ร้านเลือกไว้แต่ถูกซ่อนอยู่ (ไม่แสดงบนเว็บ แต่บันทึกแล้วยังอยู่):</span>
               {hiddenLinked.map((s) => (
                 <Tag key={s.key} disabled className="!m-0">
                   {s.name_th} (ซ่อนอยู่)
@@ -175,13 +188,18 @@ export function BarInfoForm({
                   >
                     <Input
                       placeholder={
-                        LINK_TYPES.find((t) => t.value === form.getFieldValue(['links', f.name, 'type']))?.placeholder ??
-                        'https://…'
+                        LINK_TYPES.find(
+                          (t) => t.value === form.getFieldValue(['links', f.name, 'type']),
+                        )?.placeholder ?? 'https://…'
                       }
                       aria-label="ลิงก์"
                     />
                   </Form.Item>
-                  <Button icon={<Trash size={16} />} aria-label="ลบลิงก์" onClick={() => remove(f.name)} />
+                  <Button
+                    icon={<Trash size={16} />}
+                    aria-label="ลบลิงก์"
+                    onClick={() => remove(f.name)}
+                  />
                 </div>
               ))}
               {fields.length < LINKS_MAX && (

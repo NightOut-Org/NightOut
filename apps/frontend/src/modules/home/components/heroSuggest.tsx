@@ -17,6 +17,7 @@ import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router';
 import type { HomeCategory } from '../type/category';
 import { useHoverIntent } from '../utils/useHoverIntent';
+import { barPlace } from '@/ui/utils/area';
 
 /** ไอคอนตาม slot ของการ์ดหมวด (ไอคอนเป็นเรื่องของหน้าเว็บ · DB ไม่เก็บแล้ว) · slot ใหม่ที่ไม่รู้จัก = Sparkle */
 const SLOT_ICONS: Record<string, Icon> = {
@@ -70,7 +71,7 @@ function buildGroups(categories: HomeCategory[] = [], popular: BarWithTier[], fi
       items: (q ? listBars({ q }).slice(0, BAR_MATCH_LIMIT) : popular.slice(0, POPULAR_LIMIT)).map((b) => ({
         id: `bar-${b.id}`,
         label: b.name,
-        hint: b.district,
+        hint: barPlace(b),
         icon: Storefront,
         to: `/bars/${b.slug}`,
       })),

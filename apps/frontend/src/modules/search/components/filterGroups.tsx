@@ -1,5 +1,5 @@
 import { ShieldCheck, Users } from '@phosphor-icons/react';
-import { DISTRICTS, STYLES, type BarFilter } from '@/services/data';
+import { AREA_OPTIONS, STYLES, type BarFilter } from '@/services/data';
 import type { CrowdStatus } from '@nightout/types';
 import {
   MAX_GROUP_SIZE,
@@ -9,10 +9,13 @@ import {
 } from '@nightout/utils';
 import type { ReactNode } from 'react';
 import { baht, CROWD } from '@/ui/utils/format';
+import { AreaSelect } from './areaSelect';
 
 const CROWDS: CrowdStatus[] = ['AVAILABLE', 'ALMOST_FULL', 'FULL'];
 const PEOPLE_QUICK = [2, 4, 6, 8, 10] as const;
 const SAFETY_PRESETS = [0, 50, 70, 90] as const;
+/** ปุ่มลัด = พื้นที่ที่มีร้านมากสุด · ที่เหลือค้นใน AreaSelect */
+const QUICK_AREAS = 8;
 
 const chip = (on: boolean) =>
   `rounded-full border text-[13px] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold ${
@@ -43,7 +46,7 @@ function Group({ title, children }: { title: string; children: ReactNode }) {
 
 /**
  * ตัวกรองทั้งหมดของหน้าค้นหา (ดีไซน์ Search Combined v2 · "Filter Groups") — ใช้ในลิ้นชักตัวกรอง
- * ย่าน · ไปกันกี่คน (พิมพ์ได้ + ปุ่มลัด) · งบต่อคน (พิมพ์ได้ + ปุ่มลัด) · ความแน่น (พร้อมจำนวน) · สไตล์ · Safety ขั้นต่ำ · มี PR
+ * พื้นที่ (ย่าน · ตำบล/แขวง · อำเภอ/เขต · จังหวัด) · ไปกันกี่คน (พิมพ์ได้ + ปุ่มลัด) · งบต่อคน (พิมพ์ได้ + ปุ่มลัด) · ความแน่น (พร้อมจำนวน) · สไตล์ · Safety ขั้นต่ำ · มี PR
  */
 export function FilterGroups({
   f,
@@ -56,19 +59,27 @@ export function FilterGroups({
 }) {
   return (
     <div className="flex flex-col gap-6 text-sm">
-      <Group title="ย่าน">
+      {/* ทุกพื้นที่ทั้งประเทศค้นได้ใน Select · ปุ่มลัด = พื้นที่ที่มีร้านมากสุด ตามด้วยย่านที่ทีมคัดเอง */}
+      <Group title="พื้นที่">
+        <AreaSelect f={f} set={set} />
         <div className="flex flex-wrap gap-1.5">
-          {[undefined, ...DISTRICTS].map((d) => {
-            const on = f.district === d;
+          {[undefined, ...AREA_OPTIONS.slice(0, QUICK_AREAS)].map((o) => {
+            const on = o ? f.district === o.value : !f.district && !f.tambon;
             return (
               <button
-                key={d ?? 'all'}
+                key={o?.value ?? 'all'}
                 type="button"
                 aria-pressed={on}
-                onClick={() => set({ district: d && on ? undefined : d })}
+                onClick={() =>
+                  set({
+                    district: o && on ? undefined : o?.value,
+                    tambon: undefined,
+                    tambonLabel: undefined,
+                  })
+                }
                 className={`h-9 px-3.5 ${chip(on)}`}
               >
-                {d ?? 'ทุกย่าน'}
+                {o?.label ?? 'ทุกพื้นที่'}
               </button>
             );
           })}

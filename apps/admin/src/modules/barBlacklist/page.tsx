@@ -13,6 +13,7 @@ import { StrikeDrawer } from './components/strikeDrawer';
 import { BlacklistModal, type BlacklistMode, type BlacklistTarget } from './modal/blacklistModal';
 import { ReportNoTableModal } from './modal/reportNoTableModal';
 import { useBarBlacklist } from './api';
+import { RuleList } from '@/ui/components/RuleList';
 
 type Filter = 'strikes' | 'blacklisted' | 'all';
 
@@ -95,7 +96,16 @@ export function BarBlacklistPage() {
         className="!mb-4"
         type="info"
         showIcon
-        title='ร้านถูกบันทึก "ไม่มีโต๊ะให้ลูกค้า" อัตโนมัติเมื่อทีมร้านเลือกเหตุนี้ตอนยกเลิก/คืน Table Fee · ลูกค้าร้องเรียนมาเอง บันทึกได้ที่ปุ่ม "บันทึกข้อร้องเรียน" (คืน Table Fee ให้ลูกค้าแทนร้าน) · NightOut ปรับเงินร้านไม่ได้ — Blacklist เพื่อซ่อนร้านและปิดรับจองใหม่จนกว่าจะปลด'
+        title="ประวัติร้านที่ไม่มีโต๊ะให้ลูกค้า"
+        description={
+          <RuleList
+            rules={[
+              'ระบบบันทึกให้อัตโนมัติเมื่อทีมร้านเลือกเหตุ "ไม่มีโต๊ะให้ลูกค้า" ตอนยกเลิก/คืน Table Fee',
+              'ลูกค้าร้องเรียนมาเอง บันทึกที่ปุ่ม "บันทึกข้อร้องเรียน" (คืน Table Fee ให้ลูกค้าแทนร้าน)',
+              'NightOut ปรับเงินร้านไม่ได้ จึงใช้ Blacklist ซ่อนร้านและปิดรับจองใหม่จนกว่าจะปลด',
+            ]}
+          />
+        }
       />
       <Table<Db.AdminBarBlacklist>
         rowKey="id"
@@ -161,7 +171,7 @@ export function BarBlacklistPage() {
                 <Tooltip title={b.blacklist_reason ? `เหตุผล: ${b.blacklist_reason}` : undefined}>
                   <span className="cursor-help">
                     {date(b.blacklisted_at)}
-                    {b.blacklisted_by ? ` · ${b.blacklisted_by.display_name}` : ''}
+                    {b.blacklisted_by ? ` โดย ${b.blacklisted_by.display_name}` : ''}
                   </span>
                 </Tooltip>
               ) : (

@@ -5,7 +5,7 @@ import {
   type CommunityScope,
   type CommunityThreadSummary,
 } from '@nightout/contracts';
-import { NotePencil, Trash } from '@phosphor-icons/react';
+import { CaretLeft, NotePencil, Trash } from '@phosphor-icons/react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { App, Button, Empty, Popconfirm, Skeleton, Tabs } from 'antd';
 import { Link, useSearchParams } from 'react-router';
@@ -39,6 +39,13 @@ export function CommunityMePage() {
     <div className="embers-glass relative isolate mx-auto max-w-3xl">
       {/* พื้นหลัง Golden Embers เดียวกับหน้า /community (ธีมมืด) */}
       <EmbersBackdrop />
+      <Link
+        to="/community"
+        className="-ml-2 mb-1 inline-flex h-11 items-center gap-1 rounded-full px-2 text-sm font-medium !text-muted hover:!text-text"
+      >
+        <CaretLeft size={18} />
+        กลับไปหน้ากระทู้
+      </Link>
       <PageHeader
         title="กระทู้ของฉัน"
         extra={

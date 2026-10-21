@@ -13,6 +13,7 @@ import { MarkPaymentRefundedBody, MockCompleteBody, PAYMENT_ERRORS, SUPER_ADMIN_
 import { TableBoardQuery, TableOccupancyBody } from './index';
 import { MINI_ADS_ERRORS, MiniAdBody, MiniAdsQuery, TrackMiniAdBody, UpdateMiniAdBody } from './index';
 import { SalesStatsQuery, type TeamForfeitResult } from './index';
+import { AreaAtPointQuery, BarInfoBody, MerchantJoinBody, TambonSearchQuery } from './index';
 
 describe('booking', () => {
   const base = {
@@ -258,7 +259,7 @@ describe('community', () => {
     expect(CommunityReportBody.safeParse({ thread_id: id, comment_id: id, reason: 'SPAM' }).success).toBe(false);
   });
   it('shop team: badge text · shop news must tag a shop', () => {
-    expect(communityTeamBadge('Moon Bar')).toBe('ทีมร้าน · Moon Bar');
+    expect(communityTeamBadge('Moon Bar')).toBe('ทีมร้าน Moon Bar');
     expect(CommunityThreadBody.safeParse({ category: 'shop-news', title: 'ข่าวร้านเรา' }).success).toBe(false);
     expect(CommunityThreadBody.safeParse({ category: 'shop-news', title: 'ข่าวร้านเรา', bar_id: id }).success).toBe(true);
     expect(CommunityThreadBody.safeParse({ category: 'qa', title: 'ร้านไหนดี' }).success).toBe(true);
@@ -499,7 +500,7 @@ describe('G6: แก้ข้อมูลร้านแทน · สไตล�
   });
 
   it('Backoffice registry: new views + districts master table', () => {
-    for (const v of ['admin_bar_details', 'admin_styles', 'admin_ranking'] as const) expect(ADMIN_VIEWS).toContain(v);
+    for (const v of ['admin_bar_details', 'admin_styles', 'admin_ranking', 'admin_bar_areas'] as const) expect(ADMIN_VIEWS).toContain(v);
     expect(ADMIN_MASTER_TABLES).toContain('districts');
   });
 });
@@ -677,5 +678,29 @@ describe('สมัครด้วย Google / Facebook (REQUIREMENTS ข้อ 
     for (const code of ['OAUTH_BIRTHDATE_MISSING', 'OAUTH_AGE_UNDER_20', 'OAUTH_RELOGIN_REQUIRED', 'OAUTH_TOKEN_MISMATCH'] as const) {
       expect(ERROR_MESSAGES[code]).toBe(ACCOUNT_ERRORS[code]);
     }
+  });
+});
+
+describe('areas (พื้นที่จากหมุด)', () => {
+  it('AreaAtPointQuery coerces query strings and rejects out-of-range', () => {
+    expect(AreaAtPointQuery.parse({ lat: '13.7305', lng: '100.581' })).toEqual({ lat: 13.7305, lng: 100.581 });
+    expect(AreaAtPointQuery.safeParse({ lat: 91, lng: 100 }).success).toBe(false);
+    expect(AreaAtPointQuery.safeParse({ lat: 13 }).success).toBe(false);
+  });
+  it('shop forms no longer carry district_id (DB derives it from the pin)', () => {
+    expect('district_id' in BarInfoBody.shape).toBe(false);
+    expect(BarInfoBody.parse({ name: 'ร้าน', district_id: '00000000-0000-0000-0000-000000000000' })).toEqual({ name: 'ร้าน' });
+    expect(MerchantJoinBody.safeParse({}).success).toBe(false);
+  });
+});
+
+describe('tambon search', () => {
+  it('accepts q (≥ 2 chars) or code, not both or neither', () => {
+    expect(TambonSearchQuery.parse({ q: ' คลองตัน ' })).toEqual({ q: 'คลองตัน' });
+    expect(TambonSearchQuery.parse({ code: 'TH103902' })).toEqual({ code: 'TH103902' });
+    expect(TambonSearchQuery.safeParse({ q: 'ก' }).success).toBe(false);
+    expect(TambonSearchQuery.safeParse({}).success).toBe(false);
+    expect(TambonSearchQuery.safeParse({ q: 'คลอง', code: 'TH103902' }).success).toBe(false);
+    expect(TambonSearchQuery.safeParse({ code: 'TH1039' }).success).toBe(false);
   });
 });

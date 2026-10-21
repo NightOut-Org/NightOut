@@ -15,6 +15,7 @@ const oneOf = <T extends string>(list: readonly T[], v: string | null): T | unde
 /**
  * URL → ตัวกรองหน้า /search
  * · ?q=&district=&budget=&people= จาก Hero หน้าแรก (parseBudgetSearch · ค่าผิด = ไม่กรอง)
+ * · ?tambon=<รหัสตำบล TH######> จากตัวกรองพื้นที่ (ใช้แทน district)
  * · ?category= / ?style= (ซ้ำได้) จากการ์ดหมวดหมู่ · ?crowd= (ซ้ำได้) · ?safety= · ?pr=1 · ?sort=
  */
 export function filterFromParams(params: URLSearchParams): BarFilter {
@@ -25,10 +26,11 @@ export function filterFromParams(params: URLSearchParams): BarFilter {
     category: oneOf(CATEGORIES, params.get('category')) ?? 'ALL',
     styles: params.getAll('style'),
     district: s.district,
+    tambon: /^TH[0-9]{6}$/.test(params.get('tambon') ?? '') ? params.get('tambon')! : undefined,
     maxBudget: s.budget,
     people: s.people,
     crowd: params.getAll('crowd').filter((c): c is CrowdStatus => oneOf(CROWDS, c) !== undefined),
-    // สวิตช์ "เฉพาะร้านที่มี PR": เปิด (?pr=1) = เฉพาะร้านมี PR · ปิด = เฉพาะร้านที่ไม่มี PR (ตกลงกับผู้ใช้ 2026-10-17)
+    // สวิตช์ "เฉพาะร้านที่มี PR": เปิด (?pr=1) = เฉพาะร้านมี PR · ปิด = ทุกร้าน (ตกลงกับผู้ใช้ 2026-10-21)
     hasPR: params.get('pr') === '1',
     minSafety: Number.isInteger(safety) && safety > 0 && safety <= 100 ? safety : undefined,
     sort: oneOf(SORTS, params.get('sort')) ?? 'relevance',
@@ -38,6 +40,7 @@ export function filterFromParams(params: URLSearchParams): BarFilter {
 /** ตัวกรอง → query string (ไม่มี "?") · ข้ามค่าที่ไม่กรอง · อ่านกลับด้วย filterFromParams ได้ค่าเดิม */
 export function filterToQuery(f: BarFilter): string {
   const extra: [string, string][] = [
+    ...(f.tambon ? [['tambon', f.tambon] as [string, string]] : []),
     ...(f.category && f.category !== 'ALL' ? [['category', f.category] as [string, string]] : []),
     ...(f.styles ?? []).map((v): [string, string] => ['style', v]),
     ...(f.crowd ?? []).map((v): [string, string] => ['crowd', v]),

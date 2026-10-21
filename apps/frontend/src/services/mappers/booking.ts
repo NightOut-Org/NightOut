@@ -1,4 +1,4 @@
-import type { Booking } from '@nightout/mock';
+import type { Booking } from '@/services/models';
 import type { BookingStatus } from '@nightout/types';
 
 /** booking — แถวจาก view booking_detail → Booking ของหน้าเว็บ (ใช้ทั้งการจองของฉันและของร้าน) */

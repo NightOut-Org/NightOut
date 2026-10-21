@@ -7,7 +7,7 @@ import { SaveBar } from '@/ui/components/SaveBar';
 import { StatusTag } from '@/ui/components/StatusTag';
 import { webSrc } from '@/ui/utils/image';
 import { BAR_STATUS } from '@/ui/utils/labels';
-import { barDetailsAction, useBarDetails, useDistricts, useStyleOptions } from '../api';
+import { barDetailsAction, useBarDetails, useStyleOptions } from '../api';
 import { toInfoForm, useBarDetailsDraft, type InfoForm } from '../utils/useBarDetailsDraft';
 import { BarInfoForm } from './barInfoForm';
 import { MenuEditor } from './menuEditor';
@@ -34,7 +34,6 @@ export function BarDetailsDrawer({
   const [tab, setTab] = useState<TabKey>('info');
   const details = useBarDetails(barId);
   const styles = useStyleOptions();
-  const districts = useDistricts();
   const act = useAdminAction();
   const saving = act.isPending;
 
@@ -53,7 +52,7 @@ export function BarDetailsDrawer({
   const dirty = draft.count > 0;
   const ready = !!bar && !!styles.data;
   const missing = details.isSuccess && !details.data;
-  const error = details.error ?? styles.error ?? districts.error;
+  const error = details.error ?? styles.error;
 
   useEffect(() => onDirtyChange(dirty), [dirty, onDirtyChange]);
 
@@ -129,7 +128,7 @@ export function BarDetailsDrawer({
       }
       footer={
         <Typography.Text type="secondary" className="text-xs">
-          บันทึกแล้วทีมร้านได้รับแจ้งเตือน · ทุกการแก้ลง Audit Log
+          บันทึกแล้วทีมร้านได้รับแจ้งเตือน และทุกการแก้ลง Audit Log
         </Typography.Text>
       }
     >
@@ -138,7 +137,6 @@ export function BarDetailsDrawer({
         onRetry={() => {
           void details.refetch();
           void styles.refetch();
-          void districts.refetch();
         }}
       />
       {missing ? (
@@ -156,7 +154,7 @@ export function BarDetailsDrawer({
           items={[
             {
               key: 'info',
-              label: draft.infoDirty ? 'ข้อมูลร้าน •' : 'ข้อมูลร้าน',
+              label: draft.infoDirty ? 'ข้อมูลร้าน (แก้แล้ว)' : 'ข้อมูลร้าน',
               forceRender: true,
               children: (
                 <BarInfoForm
@@ -165,7 +163,6 @@ export function BarDetailsDrawer({
                   bar={bar}
                   initialValues={toInfoForm(bar, activeKeys)}
                   styles={styles.data}
-                  districts={districts.data ?? []}
                   disabled={saving}
                   onChange={draft.setInfo}
                 />
@@ -173,7 +170,7 @@ export function BarDetailsDrawer({
             },
             {
               key: 'menu',
-              label: `เมนูและราคา (${draft.rows.length})${draft.menuChanged ? ' •' : ''}`,
+              label: `เมนูและราคา (${draft.rows.length})${draft.menuChanged ? ' แก้แล้ว' : ''}`,
               children: <MenuEditor draft={draft} disabled={saving} />,
             },
           ]}

@@ -120,7 +120,7 @@ export function AccountMenu({
     >
       <button
         type="button"
-        aria-label={`บัญชี ${user.displayName} · ${label}`}
+        aria-label={`บัญชี ${user.displayName} ${label}`}
         aria-haspopup="menu"
         aria-expanded={open}
         className={`relative ml-3 flex shrink-0 cursor-pointer items-center gap-2.5 rounded-full border text-left transition-[height,border-color] duration-300 ${compact ? '' : `md:pr-3 md:pl-1.5 ${scrolled ? 'md:h-10' : 'md:h-[46px]'}`} ${glass ? 'border-white/15 bg-white/10 text-white' : 'border-border bg-card text-text'} p-0.5`}

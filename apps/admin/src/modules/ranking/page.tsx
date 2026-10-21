@@ -10,9 +10,10 @@ import { useAdminAction } from '@/services/adminData';
 import { LoadError } from '@/ui/components/LoadError';
 import { dateTime } from '@/ui/utils/format';
 import { CATEGORY } from '@/ui/utils/labels';
-import { recomputeRankingAction, useRanking } from './api';
+import { recomputeRankingAction, useBarAreas, useRanking } from './api';
+import { RuleList } from '@/ui/components/RuleList';
 
-type Row = Db.AdminRanking & { rank: number };
+type Row = Db.AdminRanking & { rank: number; area?: Db.AdminBarArea };
 
 const num = (v: number | null | undefined) => (v === null || v === undefined ? null : Number(v));
 const pts = (v: number | null | undefined, max: number) => {
@@ -24,27 +25,41 @@ const isRescaled = (b: Db.AdminRanking) => b.total_score !== null && num(b.check
 
 /**
  * /ranking — คะแนนรวมของทุกร้านที่แสดงอยู่ (รอบสัปดาห์ล่าสุด) แยกส่วนรีวิว / เช็กอิน / Safety + โหวตสัปดาห์/เดือน
- * กรองตามประเภทร้านและย่าน · ปุ่ม "คำนวณใหม่" = คำนวณทันทีเหมือน job ทุกคืน · การโปรโมทไม่มีผลต่อคะแนน
+ * กรองตามประเภทร้าน ย่าน อำเภอ/เขต และจังหวัด (จากหมุดร้าน · admin_bar_areas) · ปุ่ม "คำนวณใหม่" = คำนวณทันทีเหมือน job ทุกคืน · การโปรโมทไม่มีผลต่อคะแนน
  */
 export function RankingPage() {
   const { data, isLoading, error, refetch } = useRanking();
+  const areas = useBarAreas();
   const act = useAdminAction();
 
-  const rows = useMemo<Row[]>(
-    () =>
-      [...(data ?? [])]
-        .sort(
-          (a, b) =>
-            (num(b.total_score) ?? -1) - (num(a.total_score) ?? -1) || a.name.localeCompare(b.name, 'th'),
-        )
-        .map((b, i) => ({ ...b, rank: i + 1 })),
-    [data],
-  );
+  const rows = useMemo<Row[]>(() => {
+    const byBar = new Map((areas.data ?? []).map((a) => [a.bar_id, a]));
+    return [...(data ?? [])]
+      .sort(
+        (a, b) =>
+          (num(b.total_score) ?? -1) - (num(a.total_score) ?? -1) ||
+          a.name.localeCompare(b.name, 'th'),
+      )
+      .map((b, i) => ({ ...b, rank: i + 1, area: byBar.get(b.id) }));
+  }, [data, areas.data]);
   const districts = useMemo(() => {
     const seen = new Map<string, string>();
     for (const b of rows) if (b.district) seen.set(b.district.id, b.district.name_th);
-    return [...seen].map(([value, text]) => ({ value, text })).sort((a, b) => a.text.localeCompare(b.text, 'th'));
+    return [...seen]
+      .map(([value, text]) => ({ value, text }))
+      .sort((a, b) => a.text.localeCompare(b.text, 'th'));
   }, [rows]);
+  /** ตัวกรองจากพื้นที่ของร้านที่อยู่ในตาราง (ไม่แสดงพื้นที่ที่ไม่มีร้าน) */
+  const areaFilters = (
+    code: 'province_code' | 'amphoe_code',
+    name: 'province_th' | 'amphoe_th',
+  ) => {
+    const seen = new Map<string, string>();
+    for (const b of rows) if (b.area) seen.set(b.area[code], b.area[name]);
+    return [...seen]
+      .map(([value, text]) => ({ value, text }))
+      .sort((a, b) => a.text.localeCompare(b.text, 'th'));
+  };
   const lastComputed = rows.reduce<string | null>(
     (max, b) => (b.computed_at && (!max || b.computed_at > max) ? b.computed_at : max),
     null,
@@ -59,7 +74,17 @@ export function RankingPage() {
   return (
     <PageContainer
       title="ดาว / อันดับ"
-      content="คะแนนรวม 100 = รีวิว 50 · เช็กอิน 30 (90 วันล่าสุด) · Safety 20 — ร้านที่ยังไม่มีเช็กอินใน 90 วัน คิดจากรีวิว + Safety แล้วขยายเป็นเต็ม 100 · คำนวณอัตโนมัติทุกคืน 00:05 · ร้านที่รีวิวน้อยกว่า 5 = ร้านใหม่ (ยังไม่มีดาว) · การโปรโมทไม่มีผล"
+      content={
+        <RuleList
+          rules={[
+            'คะแนนรวม 100 = รีวิว 50 + เช็กอิน 30 (90 วันล่าสุด) + Safety 20',
+            'ร้านที่ยังไม่มีเช็กอินใน 90 วัน คิดจากรีวิว + Safety แล้วขยายเป็นเต็ม 100',
+            'ร้านที่รีวิวน้อยกว่า 5 เป็นร้านใหม่ ยังไม่มีดาวและไม่ติดอันดับ',
+            'คำนวณอัตโนมัติทุกคืน 00:05 หรือกด "คำนวณใหม่"',
+            { tone: 'check', text: 'การโปรโมทไม่มีผลต่อคะแนน' },
+          ]}
+        />
+      }
       extra={
         <Space wrap>
           <Typography.Text type="secondary">
@@ -76,15 +101,26 @@ export function RankingPage() {
         </Space>
       }
     >
-      <LoadError error={error} onRetry={() => void refetch()} />
+      <LoadError
+        error={error ?? areas.error}
+        onRetry={() => {
+          void refetch();
+          void areas.refetch();
+        }}
+      />
       <Table<Row>
         rowKey="id"
         loading={isLoading}
         dataSource={rows}
         pagination={{ pageSize: PAGE_SIZE }}
-        scroll={{ x: 1500 }}
+        scroll={{ x: 1770 }}
         columns={[
-          { title: 'อันดับ', dataIndex: 'rank', width: 72, render: (v: number) => <span className="tabular-nums">{v}</span> },
+          {
+            title: 'อันดับ',
+            dataIndex: 'rank',
+            width: 72,
+            render: (v: number) => <span className="tabular-nums">{v}</span>,
+          },
           { title: 'ร้าน', dataIndex: 'name', width: 200 },
           {
             title: 'ประเภท',
@@ -101,6 +137,24 @@ export function RankingPage() {
             filters: districts,
             onFilter: (v, b) => b.district_id === v,
             render: (_, b) => b.district?.name_th ?? '-',
+          },
+          {
+            title: 'อำเภอ / เขต',
+            key: 'amphoe',
+            width: 140,
+            filters: areaFilters('amphoe_code', 'amphoe_th'),
+            filterSearch: true,
+            onFilter: (v, b) => b.area?.amphoe_code === v,
+            render: (_, b) => b.area?.amphoe_th ?? '-',
+          },
+          {
+            title: 'จังหวัด',
+            key: 'province',
+            width: 130,
+            filters: areaFilters('province_code', 'province_th'),
+            filterSearch: true,
+            onFilter: (v, b) => b.area?.province_code === v,
+            render: (_, b) => b.area?.province_th ?? '-',
           },
           {
             title: 'อันดับในประเภท / ย่าน',
@@ -130,7 +184,11 @@ export function RankingPage() {
                         className="inline-flex"
                         aria-label={`${up ? 'ขึ้น' : 'ลง'}จาก ${b.prev_stars} ดาว`}
                       >
-                        {up ? <ArrowUp size={14} weight="bold" /> : <ArrowDown size={14} weight="bold" />}
+                        {up ? (
+                          <ArrowUp size={14} weight="bold" />
+                        ) : (
+                          <ArrowDown size={14} weight="bold" />
+                        )}
                       </Typography.Text>
                     </Tooltip>
                   )}
@@ -164,7 +222,8 @@ export function RankingPage() {
               <span className="flex flex-col">
                 <span className="tabular-nums">{pts(b.review_score, 50)}</span>
                 <Typography.Text type="secondary" className="text-xs tabular-nums">
-                  {b.rating_avg === null ? '-' : Number(b.rating_avg).toFixed(1)} ({b.rating_count} รีวิว)
+                  {b.rating_avg === null ? '-' : Number(b.rating_avg).toFixed(1)} ({b.rating_count}{' '}
+                  รีวิว)
                 </Typography.Text>
               </span>
             ),
@@ -202,7 +261,7 @@ export function RankingPage() {
             title: 'โปรโมท',
             dataIndex: 'is_promoted',
             width: 180,
-            render: (v: boolean) => (v ? <Tag color="gold">โฆษณา · ไม่มีผลต่อคะแนน</Tag> : '-'),
+            render: (v: boolean) => (v ? <Tag color="gold">โฆษณา (ไม่มีผลต่อคะแนน)</Tag> : '-'),
           },
         ]}
       />

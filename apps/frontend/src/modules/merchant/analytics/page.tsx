@@ -137,7 +137,7 @@ export function MerchantAnalyticsPage() {
 
         <Tile className="flex flex-col gap-2.5 !rounded-[18px] lg:!rounded-[20px]">
           <b className="text-sm font-semibold">
-            ช่วงเวลายอดนิยม <span className="text-xs font-normal text-muted">· จำนวนการจองตามวัน × ชั่วโมง</span>
+            ช่วงเวลายอดนิยม <span className="ml-1 text-xs font-normal text-muted">จำนวนการจองตามวันและชั่วโมง</span>
           </b>
           <div className="grid grid-cols-[30px_repeat(8,1fr)] gap-[3px] text-[11px] text-muted lg:grid-cols-[36px_repeat(8,1fr)] lg:gap-1">
             <span />
@@ -153,7 +153,7 @@ export function MerchantAnalyticsPage() {
               {r.cells.map((n, i) => (
                 <span
                   key={i}
-                  title={`${r.label} ${String(HEAT_HOURS[i]).padStart(2, '0')}:00 · ${n} การจอง`}
+                  title={`${r.label} ${String(HEAT_HOURS[i]).padStart(2, '0')}:00 น. มี ${n} การจอง`}
                   className="block rounded-[4px] lg:rounded-md"
                   style={{ background: cellColor(n) }}
                 />

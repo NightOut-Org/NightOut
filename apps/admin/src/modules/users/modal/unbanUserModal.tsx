@@ -62,7 +62,7 @@ export function UnbanUserModal({ user: target, onClose }: { user: Db.AdminUser |
     >
       {user && (
         <Typography.Paragraph type="secondary" className="!mb-4 !mt-1">
-          จองโต๊ะได้อีกครั้ง · ปลดเบอร์ {user.banned_phones.map(formatThaiPhone).join(', ') || '-'} · ล้างธงสลิปปลอม{' '}
+          จองโต๊ะได้อีกครั้ง ปลดเบอร์ {user.banned_phones.map(formatThaiPhone).join(', ') || '-'} และล้างธงสลิปปลอม{' '}
           {user.fake_slip_count} ครั้ง (บันทึกใน Audit Log)
         </Typography.Paragraph>
       )}

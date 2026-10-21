@@ -78,6 +78,7 @@ export class AccountAdminController {
     description:
       'หน้า /users แก้ชั้นบัญชีในหน้าแล้วบันทึกครั้งเดียว · เฉพาะ SUPER_ADMIN ใช้แก้บัญชีที่สร้างผิด · `changes` = เฉพาะคนที่เปลี่ยน ตั้งเป็น CUSTOMER / MERCHANT / STAFF / ADMIN / SUPER_ADMIN · ' +
       'ชั้นใหม่เป็น CUSTOMER / ADMIN / SUPER_ADMIN → หลุดจากทุกร้าน (เลิกเป็นเจ้าของ + ถอนจากทีม) · ' +
+      'ชั้นใหม่เป็น MERCHANT ต้องเป็นเจ้าของ/ผู้จัดการในทีมร้านอยู่แล้ว · STAFF ต้องอยู่ในทีมร้านอยู่แล้ว (ไม่งั้น `ROLE_NEEDS_BAR`) · ' +
       'ห้ามเหลือ SUPER_ADMIN เป็นศูนย์ (`LAST_SUPER_ADMIN`) · ธุรกรรมเดียว (คนไหนพลาด = ไม่บันทึกเลย) · audit log ต่อคน (rpc admin_set_users_role → admin_set_user_role)',
     returns: '`updated` จำนวนคนที่บันทึก · `bars_detached` จำนวนร้านที่หลุดรวม',
     forbidden: 'ไม่ใช่ SUPER_ADMIN (`SUPER_ADMIN_REQUIRED`)',

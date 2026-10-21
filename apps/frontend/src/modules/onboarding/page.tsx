@@ -4,6 +4,7 @@ import { MASTER, myPrefs } from '@/services/data';
 import { updateProfile } from './api';
 import { useNavigate, useSearchParams } from 'react-router';
 import { PageHeader } from '@/ui/components/pageHeader';
+import { districtSelectOptions } from '@/ui/utils/area';
 
 /** `?next=` จากหน้าสมัคร (เช่น ลิงก์แชร์ที่กด "ไปด้วย") — รับเฉพาะ path ในเว็บเรา กันพาออกไปเว็บอื่น */
 const safeNext = (v: string | null) => (v && /^\/(?![/\\])/.test(v) ? v : '/');
@@ -56,7 +57,7 @@ export function OnboardingPage() {
             </Form.Item>
           </div>
           <Form.Item name="districts" label="ย่าน">
-            <Select mode="multiple" options={MASTER.districts.map((d) => ({ label: d.name, value: d.id }))} />
+            <Select mode="multiple" showSearch={{ optionFilterProp: 'label' }} placeholder="พิมพ์ชื่อย่าน" options={districtSelectOptions()} />
           </Form.Item>
           <div className="flex gap-3">
             <Button block onClick={() => navigate(next)}>

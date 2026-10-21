@@ -69,7 +69,7 @@ export function DepositsPage() {
       key: 'channel',
       render: (_, d) =>
         d.payment_provider ? (
-          <Tag color="green">ออนไลน์ · {paymentProviderLabel(d.payment_provider)}</Tag>
+          <Tag color="green">ออนไลน์ ({paymentProviderLabel(d.payment_provider)})</Tag>
         ) : (
           <Tag>สลิป</Tag>
         ),
@@ -98,7 +98,7 @@ export function DepositsPage() {
   return (
     <PageContainer
       title="เงินมัดจำ"
-      subTitle="ลูกค้าโอนเข้า PromptPay ของ NightOut หรือชำระออนไลน์ · เราถือไว้จนเช็กอิน แล้วส่งต่อให้ร้าน"
+      subTitle="ลูกค้าโอนเข้า PromptPay ของ NightOut หรือชำระออนไลน์ เราถือไว้จนเช็กอิน แล้วส่งต่อให้ร้าน"
       extra={
         <Space size="large">
           <Statistic title="รอตรวจสลิป" value={g.toVerify.length} suffix="รายการ" />
@@ -114,7 +114,7 @@ export function DepositsPage() {
           type="info"
           showIcon
           title={`เปิดชำระออนไลน์แล้ว (${payment.provider_label ?? payment.provider}) — ลูกค้าส่งสลิปใหม่ไม่ได้`}
-          description="แท็บตรวจสลิปเหลือเฉพาะสลิปที่ส่งมาก่อนเปิด · การชำระออนไลน์เข้า “ถือไว้” ทันที"
+          description="แท็บตรวจสลิปเหลือเฉพาะสลิปที่ส่งมาก่อนเปิด ส่วนการชำระออนไลน์เข้า “ถือไว้” ทันที"
         />
       )}
       <Tabs
@@ -153,7 +153,7 @@ export function DepositsPage() {
                             ...reviewDepositAction(d.id, { approve: false, reason_code: code, reason: note || undefined }),
                             success: (r) =>
                               (r as { banned?: boolean }).banned
-                                ? 'สลิปไม่ผ่าน · ลูกค้าส่งสลิปปลอมครบ 2 ครั้ง ระบบแบนบัญชีและเบอร์โทรแล้ว'
+                                ? 'สลิปไม่ผ่าน ลูกค้าส่งสลิปปลอมครบ 2 ครั้ง ระบบแบนบัญชีและเบอร์โทรแล้ว'
                                 : 'แจ้งลูกค้าให้ส่งสลิปใหม่แล้ว',
                           })
                         }
@@ -219,7 +219,7 @@ export function DepositsPage() {
                         <br />
                         <Typography.Text type="secondary" className="text-xs">
                           ร้านอนุมัติ{d.refund_requested_by_name ? ` โดย ${d.refund_requested_by_name}` : ''}
-                          {d.refund_requested_at ? ` · ${dateTime(d.refund_requested_at)}` : ''}
+                          {d.refund_requested_at ? ` เมื่อ ${dateTime(d.refund_requested_at)}` : ''}
                         </Typography.Text>
                       </span>
                     ) : d.status === 'SUBMITTED' ? (

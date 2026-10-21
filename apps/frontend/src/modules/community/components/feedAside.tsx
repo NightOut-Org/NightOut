@@ -1,13 +1,20 @@
 import type { CommunityCategory } from '@nightout/contracts';
-import { Info } from '@phosphor-icons/react';
+import { ChatsCircle, Info, MapPin } from '@phosphor-icons/react';
 import { Link } from 'react-router';
 import { getBar } from '@/services/data';
 import { barImage } from '@/ui/utils/barImage';
 import { compactCount } from '@/ui/utils/community';
 import { useTrendingBars } from '../api';
+import { MetaList } from '@/ui/components/metaList';
+import { RuleList } from '@/ui/components/ruleList';
+import { barPlace } from '@/ui/utils/area';
 
-export const COMMUNITY_RULES =
-  'เคารพกัน ไม่โฆษณาแฝง ห้ามแชร์ข้อมูลส่วนตัวของคนอื่น · ทีมร้านมีป้าย "ทีมร้าน" ห้ามโปรแอลกอฮอล์และห้ามพูดถึงร้านอื่นในทางเสีย · 20+ · ดื่มไม่ขับ';
+export const COMMUNITY_RULES = [
+  { text: 'เคารพกัน และไม่โฆษณาแฝง', tone: 'check' },
+  { text: 'ห้ามแชร์ข้อมูลส่วนตัวของคนอื่น', tone: 'warn' },
+  { text: 'ทีมร้านมีป้าย "ทีมร้าน" ห้ามโปรแอลกอฮอล์และห้ามพูดถึงร้านอื่นในทางเสีย', tone: 'info' },
+  { text: 'สำหรับผู้อายุ 20 ปีขึ้นไป ดื่มไม่ขับ', tone: 'warn' },
+] as const;
 
 /** คอลัมน์ซ้าย (จอใหญ่): หมวดหมู่ + จำนวนกระทู้ */
 export function CategoryAside({
@@ -67,7 +74,12 @@ export function FeedSideRail() {
                   <Link to={`/bars/${b.slug}`} className="min-w-0 flex-1 !text-text">
                     <div className="truncate text-sm font-semibold">{b.name}</div>
                     <div className="truncate text-xs text-muted">
-                      {b.thread_count} กระทู้{bar?.district ? ` · ${bar.district}` : ''}
+                      <MetaList
+                        items={[
+                          { icon: <ChatsCircle weight="fill" />, label: 'จำนวนกระทู้', value: `${b.thread_count} กระทู้` },
+                          bar && { icon: <MapPin weight="fill" />, label: 'พื้นที่', value: barPlace(bar) },
+                        ]}
+                      />
                     </div>
                   </Link>
                   <Link
@@ -87,7 +99,7 @@ export function FeedSideRail() {
           <Info size={17} className="text-gold-text" />
           กติกาชุมชน
         </h2>
-        {COMMUNITY_RULES}
+        <RuleList rules={[...COMMUNITY_RULES]} className="mt-2" />
       </section>
     </aside>
   );

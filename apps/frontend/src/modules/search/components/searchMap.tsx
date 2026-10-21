@@ -14,13 +14,14 @@ import { App } from 'antd';
 import type { LatLngBoundsExpression, Map as LeafletMap } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { useReducedMotion } from 'motion/react';
-import { useCallback, useEffect, useMemo, useState, type CSSProperties } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { MapContainer, Marker, useMap, useMapEvents } from 'react-leaflet';
 import { Link } from 'react-router';
 import { CrowdBadge } from '@/ui/components/crowdBadge';
 import { MapBaseLayer } from '@/ui/components/mapBaseLayer';
 import { barImage } from '@/ui/utils/barImage';
 import { baht } from '@/ui/utils/format';
+import { barPlace } from '@/ui/utils/area';
 import { meIcon, photoPin, PIN_LABEL_ZOOM } from './mapPins';
 import '../search.css';
 
@@ -59,6 +60,19 @@ function PanToSelected({ bar }: { bar: BarWithTier | null }) {
   return null;
 }
 
+/** ได้ตำแหน่งผู้ใช้ครั้งแรก (ขอตอนเปิดหน้า) → พาแผนที่ไปหาผู้ใช้ครั้งเดียว · ครั้งต่อไปพาไปเมื่อกดปุ่มเท่านั้น */
+function CenterOnMe({ me }: { me: LatLng | null }) {
+  const map = useMap();
+  const reduce = useReducedMotion();
+  const centered = useRef(false);
+  useEffect(() => {
+    if (!me || centered.current) return;
+    centered.current = true;
+    map.flyTo(me, Math.max(map.getZoom(), 14), { duration: reduce ? 0 : 0.8 });
+  }, [map, me, reduce]);
+  return null;
+}
+
 /** แตะพื้นแผนที่ = ปิดการ์ด · ซูม/ย่อขยายกรอบ = อ่านขนาดใหม่ · ขยับแผนที่ = วางการ์ดใหม่ (onMove) */
 function MapEvents({
   onClose,
@@ -83,7 +97,7 @@ const mapButton =
 const zoomButton =
   'grid size-11 touch-manipulation place-items-center text-text transition-colors hover:text-gold-text focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-gold';
 
-/** ปุ่ม "ตำแหน่งของฉัน" — ขอพิกัดตอนกดเท่านั้น (ไม่ขอสิทธิ์ตอนเปิดหน้า) แล้วบินไปที่จุดนั้น */
+/** ปุ่ม "ตำแหน่งของฉัน" — ขอพิกัดใหม่ แล้วบินไปที่จุดนั้น (หน้าค้นหาขอให้แล้วหนึ่งครั้งตอนเปิดหน้า) */
 function useMyLocation(map: LeafletMap | null, onLocate: (ll: LatLng) => void) {
   const { message } = App.useApp();
   const reduce = useReducedMotion();
@@ -245,6 +259,7 @@ export function SearchMap({
         <MapBaseLayer theme={resolved} />
         <FitBounds bars={bars} />
         <PanToSelected bar={card} />
+        <CenterOnMe me={me} />
         <MapEvents
           onClose={onCloseCard}
           onView={syncView}
@@ -350,7 +365,7 @@ export function SearchMap({
               </span>
             </div>
             <p className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted [&_.text-sm]:text-xs">
-              <span>{card.district}</span>
+              <span>{barPlace(card)}</span>
               {dist !== undefined && (
                 <>
                   <span aria-hidden className="size-[3px] rounded-full bg-muted" />
@@ -375,8 +390,12 @@ export function SearchMap({
                   'ร้านยังไม่ระบุราคา'
                 )}
               </p>
-              <Link to={`/bars/${card.slug}`} className="text-[13px] font-semibold">
-                ดูรายละเอียด →
+              {/* แตะได้ทั้งการ์ด (after:inset-0) · ปุ่มปิดอยู่ชั้นบน z-10 */}
+              <Link
+                to={`/bars/${card.slug}`}
+                className="inline-flex h-8 shrink-0 items-center rounded-full bg-gold px-3.5 text-[13px] font-semibold !text-on-gold transition-colors after:absolute after:inset-0 hover:bg-gold-highlight focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
+              >
+                ดูร้าน
               </Link>
             </div>
           </div>

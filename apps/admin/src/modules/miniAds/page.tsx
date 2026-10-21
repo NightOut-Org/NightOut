@@ -13,6 +13,7 @@ import { MiniAdDrawer } from './form/miniAdDrawer';
 import { periodLabel } from './utils/dates';
 import { MINI_AD_STATE_TAG } from './utils/labels';
 import { deleteMiniAdAction, useMiniAds } from './api';
+import { RuleList } from '@/ui/components/RuleList';
 
 type Row = Db.AdminMiniAd & { state: MiniAdState };
 type Filter = 'ALL' | MiniAdState;
@@ -62,7 +63,7 @@ export function MiniAdsPage() {
   return (
     <PageContainer
       title="โฆษณา (Mini-Ads)"
-      subTitle={data ? `กำลังแสดง ${counts.LIVE} · ทั้งหมด ${rows.length}` : undefined}
+      subTitle={data ? `กำลังแสดง ${counts.LIVE} จากทั้งหมด ${rows.length}` : undefined}
       extra={
         <Button
           type="primary"
@@ -78,7 +79,20 @@ export function MiniAdsPage() {
         className="!mb-4"
         type="info"
         showIcon
-        title='แบนเนอร์เล็กในหน้าแรก (ใต้ร้านยอดนิยม) และหน้าค้นหา (หลังร้านลำดับที่ 6) ป้าย "โฆษณา" เสมอ · 1 ชิ้นต่อหน้า (สุ่มเมื่อมีหลายชิ้น) · ไม่มีผลต่ออันดับหรือผลค้นหา · ห้ามแบรนด์/สินค้าเครื่องดื่มแอลกอฮอล์ รวมถึงสินค้าที่ใช้แบรนด์ร่วม (ม.32)'
+        title="แบนเนอร์เล็กในหน้าแรกและหน้าค้นหา"
+        description={
+          <RuleList
+            rules={[
+              'หน้าแรกอยู่ใต้ "ร้านยอดนิยม" และหน้าค้นหาอยู่หลังร้านลำดับที่ 6',
+              'แสดง 1 ชิ้นต่อหน้า สุ่มเมื่อมีหลายชิ้น และติดป้าย "โฆษณา" เสมอ',
+              { tone: 'check', text: 'ไม่มีผลต่ออันดับหรือผลค้นหา' },
+              {
+                tone: 'warn',
+                text: 'ห้ามแบรนด์/สินค้าเครื่องดื่มแอลกอฮอล์ รวมถึงสินค้าที่ใช้แบรนด์ร่วม (ม.32)',
+              },
+            ]}
+          />
+        }
       />
       <div className="mb-4 overflow-x-auto">
         <Segmented<Filter>
@@ -155,7 +169,7 @@ export function MiniAdsPage() {
               const ctr = miniAdCtr(r.impressions, r.clicks);
               return (
                 <Typography.Text type="secondary" className="text-xs">
-                  เห็น {r.impressions.toLocaleString('th-TH')} · คลิก{' '}
+                  เห็น {r.impressions.toLocaleString('th-TH')} คลิก{' '}
                   {r.clicks.toLocaleString('th-TH')}
                   <br />
                   {ctr === null ? '—' : `CTR ${ctr}%`}

@@ -3,7 +3,7 @@ import type { Bar, BarPromotion } from '@/services/data';
 
 /** คำอธิบายโปร + เงื่อนไขเวลาเช็กอิน เช่น "มิกเซอร์ 4 จ่าย 3 · เช็กอินก่อน 20:00 น." */
 export const promoNote = (p: Pick<BarPromotion, 'description' | 'cutoffTime'>) =>
-  p.cutoffTime ? `${p.description} · เช็กอินก่อน ${p.cutoffTime} น.` : p.description;
+  p.cutoffTime ? `${p.description} (เช็กอินก่อน ${p.cutoffTime} น.)` : p.description;
 
 /** ร้านปิดวันนี้ไหม (เวลาเปิด-ปิดรายวัน · 0 = อาทิตย์) */
 export const isClosedOn = (hours: Bar['hours'], day: number) =>

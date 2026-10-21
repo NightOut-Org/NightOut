@@ -21,7 +21,7 @@ export interface RoleMeta {
   label: string;
   icon: Icon;
   description: string;
-  /** ปุ่มลัดในเมนูบัญชี — ลูกค้าไม่มี (เมนู "การจอง" อยู่บน navbar แล้ว) */
+  /** ปุ่มลัดในเมนูบัญชี (ลูกค้า = สมัครเปิดร้าน · เมนู "การจอง" อยู่บน navbar แล้ว) */
   cta?: { label: string; icon: Icon; to: string; external?: boolean };
 }
 
@@ -35,6 +35,7 @@ export const ROLE_META: Record<UserRole, RoleMeta> = {
     label: 'ลูกค้า',
     icon: User,
     description: 'ค้นหา จองโต๊ะ และรีวิวร้านที่เช็กอินแล้ว',
+    cta: { label: 'เปิดร้านกับ NightOut', icon: Storefront, to: '/merchant/join' },
   },
   STAFF: {
     label: 'พนักงานร้าน',
@@ -103,11 +104,11 @@ export function roleTone(color: string): RoleTone {
   };
 }
 
-/** บรรทัดขอบเขตใต้ชื่อชั้น เช่น "Moonlight Bar · พนักงาน" */
+/** บรรทัดขอบเขตใต้ชื่อชั้น เช่น "พนักงานร้าน Moonlight Bar" */
 export function roleScope(role: UserRole, barName?: string) {
-  if (role === 'STAFF') return barName ? `${barName} · พนักงาน` : 'พนักงานร้าน';
-  if (role === 'MERCHANT') return barName ? `${barName} · เจ้าของ` : 'เจ้าของร้าน';
+  if (role === 'STAFF') return barName ? `พนักงานร้าน ${barName}` : 'พนักงานร้าน';
+  if (role === 'MERCHANT') return barName ? `เจ้าของร้าน ${barName}` : 'เจ้าของร้าน';
   if (role === 'ADMIN') return 'ทีม NightOut';
-  if (role === 'SUPER_ADMIN') return 'ทีม NightOut · สิทธิ์สูงสุด';
+  if (role === 'SUPER_ADMIN') return 'ทีม NightOut (สิทธิ์สูงสุด)';
   return 'บัญชีส่วนตัว';
 }

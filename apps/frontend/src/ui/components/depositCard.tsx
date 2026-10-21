@@ -28,7 +28,7 @@ export function DepositSummary({ booking: b }: { booking: Booking }) {
           <dt className="text-muted">ชำระผ่าน</dt>
           <dd>{paymentProviderLabel(d.provider)} (NightOut ถือเงินไว้ให้ก่อน)</dd>
           <dt className="text-muted">สถานะ</dt>
-          <dd>ชำระสำเร็จ · {dateTime(d.verifiedAt ?? d.submittedAt)}</dd>
+          <dd>ชำระสำเร็จเมื่อ {dateTime(d.verifiedAt ?? d.submittedAt)}</dd>
         </>
       ) : (
         <>
@@ -36,7 +36,7 @@ export function DepositSummary({ booking: b }: { booking: Booking }) {
           <dd>NightOut (แพลตฟอร์มถือเงินไว้ให้ก่อน)</dd>
           <dt className="text-muted">สลิป</dt>
           <dd>
-            {d.status === 'VERIFIED' ? 'ตรวจแล้ว' : d.status === 'REJECTED' ? 'ไม่ผ่าน' : 'รอตรวจ'} ·{' '}
+            {d.status === 'VERIFIED' ? 'ตรวจแล้ว' : d.status === 'REJECTED' ? 'ไม่ผ่าน' : 'รอตรวจ'} เมื่อ{' '}
             {dateTime(d.verifiedAt ?? d.submittedAt)}
           </dd>
         </>

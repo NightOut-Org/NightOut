@@ -1,4 +1,13 @@
-# bar — ประวัติการแก้ไข
+# CHANGELOG — backend/domains/bar
+
+## 2026-10-21 — เลิกใช้ " · " คั่นข้อความที่ผู้ใช้เห็น (ส่วนที่เหลือ)
+- ข้อความแจ้งเตือนของร้าน (สมัครร้าน ขอแก้ตำแหน่ง Blacklist ไม่มีโต๊ะให้ลูกค้า สถานะร้าน Safety แก้ข้อมูลแทนร้าน): `app_merchant_join` `app_request_bar_location` `admin_blacklist_bar` `app_team_report_no_table` `admin_report_no_table` `bars_owner_blacklist_notify` `handle_bar_status_notify` `app_set_safety_evidence` `app_save_safety` `admin_inspect_safety` `admin_save_bar_details`
+- migration `20261021000200_notify_text_no_dots` ประกาศฟังก์ชันตัวล่าสุดซ้ำทั้งตัว เปลี่ยนเฉพาะสตริงที่มีตัวคั่นเป็นวรรค (ตรวจแล้ว 29 ฟังก์ชันต่างกันแค่ข้อความ/คอมเมนต์ · แจ้งเตือนที่ส่งไปแล้วไม่แก้ย้อนหลัง)
+
+## 2026-10-20 — ลบร้านเดโม 16 ร้านออกจาก DB
+- migration `20261020000100_demo_bars_cleanup`: ลบร้านเดโมด้วย id คงที่ 16 รายการ (ร้านจริงไม่ถูกแตะ) พร้อมข้อมูลทดสอบบนร้านเดโม (การจอง · รีวิว · Table Fee · payment intent/event · เช็กอิน · consent · strike · billing · promoted listing ฯลฯ — ปิด trigger `booking_deposit_consents_immutable` เฉพาะช่วงลบแล้วเปิดคืน) · ไฟล์ใน Storage ไม่ถูกลบ
+- `seed.sql` เหลือ master data อย่างเดียว · ลบ `scripts/seed-from-mock.ts` + script `db:seed:gen`
+- สคริปต์ `scripts/cleanup-demo-review-media.ts` (`pnpm --filter @nightout/backend demo:media-cleanup [--apply]`) ลบไฟล์รีวิวทดสอบของร้านเดโมใน bucket `review-media` — ต้องรัน**ก่อน** `db push` (หลัง push แถวรีวิวที่เก็บ path หายแล้ว) · ไม่ใส่ `--apply` = แสดงรายการเฉย ๆ
 
 ## 2026-10-13 — แอดมินแก้ข้อมูลร้าน + เมนู/ราคาแทนร้าน
 - endpoint ใหม่ `PUT /admin/bars/:id/details` `{info?, menu?}` → `BarMediaService.saveAdminDetails()` → rpc `admin_save_bar_details` (ธุรกรรมเดียว · `info` เฉพาะ field ที่แก้ — ไม่มีที่อยู่/หมุด · `menu` ทั้งชุด รูปเมนูคงเดิม · ไฟล์รูปของรายการที่เอาออก backend ลบจาก Storage ผ่าน `cleanup()` เดิม · audit ต่อส่วน + แจ้งทีมร้าน 1 ครั้ง `BAR_EDITED_BY_ADMIN`)

@@ -1,33 +1,41 @@
-import {
-  configureStore,
-  getState,
-  mutate,
-  setSessionUserId,
-  type AppNotification,
-  type Bar,
-  type Booking,
-  type DemoUser,
-  type PromotionOrder,
-  type Review,
-} from '@nightout/mock';
+import { getState, mutate, setSessionUserId } from '@/services/cache';
+import type {
+  AppNotification,
+  Bar,
+  Booking,
+  DemoUser,
+  PromotionOrder,
+  Review,
+} from '@/services/models';
+import type { BarAreaRow } from '@nightout/contracts';
 import type { UserRole } from '@nightout/types';
+import { amphoeLabel, provinceLabel } from '@nightout/utils';
 import { Rest } from '@nightout/utils/rest';
 import { STYLE_LABELS, toBar, type BarDetailRow } from '@/services/barsRepo';
 import { log, since } from '@/services/log';
-import { toNotification, toPromotionOrder, type ListingRow, type NotificationRow } from '@/services/mappers/account';
+import {
+  toNotification,
+  toPromotionOrder,
+  type ListingRow,
+  type NotificationRow,
+} from '@/services/mappers/account';
 import { toBooking, type BookingDetailRow } from '@/services/mappers/booking';
-import { mediaPaths, signReviewPaths, toMyReview, toPublicReview, type MyReviewRow, type PublicReviewRow } from '@/services/mappers/review';
+import {
+  mediaPaths,
+  signReviewPaths,
+  toMyReview,
+  toPublicReview,
+  type MyReviewRow,
+  type PublicReviewRow,
+} from '@/services/mappers/review';
 
 /**
- * ดึงข้อมูลจาก NestJS API (Rest → GET /public/catalog, /me/overview) มาใส่ store ของ @nightout/mock (cache ฝั่งหน้าเว็บ) — ไม่ query DB ตรง (ADR 0002)
+ * ดึงข้อมูลจาก NestJS API (Rest → GET /public/catalog, /me/overview) มาใส่ cache ฝั่งหน้าเว็บ (services/cache.ts) — ไม่ query DB ตรง (ADR 0002)
  * - สาธารณะ (ตอนเปิดเว็บ): ร้าน (bar_detail) · รีวิว (public_reviews) · ย่าน/สไตล์/แพ็กเกจโปรโมท/PromptPay
  * - ผู้ใช้ (หลังล็อกอิน): การจอง · มัดจำ · แจ้งเตือน · ร้านโปรด · รีวิวของฉัน · ร้านของฉัน (ทุกสถานะ) + การจองของร้าน
  * หน้าเว็บอ่านจาก store แบบเดิม (listBars, myBookings, ...) · การเขียนทั้งหมดไป NestJS (modules/<หน้า>/api.ts) แล้ว Rest โหลดใหม่ให้เอง (refreshAfterWrite)
- * ไม่มีข้อมูลเดโม: store ถูกล้างแล้วแทนด้วยข้อมูลจาก DB ทุกครั้ง
+ * ไม่มีข้อมูลเดโม: cache เริ่มว่างแล้วเติมจาก DB ทุกครั้ง
  */
-
-// store เป็น cache ในหน่วยความจำอย่างเดียว (ไม่ JSON.stringify ทั้งก้อนลง localStorage ทุกครั้งที่ข้อมูลเปลี่ยน)
-configureStore({ persist: false });
 
 // ---------------------------------------------------------------------
 // master data (ใช้ใน dropdown) — เติมค่าตอนเปิดเว็บก่อน render (main.tsx รอโหลดเสร็จ)
@@ -35,6 +43,22 @@ configureStore({ persist: false });
 export interface DistrictOpt {
   id: string;
   name: string;
+  /** จังหวัดของย่าน (ชื่อย่านซ้ำกันได้ข้ามจังหวัด) */
+  province: string;
+}
+/** ตัวเลือกพื้นที่ในหน้าค้นหา/Hero — ครบทั้งประเทศ (ย่าน 850 · อำเภอ/เขต 928 · จังหวัด 77) พื้นที่ที่มีร้านอยู่ขึ้นก่อน */
+export interface AreaOpt {
+  /** ค่าใน ?district= (ชื่อไม่มีคำนำหน้า) */
+  value: string;
+  /** "ย่านทองหล่อ" · "เขตวัฒนา" · "เชียงใหม่" */
+  label: string;
+  kind: 'district' | 'amphoe' | 'province';
+  /** จังหวัด (ย่าน/อำเภอที่ชื่อซ้ำกันข้ามจังหวัดได้) · ว่าง = จังหวัดเอง หรือชื่อนี้มีหลายจังหวัด */
+  hint: string;
+  /** จำนวนร้านที่แสดงอยู่ในพื้นที่ */
+  count: number;
+  /** ตัวเลือกเด่น (Hero · ปุ่มลัด · แยกคำค้น): มีร้าน หรือเป็นจังหวัด หรือย่านที่ทีมคัดเอง */
+  featured: boolean;
 }
 export interface StyleOpt {
   id: string;
@@ -57,11 +81,12 @@ export const MASTER = {
   depositPromptPay: { name: '', promptpayId: '' },
   promotionPromptPay: { name: '', promptpayId: '' },
 };
-/** ชื่อย่าน (เหมือน DISTRICTS เดิม) — array เดิมถูกเติมค่าในที่ */
+/** พื้นที่ที่มีร้าน เรียงตามจำนวนร้าน — array เดิมถูกเติมค่าในที่ */
+export const AREA_OPTIONS: AreaOpt[] = [];
+/** ชื่อพื้นที่ที่มีร้าน (ค่าของ AREA_OPTIONS) — ใช้แยกคำค้นใน smartQuery */
 export const DISTRICTS: string[] = [];
 /** ชื่อสไตล์ (เหมือน STYLES เดิม) */
 export const STYLES: string[] = [];
-
 
 // ---------------------------------------------------------------------
 // cache ภายใน (แยกสาธารณะ / ผู้ใช้ แล้วรวมใส่ store)
@@ -95,7 +120,6 @@ function commit() {
     s.favorites = userData ? { [userData.user.id]: userData.favorites } : {};
     s.promotions = userData?.promotions ?? [];
     s.users = userData ? [userData.user] : [];
-    s.audit = [];
   });
 }
 
@@ -104,29 +128,127 @@ function commit() {
 // ---------------------------------------------------------------------
 interface PublicRaw {
   bars: BarDetailRow[];
+  /** snapshot เก่าไม่มี */
+  areas?: BarAreaRow[];
   reviews: PublicReviewRow[];
-  districts: { id: string; name_th: string }[];
+  districts: { id: string; name_th: string; province_th?: string; sort_order?: number }[];
+  /** snapshot เก่าไม่มี */
+  amphoes?: { code: string; name_th: string; province_code: string }[];
+  provinces?: { code: string; name_th: string }[];
   styles: { id: string; key: string; name_th: string; icon?: string | null }[];
   settings: { key: string; value: { name?: string; promptpay_id?: string } }[];
-  packages: { id: string; name: string; placement: PromotionPackage['placement']; duration_days: number; price: number }[];
+  packages: {
+    id: string;
+    name: string;
+    placement: PromotionPackage['placement'];
+    duration_days: number;
+    price: number;
+  }[];
 }
 
 /** แปลงข้อมูลดิบ → master + store (ใช้ทั้งตอนโหลดจาก DB และตอนอ่าน snapshot ในเครื่อง) */
 function applyPublic(raw: PublicRaw, urls: Map<string, string>) {
-  MASTER.districts = raw.districts.map((d) => ({ id: d.id, name: d.name_th }));
-  MASTER.styles = raw.styles.map((x) => ({ id: x.id, key: x.key, label: x.name_th, icon: x.icon ?? undefined }));
+  MASTER.districts = raw.districts.map((d) => ({
+    id: d.id,
+    name: d.name_th,
+    province: d.province_th ?? '',
+  }));
+  MASTER.styles = raw.styles.map((x) => ({
+    id: x.id,
+    key: x.key,
+    label: x.name_th,
+    icon: x.icon ?? undefined,
+  }));
   for (const x of MASTER.styles) STYLE_LABELS[x.key] = x.label;
-  DISTRICTS.splice(0, DISTRICTS.length, ...MASTER.districts.map((d) => d.name));
   STYLES.splice(0, STYLES.length, ...MASTER.styles.map((x) => x.label));
   for (const row of raw.settings) {
     const v = { name: row.value?.name ?? '', promptpayId: row.value?.promptpay_id ?? '' };
     if (row.key === 'deposit_promptpay') MASTER.depositPromptPay = v;
     if (row.key === 'promotion_promptpay') MASTER.promotionPromptPay = v;
   }
-  MASTER.packages = raw.packages.map((p) => ({ id: p.id, name: p.name, placement: p.placement, days: p.duration_days, price: Number(p.price) }));
-  publicBars = raw.bars.map(toBar);
+  MASTER.packages = raw.packages.map((p) => ({
+    id: p.id,
+    name: p.name,
+    placement: p.placement,
+    days: p.duration_days,
+    price: Number(p.price),
+  }));
+  const areas = new Map((raw.areas ?? []).map((a) => [a.bar_id, a]));
+  publicBars = raw.bars.map((row) => {
+    const bar = toBar(row);
+    const a = areas.get(bar.id);
+    return a
+      ? {
+          ...bar,
+          area: {
+            tambon: a.tambon_th,
+            tambonCode: a.tambon_code,
+            amphoe: a.amphoe_th,
+            province: a.province_th,
+            provinceCode: a.province_code,
+          },
+        }
+      : bar;
+  });
+  const opts = areaOptions(publicBars, raw);
+  AREA_OPTIONS.splice(0, AREA_OPTIONS.length, ...opts);
+  // แยกคำค้นเฉพาะตัวเลือกเด่น ชื่อ ≥ 3 ตัวอักษร — ชื่อชุมชนสั้นๆ จาก OSM ไม่ไปชนคำทั่วไปในช่องค้นหา
+  DISTRICTS.splice(0, DISTRICTS.length, ...opts.filter((o) => o.featured && o.value.length >= 3).map((o) => o.value));
   publicReviews = raw.reviews.map((r) => toPublicReview(r, urls));
   commit();
+}
+
+/** ย่าน < 1000 = ทีมคัดเอง (SEED) · OSM = 1000 (migration …20261020000400) */
+const SEED_SORT_MAX = 1000;
+
+/**
+ * ตัวเลือกพื้นที่ทั้งประเทศ + จำนวนร้านที่แสดงอยู่ · กรองด้วยชื่อ → ชื่อซ้ำ (ย่านสาทร / เขตสาทร · อำเภอชื่อเดียวกันคนละจังหวัด) รวมเป็นตัวเลือกเดียว
+ * เรียง: มีร้านมากก่อน → ตัวเลือกเด่น → ย่าน / อำเภอ / จังหวัด → ชื่อ
+ */
+function areaOptions(bars: Bar[], raw: PublicRaw): AreaOpt[] {
+  const count = new Map<string, number>();
+  const bump = (v?: string) => v && count.set(v, (count.get(v) ?? 0) + 1);
+  for (const b of bars) {
+    if (b.status !== 'APPROVED') continue;
+    bump(b.district || undefined);
+    if (b.area && b.area.amphoe !== b.district) bump(b.area.amphoe);
+    if (b.area && b.area.province !== b.district && b.area.province !== b.area.amphoe) bump(b.area.province);
+  }
+  const provinceName = new Map((raw.provinces ?? []).map((p) => [p.code, p.name_th]));
+  const byValue = new Map<string, AreaOpt>();
+  const add = (value: string, label: string, kind: AreaOpt['kind'], hint: string, seed: boolean) => {
+    const o = byValue.get(value);
+    if (o) {
+      if (o.hint !== hint) o.hint = '';
+      o.featured ||= seed;
+      return;
+    }
+    const n = count.get(value) ?? 0;
+    byValue.set(value, { value, label, kind, hint, count: n, featured: seed || n > 0 });
+  };
+  for (const d of raw.districts) {
+    add(d.name_th, `ย่าน${d.name_th}`, 'district', provinceLabel({ province: d.province_th }), (d.sort_order ?? SEED_SORT_MAX) < SEED_SORT_MAX);
+  }
+  for (const a of raw.amphoes ?? []) {
+    const province = provinceName.get(a.province_code) ?? '';
+    add(a.name_th, amphoeLabel({ amphoe: a.name_th, provinceCode: a.province_code }), 'amphoe', provinceLabel({ province, provinceCode: a.province_code }), false);
+  }
+  for (const p of raw.provinces ?? []) add(p.name_th, provinceLabel({ province: p.name_th, provinceCode: p.code }), 'province', '', true);
+  // snapshot เก่า (ไม่มีรายชื่ออำเภอ/จังหวัด) — ใช้พื้นที่ของร้านแทน
+  for (const b of bars) {
+    if (b.status !== 'APPROVED' || !b.area) continue;
+    const p = { ...b.area };
+    add(b.area.amphoe, amphoeLabel(p), 'amphoe', provinceLabel(p), false);
+    add(b.area.province, provinceLabel(p), 'province', '', true);
+  }
+  const rank = { district: 0, amphoe: 1, province: 2 };
+  return [...byValue.values()].sort(
+    (a, b) =>
+      b.count - a.count ||
+      Number(b.featured) - Number(a.featured) ||
+      rank[a.kind] - rank[b.kind] ||
+      a.label.localeCompare(b.label, 'th'),
+  );
 }
 
 // ---------------------------------------------------------------------
@@ -156,7 +278,9 @@ export function hydratePublicFromCache(): boolean {
     const snap = JSON.parse(v) as { savedAt: number; raw: PublicRaw };
     if (!snap?.raw?.bars || Date.now() - snap.savedAt > SNAPSHOT_MAX_AGE) return false;
     applyPublic(snap.raw, new Map());
-    log.ok(`แสดงข้อมูลจากเครื่องก่อน (${Math.round((Date.now() - snap.savedAt) / 60_000)} นาทีที่แล้ว) · กำลังโหลดของใหม่`);
+    log.ok(
+      `แสดงข้อมูลจากเครื่องก่อน (${Math.round((Date.now() - snap.savedAt) / 60_000)} นาทีที่แล้ว) · กำลังโหลดของใหม่`,
+    );
     return true;
   } catch {
     return false;
@@ -234,7 +358,8 @@ export async function loadUser(p: SessionProfile): Promise<{ barId?: string }> {
   const myReviewRows = o.reviews;
   // โหลดซ้ำทุก 60 วิ: ถ้าข้อมูลเหมือนเดิมทุกอย่าง ไม่ต้องขอ URL รูปใหม่ / ไม่ re-render ทั้งแอป
   const signature = JSON.stringify(o);
-  if (signature === lastUserSignature && userData?.user.id === p.id) return { barId: userData.user.barId };
+  if (signature === lastUserSignature && userData?.user.id === p.id)
+    return { barId: userData.user.barId };
   lastUserSignature = signature;
   const urls = await signReviewPaths(mediaPaths(myReviewRows));
   const pr = o.preferences;
@@ -247,7 +372,9 @@ export async function loadUser(p: SessionProfile): Promise<{ barId?: string }> {
     pax: pr?.usual_pax ?? undefined,
   };
   const primary =
-    bars.find((b) => b.staffRole === 'OWNER' && b.status === 'APPROVED') ?? bars.find((b) => b.status === 'APPROVED') ?? bars[0];
+    bars.find((b) => b.staffRole === 'OWNER' && b.status === 'APPROVED') ??
+    bars.find((b) => b.status === 'APPROVED') ??
+    bars[0];
 
   userData = {
     user: {
@@ -259,7 +386,9 @@ export async function loadUser(p: SessionProfile): Promise<{ barId?: string }> {
       createdAt: new Date().toISOString(),
       preferences: {
         styles: MASTER.styles.filter((s) => myPrefs.styleIds.includes(s.id)).map((s) => s.label),
-        districts: MASTER.districts.filter((d) => myPrefs.districtIds.includes(d.id)).map((d) => d.name),
+        districts: MASTER.districts
+          .filter((d) => myPrefs.districtIds.includes(d.id))
+          .map((d) => d.name),
         budget: myPrefs.budget,
         pax: myPrefs.pax,
       },
@@ -289,7 +418,10 @@ export async function startUser(p: SessionProfile) {
   const r = await loadUser(p);
   clearInterval(polling);
   polling = setInterval(() => {
-    if (document.visibilityState === 'visible' && lastProfile) void loadUser(lastProfile).catch((e: Error) => log.warn('โหลดข้อมูลผู้ใช้ใหม่ไม่สำเร็จ', e.message));
+    if (document.visibilityState === 'visible' && lastProfile)
+      void loadUser(lastProfile).catch((e: Error) =>
+        log.warn('โหลดข้อมูลผู้ใช้ใหม่ไม่สำเร็จ', e.message),
+      );
   }, 60_000);
   return r;
 }
@@ -306,14 +438,19 @@ export function clearUser() {
 
 /** โหลด store ใหม่ (`/me/overview` + `/public/catalog` ถ้า public) */
 export async function refresh(opts: { public?: boolean } = {}) {
-  await Promise.all([opts.public ? loadPublic() : Promise.resolve(), lastProfile ? loadUser(lastProfile) : Promise.resolve()]);
+  await Promise.all([
+    opts.public ? loadPublic() : Promise.resolve(),
+    lastProfile ? loadUser(lastProfile) : Promise.resolve(),
+  ]);
 }
 
 /** การเขียนที่ไม่ต้องโหลด store ใหม่ — POST ที่จริงเป็นการขอ URL ไฟล์ / ลบบัญชี (เข้าสู่ระบบไม่ได้แล้ว) */
 // ชุมชน: หน้าใช้ TanStack Query ของตัวเอง (store ไม่มีข้อมูลกระทู้) — ร่างบันทึกทุกวินาทีที่หยุดพิมพ์ ไม่ต้องโหลด store ใหม่ · นับเห็น/คลิกโฆษณา (mini-ads) ไม่ต้องโหลด store ใหม่
-const NO_REFRESH = /^\/storage\/|^\/me\/delete$|^\/(public\/|me\/)?community\/|^\/public\/mini-ads\//;
+const NO_REFRESH =
+  /^\/storage\/|^\/me\/delete$|^\/(public\/|me\/)?community\/|^\/public\/mini-ads\//;
 /** การเขียนที่เปลี่ยนข้อมูลหน้าร้าน → โหลด `/public/catalog` ใหม่ด้วย */
-const PUBLIC_WRITES = /^\/merchant\/bars\/[^/]+\/(crowd|info|media|menu|promotions|fees|zones|safety|booking-settings)|^\/bookings\/[^/]+\/review$/;
+const PUBLIC_WRITES =
+  /^\/merchant\/bars\/[^/]+\/(crowd|info|media|menu|promotions|fees|zones|safety|booking-settings)|^\/bookings\/[^/]+\/review$/;
 
 /**
  * ตั้งเป็น `afterWrite` ของ Rest ใน main.tsx — ทุก POST/PUT/PATCH/DELETE ที่สำเร็จโหลด store ใหม่ให้อัตโนมัติ

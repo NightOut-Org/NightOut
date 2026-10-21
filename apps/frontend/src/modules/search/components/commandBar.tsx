@@ -1,5 +1,5 @@
 import { SlidersHorizontal, Sparkle, X } from '@phosphor-icons/react';
-import { CATEGORY_LABELS, type BarFilter } from '@/services/data';
+import { AREA_OPTIONS, CATEGORY_LABELS, type BarFilter } from '@/services/data';
 import type { BarCategory, CrowdStatus } from '@nightout/types';
 import { useState } from 'react';
 import { baht, CROWD } from '@/ui/utils/format';
@@ -31,7 +31,17 @@ export function activeFilters(f: BarFilter, set: (p: Partial<BarFilter>) => void
       remove: () => set({ category: 'ALL' }),
     });
   if (f.district)
-    out.push({ key: 'district', label: f.district, remove: () => set({ district: undefined }) });
+    out.push({
+      key: 'district',
+      label: AREA_OPTIONS.find((o) => o.value === f.district)?.label ?? f.district,
+      remove: () => set({ district: undefined }),
+    });
+  if (f.tambon)
+    out.push({
+      key: 'tambon',
+      label: f.tambonLabel ?? 'ตำบลที่เลือก',
+      remove: () => set({ tambon: undefined, tambonLabel: undefined }),
+    });
   if (f.maxBudget)
     out.push({
       key: 'budget',

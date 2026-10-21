@@ -102,15 +102,14 @@ function CommentBubble({
           <div className="text-[13px] font-semibold">
             {c.author.name}
             <CommunityAuthorBadges author={c.author} className="ml-1.5 align-middle" />
-            <span className="font-normal text-muted"> · {timeAgo(c.created_at)}</span>
+            <span className="ml-2 font-normal text-muted">{timeAgo(c.created_at)}</span>
             {c.edited_at && (
               <>
-                <span className="font-normal text-muted"> · </span>
                 <button
                   type="button"
                   onClick={() => actions.onHistory(c)}
                   title={`แก้ไขล่าสุด ${dateTime(c.edited_at)} — ดูประวัติการแก้ไข`}
-                  className="touch-manipulation bg-transparent p-0 font-normal text-muted underline decoration-dotted underline-offset-2 md:hover:text-text"
+                  className="ml-2 touch-manipulation bg-transparent p-0 font-normal text-muted underline decoration-dotted underline-offset-2 md:hover:text-text"
                 >
                   แก้ไขแล้ว
                 </button>

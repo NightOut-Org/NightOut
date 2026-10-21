@@ -57,7 +57,7 @@ export function depositTermsText(input: DepositTermsInput): string {
 
 /** เหตุผลที่แอดมินปฏิเสธสลิป — ตรงกับ deposit_reject_label() ใน DB */
 export const DEPOSIT_REJECT_REASONS = [
-  { code: 'FAKE_SLIP', label: 'สลิปปลอม / ตัดต่อ', hint: 'ติดธงที่ลูกค้า · ครบ 2 ครั้ง แบนบัญชีและเบอร์โทร' },
+  { code: 'FAKE_SLIP', label: 'สลิปปลอม / ตัดต่อ', hint: 'ติดธงที่ลูกค้า ครบ 2 ครั้ง แบนบัญชีและเบอร์โทร' },
   { code: 'AMOUNT_MISMATCH', label: 'ยอดเงินไม่ตรงกับมัดจำ' },
   { code: 'WRONG_ACCOUNT', label: 'โอนผิดบัญชี' },
   { code: 'UNREADABLE', label: 'สลิปไม่ชัด / อ่านไม่ได้' },
