@@ -26,7 +26,7 @@ export function BookingCard({ avgPerPerson, onEstimate, onBook }: Props) {
 /** แถบปุ่มติดล่างจอ (มือถือ) — อยู่เหนือเมนูล่าง */
 export function BookingBar({ onEstimate, onBook }: Omit<Props, 'avgPerPerson'>) {
   return (
-    <div className="fixed inset-x-0 bottom-16 z-20 flex gap-3 border-t border-border bg-surface/95 p-3 backdrop-blur lg:hidden">
+    <div className="fixed inset-x-0 bottom-[calc(max(0.75rem,env(safe-area-inset-bottom))+76px)] z-20 flex gap-3 border-t border-border bg-surface/95 p-3 backdrop-blur lg:hidden">
       <Button block size="large" icon={<Calculator />} onClick={onEstimate}>
         ประเมินราคา
       </Button>

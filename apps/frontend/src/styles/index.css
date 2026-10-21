@@ -169,6 +169,8 @@
   object-fit: cover;
 }
 .leaflet-container {
+  /* เก็บ z-index ภายในของ Leaflet (pane 400 · control 1000) ไว้ในแผนที่ ไม่ให้ทับแถบ fixed ของหน้า (แถบจอง · เมนูล่าง) */
+  isolation: isolate;
   font-family: inherit;
   background: #e9e6df;
 }

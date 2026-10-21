@@ -1,6 +1,6 @@
 <!-- สร้างจาก /sync-requirements (scripts/gdoc-to-md.mjs) — ห้ามแก้มือ -->
 <!-- source: https://docs.google.com/document/d/1GQ3ilsu_y_dzTulZS9_UEtNH7ygOLkaM-YkqdFm3UUI/edit -->
-<!-- revisionId: AHj4eMQzdgNExl3eCTxVqDNnqqsMqSbTTFsFMa8hZibm8ldVFu-8hMA-HLOB3bKB7VdSlrQPFxPw7FyPIDdBK4oJD60iutfad_2C_zNi9K4 -->
+<!-- revisionId: AHj4eMQQcdAqHqWOlQD25eqDQpY8Or6JRcKTfirUmbEXzUVzulmWmreGrNpBonSnZlsQuPZ_Bx8F5nZR1AwxAMr6mmn5naFixjKNAJnxZow -->
 <!-- synced: 2026-10-21 -->
 
 # Nightout_2.day
@@ -1687,7 +1687,7 @@ New Lead → Qualified Lead → Opportunity → Proposal → Negotiation → Won
 | TypeError: Cannot read properties of undefined (reading 'id') |  | /merchant/reviews | Got |
 | TypeError: Cannot read properties of undefined (reading 'id') |  | /merchant/analytics | Got |
 | TypeError: Cannot read properties of undefined (reading 'id') |  | /merchant/staff | Got |
-|  |  |  |  |
+| Responsive Problem: BookingBar ซ้อนทับ BottomIsland |  | /bars/bar-9b49d204 | Got |
 
 ฝั่ง Admin
 
