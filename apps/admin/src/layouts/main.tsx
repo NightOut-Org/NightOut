@@ -63,7 +63,7 @@ export function MainLayout() {
             type="secondary"
             className="hidden whitespace-nowrap text-sm md:inline"
           >
-            {auth.displayName} · {auth.roleLabel}
+            {auth.displayName} ({auth.roleLabel})
           </Typography.Text>,
           <ThemeToggle key="theme" />,
           <Tooltip key="out" title="ออกจากระบบ">

@@ -14,6 +14,8 @@ import { CommandBar } from './components/commandBar';
 import { SearchMap, type LatLng } from './components/searchMap';
 import { filterFromParams, filterToQuery } from './utils/searchUrl';
 import { parseSmartQuery } from './utils/smartQuery';
+import { useTambonByCode } from './api';
+import { tambonOptionText } from '@/ui/utils/area';
 
 /** จอกว้างตั้งแต่นี้: รายการกับแผนที่วางคู่กัน · แคบกว่า: แผนที่อยู่บน รายการอยู่ล่าง */
 const WIDE_QUERY = '(min-width: 1100px)';
@@ -23,6 +25,8 @@ const CLEARED: BarFilter = {
   category: 'ALL',
   styles: [],
   district: undefined,
+  tambon: undefined,
+  tambonLabel: undefined,
   maxBudget: undefined,
   people: undefined,
   crowd: [],
@@ -44,6 +48,12 @@ export function SearchPage() {
   const [smart, setSmart] = useState(f.q ?? '');
   /** query string ที่หน้านี้เขียนเองล่าสุด — URL เปลี่ยนเป็นค่าอื่น (เช่นกดลิงก์ /search?style=… จากโฆษณา) = เริ่มตัวกรองใหม่ */
   const written = useRef(search);
+  // เปิดลิงก์ ?tambon= ตรงๆ = ยังไม่รู้ชื่อ → ขอชื่อจากรหัส แล้วใช้เป็นป้ายตัวกรองที่ใช้อยู่
+  const tambonInfo = useTambonByCode(f.tambon && !f.tambonLabel ? f.tambon : undefined);
+  const shown: BarFilter =
+    f.tambon && !f.tambonLabel && tambonInfo.data?.code === f.tambon
+      ? { ...f, tambonLabel: tambonOptionText(tambonInfo.data).label }
+      : f;
 
   useEffect(() => {
     if (search === written.current) return;
@@ -64,12 +74,27 @@ export function SearchPage() {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [cardOpen, setCardOpen] = useState(false);
   /**
-   * ตำแหน่งผู้ใช้ — รู้เมื่อกด "ตำแหน่งของฉัน" บนแผนที่ หรือเรียง "ใกล้ที่สุด" (?sort=distance · Hero "ตำแหน่งปัจจุบัน")
-   * → แสดงระยะทางในรายการ/การ์ด · ไม่ขอสิทธิ์ตอนเปิดหน้าแบบอื่น · ไม่บันทึกพิกัด
+   * ตำแหน่งผู้ใช้ — ขอทันทีที่เปิดหน้า (เหมือน /map) · กด "ตำแหน่งของฉัน" บนแผนที่ · เรียง "ใกล้ที่สุด" (?sort=distance)
+   * → แสดงระยะทางในรายการ/การ์ด + แผนที่บินไปหาผู้ใช้ · ลำดับยังเป็นแบบแนะนำจนกว่าจะเลือก "ใกล้ที่สุด" · ไม่บันทึกพิกัด
    */
   const [me, setMe] = useState<LatLng | null>(null);
   const { message } = App.useApp();
   const wantsDistance = f.sort === 'distance' && !me;
+  // เปิดหน้า: ขอเงียบ ๆ ไม่อนุญาต/หาไม่ได้ = ไม่แจ้ง · ?sort=distance ให้ effect ข้างล่างขอแทน (มีแจ้งเตือน)
+  // maximumAge: ใช้ตำแหน่งที่เครื่องเพิ่งหาได้ (≤ 1 นาที) → ขึ้นทันทีไม่ต้องรอ GPS ใหม่
+  useEffect(() => {
+    if (wantsDistance || !('geolocation' in navigator)) return;
+    let cancelled = false;
+    navigator.geolocation.getCurrentPosition(
+      (pos) => !cancelled && setMe([pos.coords.latitude, pos.coords.longitude]),
+      () => undefined,
+      { enableHighAccuracy: true, timeout: 10_000, maximumAge: 60_000 },
+    );
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   useEffect(() => {
     if (!wantsDistance) return;
     let cancelled = false;
@@ -129,7 +154,7 @@ export function SearchPage() {
   const adAfter = Math.min(MINI_AD_SEARCH_AFTER, bars.length) - 1;
   const groupBudget =
     f.people && f.maxBudget
-      ? ` · ${f.people} คน · งบรวมไม่เกิน ${baht(f.people * f.maxBudget)}`
+      ? ` สำหรับ ${f.people} คน งบรวมไม่เกิน ${baht(f.people * f.maxBudget)}`
       : '';
   const isMap = view === 'map';
 
@@ -168,7 +193,7 @@ export function SearchPage() {
       <EmbersBackdrop />
 
       <CommandBar
-        f={f}
+        f={shown}
         set={(p) => {
           // เอาป้ายคำค้นออก = ล้างช่องพิมพ์ด้วย
           if (p.q === '') setSmart('');

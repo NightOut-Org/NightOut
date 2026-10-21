@@ -1,4 +1,4 @@
-import { CheckCircle, Clock, Coins, DownloadSimple, LockSimple } from '@phosphor-icons/react';
+import { CalendarBlank, CheckCircle, Clock, Coins, DownloadSimple, LockSimple, Ticket } from '@phosphor-icons/react';
 import { Alert, Empty, Skeleton } from 'antd';
 import dayjs from 'dayjs';
 import { useState, type ReactNode } from 'react';
@@ -8,6 +8,7 @@ import { BookingStatusTag } from '@/ui/components/bookingStatusTag';
 import { Chip, Tile } from '@/ui/components/merchantUi';
 import { BOOKING_STATUS, baht } from '@/ui/utils/format';
 import { useBarLedger, type DepositLedgerRow } from './api';
+import { MetaList } from '@/ui/components/metaList';
 
 type Settlement = DepositLedgerRow['settlement'];
 
@@ -120,7 +121,7 @@ export function MerchantDepositsPage() {
     : 'ยังไม่ได้ตั้งบัญชีรับเงิน — ตั้งได้ที่ตั้งค่าการจอง';
 
   const stats = {
-    held: { icon: <LockSimple />, title: 'NightOut ถือไว้', value: baht(sum(of('HELD'))), sub: `${of('HELD').length} การจอง · รอเช็กอิน`, valueCls: 'text-gold-text', highlight: true },
+    held: { icon: <LockSimple />, title: 'NightOut ถือไว้', value: baht(sum(of('HELD'))), sub: `${of('HELD').length} การจอง รอเช็กอิน`, valueCls: 'text-gold-text', highlight: true },
     pending: { icon: <Clock />, title: 'รอโอนเข้าร้าน', value: baht(sum(of('PAYOUT_PENDING'))), sub: 'NightOut โอนเข้าบัญชีร้านรอบถัดไป', valueCls: 'text-text' },
     paid: { icon: <CheckCircle />, title: `โอนแล้ว (${thisMonth.format('MMM')})`, value: baht(sum(paidMonth)), sub: account, valueCls: 'text-(--crowd-available)' },
     credit: { icon: <Coins />, title: 'เครดิต', value: baht(sum(of('CREDIT'))), sub: 'เก็บเป็นเครดิตร้าน', valueCls: 'text-link' },
@@ -148,7 +149,7 @@ export function MerchantDepositsPage() {
           <div>
             <h1 className="font-display text-[30px] font-bold">Table Fee</h1>
             <p className="mt-1 text-sm text-muted">
-              ลูกค้าโอนผ่าน PromptPay · NightOut ตรวจสลิปและถือไว้ แล้วโอนเข้าบัญชีร้าน
+              ลูกค้าโอนผ่าน PromptPay แล้ว NightOut ตรวจสลิปและถือไว้ ก่อนโอนเข้าบัญชีร้าน
             </p>
           </div>
           <button
@@ -238,7 +239,12 @@ export function MerchantDepositsPage() {
                 <span className="flex min-w-0 flex-1 flex-col text-sm">
                   <span className="truncate">{r.customer_name ?? '-'}</span>
                   <span className="truncate text-xs text-muted">
-                    {dayjs(r.booking_datetime).format('D MMM')} · {r.booking_code}
+                    <MetaList
+                      items={[
+                        { icon: <CalendarBlank weight="fill" />, label: 'วันที่จอง', value: dayjs(r.booking_datetime).format('D MMM') },
+                        { icon: <Ticket weight="fill" />, label: 'รหัสจอง', value: r.booking_code },
+                      ]}
+                    />
                   </span>
                 </span>
                 <span className="flex flex-col items-end">

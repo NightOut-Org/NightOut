@@ -98,8 +98,20 @@ export function SiteFooter({ className = '' }: { className?: string }) {
           </div>
         </div>
 
-        <div className="mt-8 flex flex-col gap-1 border-t border-white/15 pt-5 text-xs text-white/60 sm:flex-row sm:justify-center">
-          <p>2026 Nightout. สงวนลิขสิทธิ์ทั้งหมด</p>
+        <div className="mt-8 flex flex-col items-center gap-1 border-t border-white/15 pt-5 text-center text-xs text-white/60">
+          <p className="m-0">2026 Nightout. สงวนลิขสิทธิ์ทั้งหมด</p>
+          {/* สัญญาอนุญาตของข้อมูลพื้นที่ต้องระบุที่มา (ADR 0011): OCHA COD-AB (CC BY-IGO) + OpenStreetMap (ODbL) */}
+          <p className="m-0 text-white/45">
+            ข้อมูลเขตการปกครองจาก OCHA (CC BY-IGO) และชื่อย่านจาก{' '}
+            <a
+              href="https://www.openstreetmap.org/copyright"
+              target="_blank"
+              rel="noreferrer"
+              className="text-white/60 underline-offset-2 hover:underline"
+            >
+              © OpenStreetMap contributors
+            </a>
+          </p>
         </div>
       </div>
     </footer>

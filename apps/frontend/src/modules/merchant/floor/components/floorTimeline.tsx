@@ -68,14 +68,14 @@ function BookingBar({
     disabled: !draggable,
   });
   const forfeited = booking.status === 'NO_SHOW';
-  const text = `${hhmm(booking.booking_datetime)} ${booking.customer_name ?? 'ลูกค้า'}·${booking.pax}`;
+  const text = `${hhmm(booking.booking_datetime)} ${booking.customer_name ?? 'ลูกค้า'} ${booking.pax}`;
   // ลากไม่ได้ = ปุ่มธรรมดา (ไม่ใส่ aria-disabled / คำอธิบายการลากของ dnd-kit)
   const a11y = draggable ? { ...attributes, 'aria-roledescription': DRAGGABLE_ROLE } : { role: 'button', tabIndex: 0 };
   return (
     <div
       ref={setNodeRef}
       {...a11y}
-      aria-label={`${booking.code} ${text} · ${BOOKING_STATUS[booking.status].label}${draggable ? ' · ลากเพื่อย้ายโต๊ะ' : ''}`}
+      aria-label={`${booking.code} ${text} ${BOOKING_STATUS[booking.status].label}${draggable ? ' (ลากเพื่อย้ายโต๊ะ)' : ''}`}
       onClick={onTap}
       onKeyDown={(e) => {
         if (!draggable && (e.key === 'Enter' || e.key === ' ')) {
@@ -97,7 +97,7 @@ function BookingBar({
       }}
     >
       <span className={`truncate ${forfeited ? 'line-through' : 'font-medium'}`}>
-        {forfeited ? `${text} · ปลดโต๊ะ (Forfeited)` : text}
+        {forfeited ? `${text} (ปลดโต๊ะ Forfeited)` : text}
       </span>
     </div>
   );
@@ -213,7 +213,7 @@ function TableRow({
       <button
         type="button"
         onClick={onOpen}
-        aria-label={`โต๊ะ ${table.name} · ${meta.label} · ${table.seats} ที่นั่ง`}
+        aria-label={`โต๊ะ ${table.name} ${meta.label} ${table.seats} ที่นั่ง`}
         className="floor-card-button merchant-solid sticky left-0 z-20 flex shrink-0 items-center gap-1.5 border-r border-border bg-card px-2.5 text-left"
         style={{ width: NAME_COL_PX }}
       >

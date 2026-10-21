@@ -147,7 +147,7 @@ export function PaymentsPage() {
                 <Sub>
                   {[r.refund_note, r.refunded_by_name, r.refunded_at ? dateTime(r.refunded_at) : null]
                     .filter(Boolean)
-                    .join(' · ')}
+                    .join(' ')}
                 </Sub>
               )}
             </div>
@@ -180,7 +180,7 @@ export function PaymentsPage() {
               act.mutate(
                 {
                   ...markPaymentRefundedAction(r.id, { note, refund_ref: ref || undefined }),
-                  success: 'บันทึกว่าคืนเงินแล้ว · แจ้งลูกค้าแล้ว',
+                  success: 'บันทึกว่าคืนเงินและแจ้งลูกค้าแล้ว',
                 },
                 { onSettled: () => setSavingId(undefined) },
               );
@@ -238,11 +238,11 @@ export function PaymentsPage() {
   return (
     <PageContainer
       title="การชำระเงิน"
-      subTitle="Table Fee ที่ลูกค้าชำระออนไลน์ · คืนเงินที่ระบบผู้ให้บริการแล้วกดบันทึกที่นี่"
+      subTitle="Table Fee ที่ลูกค้าชำระออนไลน์ คืนเงินที่ระบบผู้ให้บริการแล้วกดบันทึกที่นี่"
       tags={
         cfg &&
         (cfg.mode === 'PROVIDER' ? (
-          <Tag color="green">ชำระออนไลน์ · {cfg.provider_label ?? cfg.provider}</Tag>
+          <Tag color="green">ชำระออนไลน์ ({cfg.provider_label ?? cfg.provider})</Tag>
         ) : (
           <Tag>ยังใช้โอน + แนบสลิป</Tag>
         ))

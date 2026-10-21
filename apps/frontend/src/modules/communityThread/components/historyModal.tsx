@@ -45,7 +45,7 @@ export function HistoryModal({
       ) : (
         <>
           <p className="m-0 mb-3 text-[13px] text-muted">
-            แก้ไข {data.length - 1} ครั้ง · ใหม่สุดอยู่บน
+            แก้ไข {data.length - 1} ครั้ง ฉบับใหม่สุดอยู่บนสุด
           </p>
           <ol className="m-0 flex max-h-[65vh] list-none flex-col gap-3 overflow-y-auto p-0">
             {data.map((v, i) => {
@@ -60,7 +60,7 @@ export function HistoryModal({
                       {v.is_current ? 'ฉบับปัจจุบัน' : i === data.length - 1 ? 'ฉบับแรก' : 'ฉบับแก้ไข'}
                     </span>
                     <time dateTime={v.at} title={dateTime(v.at)}>
-                      {dateTime(v.at)} · {timeAgo(v.at)}
+                      {dateTime(v.at)} ({timeAgo(v.at)})
                     </time>
                   </div>
                   {isThread && (
@@ -69,7 +69,7 @@ export function HistoryModal({
                       {prev && (prev.category_name !== v.category_name || prev.bar?.id !== v.bar?.id) && (
                         <div className="mt-0.5 text-xs text-muted">
                           หมวด {v.category_name}
-                          {v.bar ? ` · แท็ก ${v.bar.name}` : ' · ไม่แท็กร้าน'}
+                          {v.bar ? ` แท็กร้าน ${v.bar.name}` : ' ไม่แท็กร้าน'}
                         </div>
                       )}
                     </>

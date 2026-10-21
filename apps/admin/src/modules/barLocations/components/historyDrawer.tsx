@@ -46,7 +46,7 @@ export function HistoryDrawer({ request: r, onClose }: { request: Db.AdminBarLoc
       destroyOnHidden
       title={
         <span className="flex flex-wrap items-center gap-2">
-          ประวัติตำแหน่ง · {r.bar.name}
+          ประวัติตำแหน่ง {r.bar.name}
           <StatusTag map={LOCATION_REQUEST_STATUS} value={r.status} />
         </span>
       }

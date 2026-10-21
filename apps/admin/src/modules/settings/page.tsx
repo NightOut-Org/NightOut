@@ -5,6 +5,7 @@ import { Link } from 'react-router';
 import { LoadError } from '@/ui/components/LoadError';
 import { useMasterTable } from './api';
 import { RoleColorsCard } from './components/roleColorsCard';
+import { RuleList } from '@/ui/components/RuleList';
 
 /** ข้อมูลตั้งต้นของระบบ (อ่านอย่างเดียว — แก้ผ่าน migration/seed) · สไตล์ร้านจัดการที่ /styles · สีชั้นบัญชีแก้ที่นี่ (Super Admin) */
 export function SettingsPage() {
@@ -14,7 +15,15 @@ export function SettingsPage() {
   return (
     <PageContainer
       title="ตั้งค่าระบบ"
-      content="ค่าระบบและมาตรการ Safety แก้ผ่าน migration / seed ของทีม · สไตล์ร้านจัดการที่หน้าสไตล์ร้าน · สีของชั้นบัญชีซูเปอร์แอดมินแก้ได้ที่นี่"
+      content={
+        <RuleList
+          rules={[
+            'สีของชั้นบัญชี ซูเปอร์แอดมินแก้ได้ที่หน้านี้',
+            'สไตล์ร้านจัดการที่หน้าสไตล์ร้าน',
+            'ค่าระบบและมาตรการ Safety แก้ผ่าน migration / seed ของทีมพัฒนา (ดูอย่างเดียว)',
+          ]}
+        />
+      }
     >
       <Space orientation="vertical" size="large" className="w-full">
         <RoleColorsCard />

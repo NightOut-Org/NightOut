@@ -1,4 +1,4 @@
-import { Camera, CheckCircle, QrCode, Scan, SquaresFour } from '@phosphor-icons/react';
+import { Armchair, Camera, CheckCircle, Clock, ClockClockwise, QrCode, Scan, SquaresFour, Storefront, Ticket } from '@phosphor-icons/react';
 import type * as C from '@nightout/contracts';
 import type { CrowdStatus } from '@nightout/types';
 import { getAntdTheme } from '@nightout/ui';
@@ -14,6 +14,8 @@ import { BOOKING_STATUS } from '@/ui/utils/format';
 import { forfeitBooking, setCrowd } from './api';
 import { QrScanner } from './components/qrScanner';
 import { CheckInConfirmModal } from './modal/checkInConfirmModal';
+import { MetaList } from '@/ui/components/metaList';
+import { StatusChip } from '@/ui/components/statusChip';
 
 const CLOSED = ['CANCELLED_BY_CUSTOMER', 'CANCELLED_BY_MERCHANT', 'REJECTED', 'EXPIRED'];
 const isIn = (s: string) => s === 'CHECKED_IN' || s === 'COMPLETED';
@@ -75,11 +77,11 @@ export function TonightPage() {
   const isForfeitable = (b: Booking) => canTeamForfeit({ status: b.status, autoCancelAt: autoCancelAt(b) }, now);
   const forfeitable = tonight.filter(isForfeitable).length;
   const overdueText = [
-    overdue.length ? `เลยเวลา ${overdue.length} โต๊ะ · ปลดโต๊ะใน ${nextReleaseMin} นาที` : '',
-    forfeitable ? `เลยเวลาเก็บโต๊ะ ${forfeitable} โต๊ะ · กดปลดโต๊ะได้` : '',
+    overdue.length ? `เลยเวลา ${overdue.length} โต๊ะ ปลดโต๊ะใน ${nextReleaseMin} นาที` : '',
+    forfeitable ? `เลยเวลาเก็บโต๊ะ ${forfeitable} โต๊ะ กดปลดโต๊ะได้` : '',
   ]
     .filter(Boolean)
-    .join(' · ');
+    .join(' และ ');
   const hours = bar.hours.find((h) => h.day === now.getDay());
   const closeLabel = !hours || hours.closed ? 'วันนี้ปิด' : `ปิดรับ ${hours.close}`;
 
@@ -108,7 +110,7 @@ export function TonightPage() {
 
   const onCheckedIn = (b: C.CheckInResult) => {
     setPendingCode(null);
-    setLast(`${b.customer_name ?? 'ลูกค้า'} · ${b.pax} คน · ${b.zone_name ?? ''} · ${b.code}`);
+    setLast(`${b.customer_name ?? 'ลูกค้า'} (${b.pax} คน)${b.zone_name ? ` โซน ${b.zone_name}` : ''} รหัส ${b.code}`);
     setCode('');
     message.success('เช็กอินสำเร็จ — โต๊ะกำลังใช้งาน');
   };
@@ -124,6 +126,7 @@ export function TonightPage() {
 
   const zoneTable = (b: Booking) =>
     [bar.zones.find((z) => z.id === b.zoneId)?.name, bar.zones.flatMap((z) => z.tables).find((t) => t.id === b.tableId)?.name]
+      .map((name, i) => (name && i === 1 ? `โต๊ะ ${name}` : name))
       .filter(Boolean)
       .join(' ');
 
@@ -184,15 +187,22 @@ export function TonightPage() {
         </span>
         <span className="flex min-w-0 flex-1 flex-col text-sm">
           <b className="truncate font-medium">
-            {b.userName} · {b.pax} คน
+            {b.userName}
+            <span className="ml-1.5 font-normal text-muted">{b.pax} คน</span>
           </b>
           <span className="truncate text-xs text-muted">
-            {zoneTable(b)}
-            {big ? '' : ` · ${b.code}`}
+            <MetaList
+              items={[
+                zoneTable(b) && { icon: <Armchair weight="fill" />, label: 'ที่นั่ง', value: zoneTable(b) },
+                !big && { icon: <Ticket weight="fill" />, label: 'รหัสจอง', value: b.code },
+              ]}
+            />
           </span>
           {/* แยกบรรทัด ไม่ให้ถูกตัดด้วย … — พนักงานต้องเห็นว่าเก็บโต๊ะถึงกี่โมง */}
           {b.status === 'CONFIRMED' && b.extendedAt && (
-            <span className="text-xs font-medium text-gold-text">ต่อเวลาแล้ว · เก็บโต๊ะถึง {hhmm(autoCancelAt(b))}</span>
+            <StatusChip icon={<ClockClockwise weight="bold" />} value={hhmm(autoCancelAt(b))} className="self-start">
+              ต่อเวลาแล้ว เก็บโต๊ะถึง
+            </StatusChip>
           )}
         </span>
         {rowAction(b, big)}
@@ -330,7 +340,12 @@ export function TonightPage() {
           </Tile>
           <Tile className="flex flex-col justify-between gap-3">
             <span className="text-sm text-muted">
-              {hhmm(now)} · {closeLabel}
+              <MetaList
+                items={[
+                  { icon: <Clock weight="fill" />, label: 'เวลาตอนนี้', value: `${hhmm(now)} น.`, strong: true },
+                  { icon: <Storefront weight="fill" />, label: 'เวลาปิดรับ', value: closeLabel },
+                ]}
+              />
             </span>
             <div className="flex items-center gap-3.5">
               <Ring pct={totalPax ? (inPax / totalPax) * 100 : 0} size={80} />
@@ -366,7 +381,12 @@ export function TonightPage() {
               {floorLink}
             </span>
             <span className="text-[13px] text-muted">
-              {hhmm(now)} · {closeLabel}
+              <MetaList
+                items={[
+                  { icon: <Clock weight="fill" />, label: 'เวลาตอนนี้', value: `${hhmm(now)} น.`, strong: true },
+                  { icon: <Storefront weight="fill" />, label: 'เวลาปิดรับ', value: closeLabel },
+                ]}
+              />
             </span>
           </div>
           <button

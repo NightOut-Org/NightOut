@@ -39,7 +39,7 @@ export function SlipTransfer({ booking: b, bar }: { booking: Booking; bar: Bar }
 
   return (
     <div className="mx-auto max-w-2xl">
-      <PageHeader title="ชำระ Table Fee" subtitle={`${bar.name} · รหัสจอง ${b.code}`} />
+      <PageHeader title="ชำระ Table Fee" subtitle={`${bar.name} รหัสจอง ${b.code}`} />
       {b.depositRejectReason && (
         <Alert
           className="!mb-4"

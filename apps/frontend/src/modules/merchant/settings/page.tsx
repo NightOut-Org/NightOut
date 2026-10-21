@@ -4,10 +4,12 @@ import { Bank, ClockCountdown, MinusCircle, PlusCircle, UserSound, Wallet } from
 import { Alert, App, Form, Input, InputNumber, Segmented, Select } from 'antd';
 import { useState, type ReactNode } from 'react';
 import { useFormDirty } from '@/hooks/useFormDirty';
+import { HEADER_SAVE_CLASS } from '@/ui/utils/buttonClasses';
 import { useMerchantBar } from '@/hooks/useMerchantBar';
 import { useUnsavedGuard } from '@/hooks/useUnsavedGuard';
 import { Tile } from '@/ui/components/merchantUi';
 import { saveSettings } from './api';
+import { RuleList } from '@/ui/components/ruleList';
 
 const BANKS = ['กสิกรไทย', 'ไทยพาณิชย์', 'กรุงเทพ', 'กรุงไทย', 'กรุงศรี', 'ทหารไทยธนชาต', 'ออมสิน', 'อื่นๆ'];
 const GRACE = [15, 30, 45, 60, 90] as const;
@@ -159,7 +161,7 @@ export function MerchantSettingsPage() {
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0">
           <h1 className="text-[17px] font-bold lg:font-display lg:text-[30px]">ตั้งค่าการจอง</h1>
-          <p className="mt-1 hidden text-sm text-muted lg:block">มีผลกับการจองใหม่เท่านั้น · การจองเดิมใช้ค่าตอนจอง</p>
+          <p className="mt-1 hidden text-sm text-muted lg:block">มีผลกับการจองใหม่เท่านั้น การจองเดิมใช้ค่าตอนจอง</p>
         </div>
         <div className="flex items-center gap-1 lg:gap-3">
           {count > 0 && !saving && (
@@ -176,7 +178,7 @@ export function MerchantSettingsPage() {
               </button>
             </>
           )}
-          {saveButton('hidden h-10 items-center rounded-xl bg-gold px-[18px] text-sm font-semibold text-on-gold lg:inline-flex', 'บันทึกการเปลี่ยนแปลง')}
+          {saveButton(HEADER_SAVE_CLASS, 'บันทึกการเปลี่ยนแปลง')}
           {saveButton('px-2 py-1 text-sm font-semibold text-gold-text lg:hidden', 'บันทึก')}
         </div>
       </div>
@@ -222,7 +224,7 @@ export function MerchantSettingsPage() {
                 </span>
                 <span className="flex min-w-0 flex-1 flex-col">
                   <b className="truncate font-semibold">
-                    {bar.payout.bankName} · {bar.payout.accountNo}
+                    {bar.payout.bankName} {bar.payout.accountNo}
                   </b>
                   <span className="truncate text-[13px] text-muted">{bar.payout.accountName}</span>
                 </span>
@@ -264,9 +266,13 @@ export function MerchantSettingsPage() {
                 <Input />
               </Form.Item>
             </div>
-            <span className="text-[13px] text-muted">
-              ลูกค้าชำระ Table Fee ให้ NightOut · เมื่อลูกค้าเช็กอินหรือถูกปลดโต๊ะ (Forfeited) NightOut โอนเข้าบัญชีนี้ หรือเก็บเป็นเครดิตร้าน
-            </span>
+            <RuleList
+              className="text-[13px] text-muted"
+              rules={[
+                'ลูกค้าชำระ Table Fee ให้ NightOut ก่อน',
+                { tone: 'check', text: 'เมื่อลูกค้าเช็กอินหรือถูกปลดโต๊ะ (Forfeited) NightOut โอนเข้าบัญชีนี้ หรือเก็บเป็นเครดิตร้าน' },
+              ]}
+            />
           </Section>
 
           <Section icon={<ClockCountdown />} title="เช็กอินและปลดโต๊ะอัตโนมัติ">
@@ -274,7 +280,16 @@ export function MerchantSettingsPage() {
               name="gracePeriodMinutes"
               label="Grace period หลังเวลานัด"
               className="!mb-0"
-              extra={`เลยเวลานี้ไม่มาเช็กอิน → ระบบปลดโต๊ะ (Forfeited) อัตโนมัติ และ Table Fee ตกเป็นของร้าน · ลูกค้าขอต่อเวลาได้อีก ${BOOKING_EXTENSION_MINUTES} นาที 1 ครั้ง · เช็กอินได้ตั้งแต่ ${CHECK_IN_EARLY_HOURS} ชม. ก่อนเวลานัด`}
+              extra={
+                <RuleList
+                  className="mt-2"
+                  rules={[
+                    { tone: 'warn', text: 'เลยเวลานี้ไม่มาเช็กอิน ระบบปลดโต๊ะ (Forfeited) อัตโนมัติ และ Table Fee ตกเป็นของร้าน' },
+                    `ลูกค้าขอต่อเวลาได้อีก ${BOOKING_EXTENSION_MINUTES} นาที 1 ครั้ง`,
+                    `เช็กอินได้ตั้งแต่ ${CHECK_IN_EARLY_HOURS} ชม. ก่อนเวลานัด`,
+                  ]}
+                />
+              }
             >
               <Segmented block options={GRACE.map((m) => ({ label: `${m} นาที`, value: m }))} />
             </Form.Item>
@@ -292,7 +307,7 @@ export function MerchantSettingsPage() {
                 <Stepper label="LGBTQ+" disabled={saving} />
               </Form.Item>
             </div>
-            <span className="text-[13px] text-muted">ลูกค้าเห็นในหน้าร้านและกรองได้ในหน้าค้นหา · ใส่ 0 ทั้งหมดถ้าไม่มี</span>
+            <span className="text-[13px] text-muted">ลูกค้าเห็นในหน้าร้านและกรองได้ในหน้าค้นหา ใส่ 0 ทั้งหมดถ้าไม่มี</span>
           </Section>
         </div>
       </Form>

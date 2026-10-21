@@ -65,7 +65,7 @@ async function boot() {
     // ข้อความไทยอยู่ในหน้าแล้ว — ใต้ปุ่มแสดงสาเหตุจริงจาก API (เช่น 503 SUPABASE_UNREACHABLE: ENOTFOUND) ไว้ส่งให้ทีม
     const detail =
       e instanceof ApiError
-        ? `${e.status || 'เครือข่าย'} · ${e.code}`
+        ? `${e.status || 'เครือข่าย'} ${e.code}`
         : e instanceof Error
           ? e.message
           : undefined;

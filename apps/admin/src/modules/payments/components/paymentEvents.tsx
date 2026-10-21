@@ -18,7 +18,7 @@ export function PaymentEvents({ row }: { row: Db.AdminPaymentIntent }) {
           },
           { key: 'created', label: 'เปิดรายการ', children: dateTime(row.created_at) },
           { key: 'expires', label: 'หมดเวลาชำระ', children: dateTime(row.expires_at) },
-          { key: 'booking', label: 'เวลาจอง', children: `${dateTime(row.booking.booking_datetime)} · ${row.booking.pax} คน` },
+          { key: 'booking', label: 'เวลาจอง', children: `${dateTime(row.booking.booking_datetime)} (${row.booking.pax} คน)` },
           ...(row.refund_ref
             ? [
                 {

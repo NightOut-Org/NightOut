@@ -5,6 +5,7 @@ import { useUnsavedGuard } from '@/hooks/useUnsavedGuard';
 import { useAuth, type AppUser } from '@/services/auth';
 import { MASTER, myPrefs } from '@/services/data';
 import { updateProfile } from '../api';
+import { districtSelectOptions } from '@/ui/utils/area';
 
 interface PrefsValues {
   displayName: string;
@@ -73,7 +74,7 @@ export function PreferencesForm({ user, onDone }: { user: AppUser; onDone: () =>
         </Form.Item>
       </div>
       <Form.Item name="districts" label="ย่านที่ชอบ">
-        <Select mode="multiple" options={MASTER.districts.map((d) => ({ label: d.name, value: d.id }))} />
+        <Select mode="multiple" showSearch={{ optionFilterProp: 'label' }} placeholder="พิมพ์ชื่อย่าน" options={districtSelectOptions()} />
       </Form.Item>
       <Button type="primary" htmlType="submit" loading={saving} className="w-full sm:w-auto">
         บันทึก

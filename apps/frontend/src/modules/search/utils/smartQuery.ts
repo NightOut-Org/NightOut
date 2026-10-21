@@ -7,7 +7,7 @@ const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&');
  * ช่องค้นหาแบบพิมพ์ตามที่พูด เช่น "ทองหล่อ 4 คน 800 live music" → ตัวกรอง
  * - "<n> คน" → จำนวนคน (≤ MAX_GROUP_SIZE)
  * - ตัวเลข 3–4 หลัก (มี ฿ ได้) → งบต่อหัว (< MIN → MIN · ≥ MAX = ไม่จำกัด)
- * - ชื่อย่าน / ชื่อสไตล์ (ไม่สนตัวพิมพ์) → ย่าน / สไตล์ · คำว่า "ว่าง" → ความแน่น = ว่าง
+ * - ชื่อพื้นที่ที่มีร้าน (ย่าน / อำเภอ-เขต / จังหวัด · ตัดคำนำหน้า "ย่าน" "เขต" ด้วย) / ชื่อสไตล์ (ไม่สนตัวพิมพ์) → พื้นที่ / สไตล์ · คำว่า "ว่าง" → ความแน่น = ว่าง
  * - ที่เหลือ = คำค้น (q)
  * คืนเฉพาะค่าที่เจอ (q คืนเสมอ) — ตัวกรองที่ตั้งจากแผงละเอียดไว้แล้วไม่ถูกล้าง
  */
@@ -36,7 +36,7 @@ export function parseSmartQuery(
   const district = [...districts].sort((a, b) => b.length - a.length).find((d) => rest.includes(d));
   if (district) {
     patch.district = district;
-    rest = rest.replace(district, ' ');
+    rest = rest.replace(new RegExp(`(ย่าน|เขต|อำเภอ|จังหวัด)?\\s*${escapeRegExp(district)}`), ' ');
   }
 
   const lower = rest.toLowerCase();

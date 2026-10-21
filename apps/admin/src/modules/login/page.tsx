@@ -117,7 +117,7 @@ export function LoginPage() {
         profile = await fetchMyProfile(data.session.access_token);
       } catch (e) {
         await supabase.auth.signOut();
-        const detail = e instanceof ApiError ? `${e.status} · ${e.code}` : (e as Error).message;
+        const detail = e instanceof ApiError ? `${e.status} ${e.code}` : (e as Error).message;
         setError(
           `ล็อกอินผ่านแล้ว แต่อ่านข้อมูลบัญชีจากเซิร์ฟเวอร์ไม่ได้ (${detail}) — ไม่ใช่เรื่องสิทธิ์ ให้ตรวจ API / Supabase`,
         );
@@ -201,7 +201,7 @@ export function LoginPage() {
         className="pointer-events-none absolute -right-[200px] -bottom-[300px] size-[700px] rounded-full bg-[radial-gradient(circle,rgba(167,56,245,.22),transparent_65%)] dark:hidden"
       />
       <StaffPass
-        kicker={step === 'password' ? 'STAFF ONLY' : 'CHECKED · 1/2'}
+        kicker={step === 'password' ? 'STAFF ONLY' : 'CHECKED 1/2'}
         holder={
           step === 'password' ? (
             <span className="truncate">{emailLabel}</span>

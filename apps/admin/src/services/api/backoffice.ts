@@ -34,6 +34,7 @@ export interface AdminViewRows {
   admin_bar_details: Db.AdminBarDetails;
   admin_styles: Db.AdminStyle;
   admin_ranking: Db.AdminRanking;
+  admin_bar_areas: Db.AdminBarArea;
   admin_payment_intents: Db.AdminPaymentIntent;
   admin_payment_unmatched: Db.AdminPaymentUnmatched;
   admin_mini_ads: Db.AdminMiniAd;

@@ -1,5 +1,9 @@
 # payment — ประวัติการแก้ไข
 
+## 2026-10-21 — เลิกใช้ " · " คั่นข้อความที่ผู้ใช้เห็น (ส่วนที่เหลือ)
+- ข้อความแจ้งเตือนการชำระออนไลน์/คืนเงิน: `payment_apply_event` `admin_payment_mark_refunded`
+- migration `20261021000200_notify_text_no_dots` ประกาศฟังก์ชันตัวล่าสุดซ้ำทั้งตัว เปลี่ยนเฉพาะสตริงที่มีตัวคั่นเป็นวรรค (ตรวจแล้ว 29 ฟังก์ชันต่างกันแค่ข้อความ/คอมเมนต์ · แจ้งเตือนที่ส่งไปแล้วไม่แก้ย้อนหลัง)
+
 ## 2026-10-13 — ชั้นชำระเงินกลาง (payment intents + mock)
 - โดเมนใหม่ `payment` — ชั้นชำระ Table Fee ที่ไม่ผูกผู้ให้บริการ (เจ้าของตัดสิน 2026-10-13: ยังไม่มีคีย์ / อาจไม่ใช้ Beam) · `payment.module.ts` · `payment.service.ts` (เลือกโหมดจาก env · เปิด checkout · ตรวจลายเซ็นแล้วส่ง event ให้ `payment_apply_event` · จำกัด payload 60 KB · ลิงก์ checkout ของผู้ให้บริการจริงต้องเป็น https)
 - adapter `providers/`: `payment-provider.ts` (interface) · `mock.provider.ts` (หน้าชำระเงินจำลอง `/pay/mock/:intentId` + ลายเซ็น HMAC) · `beam.provider.ts` (stub `ready = false` → ยังใช้สลิป) · `create-provider.ts` (เลือก provider · mock บน deploy ต้องตั้ง `PAYMENT_ALLOW_MOCK_IN_PRODUCTION=true` + `PAYMENT_WEBHOOK_SECRET` ไม่งั้นเตือนใน log แล้วกลับเป็นสลิป)

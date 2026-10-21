@@ -29,6 +29,7 @@ export const ADMIN_VIEWS = [
   'admin_bar_details',
   'admin_styles',
   'admin_ranking',
+  'admin_bar_areas',
   'admin_payment_intents',
   'admin_payment_unmatched',
   'admin_mini_ads',

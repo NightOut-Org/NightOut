@@ -57,7 +57,7 @@ export function RoleColorsCard() {
     >
       <LoadError error={roles.error} onRetry={() => void roles.refetch()} />
       <Typography.Paragraph type="secondary" className="!mb-3">
-        ใช้ที่เว็บลูกค้า: ป้ายชั้นบัญชี วงรอบรูปโปรไฟล์ พื้นหลังหน้าโปรไฟล์ และปุ่มบัญชีบน navbar · ธีมสว่างระบบเข้มตัวหนังสือให้เอง
+        ใช้ที่เว็บลูกค้า: ป้ายชั้นบัญชี วงรอบรูปโปรไฟล์ พื้นหลังหน้าโปรไฟล์ และปุ่มบัญชีบน navbar ในธีมสว่างระบบเข้มตัวหนังสือให้เอง
       </Typography.Paragraph>
       <Table
         rowKey="code"

@@ -146,7 +146,7 @@ export function BarLocationEditor({
           <span className="flex flex-col gap-1 pt-1">
             <span className="tabular-nums">
               {pin
-                ? `พิกัด ${coordText(pin)}${moved ? ` · ห่างจากหมุดเดิม ${moved}` : ''}`
+                ? `พิกัด ${coordText(pin)}${moved ? ` (ห่างจากหมุดเดิม ${moved})` : ''}`
                 : 'แตะแผนที่ ลากหมุด หรือค้นหาที่อยู่ เพื่อปักหมุดร้าน'}
             </span>
             {moved && <PinLegend />}
@@ -195,7 +195,7 @@ export function BarLocationEditor({
           rows={2}
           maxLength={PARKING_NOTE_MAX}
           showCount
-          placeholder="เช่น จอดในซอยได้ประมาณ 10 คัน ฟรี · หรือที่จอดห้าง XX ชั่วโมงละ 20 บาท"
+          placeholder="เช่น จอดในซอยได้ประมาณ 10 คัน ฟรี หรือที่จอดห้าง XX ชั่วโมงละ 20 บาท"
         />
       </Form.Item>
 

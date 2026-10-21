@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { useAdminAction } from '@/services/adminData';
 import { baht } from '@/ui/utils/format';
 import { reportNoTableAction } from '../api';
+import { RuleList } from '@/ui/components/RuleList';
 
 const CODE_ID = 'no-table-booking-code';
 const NOTE_ID = 'no-table-note';
@@ -63,7 +64,15 @@ export function ReportNoTableModal({ open, onClose }: { open: boolean; onClose: 
           showIcon
           title="ทำแล้วย้อนกลับไม่ได้"
           description={
-            'คืน Table Fee เต็มจำนวนให้ลูกค้าแทนร้าน (เข้าแท็บ "รอคืนลูกค้า" ที่หน้าเงินมัดจำ) · ยกเลิกการจองถ้ายังไม่เช็กอิน · บันทึกประวัติร้าน 1 ครั้ง · แจ้งลูกค้าและทีมร้าน'
+            <RuleList
+              tone="warn"
+              rules={[
+                'คืน Table Fee เต็มจำนวนให้ลูกค้าแทนร้าน (เข้าแท็บ "รอคืนลูกค้า" ที่หน้าเงินมัดจำ)',
+                'ยกเลิกการจองถ้ายังไม่เช็กอิน',
+                'บันทึกประวัติร้าน 1 ครั้ง',
+                { tone: 'info', text: 'แจ้งลูกค้าและทีมร้าน' },
+              ]}
+            />
           }
         />
         <Form layout="vertical" disabled={act.isPending}>
@@ -87,7 +96,7 @@ export function ReportNoTableModal({ open, onClose }: { open: boolean; onClose: 
             label="รายละเอียดข้อร้องเรียน"
             htmlFor={NOTE_ID}
             required
-            extra="อย่างน้อย 3 ตัวอักษร · ทีมร้านเห็นข้อความนี้ในแจ้งเตือน"
+            extra="อย่างน้อย 3 ตัวอักษร ทีมร้านเห็นข้อความนี้ในแจ้งเตือน"
             className="!mb-0"
           >
             <Input.TextArea

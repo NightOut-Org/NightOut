@@ -58,7 +58,7 @@ export function MiniCalendar({
               key={i}
               type="button"
               aria-pressed={sel}
-              aria-label={`${d.format('D MMMM')}${dot ? ' · มีการจอง' : ''}`}
+              aria-label={`${d.format('D MMMM')}${dot ? ' มีการจอง' : ''}`}
               onClick={() => onChange(d)}
               className={`merchant-pill flex h-9 flex-col items-center justify-center gap-0.5 rounded-[10px] text-xs ${
                 sel ? 'bg-gold font-semibold text-on-gold' : past ? 'text-muted/60' : 'text-text hover:bg-surface'

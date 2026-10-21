@@ -1,3 +1,4 @@
+import { Chair, Ticket } from '@phosphor-icons/react';
 import type * as C from '@nightout/contracts';
 import type { BoardDropBlock, TableBoardStatus } from '@nightout/utils';
 import { Button, Empty } from 'antd';
@@ -5,6 +6,8 @@ import { BOOKING_STATUS } from '@/ui/utils/format';
 import { bookingWho, byTableName, hhmm, type BoardIndex } from '../utils/board';
 import { BookingChip } from './bookingChip';
 import { TableCard, type DropState } from './tableCard';
+import { MetaList } from '@/ui/components/metaList';
+import { StatusChip } from '@/ui/components/statusChip';
 
 export type StatusFilter = TableBoardStatus | 'ALL';
 
@@ -46,11 +49,17 @@ function LaneChips({
         <li key={b.id}>
           <BookingChip booking={b} label={`${b.code} ${bookingWho(b)}`} onTap={() => onTap(b)}>
             <span className="truncate font-medium">
-              {hhmm(b.booking_datetime)} · {bookingWho(b)}
+              <span className="mr-2 tabular-nums">{hhmm(b.booking_datetime)}</span>
+              {bookingWho(b)}
             </span>
             <span className="truncate text-xs text-muted">
-              {b.code} · {BOOKING_STATUS[b.status].label}
-              {b.table_name ? ` · เดิมโต๊ะ ${b.table_name}` : ''}
+              <MetaList
+                items={[
+                  { icon: <Ticket weight="fill" />, label: 'รหัสจอง', value: b.code },
+                  BOOKING_STATUS[b.status].label,
+                  b.table_name && { icon: <Chair weight="fill" />, label: 'โต๊ะเดิม', value: `เดิม ${b.table_name}` },
+                ]}
+              />
             </span>
           </BookingChip>
         </li>
@@ -93,10 +102,14 @@ export function FloorGrid({
           <section key={zone.id} aria-labelledby={`zone-${zone.id}`} className="flex flex-col gap-2.5">
             <header className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
               <h2 id={`zone-${zone.id}`} className="m-0 text-base font-semibold">
-                {zone.name} · {tables.length} โต๊ะ
+                {zone.name} ({tables.length} โต๊ะ)
               </h2>
               <span className="text-xs text-muted">
-                ว่าง {count('FREE')} · จองแล้ว {count('RESERVED')} · กำลังใช้ {count('IN_USE')}
+                <span className="flex flex-wrap gap-1.5">
+                  <StatusChip tone="success" value={count('FREE')}>ว่าง</StatusChip>
+                  <StatusChip tone="gold" value={count('RESERVED')}>จองแล้ว</StatusChip>
+                  <StatusChip tone="purple" value={count('IN_USE')}>กำลังใช้</StatusChip>
+                </span>
               </span>
             </header>
             {lane.length > 0 && (

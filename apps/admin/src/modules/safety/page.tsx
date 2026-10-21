@@ -16,6 +16,7 @@ import { InspectDrawer } from './components/inspectDrawer';
 import { InspectionHistory } from './components/inspectionHistory';
 import { useSafetyBars, useSafetyQueue, verifySafetyAction } from './api';
 import { SAFETY_CHECK_TAG, SAFETY_VERIFY_TAG } from './utils/labels';
+import { RuleList } from '@/ui/components/RuleList';
 
 type Stage = 'all' | 'pending' | 'evidence';
 
@@ -56,12 +57,23 @@ export function SafetyPage() {
   return (
     <PageContainer
       title="ยืนยัน Safety"
-      content="รายการที่ร้านแจ้งว่า “มี” แต่ทีมยังไม่ได้ลงพื้นที่ตรวจ · “ยืนยันแล้ว” = ตรวจจากหลักฐานที่ร้านแนบ (ลูกค้าเห็น “ตรวจหลักฐานแล้ว”) · แอดมินทุกคนลงพื้นที่ตรวจได้ ระบบบันทึกชื่อผู้ตรวจและวันที่ (ลูกค้าเห็น “ทีมงานลงพื้นที่ตรวจ”)"
+      content={
+        <RuleList
+          rules={[
+            'รายการที่ร้านแจ้งว่า “มี” แต่ทีมยังไม่ได้ลงพื้นที่ตรวจ',
+            'กด “ยืนยันแล้ว” = ตรวจจากหลักฐานที่ร้านแนบ ลูกค้าเห็นป้าย “ตรวจหลักฐานแล้ว”',
+            'ลงพื้นที่ตรวจได้ทุกคน ระบบบันทึกชื่อผู้ตรวจและวันที่ ลูกค้าเห็นป้าย “ทีมงานลงพื้นที่ตรวจ”',
+          ]}
+        />
+      }
     >
-      <LoadError error={queue.error ?? bars.error} onRetry={() => {
+      <LoadError
+        error={queue.error ?? bars.error}
+        onRetry={() => {
           void queue.refetch();
           void bars.refetch();
-        }} />
+        }}
+      />
       <div className="mb-4 flex flex-wrap items-center gap-2">
         <Select
           className="w-full sm:w-72"
@@ -121,7 +133,11 @@ export function SafetyPage() {
                       key: 'bar',
                       width: 170,
                       render: (_, r) => (
-                        <Button type="link" className="!h-auto !p-0 text-left" onClick={() => setParam('bar', r.bar_id)}>
+                        <Button
+                          type="link"
+                          className="!h-auto !p-0 text-left"
+                          onClick={() => setParam('bar', r.bar_id)}
+                        >
                           {r.bar.name}
                         </Button>
                       ),
@@ -136,10 +152,12 @@ export function SafetyPage() {
                           <Tag color="gold">รอตรวจ</Tag>
                         ) : (
                           <span className="flex flex-col items-start gap-0.5">
-                            <Tag color={SAFETY_VERIFY_TAG.EVIDENCE.color}>{safetyVerifyLabel(r.verify_method)}</Tag>
+                            <Tag color={SAFETY_VERIFY_TAG.EVIDENCE.color}>
+                              {safetyVerifyLabel(r.verify_method)}
+                            </Tag>
                             <span className="text-xs opacity-70">
                               {r.verified_at ? date(r.verified_at) : '-'}
-                              {r.verified_by_name ? ` · ${r.verified_by_name}` : ''}
+                              {r.verified_by_name ? ` โดย ${r.verified_by_name}` : ''}
                             </span>
                           </span>
                         ),
@@ -149,9 +167,18 @@ export function SafetyPage() {
                       dataIndex: 'evidence_path',
                       width: 110,
                       render: (p: string | null) =>
-                        p ? <SlipImage bucket="bar-verifications" path={p} /> : <span className="text-xs text-muted">ยังไม่แนบ</span>,
+                        p ? (
+                          <SlipImage bucket="bar-verifications" path={p} />
+                        ) : (
+                          <span className="text-xs text-muted">ยังไม่แนบ</span>
+                        ),
                     },
-                    { title: 'หมายเหตุจากร้าน', dataIndex: 'note', width: 160, render: (v: string | null) => v ?? '-' },
+                    {
+                      title: 'หมายเหตุจากร้าน',
+                      dataIndex: 'note',
+                      width: 160,
+                      render: (v: string | null) => v ?? '-',
+                    },
                     {
                       title: 'ลูกค้าแจ้งว่าไม่จริง',
                       dataIndex: 'open_inaccurate_reports',
@@ -166,13 +193,22 @@ export function SafetyPage() {
                         r.last_result ? (
                           <span className="flex flex-col items-start gap-0.5">
                             <StatusTag map={SAFETY_CHECK_TAG} value={r.last_result} />
-                            {r.last_inspected_at && <span className="text-xs opacity-70">{date(r.last_inspected_at)}</span>}
+                            {r.last_inspected_at && (
+                              <span className="text-xs opacity-70">
+                                {date(r.last_inspected_at)}
+                              </span>
+                            )}
                           </span>
                         ) : (
                           '-'
                         ),
                     },
-                    { title: 'แจ้งเมื่อ', dataIndex: 'updated_at', width: 150, render: (v: string) => dateTime(v) },
+                    {
+                      title: 'แจ้งเมื่อ',
+                      dataIndex: 'updated_at',
+                      width: 150,
+                      render: (v: string) => dateTime(v),
+                    },
                     {
                       title: '',
                       key: 'a',
@@ -186,13 +222,16 @@ export function SafetyPage() {
                             <Tooltip
                               title={
                                 r.evidence_path
-                                  ? 'ตรวจจากหลักฐานที่ร้านแนบ — ไม่ได้ลงพื้นที่ · ลูกค้าเห็น “ตรวจหลักฐานแล้ว”'
+                                  ? 'ตรวจจากหลักฐานที่ร้านแนบ (ไม่ได้ลงพื้นที่) ลูกค้าเห็น “ตรวจหลักฐานแล้ว”'
                                   : 'ร้านยังไม่แนบหลักฐาน — ลงพื้นที่ตรวจแทน'
                               }
                             >
                               <Button
                                 disabled={!r.evidence_path}
-                                loading={act.isPending && act.variables?.path === verifySafetyAction(r.id).path}
+                                loading={
+                                  act.isPending &&
+                                  act.variables?.path === verifySafetyAction(r.id).path
+                                }
                                 onClick={() =>
                                   act.mutate(
                                     {
@@ -222,7 +261,11 @@ export function SafetyPage() {
           { key: 'history', label: 'ประวัติการตรวจ', children: <InspectionHistory barId={bar} /> },
         ]}
       />
-      <InspectDrawer barId={inspect} barName={nameOf(inspect)} onClose={() => setParam('inspect', null)} />
+      <InspectDrawer
+        barId={inspect}
+        barName={nameOf(inspect)}
+        onClose={() => setParam('inspect', null)}
+      />
     </PageContainer>
   );
 }

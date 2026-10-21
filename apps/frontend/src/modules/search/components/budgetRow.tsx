@@ -1,14 +1,17 @@
-import { NavigationArrow, ShieldCheck, Users } from '@phosphor-icons/react';
+import { MapPin, NavigationArrow, ShieldCheck, Users } from '@phosphor-icons/react';
 import { CATEGORY_LABELS, safetyScore, type BarWithTier } from '@/services/data';
 import type { MouseEvent, ReactNode } from 'react';
 import { Link } from 'react-router';
+import { AdBadge } from '@/ui/components/adBadge';
 import { BarRating } from '@/ui/components/barRating';
 import { CrowdBadge } from '@/ui/components/crowdBadge';
 import { DealBadge } from '@/ui/components/dealBadge';
 import { FavoriteButton } from '@/ui/components/favoriteButton';
+import { MetaList } from '@/ui/components/metaList';
 import { PRBadge } from '@/ui/components/prBadge';
 import { barImage } from '@/ui/utils/barImage';
 import { baht } from '@/ui/utils/format';
+import { barPlace } from '@/ui/utils/area';
 
 /** ความจุโซนที่ใหญ่ที่สุด = กลุ่มใหญ่สุดที่ร้านรับได้ในโต๊ะเดียว */
 const maxGroup = (bar: BarWithTier) => Math.max(0, ...bar.zones.map((z) => z.capacityPax));
@@ -79,23 +82,22 @@ export function BudgetRow({
           barId={bar.id}
           className="!absolute right-1.5 top-1.5 !size-[30px] !min-w-0 !border-0 !bg-black/55 !text-white backdrop-blur"
         />
-        {bar.promoted && (
-          <span className="absolute bottom-1.5 left-1.5 rounded-md bg-gold px-1.5 text-[10px] font-semibold text-on-gold">
-            แนะนำ · โฆษณา
-          </span>
-        )}
+        {bar.promoted && <AdBadge variant="overlay" className="absolute bottom-1.5 left-1.5 !text-[10px] !leading-4" />}
       </div>
 
       <div className="flex min-w-0 flex-col gap-2 py-0.5 pr-1">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
             <b className="block truncate text-[17px] leading-snug">{bar.name}</b>
-            <p className="mt-0.5 flex min-w-0 items-center gap-1.5 truncate text-xs text-muted">
+            <p className="mt-0.5 flex min-w-0 items-center gap-3 text-xs text-muted">
               <BarRating bar={bar} compact />
-              <span aria-hidden>·</span>
-              <span className="truncate">
-                {bar.district} · {CATEGORY_LABELS[bar.category]}
-              </span>
+              <MetaList
+                className="min-w-0 flex-nowrap"
+                items={[
+                  { icon: <MapPin weight="fill" />, label: 'พื้นที่', value: barPlace(bar) },
+                  CATEGORY_LABELS[bar.category],
+                ]}
+              />
             </p>
           </div>
           <div className="shrink-0 text-right leading-tight">

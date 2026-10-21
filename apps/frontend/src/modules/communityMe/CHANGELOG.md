@@ -1,5 +1,10 @@
 # CHANGELOG — frontend · communityMe
 
+## 2026-10-21 — ปุ่มกลับไปหน้ากระทู้ + เอา footer ออก
+- เพิ่มลิงก์ "กลับไปหน้ากระทู้" (→ `/community`) เหนือหัวข้อ เดิมไม่มีทางกลับนอกจากปุ่มย้อนกลับของเบราว์เซอร์
+- ซ่อน footer ของเว็บที่หน้านี้ (`handle: { hideFooter: true }` ใน `router/index.tsx`)
+- ไฟล์: `page.tsx` · `src/router/index.tsx`
+
 ## 2026-10-16 — พื้นหลังเหมือนหน้าชุมชน
 - ใส่พื้นหลัง Golden Embers (`EmbersBackdrop`) + การ์ดกระจก (`embers-glass`) แบบเดียวกับหน้า `/community` (ธีมมืด) แทนพื้นดำเรียบ
 - ไฟล์: `communityMe/page.tsx`

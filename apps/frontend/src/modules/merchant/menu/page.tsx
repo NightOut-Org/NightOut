@@ -1,4 +1,4 @@
-import { MagnifyingGlass, PencilSimple, Plus, Trash } from '@phosphor-icons/react';
+import { EyeSlash, MagnifyingGlass, PencilSimple, Plus, Trash } from '@phosphor-icons/react';
 import {
   App,
   Empty,
@@ -13,6 +13,7 @@ import {
 } from 'antd';
 import { useEffect, useMemo, useState } from 'react';
 import { type MenuItem } from '@/services/data';
+import { HEADER_ADD_CLASS, HEADER_SAVE_CLASS } from '@/ui/utils/buttonClasses';
 import { useMerchantBar } from '@/hooks/useMerchantBar';
 import { useUnsavedGuard } from '@/hooks/useUnsavedGuard';
 import { Chip } from '@/ui/components/merchantUi';
@@ -21,6 +22,7 @@ import { PHOTO_ACCEPT, checkPhoto } from '@/ui/utils/media';
 import { setMenu } from './api';
 import { MenuPhoto } from './components/menuPhoto';
 import { useMenuDraft } from './utils/useMenuDraft';
+import { DraftChip, StatusChip } from '@/ui/components/statusChip';
 
 const CATS: MenuItem['category'][] = ['เครื่องดื่ม', 'มิกเซอร์', 'อาหาร', 'ของทานเล่น'];
 type ItemForm = Pick<MenuItem, 'category' | 'name' | 'price' | 'available'>;
@@ -133,9 +135,7 @@ export function MerchantMenuPage() {
   const stateTag = (m: MenuItem) => {
     const st = draft.stateOf(m);
     return st ? (
-      <span className="ml-1.5 whitespace-nowrap rounded-full bg-gold/15 px-2 py-0.5 align-middle text-[11px] font-normal text-gold-text">
-        {st === 'new' ? 'ใหม่ · ยังไม่บันทึก' : 'ยังไม่บันทึก'}
-      </span>
+      <DraftChip state={st === 'new' ? 'new' : 'changed'} className="ml-1.5 align-middle" />
     ) : null;
   };
   const empty = (
@@ -152,7 +152,7 @@ export function MerchantMenuPage() {
         <div className="min-w-0">
           <h1 className="text-[17px] font-bold lg:font-display lg:text-[30px]">เมนู</h1>
           <p className="mt-1 hidden text-sm text-muted lg:block">
-            {menu.length} รายการ · ใช้คำนวณยอดประเมินให้ลูกค้า (+ SC {pct(serviceChargeRate)} + VAT{' '}
+            {menu.length} รายการ ใช้คำนวณยอดประเมินให้ลูกค้า (+ SC {pct(serviceChargeRate)} + VAT{' '}
             {pct(vatRate)})
           </p>
         </div>
@@ -175,12 +175,12 @@ export function MerchantMenuPage() {
             type="button"
             disabled={saving}
             onClick={() => openEditor('new')}
-            className="merchant-pill hidden h-10 items-center gap-2 rounded-xl bg-gold px-[18px] text-sm font-semibold text-on-gold disabled:opacity-60 lg:inline-flex"
+            className={HEADER_ADD_CLASS}
           >
             <Plus /> เพิ่มรายการ
           </button>
           {saveButton(
-            'hidden h-10 items-center rounded-xl bg-gold px-[18px] text-sm font-semibold text-on-gold lg:inline-flex',
+            HEADER_SAVE_CLASS,
             'บันทึกการเปลี่ยนแปลง',
           )}
           <button
@@ -202,6 +202,16 @@ export function MerchantMenuPage() {
           aria-label="หมวดเมนู"
           className="flex flex-col gap-0.5 self-start rounded-[20px] border border-border bg-card p-2.5"
         >
+          <label className="mb-2 flex h-9 items-center gap-2 rounded-xl border border-border bg-surface px-3 text-muted focus-within:border-gold">
+            <MagnifyingGlass />
+            <input
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="ค้นหาเมนู"
+              aria-label="ค้นหาเมนู"
+              className="min-w-0 flex-1 bg-transparent text-sm text-text outline-none placeholder:text-muted"
+            />
+          </label>
           {[null, ...CATS].map((c) => {
             const on = cat === c;
             return (
@@ -219,16 +229,6 @@ export function MerchantMenuPage() {
               </button>
             );
           })}
-          <label className="mt-2 flex h-9 items-center gap-2 rounded-xl border border-border bg-surface px-3 text-muted focus-within:border-gold">
-            <MagnifyingGlass />
-            <input
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              placeholder="ค้นหาเมนู"
-              aria-label="ค้นหาเมนู"
-              className="min-w-0 flex-1 bg-transparent text-sm text-text outline-none placeholder:text-muted"
-            />
-          </label>
         </nav>
 
         <div className="min-w-0 overflow-hidden rounded-[20px] border border-border bg-card">
@@ -347,7 +347,12 @@ export function MerchantMenuPage() {
                         {m.name}
                       </b>
                       <span className="text-xs text-muted">
-                        {m.available ? m.category : `${m.category} · ซ่อนอยู่`}
+                        {m.category}
+                        {!m.available && (
+                          <StatusChip tone="muted" icon={<EyeSlash weight="fill" />} className="ml-1.5 align-middle">
+                            ซ่อนอยู่
+                          </StatusChip>
+                        )}
                         {stateTag(m)}
                       </span>
                     </span>
@@ -425,7 +430,7 @@ export function MerchantMenuPage() {
           </div>
           <Form.Item
             label="รูป (ไม่บังคับ)"
-            extra="JPG, PNG หรือ WebP ไม่เกิน 15MB · ลูกค้าเห็นในแท็บเมนูของหน้าร้าน"
+            extra="JPG, PNG หรือ WebP ไม่เกิน 15MB และลูกค้าเห็นในแท็บเมนูของหน้าร้าน"
             className="!mb-0"
           >
             <div className="flex items-center gap-3">

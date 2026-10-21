@@ -1,16 +1,20 @@
-import { Plus, Trash, Warning } from '@phosphor-icons/react';
+import { CalendarDots, Clock, Plus, Trash, Warning } from '@phosphor-icons/react';
 import { ALCOHOL_WARNING_TEXT, alcoholWordsIn, estimatePrice } from '@nightout/utils';
 import { Alert, App, Checkbox, Empty, Form, Input, InputNumber, Modal, Switch, TimePicker } from 'antd';
 import dayjs from 'dayjs';
 import { useState } from 'react';
 import { barBookings, type Bar, type BarPromotion } from '@/services/data';
 import { useFormDirty } from '@/hooks/useFormDirty';
+import { HEADER_ADD_CLASS, HEADER_SAVE_CLASS } from '@/ui/utils/buttonClasses';
 import { useMerchantBar } from '@/hooks/useMerchantBar';
 import { useUnsavedGuard } from '@/hooks/useUnsavedGuard';
 import { Tile } from '@/ui/components/merchantUi';
 import { baht } from '@/ui/utils/format';
 import { savePromotionsPage, toPromotionItems } from './api';
 import { usePromotionsDraft } from './utils/usePromotionsDraft';
+import { MetaList } from '@/ui/components/metaList';
+import { DraftChip } from '@/ui/components/statusChip';
+import { RuleList } from '@/ui/components/ruleList';
 
 const DAYS = ['อา.', 'จ.', 'อ.', 'พ.', 'พฤ.', 'ศ.', 'ส.'];
 const DAY_SHORT = ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'];
@@ -152,11 +156,7 @@ export function MerchantPromotionsPage() {
             {p.active ? 'เปิดอยู่' : 'ปิดอยู่'}
           </span>
           {moderation(p)}
-          {state && (
-            <span className="rounded-full bg-gold/15 px-2 text-[11px] text-gold-text">
-              {state === 'new' ? 'ใหม่ · ยังไม่บันทึก' : 'ยังไม่บันทึก'}
-            </span>
-          )}
+          {state && <DraftChip state={state === 'new' ? 'new' : 'changed'} />}
         </span>
         <span className="flex items-center gap-1">
           <button
@@ -188,7 +188,12 @@ export function MerchantPromotionsPage() {
       {p.description && <span className="hidden text-[13px] text-muted lg:block">{p.description}</span>}
       <AlcoholWarning words={promoAlcoholWords(p.title, p.description)} />
       <span className="text-[13px] text-muted lg:hidden">
-        {p.cutoffTime ? `ก่อน ${p.cutoffTime}` : 'ทั้งคืน'} · {daysLabel(p.days)}
+        <MetaList
+          items={[
+            { icon: <Clock weight="fill" />, label: 'เวลา', value: p.cutoffTime ? `ก่อน ${p.cutoffTime}` : 'ทั้งคืน' },
+            { icon: <CalendarDots weight="fill" />, label: 'วัน', value: daysLabel(p.days) },
+          ]}
+        />
       </span>
       <div className="mt-auto hidden grid-cols-2 gap-2 lg:grid">
         <span className="flex flex-col gap-0.5 rounded-xl bg-surface p-2.5">
@@ -210,9 +215,14 @@ export function MerchantPromotionsPage() {
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0">
           <h1 className="text-[17px] font-bold lg:font-display lg:text-[30px]">โปรโมชัน</h1>
-          <p className="mt-1 hidden text-sm text-muted lg:block">
-            ลูกค้าเลือกได้ 1 โปรตอนจองโต๊ะ · ระบบเช็กเวลา/วันให้อัตโนมัติ · ใช้กับอาหาร ค่าเข้า หรือบริการเท่านั้น · โปรที่ใช้ได้วันนี้ขึ้นป้าย "ดีลวันนี้" บนการ์ดร้านและหน้าร้าน
-          </p>
+          <RuleList
+            className="mt-2 hidden text-sm text-muted lg:block"
+            rules={[
+              'ลูกค้าเลือกได้ 1 โปรตอนจองโต๊ะ และระบบเช็กเวลา/วันให้อัตโนมัติ',
+              { tone: 'warn', text: 'ใช้กับอาหาร ค่าเข้า หรือบริการเท่านั้น' },
+              'โปรที่ใช้ได้วันนี้ขึ้นป้าย "ดีลวันนี้" บนการ์ดร้านและหน้าร้าน',
+            ]}
+          />
         </div>
         <div className="flex items-center gap-1 lg:gap-3">
           {count > 0 && !saving && (
@@ -233,11 +243,11 @@ export function MerchantPromotionsPage() {
             type="button"
             disabled={saving}
             onClick={() => setOpen(true)}
-            className="merchant-pill hidden h-10 items-center gap-2 rounded-xl bg-gold px-[18px] text-sm font-semibold text-on-gold disabled:opacity-60 lg:inline-flex"
+            className={HEADER_ADD_CLASS}
           >
             <Plus /> สร้างโปร
           </button>
-          {saveButton('hidden h-10 items-center rounded-xl bg-gold px-[18px] text-sm font-semibold text-on-gold lg:inline-flex', 'บันทึกการเปลี่ยนแปลง')}
+          {saveButton(HEADER_SAVE_CLASS, 'บันทึกการเปลี่ยนแปลง')}
           <button
             type="button"
             aria-label="สร้างโปร"
@@ -297,7 +307,7 @@ export function MerchantPromotionsPage() {
             <Warning /> ข้อกำหนด
           </span>
           <span className="text-[13px] leading-relaxed text-pretty">
-            ไม่ทำโปรลด แจก หรือแถมเครื่องดื่มแอลกอฮอล์ และไม่ใช้คำเลี่ยง · โปรใหม่หรือที่แก้ข้อความ ทีม NightOut
+            ไม่ทำโปรลด แจก หรือแถมเครื่องดื่มแอลกอฮอล์ และไม่ใช้คำเลี่ยง โปรใหม่หรือที่แก้ข้อความ ทีม NightOut
             ตรวจถ้อยคำก่อนแสดง และปิดโปรที่ไม่ผ่าน
           </span>
         </div>

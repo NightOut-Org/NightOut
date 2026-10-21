@@ -14,8 +14,6 @@ import { RequireAuth, RequireBarRole, RequireRole } from './middleware';
  * ทุกหน้ายกเว้น Home โหลดแบบ lazy (แยก chunk ต่อหน้า) — bundle แรกเล็กลง หน้าแรกขึ้นไว
  */
 const routes: RouteObject[] = [
-  // แผนที่เต็มจอ (ไม่มี navbar — มีปุ่มลอยของตัวเอง) ซ่อนไว้ก่อนตอนนี้ไม่ใช้
-  { path: 'map', lazy: () => import('@/modules/map/page').then((m) => ({ Component: m.MapPage })) },
   // /login, /register = redirect ไปหน้าหลักแล้วเปิด modal (ลิงก์เก่า + RequireAuth)
   {
     path: 'login',
@@ -196,6 +194,7 @@ const routes: RouteObject[] = [
           },
           {
             path: 'community/me',
+            handle: { hideFooter: true },
             lazy: () =>
               import('@/modules/communityMe/page').then((m) => ({ Component: m.CommunityMePage })),
           },

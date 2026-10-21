@@ -111,4 +111,4 @@ export const byTableName = (a: { name: string }, b: { name: string }) =>
   a.name.localeCompare(b.name, 'th', { numeric: true });
 
 /** "{code} · {ชื่อ} · {n} คน" */
-export const bookingWho = (b: C.TableBoardBooking) => `${b.customer_name ?? 'ลูกค้า'} · ${b.pax} คน`;
+export const bookingWho = (b: C.TableBoardBooking) => `${b.customer_name ?? 'ลูกค้า'} (${b.pax} คน)`;

@@ -36,7 +36,7 @@ export function StrikeDrawer({
       onClose={onClose}
       size="large"
       destroyOnHidden
-      title={shown ? `${shown.name} · ไม่มีโต๊ะให้ลูกค้า ${shown.strike_count} ครั้ง` : ''}
+      title={shown ? `${shown.name} ไม่มีโต๊ะให้ลูกค้า ${shown.strike_count} ครั้ง` : ''}
       extra={
         shown &&
         (shown.is_blacklisted ? (
@@ -75,7 +75,7 @@ export function StrikeDrawer({
             </span>
             {shown.last_strike_at && (
               <Typography.Text type="secondary">
-                · ล่าสุด {dateTime(shown.last_strike_at)}
+                (ล่าสุด {dateTime(shown.last_strike_at)})
               </Typography.Text>
             )}
           </div>
@@ -112,7 +112,7 @@ function StrikeItem({ strike: s }: { strike: Db.AdminBarStrike }) {
           {s.booking_code}
         </Typography.Text>
         <span className="text-sm tabular-nums">
-          นัด {dateTime(s.booking_datetime)} · {s.pax} คน
+          นัด {dateTime(s.booking_datetime)} ({s.pax} คน)
         </span>
       </div>
       <div className="flex flex-wrap items-center gap-1">
@@ -125,7 +125,7 @@ function StrikeItem({ strike: s }: { strike: Db.AdminBarStrike }) {
         </Typography.Paragraph>
       )}
       <Typography.Text type="secondary" className="text-xs">
-        แจ้งโดย {s.reported_by ?? '-'} · {dateTime(s.created_at)}
+        แจ้งโดย {s.reported_by ?? '-'} เมื่อ {dateTime(s.created_at)}
       </Typography.Text>
     </div>
   );

@@ -2,9 +2,11 @@ import { MapPin } from '@phosphor-icons/react';
 import { Tag } from 'antd';
 import { CATEGORY_LABELS, type BarWithTier } from '@/services/data';
 import { BarCover } from '@/ui/components/barCard';
+import { AdBadge } from '@/ui/components/adBadge';
 import { BarRating } from '@/ui/components/barRating';
 import { CrowdBadge } from '@/ui/components/crowdBadge';
 import { FavoriteButton } from '@/ui/components/favoriteButton';
+import { barPlaceFull } from '@/ui/utils/area';
 
 /** ภาพปกร้านเต็มความกว้าง + ปุ่มร้านโปรด */
 export function BarHero({ bar }: { bar: BarWithTier }) {
@@ -22,7 +24,7 @@ export function BarHeader({ bar }: { bar: BarWithTier }) {
     <>
       <div className="flex flex-wrap items-center gap-2">
         <Tag>{CATEGORY_LABELS[bar.category]}</Tag>
-        {bar.promoted && <Tag>แนะนำ · โฆษณา</Tag>}
+        {bar.promoted && <AdBadge />}
         {bar.styles.map((s) => (
           <Tag key={s} color="purple" variant="filled">
             {s}
@@ -33,7 +35,7 @@ export function BarHeader({ bar }: { bar: BarWithTier }) {
       <div className="mt-2 flex flex-wrap items-center gap-4 text-sm">
         <BarRating bar={bar} />
         <span className="inline-flex items-center gap-1 text-muted">
-          <MapPin /> {bar.district}
+          <MapPin weight="fill" className="text-gold-text/80" /> {barPlaceFull(bar)}
         </span>
         <CrowdBadge crowd={bar.crowd} updatedAt={bar.crowdUpdatedAt} showTime />
       </div>

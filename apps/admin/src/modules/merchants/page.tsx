@@ -12,6 +12,7 @@ import { dateTime } from '@/ui/utils/format';
 import { BAR_STATUS, CATEGORY } from '@/ui/utils/labels';
 import { PinDrawer } from './components/pinDrawer';
 import { usePendingBars, barStatusAction, usePendingBarLocations } from './api';
+import { RuleList } from '@/ui/components/RuleList';
 
 /**
  * ร้านที่ส่งข้อมูลมาให้ตรวจ — อนุมัติแล้วร้านจะแสดงบนเว็บทันที
@@ -20,7 +21,10 @@ import { usePendingBars, barStatusAction, usePendingBarLocations } from './api';
 export function MerchantsPage() {
   const { data, isLoading, error, refetch } = usePendingBars();
   const locations = usePendingBarLocations();
-  const locById = useMemo(() => new Map((locations.data ?? []).map((l) => [l.id, l])), [locations.data]);
+  const locById = useMemo(
+    () => new Map((locations.data ?? []).map((l) => [l.id, l])),
+    [locations.data],
+  );
   const [pinFor, setPinFor] = useState<string | null>(null);
   const pinBar = pinFor ? locById.get(pinFor) : undefined;
   const act = useAdminAction();
@@ -33,7 +37,15 @@ export function MerchantsPage() {
   return (
     <PageContainer
       title="ร้านรออนุมัติ"
-      content="ร้านที่อนุมัติแล้วจะแสดงบนเว็บทันที · ร้านสถานะร่างยังกรอกข้อมูลไม่ครบ · อนุมัติร้าน = ตรวจหมุดไปพร้อมกัน"
+      content={
+        <RuleList
+          rules={[
+            'การอนุมัติร้านคือการตรวจหมุดไปพร้อมกัน',
+            'ร้านสถานะร่างยังกรอกข้อมูลไม่ครบ',
+            { tone: 'check', text: 'อนุมัติแล้วร้านแสดงบนเว็บทันที' },
+          ]}
+        />
+      }
     >
       <LoadError
         error={error ?? locations.error}
@@ -51,24 +63,39 @@ export function MerchantsPage() {
         locale={{ emptyText: 'ไม่มีร้านรอตรวจ' }}
         columns={[
           { title: 'ร้าน', dataIndex: 'name' },
-          { title: 'ประเภท', dataIndex: 'category', render: (c: Db.AdminBar['category']) => CATEGORY[c] },
+          {
+            title: 'ประเภท',
+            dataIndex: 'category',
+            render: (c: Db.AdminBar['category']) => CATEGORY[c],
+          },
           { title: 'ย่าน', key: 'district', render: (_, b) => b.district?.name_th ?? '-' },
           { title: 'เจ้าของ', key: 'owner', render: (_, b) => b.owner?.email ?? '-' },
           { title: 'ส่งเมื่อ', dataIndex: 'created_at', render: (v: string) => dateTime(v) },
-          { title: 'สถานะ', dataIndex: 'status', render: (s: string) => <StatusTag map={BAR_STATUS} value={s} /> },
+          {
+            title: 'สถานะ',
+            dataIndex: 'status',
+            render: (s: string) => <StatusTag map={BAR_STATUS} value={s} />,
+          },
           {
             title: 'หมุด',
             key: 'pin',
             width: 320,
             render: (_, b) => {
               const loc = locById.get(b.id);
-              if (!loc) return <span className="text-muted">{locations.isLoading ? 'กำลังโหลด…' : '-'}</span>;
+              if (!loc)
+                return (
+                  <span className="text-muted">{locations.isLoading ? 'กำลังโหลด…' : '-'}</span>
+                );
               return loc.is_default_pin ? (
                 <span className="inline-flex flex-wrap items-center gap-2">
                   <Tag color="red" className="!m-0">
                     ยังไม่ปักหมุด
                   </Tag>
-                  <Button size="small" icon={<MapPin size={14} aria-hidden />} onClick={() => setPinFor(b.id)}>
+                  <Button
+                    size="small"
+                    icon={<MapPin size={14} aria-hidden />}
+                    onClick={() => setPinFor(b.id)}
+                  >
                     ปักหมุด
                   </Button>
                 </span>

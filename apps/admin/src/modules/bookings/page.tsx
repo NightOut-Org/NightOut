@@ -27,7 +27,7 @@ function ConsentEvidence({ c }: { c: Db.AdminDepositConsent | null }) {
         <dd>{dateTime(c.accepted_at)}</dd>
         <dt className="text-muted">มัดจำ</dt>
         <dd>
-          {baht(c.deposit_amount)} · คืนได้ถ้ายกเลิกก่อน {c.refund_before_hours} ชม. · มาสายได้ {c.grace_minutes} นาที
+          {baht(c.deposit_amount)} คืนได้ถ้ายกเลิกก่อน {c.refund_before_hours} ชม. และมาสายได้ {c.grace_minutes} นาที
         </dd>
         <dt className="text-muted">IP</dt>
         <dd>{c.ip ?? '-'}</dd>
@@ -91,9 +91,9 @@ export function BookingsPage() {
                 items={b.status_history.map((h) => ({
                   content: (
                     <span className="text-sm">
-                      {dateTime(h.created_at)} · {h.from_status ? `${BOOKING_STATUS[h.from_status].text} → ` : ''}
-                      {BOOKING_STATUS[h.to_status].text} · {h.changed_by ?? 'ระบบ'}
-                      {h.reason && h.reason !== 'created' ? ` · ${h.reason}` : ''}
+                      {dateTime(h.created_at)} {h.from_status ? `${BOOKING_STATUS[h.from_status].text} → ` : ''}
+                      {BOOKING_STATUS[h.to_status].text} โดย {h.changed_by ?? 'ระบบ'}
+                      {h.reason && h.reason !== 'created' ? ` (${h.reason})` : ''}
                     </span>
                   ),
                 }))}
@@ -109,7 +109,7 @@ export function BookingsPage() {
           { title: 'เบอร์', dataIndex: 'contact_phone', render: (v: string | null) => (v ? formatThaiPhone(v) : '-') },
           { title: 'เวลา', dataIndex: 'booking_datetime', render: (v: string) => dateTime(v) },
           { title: 'คน', dataIndex: 'pax' },
-          { title: 'โซน / โต๊ะ', key: 'zone', render: (_, b) => [b.zone_name, b.table_name].filter(Boolean).join(' · ') || '-' },
+          { title: 'โซน / โต๊ะ', key: 'zone', render: (_, b) => [b.zone_name, b.table_name && `โต๊ะ ${b.table_name}`].filter(Boolean).join(' ') || '-' },
           { title: 'มัดจำ', dataIndex: 'deposit_required', align: 'right', render: (v: number) => (v ? baht(v) : '-') },
           {
             title: 'สถานะ',

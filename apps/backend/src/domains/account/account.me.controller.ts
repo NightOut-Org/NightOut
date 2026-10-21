@@ -111,7 +111,7 @@ export class AccountMeController {
     const t = bearerOf(req);
     const [bookings, notifications, favorites, reviews, prefs, bars, reviewReports] = await Promise.all([
       this.db.selectAs<unknown[]>(t, `booking_detail?select=*&user_id=eq.${me.id}&order=booking_datetime.desc`),
-      this.db.selectAs<unknown[]>(t, `notifications?select=id,user_id,title,body,payload,read_at,created_at&user_id=eq.${me.id}&order=created_at.desc&limit=100`),
+      this.db.selectAs<unknown[]>(t, `notifications?select=id,user_id,bar_id,title,body,payload,read_at,created_at&user_id=eq.${me.id}&order=created_at.desc&limit=100`),
       this.db.selectAs<unknown[]>(t, 'my_favorites?select=id'),
       this.db.selectAs<unknown[]>(t, 'my_reviews?select=*&order=created_at.desc'),
       this.db.selectAs<unknown[]>(t, `user_preferences?select=*&user_id=eq.${me.id}&limit=1`),

@@ -58,8 +58,8 @@ describe('location — transit', () => {
     for (const line of TRANSIT_LINES) expect(TRANSIT_LINE_LABELS[line]).toBeTruthy();
   });
   it('formats line + station + walking minutes', () => {
-    expect(formatTransit({ line: 'BTS', station: 'อารีย์', walkMinutes: 5 })).toBe('BTS อารีย์ · เดิน 5 นาที');
-    expect(formatTransit({ line: 'ARL', station: 'มักกะสัน', walkMinutes: 10 })).toBe('Airport Rail Link มักกะสัน · เดิน 10 นาที');
+    expect(formatTransit({ line: 'BTS', station: 'อารีย์', walkMinutes: 5 })).toBe('BTS อารีย์ (เดิน 5 นาที)');
+    expect(formatTransit({ line: 'ARL', station: 'มักกะสัน', walkMinutes: 10 })).toBe('Airport Rail Link มักกะสัน (เดิน 10 นาที)');
   });
   it('omits the walk when not given', () => {
     expect(formatTransit({ line: 'MRT', station: 'สุขุมวิท' })).toBe('MRT สุขุมวิท');

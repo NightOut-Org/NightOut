@@ -1,5 +1,8 @@
 # CHANGELOG — @nightout/types
 
+## 2026-10-20 — พื้นที่ร้านครบทั้งประเทศ (หาจากหมุด)
+- `database.ts`: `Db.AdminBarArea` (view `admin_bar_areas`)
+
 ## 2026-10-17 — สีของชั้นบัญชี
 - `database.generated.ts`: ตาราง `roles` + `color` · ฟังก์ชัน `admin_save_role_colors` (`20261017000100`) · `refresh_bar_rating` (`20261016000200`) — push ขึ้น Supabase แล้ว · สร้างใหม่ด้วย `db:types`
 

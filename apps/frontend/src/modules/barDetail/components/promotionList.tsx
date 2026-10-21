@@ -30,7 +30,7 @@ export function PromotionList({ bar }: { bar: Pick<Bar, 'promotions' | 'hours'> 
               <div key={p.id} className="rounded-xl border border-border p-3 opacity-60">
                 <p className="font-semibold">{p.title}</p>
                 <p className="text-xs text-muted">
-                  หมดเวลาวันนี้ · ต้องเช็กอินก่อน {p.cutoffTime} น.
+                  หมดเวลาวันนี้ (ต้องเช็กอินก่อน {p.cutoffTime} น.)
                 </p>
               </div>
             ))}

@@ -66,7 +66,7 @@ export function TeamPage() {
       title="จัดการทีมงาน"
       subTitle={
         data
-          ? `แสดงบนเว็บ ${shown} จาก ${rows.length} คน${isSuperAdmin ? '' : ' · แอดมินแก้/ซ่อนได้เฉพาะแถวของตัวเอง'}`
+          ? `แสดงบนเว็บ ${shown} จาก ${rows.length} คน${isSuperAdmin ? '' : ' (แอดมินแก้/ซ่อนได้เฉพาะแถวของตัวเอง)'}`
           : undefined
       }
       extra={

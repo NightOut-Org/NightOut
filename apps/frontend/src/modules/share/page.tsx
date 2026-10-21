@@ -34,7 +34,7 @@ export function SharePage() {
             <CalendarCheck className="text-gold-text" /> {dateTime(card.booking_datetime)}
           </li>
           <li className="flex items-center gap-2">
-            <UsersThree className="text-gold-text" /> {card.pax} คน · {card.zone_name}
+            <UsersThree className="text-gold-text" /> {card.pax} คน{card.zone_name ? ` โซน ${card.zone_name}` : ''}
           </li>
           <li className="flex items-center gap-2">
             <MapPin className="text-gold-text" /> {card.address}
@@ -52,7 +52,7 @@ export function SharePage() {
                   {baht(feePerHead)} <span className="text-sm font-normal text-muted">/ คน</span>
                 </p>
                 <p className="text-sm text-muted">
-                  {TABLE_FEE_LABEL} {baht(fee)} หาร {card.pax} คน · {card.host_first_name} เป็นคนจ่ายผ่านแอป โอนส่วนของคุณให้ {card.host_first_name} โดยตรง
+                  {TABLE_FEE_LABEL} {baht(fee)} หาร {card.pax} คน โดย {card.host_first_name} เป็นคนจ่ายผ่านแอป โอนส่วนของคุณให้ {card.host_first_name} โดยตรง
                 </p>
               </>
             )}

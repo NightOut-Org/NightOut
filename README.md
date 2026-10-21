@@ -6,15 +6,9 @@
 
 > **สถานะ:** 🧪 Demo — ทุกหน้าตาม [`docs/SITEMAP.md`](docs/SITEMAP.md) ใช้งานได้ด้วย **โหมดเดโม** (ข้อมูลร้านสมมติ 15 ร้าน เก็บในเบราว์เซอร์) · เชื่อม Supabase ตาม [`docs/SUPABASE.md`](docs/SUPABASE.md)
 
-### 🧪 ลองใช้โหมดเดโม
+### 🧪 เริ่มใช้งาน
 
-1. `pnpm install` แล้ว `pnpm dev` → เปิด http://localhost:5173 (ลูกค้า + ร้าน) และ http://localhost:5173/admin/ (แอดมิน — proxy ไป :5174 ให้ใช้ session ล็อกอินร่วมกับหน้าบ้าน)
-2. ไม่ต้องตั้ง `.env` — ถ้าไม่มี `VITE_SUPABASE_URL` แอปจะเข้าโหมดเดโมเอง (มีแถบม่วงด้านบน + ปุ่มรีเซ็ตข้อมูล)
-3. หน้า `/login` มีปุ่มเข้าเร็ว **ลูกค้า / เจ้าของร้าน / Staff** · แอดมินกดปุ่มเข้าสู่ระบบ (เดโม) ที่ :5174
-
-**ลองเส้นทางหลัก:** ลูกค้าจอง Moonlit Cellar → จ่ายมัดจำ (อัปโหลดรูปอะไรก็ได้) → สลับเป็นเจ้าของร้าน ยืนยันสลิปที่ `/merchant/deposits` → เปิด `/merchant/tonight` กรอกรหัสจองเพื่อเช็กอิน → กลับเป็นลูกค้า เขียนรีวิว
-
-> ตอน dev web กับ admin เป็นคนละ origin จึงเก็บข้อมูลเดโมแยกกัน · ข้อมูลเดโมอยู่ใน `packages/mock` (แทนที่ด้วย API จริงทีละหน้า)
+ไม่มีโหมดเดโมแล้ว — ต้องต่อ Supabase + เปิด backend ตามขั้นตอนใน `docs/SUPABASE.md` (ร้านทุกร้านมาจากผู้ประกอบการ/ทีม NightOut ผ่านแอป)
 
 ---
 
@@ -80,7 +74,6 @@ night-list/
 │   └── backend/      # NestJS API: src/ (controllers) · src/modules/ (business logic) · supabase/ (migrations, RLS, seed)
 ├── packages/
 │   ├── ui/           # antd theme + Tailwind preset (Midnight Gold)
-│   ├── mock/         # โหมดเดโม: ข้อมูลสมมติ + store ในเบราว์เซอร์
 │   ├── types/        # TypeScript types + Zod schemas
 │   ├── config/       # eslint, tsconfig, tailwind preset
 │   └── utils/        # price/star calculator, status transitions

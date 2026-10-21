@@ -63,7 +63,7 @@ export function AcceptInvitePage() {
             <p className="font-semibold">{i.bar_name}</p>
             <p className="text-sm text-white/70">
               ตำแหน่ง {ROLE[i.role]}
-              {i.invited_by ? ` · เชิญโดย ${i.invited_by}` : ''}
+              {i.invited_by ? ` เชิญโดย ${i.invited_by}` : ''}
             </p>
             <div className="mt-3 flex gap-2">
               <Button type="primary" loading={busy === i.bar_id} onClick={() => void respond(i.bar_id, true)}>

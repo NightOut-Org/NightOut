@@ -73,7 +73,7 @@ export function CommunityThreadRow({
           <span className="hidden min-w-0 items-center gap-1.5 md:inline-flex">
             <span className="truncate">{t.author.name}</span>
             <CommunityAuthorBadges author={t.author} link={false} />
-            <span className="shrink-0">· {timeAgo(t.created_at)}</span>
+            <span className="ml-1 shrink-0">{timeAgo(t.created_at)}</span>
           </span>
           <span
             className="inline-flex items-center gap-1"

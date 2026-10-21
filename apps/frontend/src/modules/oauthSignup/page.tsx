@@ -92,7 +92,7 @@ export function OAuthSignupPage() {
       <AuthCard title="ใช้งานบัญชีนี้ไม่ได้">
         <Result status="warning" className="!px-0 !pt-0" subTitle={<span className="text-white/80">{step.message}</span>} />
         <p className="mb-5 text-center text-sm text-white/75">
-          ระบบไม่ได้สร้างบัญชีให้ · สมัครด้วยอีเมลแล้วกรอกวันเกิดเองได้
+          ระบบไม่ได้สร้างบัญชีให้ สมัครด้วยอีเมลแล้วกรอกวันเกิดเองได้
         </p>
         <Button
           type="primary"
@@ -170,7 +170,7 @@ export function OAuthSignupPage() {
         ยอมรับและสร้างบัญชี
       </Button>
       <Button type="text" block className="!mt-3 !text-white/70" disabled={saving} onClick={decline}>
-        ไม่ยอมรับ · ออกจากระบบ
+        ไม่ยอมรับและออกจากระบบ
       </Button>
     </AuthCard>
   );

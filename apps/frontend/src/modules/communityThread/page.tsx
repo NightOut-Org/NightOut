@@ -1,18 +1,6 @@
 import { COMMUNITY_SHOP_NEWS_CATEGORY } from '@nightout/contracts';
 import type { CommunityComment, CommunityThreadDetail } from '@nightout/contracts';
-import {
-  BookmarkSimple,
-  CaretLeft,
-  CaretRight,
-  DotsThree,
-  Flag,
-  Heart,
-  PencilSimple,
-  PushPin,
-  ShareNetwork,
-  Star,
-  Trash,
-} from '@phosphor-icons/react';
+import { BookmarkSimple, CaretLeft, CaretRight, ChatCircle, Clock, DotsThree, Flag, Heart, PencilSimple, PushPin, ShareNetwork, Star, Trash } from '@phosphor-icons/react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Alert, App, Button, Dropdown, Result, Segmented, Skeleton, type MenuProps } from 'antd';
 import { useEffect, useRef, useState } from 'react';
@@ -43,6 +31,8 @@ import { HistoryModal, type HistoryTarget } from './components/historyModal';
 import { ReplyComposer, type ReplyComposerHandle } from './components/replyComposer';
 import { ReportModal } from './components/reportModal';
 import { EmbersBackdrop } from '@/ui/components/embersBackdrop';
+import { MetaList } from '@/ui/components/metaList';
+import { barPlace } from '@/ui/utils/area';
 
 /** อ่านกระทู้ (/community/t/:id) — ทุกคนอ่านได้ · ตอบ/ถูกใจ/บันทึก/ปักหมุด ต้องล็อกอิน */
 export function CommunityThreadPage() {
@@ -121,9 +111,28 @@ export function CommunityThreadPage() {
   });
   const toggleSave = guard(async () => {
     const r = await setSave(t.id, !t.is_saved);
-    message.success(
-      r.saved ? 'บันทึกไว้แล้ว — ดูได้ที่ "กระทู้ของฉัน"' : 'เอาออกจากที่บันทึกไว้แล้ว',
-    );
+    if (!r.saved) return void message.success('เอาออกจากที่บันทึกไว้แล้ว');
+    // message อยู่นอก RouterProvider (ใช้ <Link> ไม่ได้) → ปุ่มเรียก navigate ของหน้านี้แทน
+    const key = 'community-saved';
+    message.success({
+      key,
+      duration: 5,
+      content: (
+        <span>
+          บันทึกไว้แล้ว{' '}
+          <button
+            type="button"
+            onClick={() => {
+              message.destroy(key);
+              navigate('/community/me?tab=saved');
+            }}
+            className="cursor-pointer border-0 bg-transparent p-0 font-semibold text-gold-text underline underline-offset-2"
+          >
+            ดูที่บันทึกไว้
+          </button>
+        </span>
+      ),
+    });
   });
   const share = async () => {
     const url = `${location.origin}/community/t/${t.id}`;
@@ -306,7 +315,12 @@ export function CommunityThreadPage() {
                         {r.title}
                       </Link>
                       <div className="mt-0.5 text-xs text-muted">
-                        {r.reply_count} ความเห็น · {timeAgo(r.created_at)}
+                        <MetaList
+                          items={[
+                            { icon: <ChatCircle weight="fill" />, label: 'ความเห็น', value: r.reply_count },
+                            { icon: <Clock weight="fill" />, label: 'โพสต์เมื่อ', value: timeAgo(r.created_at) },
+                          ]}
+                        />
                       </div>
                     </li>
                   ))}
@@ -352,11 +366,10 @@ function ThreadArticle({
             <span className="truncate">{t.author.name}</span>
             <CommunityAuthorBadges author={t.author} />
           </div>
-          <div className="text-xs text-muted">
-            {timeAgo(t.created_at)}
+          <div className="flex flex-wrap items-baseline gap-x-3 text-xs text-muted">
+            <span>{timeAgo(t.created_at)}</span>
             {t.edited_at && (
               <>
-                {' · '}
                 <button
                   type="button"
                   onClick={onHistory}
@@ -366,8 +379,8 @@ function ThreadArticle({
                   แก้ไขแล้ว
                 </button>
               </>
-            )}{' '}
-            · เข้าชม {compactCount(t.view_count)}
+            )}
+            <span>เข้าชม {compactCount(t.view_count)}</span>
           </div>
         </div>
         <Dropdown menu={{ items: menu }} trigger={['click']} placement="bottomRight">
@@ -450,9 +463,12 @@ function TaggedBarCard({
 }) {
   const bar = getBar(barRef.id);
   const meta = bar && (
-    <div className="flex items-center gap-1 text-xs text-muted">
-      <Star size={12} weight="fill" className="text-gold" />
-      {bar.rating.toFixed(1)} · {bar.district} ·{' '}
+    <div className="flex flex-wrap items-center gap-x-3 text-xs text-muted">
+      <span className="inline-flex items-center gap-1">
+        <Star size={12} weight="fill" className="text-gold" />
+        {bar.rating.toFixed(1)}
+      </span>
+      <span>{barPlace(bar)}</span>
       <span style={{ color: CROWD[bar.crowd].dot }}>{CROWD[bar.crowd].label}</span>
     </div>
   );

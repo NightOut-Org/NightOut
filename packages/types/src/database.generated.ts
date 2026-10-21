@@ -14,6 +14,55 @@ export type Database = {
   }
   public: {
     Tables: {
+      amphoes: {
+        Row: {
+          center: unknown
+          code: string
+          created_at: string
+          name_en: string
+          name_th: string
+          province_code: string
+        }
+        Insert: {
+          center: unknown
+          code: string
+          created_at?: string
+          name_en: string
+          name_th: string
+          province_code: string
+        }
+        Update: {
+          center?: unknown
+          code?: string
+          created_at?: string
+          name_en?: string
+          name_th?: string
+          province_code?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "amphoes_province_code_fkey"
+            columns: ["province_code"]
+            isOneToOne: false
+            referencedRelation: "admin_bar_areas"
+            referencedColumns: ["province_code"]
+          },
+          {
+            foreignKeyName: "amphoes_province_code_fkey"
+            columns: ["province_code"]
+            isOneToOne: false
+            referencedRelation: "bar_areas"
+            referencedColumns: ["province_code"]
+          },
+          {
+            foreignKeyName: "amphoes_province_code_fkey"
+            columns: ["province_code"]
+            isOneToOne: false
+            referencedRelation: "provinces"
+            referencedColumns: ["code"]
+          },
+        ]
+      }
       audit_logs: {
         Row: {
           action: string
@@ -172,6 +221,13 @@ export type Database = {
             foreignKeyName: "bar_booking_settings_bar_id_fkey"
             columns: ["bar_id"]
             isOneToOne: true
+            referencedRelation: "admin_bar_areas"
+            referencedColumns: ["bar_id"]
+          },
+          {
+            foreignKeyName: "bar_booking_settings_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: true
             referencedRelation: "admin_bar_blacklist"
             referencedColumns: ["id"]
           },
@@ -216,6 +272,13 @@ export type Database = {
             isOneToOne: true
             referencedRelation: "admin_ranking"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bar_booking_settings_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: true
+            referencedRelation: "bar_areas"
+            referencedColumns: ["bar_id"]
           },
           {
             foreignKeyName: "bar_booking_settings_bar_id_fkey"
@@ -300,6 +363,13 @@ export type Database = {
             foreignKeyName: "bar_credit_ledger_bar_id_fkey"
             columns: ["bar_id"]
             isOneToOne: false
+            referencedRelation: "admin_bar_areas"
+            referencedColumns: ["bar_id"]
+          },
+          {
+            foreignKeyName: "bar_credit_ledger_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
             referencedRelation: "admin_bar_blacklist"
             referencedColumns: ["id"]
           },
@@ -344,6 +414,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "admin_ranking"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bar_credit_ledger_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
+            referencedRelation: "bar_areas"
+            referencedColumns: ["bar_id"]
           },
           {
             foreignKeyName: "bar_credit_ledger_bar_id_fkey"
@@ -466,6 +543,13 @@ export type Database = {
             foreignKeyName: "bar_fees_bar_id_fkey"
             columns: ["bar_id"]
             isOneToOne: false
+            referencedRelation: "admin_bar_areas"
+            referencedColumns: ["bar_id"]
+          },
+          {
+            foreignKeyName: "bar_fees_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
             referencedRelation: "admin_bar_blacklist"
             referencedColumns: ["id"]
           },
@@ -510,6 +594,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "admin_ranking"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bar_fees_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
+            referencedRelation: "bar_areas"
+            referencedColumns: ["bar_id"]
           },
           {
             foreignKeyName: "bar_fees_bar_id_fkey"
@@ -591,6 +682,13 @@ export type Database = {
             foreignKeyName: "bar_hours_bar_id_fkey"
             columns: ["bar_id"]
             isOneToOne: false
+            referencedRelation: "admin_bar_areas"
+            referencedColumns: ["bar_id"]
+          },
+          {
+            foreignKeyName: "bar_hours_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
             referencedRelation: "admin_bar_blacklist"
             referencedColumns: ["id"]
           },
@@ -635,6 +733,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "admin_ranking"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bar_hours_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
+            referencedRelation: "bar_areas"
+            referencedColumns: ["bar_id"]
           },
           {
             foreignKeyName: "bar_hours_bar_id_fkey"
@@ -713,6 +818,13 @@ export type Database = {
             foreignKeyName: "bar_links_bar_id_fkey"
             columns: ["bar_id"]
             isOneToOne: false
+            referencedRelation: "admin_bar_areas"
+            referencedColumns: ["bar_id"]
+          },
+          {
+            foreignKeyName: "bar_links_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
             referencedRelation: "admin_bar_blacklist"
             referencedColumns: ["id"]
           },
@@ -757,6 +869,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "admin_ranking"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bar_links_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
+            referencedRelation: "bar_areas"
+            referencedColumns: ["bar_id"]
           },
           {
             foreignKeyName: "bar_links_bar_id_fkey"
@@ -829,6 +948,13 @@ export type Database = {
             foreignKeyName: "bar_live_status_bar_id_fkey"
             columns: ["bar_id"]
             isOneToOne: true
+            referencedRelation: "admin_bar_areas"
+            referencedColumns: ["bar_id"]
+          },
+          {
+            foreignKeyName: "bar_live_status_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: true
             referencedRelation: "admin_bar_blacklist"
             referencedColumns: ["id"]
           },
@@ -873,6 +999,13 @@ export type Database = {
             isOneToOne: true
             referencedRelation: "admin_ranking"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bar_live_status_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: true
+            referencedRelation: "bar_areas"
+            referencedColumns: ["bar_id"]
           },
           {
             foreignKeyName: "bar_live_status_bar_id_fkey"
@@ -990,6 +1123,13 @@ export type Database = {
             foreignKeyName: "bar_location_requests_bar_id_fkey"
             columns: ["bar_id"]
             isOneToOne: false
+            referencedRelation: "admin_bar_areas"
+            referencedColumns: ["bar_id"]
+          },
+          {
+            foreignKeyName: "bar_location_requests_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
             referencedRelation: "admin_bar_blacklist"
             referencedColumns: ["id"]
           },
@@ -1034,6 +1174,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "admin_ranking"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bar_location_requests_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
+            referencedRelation: "bar_areas"
+            referencedColumns: ["bar_id"]
           },
           {
             foreignKeyName: "bar_location_requests_bar_id_fkey"
@@ -1152,6 +1299,13 @@ export type Database = {
             foreignKeyName: "bar_media_bar_id_fkey"
             columns: ["bar_id"]
             isOneToOne: false
+            referencedRelation: "admin_bar_areas"
+            referencedColumns: ["bar_id"]
+          },
+          {
+            foreignKeyName: "bar_media_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
             referencedRelation: "admin_bar_blacklist"
             referencedColumns: ["id"]
           },
@@ -1196,6 +1350,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "admin_ranking"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bar_media_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
+            referencedRelation: "bar_areas"
+            referencedColumns: ["bar_id"]
           },
           {
             foreignKeyName: "bar_media_bar_id_fkey"
@@ -1286,6 +1447,13 @@ export type Database = {
             foreignKeyName: "bar_payout_accounts_bar_id_fkey"
             columns: ["bar_id"]
             isOneToOne: false
+            referencedRelation: "admin_bar_areas"
+            referencedColumns: ["bar_id"]
+          },
+          {
+            foreignKeyName: "bar_payout_accounts_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
             referencedRelation: "admin_bar_blacklist"
             referencedColumns: ["id"]
           },
@@ -1330,6 +1498,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "admin_ranking"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bar_payout_accounts_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
+            referencedRelation: "bar_areas"
+            referencedColumns: ["bar_id"]
           },
           {
             foreignKeyName: "bar_payout_accounts_bar_id_fkey"
@@ -1437,6 +1612,13 @@ export type Database = {
             foreignKeyName: "bar_payouts_bar_id_fkey"
             columns: ["bar_id"]
             isOneToOne: false
+            referencedRelation: "admin_bar_areas"
+            referencedColumns: ["bar_id"]
+          },
+          {
+            foreignKeyName: "bar_payouts_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
             referencedRelation: "admin_bar_blacklist"
             referencedColumns: ["id"]
           },
@@ -1481,6 +1663,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "admin_ranking"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bar_payouts_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
+            referencedRelation: "bar_areas"
+            referencedColumns: ["bar_id"]
           },
           {
             foreignKeyName: "bar_payouts_bar_id_fkey"
@@ -1574,6 +1763,13 @@ export type Database = {
             foreignKeyName: "bar_pr_counts_bar_id_fkey"
             columns: ["bar_id"]
             isOneToOne: false
+            referencedRelation: "admin_bar_areas"
+            referencedColumns: ["bar_id"]
+          },
+          {
+            foreignKeyName: "bar_pr_counts_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
             referencedRelation: "admin_bar_blacklist"
             referencedColumns: ["id"]
           },
@@ -1618,6 +1814,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "admin_ranking"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bar_pr_counts_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
+            referencedRelation: "bar_areas"
+            referencedColumns: ["bar_id"]
           },
           {
             foreignKeyName: "bar_pr_counts_bar_id_fkey"
@@ -1729,6 +1932,13 @@ export type Database = {
             foreignKeyName: "bar_promotions_bar_id_fkey"
             columns: ["bar_id"]
             isOneToOne: false
+            referencedRelation: "admin_bar_areas"
+            referencedColumns: ["bar_id"]
+          },
+          {
+            foreignKeyName: "bar_promotions_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
             referencedRelation: "admin_bar_blacklist"
             referencedColumns: ["id"]
           },
@@ -1773,6 +1983,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "admin_ranking"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bar_promotions_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
+            referencedRelation: "bar_areas"
+            referencedColumns: ["bar_id"]
           },
           {
             foreignKeyName: "bar_promotions_bar_id_fkey"
@@ -1886,6 +2103,13 @@ export type Database = {
             foreignKeyName: "bar_safety_features_bar_id_fkey"
             columns: ["bar_id"]
             isOneToOne: false
+            referencedRelation: "admin_bar_areas"
+            referencedColumns: ["bar_id"]
+          },
+          {
+            foreignKeyName: "bar_safety_features_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
             referencedRelation: "admin_bar_blacklist"
             referencedColumns: ["id"]
           },
@@ -1930,6 +2154,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "admin_ranking"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bar_safety_features_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
+            referencedRelation: "bar_areas"
+            referencedColumns: ["bar_id"]
           },
           {
             foreignKeyName: "bar_safety_features_bar_id_fkey"
@@ -2042,6 +2273,13 @@ export type Database = {
             foreignKeyName: "bar_special_hours_bar_id_fkey"
             columns: ["bar_id"]
             isOneToOne: false
+            referencedRelation: "admin_bar_areas"
+            referencedColumns: ["bar_id"]
+          },
+          {
+            foreignKeyName: "bar_special_hours_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
             referencedRelation: "admin_bar_blacklist"
             referencedColumns: ["id"]
           },
@@ -2086,6 +2324,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "admin_ranking"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bar_special_hours_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
+            referencedRelation: "bar_areas"
+            referencedColumns: ["bar_id"]
           },
           {
             foreignKeyName: "bar_special_hours_bar_id_fkey"
@@ -2170,6 +2415,13 @@ export type Database = {
             foreignKeyName: "bar_staff_bar_id_fkey"
             columns: ["bar_id"]
             isOneToOne: false
+            referencedRelation: "admin_bar_areas"
+            referencedColumns: ["bar_id"]
+          },
+          {
+            foreignKeyName: "bar_staff_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
             referencedRelation: "admin_bar_blacklist"
             referencedColumns: ["id"]
           },
@@ -2214,6 +2466,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "admin_ranking"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bar_staff_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
+            referencedRelation: "bar_areas"
+            referencedColumns: ["bar_id"]
           },
           {
             foreignKeyName: "bar_staff_bar_id_fkey"
@@ -2335,6 +2594,13 @@ export type Database = {
             foreignKeyName: "bar_stats_bar_id_fkey"
             columns: ["bar_id"]
             isOneToOne: true
+            referencedRelation: "admin_bar_areas"
+            referencedColumns: ["bar_id"]
+          },
+          {
+            foreignKeyName: "bar_stats_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: true
             referencedRelation: "admin_bar_blacklist"
             referencedColumns: ["id"]
           },
@@ -2379,6 +2645,13 @@ export type Database = {
             isOneToOne: true
             referencedRelation: "admin_ranking"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bar_stats_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: true
+            referencedRelation: "bar_areas"
+            referencedColumns: ["bar_id"]
           },
           {
             foreignKeyName: "bar_stats_bar_id_fkey"
@@ -2460,6 +2733,13 @@ export type Database = {
             foreignKeyName: "bar_strikes_bar_id_fkey"
             columns: ["bar_id"]
             isOneToOne: false
+            referencedRelation: "admin_bar_areas"
+            referencedColumns: ["bar_id"]
+          },
+          {
+            foreignKeyName: "bar_strikes_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
             referencedRelation: "admin_bar_blacklist"
             referencedColumns: ["id"]
           },
@@ -2504,6 +2784,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "admin_ranking"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bar_strikes_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
+            referencedRelation: "bar_areas"
+            referencedColumns: ["bar_id"]
           },
           {
             foreignKeyName: "bar_strikes_bar_id_fkey"
@@ -2612,6 +2899,13 @@ export type Database = {
             foreignKeyName: "bar_styles_bar_id_fkey"
             columns: ["bar_id"]
             isOneToOne: false
+            referencedRelation: "admin_bar_areas"
+            referencedColumns: ["bar_id"]
+          },
+          {
+            foreignKeyName: "bar_styles_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
             referencedRelation: "admin_bar_blacklist"
             referencedColumns: ["id"]
           },
@@ -2656,6 +2950,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "admin_ranking"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bar_styles_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
+            referencedRelation: "bar_areas"
+            referencedColumns: ["bar_id"]
           },
           {
             foreignKeyName: "bar_styles_bar_id_fkey"
@@ -2757,6 +3058,13 @@ export type Database = {
             foreignKeyName: "bar_verifications_bar_id_fkey"
             columns: ["bar_id"]
             isOneToOne: false
+            referencedRelation: "admin_bar_areas"
+            referencedColumns: ["bar_id"]
+          },
+          {
+            foreignKeyName: "bar_verifications_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
             referencedRelation: "admin_bar_blacklist"
             referencedColumns: ["id"]
           },
@@ -2801,6 +3109,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "admin_ranking"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bar_verifications_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
+            referencedRelation: "bar_areas"
+            referencedColumns: ["bar_id"]
           },
           {
             foreignKeyName: "bar_verifications_bar_id_fkey"
@@ -2887,6 +3202,7 @@ export type Database = {
           slug: string
           status: Database["public"]["Enums"]["bar_status"]
           status_reason: string | null
+          tambon_code: string | null
           transit_line: string | null
           transit_station: string | null
           transit_walk_minutes: number | null
@@ -2919,6 +3235,7 @@ export type Database = {
           slug: string
           status?: Database["public"]["Enums"]["bar_status"]
           status_reason?: string | null
+          tambon_code?: string | null
           transit_line?: string | null
           transit_station?: string | null
           transit_walk_minutes?: number | null
@@ -2951,6 +3268,7 @@ export type Database = {
           slug?: string
           status?: Database["public"]["Enums"]["bar_status"]
           status_reason?: string | null
+          tambon_code?: string | null
           transit_line?: string | null
           transit_station?: string | null
           transit_walk_minutes?: number | null
@@ -3007,6 +3325,27 @@ export type Database = {
             referencedRelation: "users"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "bars_tambon_code_fkey"
+            columns: ["tambon_code"]
+            isOneToOne: false
+            referencedRelation: "admin_bar_areas"
+            referencedColumns: ["tambon_code"]
+          },
+          {
+            foreignKeyName: "bars_tambon_code_fkey"
+            columns: ["tambon_code"]
+            isOneToOne: false
+            referencedRelation: "bar_areas"
+            referencedColumns: ["tambon_code"]
+          },
+          {
+            foreignKeyName: "bars_tambon_code_fkey"
+            columns: ["tambon_code"]
+            isOneToOne: false
+            referencedRelation: "tambons"
+            referencedColumns: ["code"]
+          },
         ]
       }
       billing_events: {
@@ -3057,6 +3396,13 @@ export type Database = {
             foreignKeyName: "billing_events_bar_id_fkey"
             columns: ["bar_id"]
             isOneToOne: false
+            referencedRelation: "admin_bar_areas"
+            referencedColumns: ["bar_id"]
+          },
+          {
+            foreignKeyName: "billing_events_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
             referencedRelation: "admin_bar_blacklist"
             referencedColumns: ["id"]
           },
@@ -3101,6 +3447,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "admin_ranking"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "billing_events_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
+            referencedRelation: "bar_areas"
+            referencedColumns: ["bar_id"]
           },
           {
             foreignKeyName: "billing_events_bar_id_fkey"
@@ -3835,6 +4188,13 @@ export type Database = {
             foreignKeyName: "bookings_bar_id_fkey"
             columns: ["bar_id"]
             isOneToOne: false
+            referencedRelation: "admin_bar_areas"
+            referencedColumns: ["bar_id"]
+          },
+          {
+            foreignKeyName: "bookings_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
             referencedRelation: "admin_bar_blacklist"
             referencedColumns: ["id"]
           },
@@ -3879,6 +4239,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "admin_ranking"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
+            referencedRelation: "bar_areas"
+            referencedColumns: ["bar_id"]
           },
           {
             foreignKeyName: "bookings_bar_id_fkey"
@@ -4099,6 +4466,13 @@ export type Database = {
             foreignKeyName: "commission_rules_bar_id_fkey"
             columns: ["bar_id"]
             isOneToOne: false
+            referencedRelation: "admin_bar_areas"
+            referencedColumns: ["bar_id"]
+          },
+          {
+            foreignKeyName: "commission_rules_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
             referencedRelation: "admin_bar_blacklist"
             referencedColumns: ["id"]
           },
@@ -4143,6 +4517,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "admin_ranking"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commission_rules_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
+            referencedRelation: "bar_areas"
+            referencedColumns: ["bar_id"]
           },
           {
             foreignKeyName: "commission_rules_bar_id_fkey"
@@ -4349,6 +4730,13 @@ export type Database = {
             foreignKeyName: "community_comments_team_bar_id_fkey"
             columns: ["team_bar_id"]
             isOneToOne: false
+            referencedRelation: "admin_bar_areas"
+            referencedColumns: ["bar_id"]
+          },
+          {
+            foreignKeyName: "community_comments_team_bar_id_fkey"
+            columns: ["team_bar_id"]
+            isOneToOne: false
             referencedRelation: "admin_bar_blacklist"
             referencedColumns: ["id"]
           },
@@ -4393,6 +4781,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "admin_ranking"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_comments_team_bar_id_fkey"
+            columns: ["team_bar_id"]
+            isOneToOne: false
+            referencedRelation: "bar_areas"
+            referencedColumns: ["bar_id"]
           },
           {
             foreignKeyName: "community_comments_team_bar_id_fkey"
@@ -4781,6 +5176,13 @@ export type Database = {
             foreignKeyName: "community_revisions_bar_id_fkey"
             columns: ["bar_id"]
             isOneToOne: false
+            referencedRelation: "admin_bar_areas"
+            referencedColumns: ["bar_id"]
+          },
+          {
+            foreignKeyName: "community_revisions_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
             referencedRelation: "admin_bar_blacklist"
             referencedColumns: ["id"]
           },
@@ -4825,6 +5227,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "admin_ranking"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_revisions_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
+            referencedRelation: "bar_areas"
+            referencedColumns: ["bar_id"]
           },
           {
             foreignKeyName: "community_revisions_bar_id_fkey"
@@ -5066,6 +5475,13 @@ export type Database = {
             foreignKeyName: "community_threads_bar_id_fkey"
             columns: ["bar_id"]
             isOneToOne: false
+            referencedRelation: "admin_bar_areas"
+            referencedColumns: ["bar_id"]
+          },
+          {
+            foreignKeyName: "community_threads_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
             referencedRelation: "admin_bar_blacklist"
             referencedColumns: ["id"]
           },
@@ -5110,6 +5526,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "admin_ranking"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_threads_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
+            referencedRelation: "bar_areas"
+            referencedColumns: ["bar_id"]
           },
           {
             foreignKeyName: "community_threads_bar_id_fkey"
@@ -5164,6 +5587,13 @@ export type Database = {
             foreignKeyName: "community_threads_team_bar_id_fkey"
             columns: ["team_bar_id"]
             isOneToOne: false
+            referencedRelation: "admin_bar_areas"
+            referencedColumns: ["bar_id"]
+          },
+          {
+            foreignKeyName: "community_threads_team_bar_id_fkey"
+            columns: ["team_bar_id"]
+            isOneToOne: false
             referencedRelation: "admin_bar_blacklist"
             referencedColumns: ["id"]
           },
@@ -5208,6 +5638,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "admin_ranking"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_threads_team_bar_id_fkey"
+            columns: ["team_bar_id"]
+            isOneToOne: false
+            referencedRelation: "bar_areas"
+            referencedColumns: ["bar_id"]
           },
           {
             foreignKeyName: "community_threads_team_bar_id_fkey"
@@ -5280,6 +5717,13 @@ export type Database = {
             foreignKeyName: "crowd_status_logs_bar_id_fkey"
             columns: ["bar_id"]
             isOneToOne: false
+            referencedRelation: "admin_bar_areas"
+            referencedColumns: ["bar_id"]
+          },
+          {
+            foreignKeyName: "crowd_status_logs_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
             referencedRelation: "admin_bar_blacklist"
             referencedColumns: ["id"]
           },
@@ -5324,6 +5768,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "admin_ranking"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crowd_status_logs_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
+            referencedRelation: "bar_areas"
+            referencedColumns: ["bar_id"]
           },
           {
             foreignKeyName: "crowd_status_logs_bar_id_fkey"
@@ -5470,6 +5921,13 @@ export type Database = {
             foreignKeyName: "deposits_bar_id_fkey"
             columns: ["bar_id"]
             isOneToOne: false
+            referencedRelation: "admin_bar_areas"
+            referencedColumns: ["bar_id"]
+          },
+          {
+            foreignKeyName: "deposits_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
             referencedRelation: "admin_bar_blacklist"
             referencedColumns: ["id"]
           },
@@ -5514,6 +5972,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "admin_ranking"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deposits_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
+            referencedRelation: "bar_areas"
+            referencedColumns: ["bar_id"]
           },
           {
             foreignKeyName: "deposits_bar_id_fkey"
@@ -5646,35 +6111,75 @@ export type Database = {
       districts: {
         Row: {
           active: boolean
+          amphoe_code: string | null
+          center: unknown
           created_at: string
           id: string
           name_th: string
+          osm_id: string | null
+          priority: number
           province_th: string
+          radius_m: number
           slug: string
           sort_order: number
+          source: string
           updated_at: string
         }
         Insert: {
           active?: boolean
+          amphoe_code?: string | null
+          center?: unknown
           created_at?: string
           id?: string
           name_th: string
+          osm_id?: string | null
+          priority?: number
           province_th?: string
+          radius_m?: number
           slug: string
           sort_order?: number
+          source?: string
           updated_at?: string
         }
         Update: {
           active?: boolean
+          amphoe_code?: string | null
+          center?: unknown
           created_at?: string
           id?: string
           name_th?: string
+          osm_id?: string | null
+          priority?: number
           province_th?: string
+          radius_m?: number
           slug?: string
           sort_order?: number
+          source?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "districts_amphoe_code_fkey"
+            columns: ["amphoe_code"]
+            isOneToOne: false
+            referencedRelation: "admin_bar_areas"
+            referencedColumns: ["amphoe_code"]
+          },
+          {
+            foreignKeyName: "districts_amphoe_code_fkey"
+            columns: ["amphoe_code"]
+            isOneToOne: false
+            referencedRelation: "amphoes"
+            referencedColumns: ["code"]
+          },
+          {
+            foreignKeyName: "districts_amphoe_code_fkey"
+            columns: ["amphoe_code"]
+            isOneToOne: false
+            referencedRelation: "bar_areas"
+            referencedColumns: ["amphoe_code"]
+          },
+        ]
       }
       favorites: {
         Row: {
@@ -5693,6 +6198,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "favorites_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
+            referencedRelation: "admin_bar_areas"
+            referencedColumns: ["bar_id"]
+          },
           {
             foreignKeyName: "favorites_bar_id_fkey"
             columns: ["bar_id"]
@@ -5741,6 +6253,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "admin_ranking"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "favorites_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
+            referencedRelation: "bar_areas"
+            referencedColumns: ["bar_id"]
           },
           {
             foreignKeyName: "favorites_bar_id_fkey"
@@ -5899,6 +6418,13 @@ export type Database = {
             foreignKeyName: "home_popular_bars_bar_id_fkey"
             columns: ["bar_id"]
             isOneToOne: true
+            referencedRelation: "admin_bar_areas"
+            referencedColumns: ["bar_id"]
+          },
+          {
+            foreignKeyName: "home_popular_bars_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: true
             referencedRelation: "admin_bar_blacklist"
             referencedColumns: ["id"]
           },
@@ -5943,6 +6469,13 @@ export type Database = {
             isOneToOne: true
             referencedRelation: "admin_ranking"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "home_popular_bars_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: true
+            referencedRelation: "bar_areas"
+            referencedColumns: ["bar_id"]
           },
           {
             foreignKeyName: "home_popular_bars_bar_id_fkey"
@@ -6039,6 +6572,13 @@ export type Database = {
             foreignKeyName: "invoices_bar_id_fkey"
             columns: ["bar_id"]
             isOneToOne: false
+            referencedRelation: "admin_bar_areas"
+            referencedColumns: ["bar_id"]
+          },
+          {
+            foreignKeyName: "invoices_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
             referencedRelation: "admin_bar_blacklist"
             referencedColumns: ["id"]
           },
@@ -6083,6 +6623,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "admin_ranking"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
+            referencedRelation: "bar_areas"
+            referencedColumns: ["bar_id"]
           },
           {
             foreignKeyName: "invoices_bar_id_fkey"
@@ -6218,6 +6765,13 @@ export type Database = {
             foreignKeyName: "menu_categories_bar_id_fkey"
             columns: ["bar_id"]
             isOneToOne: false
+            referencedRelation: "admin_bar_areas"
+            referencedColumns: ["bar_id"]
+          },
+          {
+            foreignKeyName: "menu_categories_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
             referencedRelation: "admin_bar_blacklist"
             referencedColumns: ["id"]
           },
@@ -6262,6 +6816,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "admin_ranking"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "menu_categories_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
+            referencedRelation: "bar_areas"
+            referencedColumns: ["bar_id"]
           },
           {
             foreignKeyName: "menu_categories_bar_id_fkey"
@@ -6355,6 +6916,13 @@ export type Database = {
             foreignKeyName: "menu_items_bar_id_fkey"
             columns: ["bar_id"]
             isOneToOne: false
+            referencedRelation: "admin_bar_areas"
+            referencedColumns: ["bar_id"]
+          },
+          {
+            foreignKeyName: "menu_items_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
             referencedRelation: "admin_bar_blacklist"
             referencedColumns: ["id"]
           },
@@ -6399,6 +6967,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "admin_ranking"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "menu_items_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
+            referencedRelation: "bar_areas"
+            referencedColumns: ["bar_id"]
           },
           {
             foreignKeyName: "menu_items_bar_id_fkey"
@@ -6728,6 +7303,13 @@ export type Database = {
             foreignKeyName: "notifications_bar_fk"
             columns: ["bar_id"]
             isOneToOne: false
+            referencedRelation: "admin_bar_areas"
+            referencedColumns: ["bar_id"]
+          },
+          {
+            foreignKeyName: "notifications_bar_fk"
+            columns: ["bar_id"]
+            isOneToOne: false
             referencedRelation: "admin_bar_blacklist"
             referencedColumns: ["id"]
           },
@@ -6772,6 +7354,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "admin_ranking"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_bar_fk"
+            columns: ["bar_id"]
+            isOneToOne: false
+            referencedRelation: "bar_areas"
+            referencedColumns: ["bar_id"]
           },
           {
             foreignKeyName: "notifications_bar_fk"
@@ -7003,6 +7592,13 @@ export type Database = {
             foreignKeyName: "payment_intents_bar_id_fkey"
             columns: ["bar_id"]
             isOneToOne: false
+            referencedRelation: "admin_bar_areas"
+            referencedColumns: ["bar_id"]
+          },
+          {
+            foreignKeyName: "payment_intents_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
             referencedRelation: "admin_bar_blacklist"
             referencedColumns: ["id"]
           },
@@ -7047,6 +7643,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "admin_ranking"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_intents_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
+            referencedRelation: "bar_areas"
+            referencedColumns: ["bar_id"]
           },
           {
             foreignKeyName: "payment_intents_bar_id_fkey"
@@ -7265,6 +7868,13 @@ export type Database = {
             foreignKeyName: "price_packages_bar_id_fkey"
             columns: ["bar_id"]
             isOneToOne: false
+            referencedRelation: "admin_bar_areas"
+            referencedColumns: ["bar_id"]
+          },
+          {
+            foreignKeyName: "price_packages_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
             referencedRelation: "admin_bar_blacklist"
             referencedColumns: ["id"]
           },
@@ -7309,6 +7919,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "admin_ranking"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "price_packages_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
+            referencedRelation: "bar_areas"
+            referencedColumns: ["bar_id"]
           },
           {
             foreignKeyName: "price_packages_bar_id_fkey"
@@ -7541,6 +8158,13 @@ export type Database = {
             foreignKeyName: "promoted_listings_bar_id_fkey"
             columns: ["bar_id"]
             isOneToOne: false
+            referencedRelation: "admin_bar_areas"
+            referencedColumns: ["bar_id"]
+          },
+          {
+            foreignKeyName: "promoted_listings_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
             referencedRelation: "admin_bar_blacklist"
             referencedColumns: ["id"]
           },
@@ -7585,6 +8209,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "admin_ranking"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "promoted_listings_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
+            referencedRelation: "bar_areas"
+            referencedColumns: ["bar_id"]
           },
           {
             foreignKeyName: "promoted_listings_bar_id_fkey"
@@ -7677,6 +8308,30 @@ export type Database = {
           placement?: Database["public"]["Enums"]["promo_placement"]
           price?: number
           updated_at?: string
+        }
+        Relationships: []
+      }
+      provinces: {
+        Row: {
+          center: unknown
+          code: string
+          created_at: string
+          name_en: string
+          name_th: string
+        }
+        Insert: {
+          center: unknown
+          code: string
+          created_at?: string
+          name_en: string
+          name_th: string
+        }
+        Update: {
+          center?: unknown
+          code?: string
+          created_at?: string
+          name_en?: string
+          name_th?: string
         }
         Relationships: []
       }
@@ -7948,6 +8603,13 @@ export type Database = {
             foreignKeyName: "reviews_bar_id_fkey"
             columns: ["bar_id"]
             isOneToOne: false
+            referencedRelation: "admin_bar_areas"
+            referencedColumns: ["bar_id"]
+          },
+          {
+            foreignKeyName: "reviews_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
             referencedRelation: "admin_bar_blacklist"
             referencedColumns: ["id"]
           },
@@ -7992,6 +8654,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "admin_ranking"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
+            referencedRelation: "bar_areas"
+            referencedColumns: ["bar_id"]
           },
           {
             foreignKeyName: "reviews_bar_id_fkey"
@@ -8228,6 +8897,13 @@ export type Database = {
             foreignKeyName: "safety_inspections_bar_id_fkey"
             columns: ["bar_id"]
             isOneToOne: false
+            referencedRelation: "admin_bar_areas"
+            referencedColumns: ["bar_id"]
+          },
+          {
+            foreignKeyName: "safety_inspections_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
             referencedRelation: "admin_bar_blacklist"
             referencedColumns: ["id"]
           },
@@ -8272,6 +8948,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "admin_ranking"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "safety_inspections_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
+            referencedRelation: "bar_areas"
+            referencedColumns: ["bar_id"]
           },
           {
             foreignKeyName: "safety_inspections_bar_id_fkey"
@@ -8379,6 +9062,13 @@ export type Database = {
             foreignKeyName: "safety_reports_bar_id_fkey"
             columns: ["bar_id"]
             isOneToOne: false
+            referencedRelation: "admin_bar_areas"
+            referencedColumns: ["bar_id"]
+          },
+          {
+            foreignKeyName: "safety_reports_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
             referencedRelation: "admin_bar_blacklist"
             referencedColumns: ["id"]
           },
@@ -8423,6 +9113,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "admin_ranking"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "safety_reports_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
+            referencedRelation: "bar_areas"
+            referencedColumns: ["bar_id"]
           },
           {
             foreignKeyName: "safety_reports_bar_id_fkey"
@@ -8649,6 +9346,13 @@ export type Database = {
             foreignKeyName: "table_occupancies_bar_id_fkey"
             columns: ["bar_id"]
             isOneToOne: false
+            referencedRelation: "admin_bar_areas"
+            referencedColumns: ["bar_id"]
+          },
+          {
+            foreignKeyName: "table_occupancies_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
             referencedRelation: "admin_bar_blacklist"
             referencedColumns: ["id"]
           },
@@ -8693,6 +9397,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "admin_ranking"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "table_occupancies_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
+            referencedRelation: "bar_areas"
+            referencedColumns: ["bar_id"]
           },
           {
             foreignKeyName: "table_occupancies_bar_id_fkey"
@@ -8815,6 +9526,13 @@ export type Database = {
             foreignKeyName: "table_zones_bar_id_fkey"
             columns: ["bar_id"]
             isOneToOne: false
+            referencedRelation: "admin_bar_areas"
+            referencedColumns: ["bar_id"]
+          },
+          {
+            foreignKeyName: "table_zones_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
             referencedRelation: "admin_bar_blacklist"
             referencedColumns: ["id"]
           },
@@ -8859,6 +9577,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "admin_ranking"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "table_zones_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
+            referencedRelation: "bar_areas"
+            referencedColumns: ["bar_id"]
           },
           {
             foreignKeyName: "table_zones_bar_id_fkey"
@@ -8939,6 +9664,58 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "table_zones"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      tambons: {
+        Row: {
+          amphoe_code: string
+          center: unknown
+          code: string
+          created_at: string
+          geom: unknown
+          name_en: string
+          name_th: string
+        }
+        Insert: {
+          amphoe_code: string
+          center: unknown
+          code: string
+          created_at?: string
+          geom: unknown
+          name_en: string
+          name_th: string
+        }
+        Update: {
+          amphoe_code?: string
+          center?: unknown
+          code?: string
+          created_at?: string
+          geom?: unknown
+          name_en?: string
+          name_th?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tambons_amphoe_code_fkey"
+            columns: ["amphoe_code"]
+            isOneToOne: false
+            referencedRelation: "admin_bar_areas"
+            referencedColumns: ["amphoe_code"]
+          },
+          {
+            foreignKeyName: "tambons_amphoe_code_fkey"
+            columns: ["amphoe_code"]
+            isOneToOne: false
+            referencedRelation: "amphoes"
+            referencedColumns: ["code"]
+          },
+          {
+            foreignKeyName: "tambons_amphoe_code_fkey"
+            columns: ["amphoe_code"]
+            isOneToOne: false
+            referencedRelation: "bar_areas"
+            referencedColumns: ["amphoe_code"]
           },
         ]
       }
@@ -9065,6 +9842,13 @@ export type Database = {
             foreignKeyName: "tier_scores_bar_id_fkey"
             columns: ["bar_id"]
             isOneToOne: false
+            referencedRelation: "admin_bar_areas"
+            referencedColumns: ["bar_id"]
+          },
+          {
+            foreignKeyName: "tier_scores_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
             referencedRelation: "admin_bar_blacklist"
             referencedColumns: ["id"]
           },
@@ -9109,6 +9893,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "admin_ranking"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tier_scores_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
+            referencedRelation: "bar_areas"
+            referencedColumns: ["bar_id"]
           },
           {
             foreignKeyName: "tier_scores_bar_id_fkey"
@@ -9496,6 +10287,18 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_bar_areas: {
+        Row: {
+          amphoe_code: string | null
+          amphoe_th: string | null
+          bar_id: string | null
+          province_code: string | null
+          province_th: string | null
+          tambon_code: string | null
+          tambon_th: string | null
+        }
+        Relationships: []
+      }
       admin_bar_blacklist: {
         Row: {
           blacklist_reason: string | null
@@ -9571,6 +10374,13 @@ export type Database = {
             foreignKeyName: "bar_location_requests_bar_id_fkey"
             columns: ["bar_id"]
             isOneToOne: false
+            referencedRelation: "admin_bar_areas"
+            referencedColumns: ["bar_id"]
+          },
+          {
+            foreignKeyName: "bar_location_requests_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
             referencedRelation: "admin_bar_blacklist"
             referencedColumns: ["id"]
           },
@@ -9615,6 +10425,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "admin_ranking"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bar_location_requests_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
+            referencedRelation: "bar_areas"
+            referencedColumns: ["bar_id"]
           },
           {
             foreignKeyName: "bar_location_requests_bar_id_fkey"
@@ -10188,6 +11005,13 @@ export type Database = {
             foreignKeyName: "safety_inspections_bar_id_fkey"
             columns: ["bar_id"]
             isOneToOne: false
+            referencedRelation: "admin_bar_areas"
+            referencedColumns: ["bar_id"]
+          },
+          {
+            foreignKeyName: "safety_inspections_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
             referencedRelation: "admin_bar_blacklist"
             referencedColumns: ["id"]
           },
@@ -10232,6 +11056,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "admin_ranking"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "safety_inspections_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
+            referencedRelation: "bar_areas"
+            referencedColumns: ["bar_id"]
           },
           {
             foreignKeyName: "safety_inspections_bar_id_fkey"
@@ -10318,6 +11149,13 @@ export type Database = {
             foreignKeyName: "bar_safety_features_bar_id_fkey"
             columns: ["bar_id"]
             isOneToOne: false
+            referencedRelation: "admin_bar_areas"
+            referencedColumns: ["bar_id"]
+          },
+          {
+            foreignKeyName: "bar_safety_features_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
             referencedRelation: "admin_bar_blacklist"
             referencedColumns: ["id"]
           },
@@ -10362,6 +11200,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "admin_ranking"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bar_safety_features_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
+            referencedRelation: "bar_areas"
+            referencedColumns: ["bar_id"]
           },
           {
             foreignKeyName: "bar_safety_features_bar_id_fkey"
@@ -10591,6 +11436,18 @@ export type Database = {
           },
         ]
       }
+      bar_areas: {
+        Row: {
+          amphoe_code: string | null
+          amphoe_th: string | null
+          bar_id: string | null
+          province_code: string | null
+          province_th: string | null
+          tambon_code: string | null
+          tambon_th: string | null
+        }
+        Relationships: []
+      }
       bar_cards: {
         Row: {
           avg_price_per_person: number | null
@@ -10626,6 +11483,13 @@ export type Database = {
           bar_id: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "bar_credit_ledger_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
+            referencedRelation: "admin_bar_areas"
+            referencedColumns: ["bar_id"]
+          },
           {
             foreignKeyName: "bar_credit_ledger_bar_id_fkey"
             columns: ["bar_id"]
@@ -10674,6 +11538,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "admin_ranking"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bar_credit_ledger_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
+            referencedRelation: "bar_areas"
+            referencedColumns: ["bar_id"]
           },
           {
             foreignKeyName: "bar_credit_ledger_bar_id_fkey"
@@ -10969,6 +11840,13 @@ export type Database = {
             foreignKeyName: "reviews_bar_id_fkey"
             columns: ["bar_id"]
             isOneToOne: false
+            referencedRelation: "admin_bar_areas"
+            referencedColumns: ["bar_id"]
+          },
+          {
+            foreignKeyName: "reviews_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
             referencedRelation: "admin_bar_blacklist"
             referencedColumns: ["id"]
           },
@@ -11013,6 +11891,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "admin_ranking"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
+            referencedRelation: "bar_areas"
+            referencedColumns: ["bar_id"]
           },
           {
             foreignKeyName: "reviews_bar_id_fkey"
@@ -11150,6 +12035,13 @@ export type Database = {
             foreignKeyName: "home_popular_bars_bar_id_fkey"
             columns: ["bar_id"]
             isOneToOne: true
+            referencedRelation: "admin_bar_areas"
+            referencedColumns: ["bar_id"]
+          },
+          {
+            foreignKeyName: "home_popular_bars_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: true
             referencedRelation: "admin_bar_blacklist"
             referencedColumns: ["id"]
           },
@@ -11194,6 +12086,13 @@ export type Database = {
             isOneToOne: true
             referencedRelation: "admin_ranking"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "home_popular_bars_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: true
+            referencedRelation: "bar_areas"
+            referencedColumns: ["bar_id"]
           },
           {
             foreignKeyName: "home_popular_bars_bar_id_fkey"
@@ -11254,6 +12153,13 @@ export type Database = {
             foreignKeyName: "reviews_bar_id_fkey"
             columns: ["bar_id"]
             isOneToOne: false
+            referencedRelation: "admin_bar_areas"
+            referencedColumns: ["bar_id"]
+          },
+          {
+            foreignKeyName: "reviews_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
             referencedRelation: "admin_bar_blacklist"
             referencedColumns: ["id"]
           },
@@ -11298,6 +12204,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "admin_ranking"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_bar_id_fkey"
+            columns: ["bar_id"]
+            isOneToOne: false
+            referencedRelation: "bar_areas"
+            referencedColumns: ["bar_id"]
           },
           {
             foreignKeyName: "reviews_bar_id_fkey"
@@ -12150,6 +13063,7 @@ export type Database = {
         Args: { p_actor: string; p_deposit: string }
         Returns: Json
       }
+      area_at_point: { Args: { p_lat: number; p_lng: number }; Returns: Json }
       assert_keeps_super_admin: { Args: { p_user: string }; Returns: undefined }
       auth_role: {
         Args: never
@@ -12364,6 +13278,7 @@ export type Database = {
         Returns: Json
       }
       deposit_reject_label: { Args: { p_code: string }; Returns: string }
+      district_near: { Args: { p_lat: number; p_lng: number }; Returns: string }
       get_share_card: {
         Args: { p_token: string }
         Returns: {
@@ -12577,6 +13492,7 @@ export type Database = {
         }
       }
       super_admin_assert: { Args: { p_actor: string }; Returns: undefined }
+      tambon_at: { Args: { p_lat: number; p_lng: number }; Returns: string }
       team_member_check: {
         Args: { r: Database["public"]["Tables"]["team_members"]["Row"] }
         Returns: undefined

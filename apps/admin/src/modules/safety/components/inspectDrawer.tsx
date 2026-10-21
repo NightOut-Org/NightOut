@@ -42,6 +42,7 @@ import {
   SAFETY_VERIFY_TAG,
 } from '../utils/labels';
 import { useInspectionDraft } from '../utils/useInspectionDraft';
+import { RuleList } from '@/ui/components/RuleList';
 
 type Draft = ReturnType<typeof useInspectionDraft>;
 
@@ -147,7 +148,7 @@ function InspectPanel({
         await act.mutateAsync({
           ...inspectSafetyAction(barId, body),
           success: (r) =>
-            `บันทึกผลตรวจ ${barName} แล้ว · Safety Score ${(r as C.SafetyInspectionResult).safety_score ?? '-'}`,
+            `บันทึกผลตรวจ ${barName} แล้ว (Safety Score ${(r as C.SafetyInspectionResult).safety_score ?? '-'})`,
         });
       } catch {
         return; // useAdminAction แจ้งเหตุผลแล้ว · draft ยังอยู่ แก้แล้วบันทึกใหม่ได้
@@ -170,13 +171,17 @@ function InspectPanel({
       content: (
         <div className="space-y-2">
           <p className="m-0 font-medium">
-            ผ่าน {pass} · ไม่พบ {fail} · ไม่ได้ตรวจ {na}
+            ผ่าน {pass} ไม่พบ {fail} ไม่ได้ตรวจ {na}
           </p>
-          <p className="m-0">
-            บันทึกนี้ยืนยันว่าคุณลงพื้นที่ร้านนี้จริง ในชื่อ {inspector} · ข้อที่ “ผ่าน” ลูกค้าเห็นว่ามี พร้อมป้าย
-            “ทีมงานลงพื้นที่ตรวจ” และวันที่ · ข้อที่ “ไม่พบ” เปลี่ยนเป็น “ไม่มี” ทันที · แจ้งเจ้าของ/ผู้จัดการร้าน ·
-            บันทึกแล้วแก้ไม่ได้ (ตรวจใหม่ได้)
-          </p>
+          <RuleList
+            rules={[
+              <>ยืนยันว่าคุณลงพื้นที่ร้านนี้จริง ในชื่อ {inspector}</>,
+              'ข้อที่ “ผ่าน” ลูกค้าเห็นว่ามี พร้อมป้าย “ทีมงานลงพื้นที่ตรวจ” และวันที่',
+              'ข้อที่ “ไม่พบ” เปลี่ยนเป็น “ไม่มี” ทันที',
+              'ระบบแจ้งเจ้าของ/ผู้จัดการร้าน',
+              { tone: 'warn', text: 'บันทึกแล้วแก้ไม่ได้ (ตรวจใหม่ได้)' },
+            ]}
+          />
         </div>
       ),
       okText: 'บันทึกผลตรวจ',
@@ -200,7 +205,7 @@ function InspectPanel({
       title={
         <span className="flex min-w-0 items-center gap-2">
           <ClipboardText size={18} aria-hidden className="shrink-0" />
-          <span className="truncate">ลงพื้นที่ตรวจ · {barName}</span>
+          <span className="truncate">ลงพื้นที่ตรวจ {barName}</span>
         </span>
       }
       footer={
@@ -263,7 +268,7 @@ function InspectPanel({
                 }
               />
               <span className="block text-xs opacity-70">
-                ไม่ระบุ = ตอนนี้ · ย้อนหลังได้ไม่เกิน {SAFETY_INSPECTION_MAX_AGE_DAYS} วัน
+                ไม่ระบุ = ตอนนี้ ย้อนหลังได้ไม่เกิน {SAFETY_INSPECTION_MAX_AGE_DAYS} วัน
                 {latest ? ` และไม่ก่อนการตรวจครั้งล่าสุด (${date(latest)})` : ''}
               </span>
             </div>
@@ -294,7 +299,7 @@ function InspectPanel({
 function SourceTag({ row }: { row: Db.AdminBarSafety }) {
   if (row.source === 'ADMIN_VERIFIED') {
     const method = row.verify_method ?? 'EVIDENCE';
-    const by = row.verified_by_name ? ` · ${row.verified_by_name}` : '';
+    const by = row.verified_by_name ? ` โดย ${row.verified_by_name}` : '';
     return (
       <Tag color={SAFETY_VERIFY_TAG[method].color} className="!m-0">
         {safetyVerifyLabel(method)}
@@ -311,7 +316,15 @@ function SourceTag({ row }: { row: Db.AdminBarSafety }) {
   );
 }
 
-function FeatureCard({ row, draft, disabled }: { row: Db.AdminBarSafety; draft: Draft; disabled: boolean }) {
+function FeatureCard({
+  row,
+  draft,
+  disabled,
+}: {
+  row: Db.AdminBarSafety;
+  draft: Draft;
+  disabled: boolean;
+}) {
   const { message } = App.useApp();
   const key = row.feature_key;
   const it = draft.itemOf(key);
@@ -332,7 +345,9 @@ function FeatureCard({ row, draft, disabled }: { row: Db.AdminBarSafety; draft: 
     });
     const added = draft.addFiles(key, ok);
     if (added < ok.length)
-      void message.warning(`แนบได้สูงสุด ${SAFETY_INSPECTION_MAX_PHOTOS} รูปต่อข้อ — ใช้ ${added} รูปแรกที่เลือก`);
+      void message.warning(
+        `แนบได้สูงสุด ${SAFETY_INSPECTION_MAX_PHOTOS} รูปต่อข้อ — ใช้ ${added} รูปแรกที่เลือก`,
+      );
   };
 
   return (
@@ -378,7 +393,9 @@ function FeatureCard({ row, draft, disabled }: { row: Db.AdminBarSafety; draft: 
               maxLength={SAFETY_CHECK_NOTE_MAX}
               autoSize={{ minRows: 1, maxRows: 4 }}
               disabled={disabled}
-              placeholder={it.result === 'FAIL' ? 'ไม่พบอะไร เช่น ถังดับเพลิงหมดอายุ' : 'หมายเหตุ (ถ้ามี)'}
+              placeholder={
+                it.result === 'FAIL' ? 'ไม่พบอะไร เช่น ถังดับเพลิงหมดอายุ' : 'หมายเหตุ (ถ้ามี)'
+              }
             />
             <div className="flex flex-wrap items-center gap-2">
               <Image.PreviewGroup>
@@ -487,7 +504,9 @@ function InspectedAtPicker({
         size="large"
         className="w-28 shrink-0"
         value={value}
-        onChange={(t) => t && onChange(base.hour(t.hour()).minute(t.minute()).second(0).millisecond(0))}
+        onChange={(t) =>
+          t && onChange(base.hour(t.hour()).minute(t.minute()).second(0).millisecond(0))
+        }
       />
     </div>
   );

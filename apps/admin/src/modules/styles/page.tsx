@@ -9,6 +9,7 @@ import { SaveBar } from '@/ui/components/SaveBar';
 import { saveStylesAction, useHomeCategories, useStyles } from './api';
 import { StyleIcon } from './utils/styleIcons';
 import { isNewStyle, useStylesDraft, type StyleRow } from './utils/useStylesDraft';
+import { RuleList } from '@/ui/components/RuleList';
 
 const ERROR_TEXT = { empty: 'กรอกชื่อสไตล์', duplicate: 'ชื่อซ้ำกับสไตล์อื่น' } as const;
 
@@ -41,7 +42,7 @@ export function StylesPage() {
         ...saveStylesAction(draft.body()),
         success: (r) => {
           const { created, updated } = r as SaveStylesResult;
-          return `บันทึกสไตล์แล้ว (เพิ่ม ${created} · แก้ ${updated})`;
+          return `บันทึกสไตล์แล้ว (เพิ่ม ${created} แก้ ${updated})`;
         },
       });
       await refetch();
@@ -56,7 +57,19 @@ export function StylesPage() {
   return (
     <PageContainer
       title="สไตล์ร้าน"
-      content="สไตล์ที่ร้านเลือกได้และลูกค้าใช้กรองในหน้าค้นหา · ซ่อน = ไม่แสดงในตัวเลือกของร้าน ตัวกรอง และการ์ดร้าน (ร้านที่เลือกไว้ไม่หาย เปิดแสดงอีกครั้งได้) · ลบไม่ได้ · ประเภทร้าน (ผับ/บาร์ · ชิล · ร้านอาหาร) และประเภทโปรโมชันแก้ผ่าน migration เท่านั้น"
+      content={
+        <RuleList
+          rules={[
+            'สไตล์ที่ร้านเลือกได้ และลูกค้าใช้กรองในหน้าค้นหา',
+            'ซ่อน = ไม่แสดงในตัวเลือกของร้าน ตัวกรอง และการ์ดร้าน (ร้านที่เลือกไว้ไม่หาย เปิดแสดงอีกครั้งได้)',
+            { tone: 'warn', text: 'ลบสไตล์ไม่ได้ ใช้ซ่อนแทน' },
+            {
+              tone: 'warn',
+              text: 'ประเภทร้าน (ผับ/บาร์ ชิล ร้านอาหาร) และประเภทโปรโมชันแก้ผ่าน migration เท่านั้น',
+            },
+          ]}
+        />
+      }
       extra={
         <Space wrap>
           <Button icon={<Plus size={16} />} disabled={saving || isLoading} onClick={draft.add}>
@@ -81,8 +94,8 @@ export function StylesPage() {
           title="การ์ดหมวดหน้าแรกลิงก์ด้วยชื่อสไตล์เดิม"
           description={
             <>
-              บันทึกแล้วการ์ดจะพาไปหน้าค้นหาที่ว่างเปล่า — Backoffice แก้ลิงก์การ์ดหมวดไม่ได้แล้ว แจ้งทีมพัฒนาให้แก้ลิงก์ก่อน:{' '}
-              {draft.affected.map((c) => c.title).join(', ')}
+              บันทึกแล้วการ์ดจะพาไปหน้าค้นหาที่ว่างเปล่า — Backoffice แก้ลิงก์การ์ดหมวดไม่ได้แล้ว
+              แจ้งทีมพัฒนาให้แก้ลิงก์ก่อน: {draft.affected.map((c) => c.title).join(', ')}
             </>
           }
         />
@@ -130,7 +143,9 @@ export function StylesPage() {
                 className="w-full"
                 aria-label={`ไอคอนของ ${r.name_th || 'สไตล์ใหม่'}`}
                 options={[
-                  ...((STYLE_ICONS as readonly string[]).includes(r.icon) ? [] : [iconOption(r.icon)]),
+                  ...((STYLE_ICONS as readonly string[]).includes(r.icon)
+                    ? []
+                    : [iconOption(r.icon)]),
                   ...STYLE_ICONS.map(iconOption),
                 ]}
                 onChange={(v) => draft.setIcon(r.id, v)}
@@ -193,7 +208,7 @@ export function StylesPage() {
               isNewStyle(r) ? (
                 <Space size={4}>
                   <Tag color="warning" className="!m-0">
-                    ใหม่ · ยังไม่บันทึก
+                    ใหม่ (ยังไม่บันทึก)
                   </Tag>
                   <Button
                     type="text"

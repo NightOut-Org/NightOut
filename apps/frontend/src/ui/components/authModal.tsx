@@ -37,7 +37,7 @@ const HEADINGS: Record<AuthView, { title: string; subtitle: string }> = {
   },
   register: {
     title: 'สร้างบัญชี',
-    subtitle: 'ใช้เวลาไม่ถึงนาที · สำหรับผู้ที่อายุ 20 ปีขึ้นไป',
+    subtitle: 'ใช้เวลาไม่ถึงนาที สำหรับผู้ที่อายุ 20 ปีขึ้นไป',
   },
 };
 

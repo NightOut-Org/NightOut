@@ -37,6 +37,8 @@ import {
 } from './api';
 import { LeaveDraftModal } from './components/leaveDraftModal';
 import { EmbersBackdrop } from '@/ui/components/embersBackdrop';
+import { RuleList } from '@/ui/components/ruleList';
+import { barPlace } from '@/ui/utils/area';
 
 interface ThreadForm {
   category: string | null;
@@ -218,7 +220,7 @@ function ComposeForm({
     return !c.team_only && (!c.staff_only || isStaff || c.slug === form.category);
   });
   const barOptions = useMemo(
-    () => listBars({}).map((b) => ({ value: b.id, label: b.name, district: b.district })),
+    () => listBars({}).map((b) => ({ value: b.id, label: b.name, district: barPlace(b) })),
     [],
   );
   // นอกหมวดข่าวจากร้าน ทีมร้านแท็กร้านตัวเองเพิ่มไม่ได้ (COMMUNITY_TEAM_OWN_TAG) · แท็กเดิมของกระทู้คงไว้ได้
@@ -394,7 +396,7 @@ function ComposeForm({
             >
               <ClockCounterClockwise size={18} className="shrink-0 text-link" />
               <span className="flex-1">
-                ใช้ร่างที่ค้างไว้ · บันทึกล่าสุด {clockTime(restoredAt)}
+                ใช้ร่างที่ค้างไว้ (บันทึกล่าสุด {clockTime(restoredAt)})
               </span>
               <button
                 type="button"
@@ -421,8 +423,8 @@ function ComposeForm({
               >
                 <Storefront size={18} className="mt-px shrink-0 text-gold-text" />
                 <span className="flex-1">
-                  บัญชีนี้อยู่ในทีมร้าน — ตั้งกระทู้ได้เฉพาะหมวด "ข่าวจากร้าน" ·
-                  คอมเมนต์และตอบได้ทุกกระทู้
+                  บัญชีนี้อยู่ในทีมร้าน — ตั้งกระทู้ได้เฉพาะหมวด "ข่าวจากร้าน"
+                  แต่คอมเมนต์และตอบได้ทุกกระทู้
                 </span>
               </div>
             )
@@ -488,7 +490,7 @@ function ComposeForm({
 
           <Field
             label="รูปภาพ / วิดีโอ"
-            hint={`สูงสุด ${COMMUNITY_MEDIA_LIMITS.maxFiles} ไฟล์ · วิดีโอไม่เกิน ${COMMUNITY_MEDIA_LIMITS.videoSeconds} วิ`}
+            hint={`สูงสุด ${COMMUNITY_MEDIA_LIMITS.maxFiles} ไฟล์ วิดีโอยาวไม่เกิน ${COMMUNITY_MEDIA_LIMITS.videoSeconds} วินาที`}
           >
             <CommunityMediaPicker
               value={form.media}
@@ -519,10 +521,10 @@ function ComposeForm({
                       {b.name}{' '}
                       <span className="text-xs text-muted">
                         {!b.can_post
-                          ? '· ร้านถูกระงับ — โพสต์ข่าวไม่ได้'
-                          : `· โพสต์แล้ว ${b.shop_news_used}/${b.shop_news_limit}${
+                          ? 'ร้านถูกระงับ โพสต์ข่าวไม่ได้'
+                          : `โพสต์แล้ว ${b.shop_news_used}/${b.shop_news_limit}${
                               !editId && quotaFull(b) && b.next_slot_at
-                                ? ` · ครบแล้ว — โพสต์ได้อีก ${dateTime(b.next_slot_at)}`
+                                ? ` ครบแล้ว โพสต์ได้อีก ${dateTime(b.next_slot_at)}`
                                 : ''
                             }`}
                       </span>
@@ -550,7 +552,7 @@ function ComposeForm({
                 options={generalBarOptions}
                 optionRender={(o) => (
                   <span>
-                    {o.data.label} <span className="text-xs text-muted">· {o.data.district}</span>
+                    {o.data.label} <span className="ml-1 text-xs text-muted">{o.data.district}</span>
                   </span>
                 )}
                 placeholder="ค้นหาชื่อร้าน"
@@ -566,34 +568,48 @@ function ComposeForm({
             <div>
               <div className="font-semibold">ก่อนโพสต์</div>
               {shopNews ? (
-                <ul className="m-0 mt-0.5 list-disc pl-4">
-                  <li>
-                    ร้านละไม่เกิน {COMMUNITY_SHOP_NEWS_WEEKLY_MAX} กระทู้ใน{' '}
-                    {COMMUNITY_SHOP_NEWS_WINDOW_DAYS} วัน (นับรวมทั้งทีม · ลบแล้วก็ยังนับ)
-                  </li>
-                  <li>
-                    ห้ามโปรโมชัน ลด แจก แถมเครื่องดื่มแอลกอฮอล์ (พ.ร.บ.ควบคุมเครื่องดื่มแอลกอฮอล์
-                    ม.30/32)
-                  </li>
-                  <li>ห้ามพูดถึงร้านอื่นในทางเสีย — ลูกค้ารายงานได้ ทีมงานซ่อน/ลบได้</li>
-                  <li>โพสต์และความเห็นของคุณจะมีป้าย "ทีมร้าน · &lt;ชื่อร้าน&gt;"</li>
-                  {selectedTeamBar && (
-                    <li>
-                      {selectedTeamBar.name}: โพสต์แล้ว {selectedTeamBar.shop_news_used}/
-                      {selectedTeamBar.shop_news_limit} ใน {COMMUNITY_SHOP_NEWS_WINDOW_DAYS} วัน
-                      {!editId &&
-                        quotaFull(selectedTeamBar) &&
-                        selectedTeamBar.next_slot_at &&
-                        ` — ครบแล้ว โพสต์ได้อีก ${dateTime(selectedTeamBar.next_slot_at)}`}
-                    </li>
-                  )}
-                </ul>
+                <RuleList
+                  className="mt-1.5"
+                  rules={[
+                    <>
+                      ร้านละไม่เกิน {COMMUNITY_SHOP_NEWS_WEEKLY_MAX} กระทู้ใน {COMMUNITY_SHOP_NEWS_WINDOW_DAYS} วัน
+                      (นับรวมทั้งทีม และกระทู้ที่ลบแล้วก็ยังนับ)
+                    </>,
+                    { tone: 'warn', text: 'ห้ามโปรโมชัน ลด แจก แถมเครื่องดื่มแอลกอฮอล์ (พ.ร.บ.ควบคุมเครื่องดื่มแอลกอฮอล์ ม.30/32)' },
+                    { tone: 'warn', text: 'ห้ามพูดถึงร้านอื่นในทางเสีย ลูกค้ารายงานได้ และทีมงานซ่อน/ลบได้' },
+                    <>โพสต์และความเห็นของคุณจะมีป้าย "ทีมร้าน &lt;ชื่อร้าน&gt;"</>,
+                    ...(selectedTeamBar
+                      ? [
+                          {
+                            tone: 'check' as const,
+                            text: (
+                              <>
+                                {selectedTeamBar.name} โพสต์แล้ว{' '}
+                                <b className="tabular-nums">
+                                  {selectedTeamBar.shop_news_used}/{selectedTeamBar.shop_news_limit}
+                                </b>{' '}
+                                ใน {COMMUNITY_SHOP_NEWS_WINDOW_DAYS} วัน
+                                {!editId &&
+                                  quotaFull(selectedTeamBar) &&
+                                  selectedTeamBar.next_slot_at &&
+                                  ` ครบแล้ว โพสต์ได้อีก ${dateTime(selectedTeamBar.next_slot_at)}`}
+                              </>
+                            ),
+                          },
+                        ]
+                      : []),
+                  ]}
+                />
               ) : (
-                <ul className="m-0 mt-0.5 list-disc pl-4">
-                  <li>ตั้งหัวข้อให้ชัด ระบุย่านหรือวันที่</li>
-                  <li>แท็กร้านเพื่อให้คนอ่านจองต่อได้ทันที</li>
-                  <li>ไม่โฆษณาแฝง · 20+ · ดื่มไม่ขับ</li>
-                </ul>
+                <RuleList
+                  className="mt-1.5"
+                  rules={[
+                    { tone: 'check', text: 'ตั้งหัวข้อให้ชัด ระบุย่านหรือวันที่' },
+                    { tone: 'check', text: 'แท็กร้านเพื่อให้คนอ่านจองต่อได้ทันที' },
+                    { tone: 'warn', text: 'ไม่โฆษณาแฝง' },
+                    { tone: 'warn', text: 'สำหรับผู้อายุ 20 ปีขึ้นไป ดื่มไม่ขับ' },
+                  ]}
+                />
               )}
               <div className="mt-1 text-muted">
                 ร่างเก็บไว้ในบัญชี {COMMUNITY_DRAFT_TTL_DAYS} วัน

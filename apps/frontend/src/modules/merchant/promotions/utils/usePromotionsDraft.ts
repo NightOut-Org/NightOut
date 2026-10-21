@@ -1,4 +1,4 @@
-import type { BarPromotion } from '@nightout/mock';
+import type { BarPromotion } from '@/services/models';
 import { useState } from 'react';
 
 /**

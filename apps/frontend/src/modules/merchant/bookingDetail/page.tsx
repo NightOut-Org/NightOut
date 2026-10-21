@@ -1,4 +1,4 @@
-import { ArrowLeft, ArrowUUpLeft, ArrowsLeftRight, Check, CheckCircle, Clock, LinkBreak, Wallet, XCircle } from '@phosphor-icons/react';
+import { Armchair, ArrowLeft, ArrowUUpLeft, ArrowsLeftRight, CalendarBlank, Check, CheckCircle, Clock, LinkBreak, Ticket, Wallet, XCircle } from '@phosphor-icons/react';
 import type { TeamBookingStatusBody } from '@nightout/contracts';
 import type { BookingStatus } from '@nightout/types';
 import { canTeamForfeit, nextStatuses } from '@nightout/utils';
@@ -18,6 +18,7 @@ import { forfeitBooking, setBookingStatus, useTableOptions } from './api';
 import { CancelModal } from './modal/cancelModal';
 import { MoveTableModal } from './modal/moveTableModal';
 import { canRefund, RefundModal } from './modal/refundModal';
+import { MetaList } from '@/ui/components/metaList';
 
 /** สถานะที่ยังถือโต๊ะอยู่ → ย้ายโต๊ะได้ */
 const MOVABLE: BookingStatus[] = ['PENDING', 'AWAITING_DEPOSIT', 'DEPOSIT_SUBMITTED', 'CONFIRMED', 'CHECKED_IN'];
@@ -99,12 +100,12 @@ export function MerchantBookingDetailPage() {
   const visits = mine.filter((b) => ['CHECKED_IN', 'COMPLETED'].includes(b.status)).length;
   const noShows = mine.filter((b) => b.status === 'NO_SHOW').length;
   const visitLabel = `${visits ? `ครั้งที่ ${visits + (['CHECKED_IN', 'COMPLETED'].includes(booking.status) ? 0 : 1)}` : 'ครั้งแรก'}${
-    noShows ? ` · ถูกปลดโต๊ะ ${noShows} ครั้ง` : visits ? ' · ไม่เคยถูกปลดโต๊ะ' : ''
+    noShows ? ` (ถูกปลดโต๊ะ ${noShows} ครั้ง)` : visits ? ' (ไม่เคยถูกปลดโต๊ะ)' : ''
   }`;
 
   const promo = booking.promotionId ? bar.promotions.find((p) => p.id === booking.promotionId) : undefined;
   const promoTitle = promo?.title ?? booking.promotionTitle;
-  const promoCond = promo && [promo.cutoffTime ? `ก่อน ${promo.cutoffTime}` : 'ทั้งคืน', daysLabel(promo.days)].join(' · ');
+  const promoCond = promo && [promo.cutoffTime ? `ก่อน ${promo.cutoffTime}` : 'ทั้งคืน', daysLabel(promo.days)].join(' ');
   const estimate = bar.avgPerPerson * booking.pax;
 
   const d = booking.deposit;
@@ -121,7 +122,7 @@ export function MerchantBookingDetailPage() {
           : { icon: <Clock />, text: 'ลูกค้ายังไม่ได้โอน', short: 'ยังไม่โอน', cls: 'text-muted' };
   const settlementText = d?.settlement
     ? d.settlement === 'HELD'
-      ? 'NightOut ถือไว้ · โอนเข้าร้านหลังเช็กอิน'
+      ? 'NightOut ถือไว้ แล้วโอนเข้าร้านหลังเช็กอิน'
       : SETTLEMENT_LABEL[d.settlement].label
     : 'เงินเข้า NightOut ก่อน แล้วค่อยโอนให้ร้าน';
 
@@ -190,7 +191,7 @@ export function MerchantBookingDetailPage() {
     <li key={i} className="flex items-center gap-3 text-sm">
       <span className="size-2.5 shrink-0 rounded-full" style={{ background: BOOKING_STATUS[h.to].dot }} />
       <span className="min-w-0 flex-1">
-        {BOOKING_STATUS[h.to].label} · {h.by}
+        {BOOKING_STATUS[h.to].label} โดย {h.by}
       </span>
       <span className="shrink-0 text-xs text-muted">{dayjs(h.at).format('D MMM HH:mm')}</span>
     </li>
@@ -225,11 +226,18 @@ export function MerchantBookingDetailPage() {
               <ArrowLeft size={14} /> การจอง
             </Link>
             <h1 className="mt-1 font-display text-[30px] font-bold">
-              {booking.userName} · {booking.pax} คน
+              {booking.userName}
+              <span className="ml-3 text-lg font-normal text-muted">{booking.pax} คน</span>
             </h1>
-            <p className="mt-1.5 flex flex-wrap items-center gap-2 text-sm text-muted">
+            <p className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted">
               <BookingStatusTag status={booking.status} />
-              {booking.code} · {start.format('dddd D MMM HH:mm')} · {place}
+              <MetaList
+                items={[
+                  { icon: <CalendarBlank weight="fill" />, label: 'วันเวลา', value: start.format('dddd D MMM HH:mm') },
+                  { icon: <Armchair weight="fill" />, label: 'ที่นั่ง', value: place },
+                  { icon: <Ticket weight="fill" />, label: 'รหัสจอง', value: booking.code },
+                ]}
+              />
             </p>
           </div>
           {(actions.length > 0 || forfeitable) && (
@@ -288,7 +296,7 @@ export function MerchantBookingDetailPage() {
           {estimate > 0 && (
             <span className="mt-auto flex justify-between text-[13px]">
               <span className="text-muted">ยอดประเมิน</span>
-              {baht(estimate)} · {baht(bar.avgPerPerson)}/คน
+              {baht(estimate)} ({baht(bar.avgPerPerson)}/คน)
             </span>
           )}
         </Tile>
@@ -300,7 +308,7 @@ export function MerchantBookingDetailPage() {
 
         <Tile tone="surface" className="col-span-2 flex flex-col gap-3 !p-[22px]">
           <span className="text-sm font-semibold">
-            จัดการหน้างาน <span className="text-xs font-normal text-muted">· ทุกคนในทีมรวม PR</span>
+            จัดการหน้างาน <span className="ml-1 text-xs font-normal text-muted">ทุกคนในทีมรวม PR ทำได้</span>
           </span>
           <div className="grid flex-1 grid-cols-2 gap-3">
             {onsiteTile(
@@ -333,11 +341,17 @@ export function MerchantBookingDetailPage() {
         </Link>
         <div>
           <h1 className="text-[22px] font-semibold">
-            {booking.userName} · {booking.pax} คน
+            {booking.userName}
+            <span className="ml-2 text-base font-normal text-muted">{booking.pax} คน</span>
           </h1>
-          <p className="mt-1.5 flex flex-wrap items-center gap-2 text-[13px] text-muted">
+          <p className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] text-muted">
             <BookingStatusTag status={booking.status} />
-            {start.format('D MMM HH:mm')} · {place}
+            <MetaList
+              items={[
+                { icon: <CalendarBlank weight="fill" />, label: 'วันเวลา', value: start.format('D MMM HH:mm') },
+                { icon: <Armchair weight="fill" />, label: 'ที่นั่ง', value: place },
+              ]}
+            />
           </p>
         </div>
         <div className="grid grid-cols-2 gap-2.5">

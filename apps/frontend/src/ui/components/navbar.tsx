@@ -13,7 +13,7 @@ import { useCompactOnOverflow } from '@/hooks/useCompactOnOverflow';
 import { useScrolled } from '@/hooks/useScrolled';
 import { useAuth } from '@/services/auth';
 import { timeAgo } from '@/ui/utils/format';
-import { isMerchantNotification, isMerchantView } from '@/ui/utils/notifications';
+import { isMerchantView, notificationsForView } from '@/ui/utils/notifications';
 import { AccountMenu } from './accountMenu';
 import { BrandLogo } from './brandLogo';
 import { useAuthModal } from './authModal';
@@ -73,8 +73,8 @@ export function Navbar({
   const { pathname } = useLocation();
   const [search] = useSearchParams();
   const merchantView = isMerchantView(pathname, search);
-  // แจ้งเตือนจาก Supabase (services/sync.ts โหลดใหม่ทุก 60 วินาที) · หน้าร้านเห็นเฉพาะของทีมร้าน หน้าลูกค้าเห็นเฉพาะของลูกค้า
-  const notifications = user ? myNotifications().filter((n) => isMerchantNotification(n) === merchantView) : [];
+  // แจ้งเตือนจาก Supabase (services/sync.ts โหลดใหม่ทุก 60 วินาที) · หน้าร้านเห็นเฉพาะของร้านที่จัดการอยู่ หน้าลูกค้าเห็นเฉพาะของลูกค้า
+  const notifications = user ? notificationsForView(myNotifications(), merchantView, user.barId) : [];
   const latestNotifications = notifications
     .toSorted((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt))
     .slice(0, NOTIFICATION_PREVIEW_LIMIT);

@@ -852,6 +852,17 @@ export interface AdminRanking {
   is_promoted: boolean;
 }
 
+/** admin_bar_areas (migration 20261020000500) — ตำบล/อำเภอ/จังหวัดของร้าน (DB หาจากหมุด) · รหัส = pcode ของ OCHA */
+export interface AdminBarArea {
+  bar_id: UUID;
+  tambon_code: string;
+  tambon_th: string;
+  amphoe_code: string;
+  amphoe_th: string;
+  province_code: string;
+  province_th: string;
+}
+
 // ---------------------------------------------------------------------
 // กฎธุรกิจที่ต้องตรงกับ DB
 // ---------------------------------------------------------------------

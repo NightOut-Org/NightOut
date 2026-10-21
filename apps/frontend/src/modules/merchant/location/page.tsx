@@ -3,6 +3,7 @@ import { Alert, App, Button, Form, Popconfirm } from 'antd';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { BarWithTier } from '@/services/data';
 import { useFormDirty } from '@/hooks/useFormDirty';
+import { HEADER_SAVE_CLASS } from '@/ui/utils/buttonClasses';
 import { useMerchantBar } from '@/hooks/useMerchantBar';
 import { useNow } from '@/hooks/useNow';
 import { useUnsavedGuard } from '@/hooks/useUnsavedGuard';
@@ -42,7 +43,7 @@ function locationBanner(bar: BarWithTier, live: boolean, now: number): Banner | 
     return {
       type: rejected ? 'error' : 'warning',
       title: `ร้านยังไม่ได้ปักหมุดจริง — ปักหมุดตำแหน่งร้านแล้ว${live ? 'ส่งให้ทีมตรวจ' : 'บันทึก'}${
-        rejected ? ` · ครั้งก่อนไม่ผ่าน: ${req.reason ?? '-'}` : ''
+        rejected ? ` (ครั้งก่อนไม่ผ่าน: ${req.reason ?? '-'})` : ''
       }`,
     };
   }
@@ -55,7 +56,7 @@ function locationBanner(bar: BarWithTier, live: boolean, now: number): Banner | 
   if (req.status === 'PENDING')
     return {
       type: 'info',
-      title: `รอทีม NightOut ตรวจตำแหน่งใหม่ · ส่งเมื่อ ${dateTime(req.createdAt)} · ระหว่างรอ ลูกค้ายังเห็นหมุดเดิม (สีเทา)`,
+      title: `รอทีม NightOut ตรวจตำแหน่งใหม่ ส่งเมื่อ ${dateTime(req.createdAt)} ระหว่างรอ ลูกค้ายังเห็นหมุดเดิม (สีเทา)`,
       pending: true,
     };
   if (req.status === 'REJECTED')
@@ -73,7 +74,7 @@ function locationBanner(bar: BarWithTier, live: boolean, now: number): Banner | 
     return {
       type: 'success',
       title: `ทีม NightOut ${req.source === 'ADMIN' ? 'ตั้งตำแหน่งให้' : 'ปรับหมุดเล็กน้อยแล้วอนุมัติ'} เมื่อ ${dateTime(req.reviewedAt)}${
-        req.reason ? ` · ${req.reason}` : ''
+        req.reason ? ` (${req.reason})` : ''
       }`,
     };
   return { type: 'success', title: `ตำแหน่งใหม่ผ่านการตรวจแล้ว เมื่อ ${dateTime(req.reviewedAt)}` };
@@ -158,7 +159,7 @@ export function MerchantLocationPage() {
       const res = await saveLocation(bar.id, toLocationBody(v));
       void message.success(
         res.status === 'PENDING'
-          ? 'ส่งให้ทีม NightOut ตรวจแล้ว · ระหว่างรอ ลูกค้ายังเห็นหมุดเดิม'
+          ? 'ส่งให้ทีม NightOut ตรวจแล้ว ระหว่างรอ ลูกค้ายังเห็นหมุดเดิม'
           : 'บันทึกตำแหน่งแล้ว — ทีม NightOut ตรวจพร้อมการอนุมัติร้าน',
       );
     } catch (e) {
@@ -185,7 +186,7 @@ export function MerchantLocationPage() {
         <div className="min-w-0">
           <h1 className="text-[17px] font-bold lg:font-display lg:text-[30px]">ตำแหน่งร้าน</h1>
           <p className="mt-1 hidden text-sm text-muted lg:block">
-            ลูกค้าเห็นหมุด ที่อยู่ ที่จอดรถ และรถไฟฟ้าใกล้สุดในหน้าร้าน · แก้แล้วต้องรอทีม NightOut
+            ลูกค้าเห็นหมุด ที่อยู่ ที่จอดรถ และรถไฟฟ้าใกล้สุดในหน้าร้าน และแก้แล้วต้องรอทีม NightOut
             ตรวจก่อนแสดง (ระหว่างรอลูกค้ายังเห็นหมุดเดิม)
           </p>
         </div>
@@ -206,7 +207,7 @@ export function MerchantLocationPage() {
               </>
             )}
             {saveButton(
-              'hidden h-10 items-center rounded-xl bg-gold px-[18px] text-sm font-semibold text-on-gold lg:inline-flex',
+              HEADER_SAVE_CLASS,
               live ? 'ส่งให้ทีมตรวจ' : 'บันทึกตำแหน่ง',
             )}
             {saveButton(

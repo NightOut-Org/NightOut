@@ -21,7 +21,7 @@ export function TableDrawer({
       onClose={onClose}
       size={440}
       destroyOnHidden
-      title={table ? `โต๊ะ ${table.name} · ${table.seats} ที่นั่ง` : ''}
+      title={table ? `โต๊ะ ${table.name} (${table.seats} ที่นั่ง)` : ''}
     >
       {table && meta && (
         <div className="flex flex-col gap-4">
@@ -75,15 +75,15 @@ export function TableDrawer({
                     <StatusTag map={BOOKING_STATUS} value={b.status} />
                   </span>
                   <span>
-                    {b.customer_name ?? 'ลูกค้า'} · {b.pax} คน
-                    {b.request_pr && ` · ${PR_LABEL[b.request_pr]}`}
+                    {b.customer_name ?? 'ลูกค้า'} ({b.pax} คน)
+                    {b.request_pr && ` ขอ ${PR_LABEL[b.request_pr]}`}
                   </span>
                   {b.checked_in_at && (
                     <span className="text-xs opacity-70">เช็กอิน {hhmm(b.checked_in_at)}</span>
                   )}
                   {b.extended_at && (
                     <span className="text-xs opacity-70">
-                      ต่อเวลาแล้ว · ปลดโต๊ะ {hhmm(b.auto_cancel_at)}
+                      ต่อเวลาแล้ว ปลดโต๊ะ {hhmm(b.auto_cancel_at)}
                     </span>
                   )}
                   {b.promotion_title && (

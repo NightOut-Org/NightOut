@@ -31,6 +31,7 @@ import { BAR_STATUS } from '@/ui/utils/labels';
 import { barMediaAction, discardBarMedia } from '../api';
 import { IMAGE_ACCEPT, checkImage } from '../utils/media';
 import { useBarMediaDraft } from '../utils/useBarMediaDraft';
+import { RuleList } from '@/ui/components/RuleList';
 
 type Draft = ReturnType<typeof useBarMediaDraft>;
 
@@ -222,7 +223,7 @@ function Gallery({
                   )}
                   {draft.isNew(g) && (
                     <Tag color="warning" className="!m-0">
-                      ใหม่ · ยังไม่บันทึก
+                      ใหม่ (ยังไม่บันทึก)
                     </Tag>
                   )}
                 </span>
@@ -240,7 +241,7 @@ function Gallery({
                     title="ลบรูปนี้ออกจากร้าน?"
                     description={
                       isCover && items.length > 1
-                        ? 'รูปถัดไปจะเป็นรูปปกแทน · ทีมร้านได้รับแจ้งเตือน'
+                        ? 'รูปถัดไปจะเป็นรูปปกแทน และทีมร้านได้รับแจ้งเตือน'
                         : 'ทีมร้านได้รับแจ้งเตือน'
                     }
                     okText="ลบ"
@@ -279,10 +280,15 @@ function Gallery({
           )}
         </ul>
       </Image.PreviewGroup>
-      <Typography.Text type="secondary" className="mt-2 block text-xs">
-        ปกใช้บนการ์ดร้าน แผนที่ และหัวหน้าร้าน · JPG/PNG/WebP ไม่เกิน 15MB (ย่อเป็น 1920px ให้เอง) ·
-        อัปโหลดและแจ้งทีมร้านตอนกดบันทึก
-      </Typography.Text>
+      <div className="mt-2 text-xs text-(--ant-color-text-secondary)">
+        <RuleList
+          rules={[
+            'รูปปกใช้บนการ์ดร้าน แผนที่ และหัวหน้าร้าน',
+            'รับ JPG/PNG/WebP ไม่เกิน 15MB (ระบบย่อเป็น 1920px ให้เอง)',
+            'อัปโหลดและแจ้งทีมร้านตอนกดบันทึก',
+          ]}
+        />
+      </div>
     </section>
   );
 }
@@ -342,7 +348,7 @@ function MenuPhotos({
                       <span className="truncate">{m.name}</span>
                       {changed && (
                         <Tag color="warning" className="!m-0 shrink-0">
-                          {url ? 'รูปใหม่ · ยังไม่บันทึก' : 'จะลบรูป · ยังไม่บันทึก'}
+                          {url ? 'รูปใหม่ (ยังไม่บันทึก)' : 'จะลบรูป (ยังไม่บันทึก)'}
                         </Tag>
                       )}
                     </div>

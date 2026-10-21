@@ -4,6 +4,7 @@ import { Link } from 'react-router';
 import { barImage } from '@/ui/utils/barImage';
 import { RatingBadge } from './ratingBadge';
 import { EASE_OUT, MOTION_OK, MOTION_REDUCE, NARROW, gsap, useGSAP } from '../utils/gsap';
+import { barPlace } from '@/ui/utils/area';
 
 /**
  * สีอันดับ: ทอง / เงิน / ทองแดง — ทองแดงดันไปทางแดงและเข้มกว่า (hue ~20° vs ทอง ~41°)
@@ -62,7 +63,7 @@ function PodiumCard({ bar, place }: { bar: RankedBar; place: 0 | 1 | 2 }) {
         <div className="w-full">
           <p className="truncate text-sm font-semibold sm:text-base">{bar.name}</p>
           <div className="mt-1.5 flex items-center justify-center gap-2">
-            <span className="truncate text-xs text-white/75">{bar.district}</span>
+            <span className="truncate text-xs text-white/75">{barPlace(bar)}</span>
             <RatingBadge rating={bar.rating} tier={bar.tier} small />
           </div>
         </div>

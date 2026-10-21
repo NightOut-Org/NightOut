@@ -1,5 +1,14 @@
 # CHANGELOG — @nightout/utils
 
+## 2026-10-20 — พื้นที่ร้านครบทั้งประเทศ (หาจากหมุด)
+- ใหม่ `src/area.ts`: `districtLabel` · `amphoeLabel` · `tambonLabel` · `provinceLabel` (กทม. ใช้ เขต/แขวง · "กรุงเทพฯ") · `areaLine` · `areaMatches` + เทสต์ `area.test.ts`
+
+## 2026-10-20 — เลิกใช้ " · " คั่นข้อความที่ผู้ใช้เห็น
+- ข้อความแจ้งผู้ใช้ (error message / ป้าย / สรุปสถานที่) เปลี่ยนจากต่อด้วยจุดกลางเป็นวรรคหรือวงเล็บ ให้อ่านแยกประเภทได้ · แก้เทสต์ที่อ้างข้อความให้ตรง
+
+## 2026-10-20 — promptPayPayload ย้ายมาจาก @nightout/mock
+- เพิ่ม `src/promptpay.ts` (`promptPayPayload`) + `promptpay.test.ts` · `@nightout/mock` ถูกลบ
+
 ## 2026-10-15 — อายุ 20+ จากวันเกิดของ Google / Facebook
 - `age.ts` ใหม่: `googleBirthdate()` (เลือกวันเกิดจากบัญชีก่อนโปรไฟล์ · ต้องครบ วัน/เดือน/ปี) · `facebookBirthdate()` (`MM/DD/YYYY` เท่านั้น) · `isAtLeastAge()` (วันตัดตรง DB) · `OAUTH_BIRTHDAY_SCOPE` · `TERMS_VERSION` / `PRIVACY_VERSION` + เทสต์ `age.test.ts`
 

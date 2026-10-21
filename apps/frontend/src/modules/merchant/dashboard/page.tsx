@@ -1,4 +1,4 @@
-import { ArrowRight, ArrowUpRight, ForkKnife, QrCode, Star, Table as TableIcon, Tag, UsersThree } from '@phosphor-icons/react';
+import { ArrowUpRight, ForkKnife, MapPin, QrCode, Star, Table as TableIcon, Tag, UsersThree } from '@phosphor-icons/react';
 import { useState } from 'react';
 import { Link } from 'react-router';
 import { barBookings, barReviews } from '@/services/data';
@@ -8,6 +8,8 @@ import { BookingStatusTag } from '@/ui/components/bookingStatusTag';
 import { Meter, Ring, Tile, TileLabel } from '@/ui/components/merchantUi';
 import { barImage } from '@/ui/utils/barImage';
 import { baht } from '@/ui/utils/format';
+import { MetaList } from '@/ui/components/metaList';
+import { barPlace } from '@/ui/utils/area';
 
 const DAY = 24 * 60 * 60 * 1000;
 const CLOSED = ['CANCELLED_BY_CUSTOMER', 'CANCELLED_BY_MERCHANT', 'REJECTED', 'EXPIRED'];
@@ -67,7 +69,7 @@ export function MerchantDashboardPage() {
       </p>
       <h1 className="break-words font-display text-2xl font-bold lg:text-[32px] lg:leading-tight">{bar.name}</h1>
       <p className="mt-1 text-[13px] lg:text-sm [&_.text-muted]:!text-white/75">
-        <BarRating bar={bar} /> · {bar.district}
+        <MetaList items={[<BarRating key="r" bar={bar} />, { icon: <MapPin weight="fill" />, label: 'พื้นที่', value: barPlace(bar) }]} />
       </p>
     </div>
   );
@@ -87,7 +89,7 @@ export function MerchantDashboardPage() {
               <span className="min-w-0 flex-1 truncate">
                 {b.userName}{' '}
                 <span className="text-muted">
-                  · {b.pax} คน<span className="hidden sm:inline"> · {bar.zones.find((z) => z.id === b.zoneId)?.name}</span>
+                  {b.pax} คน<span className="ml-2 hidden sm:inline">{bar.zones.find((z) => z.id === b.zoneId)?.name}</span>
                 </span>
               </span>
               <BookingStatusTag status={b.status} />
@@ -142,9 +144,17 @@ export function MerchantDashboardPage() {
 
         <Tile className="col-span-2 row-span-2 flex flex-col gap-1 overflow-hidden">
           <span className="mb-1 flex items-center justify-between text-sm">
-            <b className="font-semibold">การจองวันนี้ · {today.length}</b>
-            <Link to="/merchant/bookings" className="inline-flex items-center gap-1">
-              ทั้งหมด <ArrowRight size={14} />
+            <b className="flex items-center gap-2 font-semibold">
+              การจองวันนี้
+              <span className="rounded-full bg-gold/15 px-2 text-xs font-semibold leading-5 text-gold-text tabular-nums">
+                {today.length}
+              </span>
+            </b>
+            <Link
+              to="/merchant/bookings"
+              className="inline-flex h-7 items-center rounded-full border border-border px-3 text-xs font-medium !text-text transition-colors hover:border-gold hover:!text-gold-text"
+            >
+              ดูทั้งหมด
             </Link>
           </span>
           {rows(9)}
@@ -154,7 +164,7 @@ export function MerchantDashboardPage() {
           <Tile className="flex flex-col gap-1.5">
             <TileLabel end={<Link to="/merchant/deposits" aria-label="ไปหน้า Table Fee"><ArrowUpRight /></Link>}>Table Fee วันนี้</TileLabel>
             <span className="text-[30px] font-semibold text-gold-text">{baht(heldToday)}</span>
-            <span className="text-[13px] text-muted">NightOut ถือไว้ · โอนเข้าร้านหลังลูกค้าเช็กอิน</span>
+            <span className="text-[13px] text-muted">NightOut ถือไว้ แล้วโอนเข้าร้านหลังลูกค้าเช็กอิน</span>
           </Tile>
         )}
 
@@ -172,8 +182,7 @@ export function MerchantDashboardPage() {
                 {review.userName}
                 {!isStaff && (
                   <>
-                    {' · '}
-                    <Link to="/merchant/reviews">ดูรีวิว</Link>
+                    <Link to="/merchant/reviews" className="ml-3">ดูรีวิว</Link>
                   </>
                 )}
               </span>

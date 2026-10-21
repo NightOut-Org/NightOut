@@ -1,5 +1,9 @@
 # CHANGELOG — frontend/modules/barReviews
 
+## 2026-10-21 — ปุ่มกลับหน้าร้านไม่มีลูกศร
+- "← กลับหน้าร้าน" เป็นปุ่มขอบเทามีไอคอนร้าน (`HEADER_LINK_CLASS` ใน `ui/utils/buttonClasses.ts`) เหมือนหน้าจอง
+- ไฟล์: `page.tsx`
+
 ## 2026-10-13 — เรียก Table Fee แทนมัดจำ
 - "รีวิวได้หลังจองและชำระ Table Fee แล้ว" · ไฟล์: `page.tsx`
 

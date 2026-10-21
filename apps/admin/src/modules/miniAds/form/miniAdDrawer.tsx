@@ -257,7 +257,7 @@ function MiniAdEditor({ ad, onClose }: { ad: Db.AdminMiniAd | null; onClose: () 
             <Button icon={<Camera size={16} />}>{image ? 'เปลี่ยนภาพ' : 'เลือกภาพ'}</Button>
           </Upload>
           <Typography.Text type="secondary" className="block text-xs">
-            ภาพแนวนอน 16:9 (แนะนำ 960×540 ขึ้นไป) · ระบบย่อเป็น webp ให้เอง ·
+            ภาพแนวนอน 16:9 (แนะนำ 960×540 ขึ้นไป) ระบบย่อเป็น webp ให้เอง
             ห้ามมีชื่อ/โลโก้/ขวด/แก้วเครื่องดื่มแอลกอฮอล์
           </Typography.Text>
           <Form.Item
@@ -321,7 +321,7 @@ function MiniAdEditor({ ad, onClose }: { ad: Db.AdminMiniAd | null; onClose: () 
         <Form.Item
           name="link_url"
           label="ลิงก์"
-          extra='https://… เปิดแท็บใหม่ · หรือลิงก์ในเว็บ เช่น /search?style=Rooftop · โปรโมทร้านในระบบใช้หน้า "โปรโมท" ไม่ใช่ที่นี่'
+          extra='https://… เปิดแท็บใหม่ หรือลิงก์ในเว็บ เช่น /search?style=Rooftop (โปรโมทร้านในระบบใช้หน้า "โปรโมท" ไม่ใช่ที่นี่)'
           rules={[
             { required: true, whitespace: true, message: 'กรอกลิงก์' },
             {
@@ -336,7 +336,7 @@ function MiniAdEditor({ ad, onClose }: { ad: Db.AdminMiniAd | null; onClose: () 
         <Form.Item
           name="placements"
           label="ตำแหน่งที่แสดง"
-          extra='หน้าแรก: ใต้ "ร้านยอดนิยม" · หน้าค้นหา: หลังร้านลำดับที่ 6 (มุมมองรายการ) — แสดง 1 ชิ้นต่อหน้า สุ่มเมื่อมีหลายชิ้น'
+          extra='หน้าแรก: ใต้ "ร้านยอดนิยม" และหน้าค้นหา: หลังร้านลำดับที่ 6 (มุมมองรายการ) — แสดง 1 ชิ้นต่อหน้า สุ่มเมื่อมีหลายชิ้น'
           rules={[{ required: true, type: 'array', min: 1, message: 'เลือกอย่างน้อย 1 ตำแหน่ง' }]}
         >
           <Checkbox.Group options={PLACEMENT_OPTIONS} />
@@ -344,7 +344,7 @@ function MiniAdEditor({ ad, onClose }: { ad: Db.AdminMiniAd | null; onClose: () 
         <Form.Item
           name="period"
           label="ช่วงวันที่แสดง"
-          extra="ตามเวลาไทย · แสดงถึงสิ้นวันสุดท้าย · ไม่เกิน 1 ปี"
+          extra="ตามเวลาไทย แสดงถึงสิ้นวันสุดท้าย และไม่เกิน 1 ปี"
           rules={[
             { required: true, message: 'เลือกช่วงวันที่' },
             {

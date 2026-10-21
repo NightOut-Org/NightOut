@@ -10,16 +10,21 @@ import { SaveBar } from '@/ui/components/SaveBar';
 import { saveSiteNavAction, useSiteNav } from './api';
 import { NAV_LINKS } from './utils/navLinks';
 import { useSiteNavDraft, type NavMode, type NavRow } from './utils/useSiteNavDraft';
+import { RuleList } from '@/ui/components/RuleList';
 
 /** เว็บลูกค้า (deploy: โดเมนเดียวกัน · dev: คนละ port) */
 const WEB_URL = import.meta.env.DEV ? 'http://localhost:5173/' : '/';
 
 const MODES: { key: NavMode; label: string; hint: string }[] = [
-  { key: 'desktop', label: 'Navbar (คอมพิวเตอร์)', hint: 'แถบเมนูด้านบนของทุกหน้า เรียงจากซ้ายไปขวา' },
+  {
+    key: 'desktop',
+    label: 'Navbar (คอมพิวเตอร์)',
+    hint: 'แถบเมนูด้านบนของทุกหน้า เรียงจากซ้ายไปขวา',
+  },
   {
     key: 'mobile',
     label: 'แถบเมนูล่าง (มือถือ)',
-    hint: 'แถบลอยด้านล่างบนมือถือ เรียงจากซ้ายไปขวา · "โปรไฟล์" อยู่ท้ายสุดเสมอ · แนะนำไม่เกิน 5 เมนูให้กดง่าย',
+    hint: 'แถบลอยด้านล่างบนมือถือ เรียงจากซ้ายไปขวา โดย "โปรไฟล์" อยู่ท้ายสุดเสมอ (แนะนำไม่เกิน 5 เมนู)',
   },
 ];
 
@@ -57,7 +62,10 @@ export function HomeContentPage() {
       <div className="space-y-4">
         <p className="m-0 text-sm opacity-70">{MODES.find((x) => x.key === m)!.hint}</p>
 
-        <div aria-label="ตัวอย่างเมนู" className="overflow-x-auto rounded-full border border-[#2a2638] bg-[#0d0b14] p-1.5">
+        <div
+          aria-label="ตัวอย่างเมนู"
+          className="overflow-x-auto rounded-full border border-[#2a2638] bg-[#0d0b14] p-1.5"
+        >
           <ol className="m-0 flex list-none items-center gap-1 p-0">
             {shown.map((r, i) => {
               const Icon = NAV_LINKS[r.key].icon;
@@ -184,10 +192,27 @@ export function HomeContentPage() {
   return (
     <PageContainer
       title="เมนูเว็บ (Navbar)"
-      content='ชื่อ ลำดับ และการซ่อนเมนูของเว็บลูกค้า · ชื่อเมนูใช้ร่วมกันทั้งคอมพิวเตอร์และมือถือ · ลำดับ/ซ่อนตั้งแยกกัน · บันทึกแล้วขึ้นเว็บทันที (ลูกค้าที่เปิดหน้าอยู่เห็นเมื่อโหลดใหม่) · บัญชีร้านไม่เห็น "การจอง" (เห็น "ร้านของฉัน" ท้ายสุดแทน)'
+      content={
+        <RuleList
+          rules={[
+            'แก้ชื่อ ลำดับ และการซ่อนเมนูของเว็บลูกค้า',
+            'ชื่อเมนูใช้ร่วมกันทั้งคอมพิวเตอร์และมือถือ แต่ลำดับและการซ่อนตั้งแยกกัน',
+            'บัญชีร้านไม่เห็น "การจอง" แต่เห็น "ร้านของฉัน" ท้ายสุดแทน',
+            {
+              tone: 'check',
+              text: 'บันทึกแล้วขึ้นเว็บทันที ลูกค้าที่เปิดหน้าอยู่เห็นเมื่อโหลดใหม่',
+            },
+          ]}
+        />
+      }
       extra={
         <Space wrap>
-          <Button href={WEB_URL} target="_blank" rel="noreferrer" icon={<ArrowSquareOut size={16} />}>
+          <Button
+            href={WEB_URL}
+            target="_blank"
+            rel="noreferrer"
+            icon={<ArrowSquareOut size={16} />}
+          >
             ดูเว็บ
           </Button>
           <SaveBar

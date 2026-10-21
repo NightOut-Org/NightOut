@@ -1,5 +1,22 @@
 # CHANGELOG — @nightout/contracts
 
+## 2026-10-21 — เลิกใช้ " · " คั่นข้อความที่ผู้ใช้เห็น (ส่วนที่เหลือ)
+- `bar.ts`: `INVALID_INSPECTION` เขียนเป็นประโยค (ไม่มีขีดยาว/จุดกลาง)
+
+## 2026-10-21 — ค้นหาตำบล/แขวง
+- `catalog.ts`: `TambonSearchQuery` (q ≥ 2 ตัวอักษร หรือ code `TH######` อย่างใดอย่างหนึ่ง) · `TambonOption` + เทสต์
+
+## 2026-10-20 — พื้นที่ร้านครบทั้งประเทศ (หาจากหมุด)
+- `catalog.ts`: `AreaAtPointQuery` · `AreaRef` · `AreaAtPointResult` · `BarAreaRow`
+- `bar.ts`: เอา `district_id` ออกจาก `MerchantJoinBody` · `BarInfoBody` · `AdminBarInfoBody` (DB หาจากหมุด)
+- `backoffice.ts`: `ADMIN_VIEWS` + `admin_bar_areas` · เทสต์ใน `contracts.test.ts`
+
+## 2026-10-20 — รหัส error ROLE_NEEDS_BAR
+- `ACCOUNT_ERRORS.ROLE_NEEDS_BAR` ข้อความไทยตอนแอดมินตั้งชั้นร้าน/พนักงานให้บัญชีที่ไม่มีร้าน · `src/account.ts`
+
+## 2026-10-20 — เลิกใช้ " · " คั่นข้อความที่ผู้ใช้เห็น
+- ข้อความแจ้งผู้ใช้ (error message / ป้าย / สรุปสถานที่) เปลี่ยนจากต่อด้วยจุดกลางเป็นวรรคหรือวงเล็บ ให้อ่านแยกประเภทได้ · แก้เทสต์ที่อ้างข้อความให้ตรง
+
 ## 2026-10-17 — สีของชั้นบัญชี
 - `account.ts`: `RoleColor` (#RRGGBB → ตัวพิมพ์ใหญ่) · `RoleInfo` (`GET /me/roles`) · `SaveRoleColorsBody` / `SaveRoleColorsResult` (`PUT /admin/roles/colors` · ชั้นซ้ำไม่ได้) · `AccountRoleOption.color` · error `INVALID_ROLE_COLORS`
 - เทสต์ใน `contracts.test.ts`

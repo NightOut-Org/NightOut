@@ -4,7 +4,7 @@ import {
   type CommunitySort,
   type CommunityThreadSummary,
 } from '@nightout/contracts';
-import { MagnifyingGlass, Plus, PushPin } from '@phosphor-icons/react';
+import { MagnifyingGlass, Notebook, Plus, PushPin } from '@phosphor-icons/react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { App, Button, Empty, Input, Skeleton } from 'antd';
 import { useEffect, useState } from 'react';
@@ -71,6 +71,7 @@ export function CommunityPage() {
   });
 
   const compose = () => (user ? navigate('/community/new') : openLogin('/community/new'));
+  const openMine = () => (user ? navigate('/community/me') : openLogin('/community/me'));
   const pickSort = (s: CommunitySort) =>
     setParams((p) => {
       if (s === 'latest') p.delete('sort');
@@ -88,12 +89,23 @@ export function CommunityPage() {
       <header className="flex flex-wrap items-end gap-4 px-4 pb-1 md:px-0 lg:pb-5">
         <div className="min-w-0 flex-1">
           <div className="font-display text-[13px] tracking-[0.14em] text-gold-text">COMMUNITY</div>
-          <h1 className="m-0 mt-0.5 text-[28px] font-bold leading-tight md:text-4xl">
-            {current?.name ?? 'ชุมชน'}
-          </h1>
+          <div className="mt-0.5 flex items-center gap-3">
+            <h1 className="m-0 min-w-0 flex-1 text-[28px] font-bold leading-tight md:text-4xl">
+              {current?.name ?? 'ชุมชน'}
+            </h1>
+            {/* มือถือ: ปุ่มตั้งกระทู้เป็นปุ่มลอย → ทางเข้ากระทู้ของฉันอยู่ข้างหัวข้อ */}
+            <Button
+              shape="round"
+              onClick={openMine}
+              icon={<Notebook size={16} weight="bold" />}
+              className="!h-9 shrink-0 !font-semibold md:!hidden"
+            >
+              กระทู้ของฉัน
+            </Button>
+          </div>
           <p className="m-0 mt-0.5 text-sm text-muted">
             {current?.team_only
-              ? `ข่าวและกิจกรรมจากทีมร้านโดยตรง · ร้านละไม่เกิน ${COMMUNITY_SHOP_NEWS_WEEKLY_MAX} กระทู้ใน ${COMMUNITY_SHOP_NEWS_WINDOW_DAYS} วัน`
+              ? `ข่าวและกิจกรรมจากทีมร้านโดยตรง ร้านละไม่เกิน ${COMMUNITY_SHOP_NEWS_WEEKLY_MAX} กระทู้ใน ${COMMUNITY_SHOP_NEWS_WINDOW_DAYS} วัน`
               : 'คุยเรื่องคืนนี้กับคนที่ไปมาแล้วจริง'}
           </p>
         </div>
@@ -107,6 +119,14 @@ export function CommunityPage() {
           enterKeyHint="search"
           className="!h-[46px] w-full !rounded-[14px] !text-base md:!w-80"
         />
+        <Button
+          size="large"
+          onClick={openMine}
+          icon={<Notebook size={18} weight="bold" />}
+          className="!hidden !h-[46px] !rounded-full !px-5 !font-semibold md:!inline-flex"
+        >
+          กระทู้ของฉัน
+        </Button>
         <Button
           type="primary"
           size="large"

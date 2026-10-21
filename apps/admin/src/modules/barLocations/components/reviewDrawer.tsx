@@ -93,7 +93,7 @@ export function ReviewDrawer({
       keyboard={!saving}
       title={
         <span className="flex flex-wrap items-center gap-2">
-          ตรวจตำแหน่ง · {bar.name}
+          ตรวจตำแหน่ง {bar.name}
           <StatusTag map={BAR_STATUS} value={bar.status} />
         </span>
       }

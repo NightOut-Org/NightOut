@@ -1,6 +1,6 @@
 import { CaretDown, MagnifyingGlass, MapPin, UsersThree, Wallet } from '@phosphor-icons/react';
 import { budgetSearchQuery, MAX_GROUP_SIZE, SEARCH_BUDGET_PRESETS } from '@nightout/utils';
-import { DISTRICTS, type BarWithTier } from '@/services/data';
+import { AREA_OPTIONS, type BarWithTier } from '@/services/data';
 import { baht } from '@/ui/utils/format';
 import { type SiteHomeContent } from '../api';
 import type { HomeCategory } from '../type/category';
@@ -20,7 +20,10 @@ const BUDGET_ITEMS = [
 ];
 const PEOPLE_ITEMS = [
   { key: ANY, label: 'ไม่ระบุ' },
-  ...Array.from({ length: MAX_GROUP_SIZE }, (_, i) => ({ key: String(i + 1), label: `${i + 1} คน` })),
+  ...Array.from({ length: MAX_GROUP_SIZE }, (_, i) => ({
+    key: String(i + 1),
+    label: `${i + 1} คน`,
+  })),
 ];
 const fromKey = (key: string) => (key === ANY ? undefined : Number(key));
 
@@ -53,6 +56,7 @@ export function Hero({
   const [budget, setBudget] = useState<number>();
   const [people, setPeople] = useState<number>();
   const district = area !== HERE ? area : undefined;
+  const areaLabel = AREA_OPTIONS.find((o) => o.value === area)?.label ?? area;
 
   return (
     <section className="relative isolate flex min-h-[540px] items-center overflow-hidden bg-[#07070d] pb-24 pt-20 md:min-h-[620px] md:pb-32 md:pt-24">
@@ -110,7 +114,10 @@ export function Hero({
             e.preventDefault();
             const q = new FormData(e.currentTarget).get('q')?.toString() ?? '';
             // "ตำแหน่งปัจจุบัน" = ไม่กรองย่าน แต่เรียงร้านใกล้ผู้ใช้ก่อน (/search ขอตำแหน่งเอง · ไม่ใส่พิกัดใน URL)
-            const qs = [budgetSearchQuery({ q, district, budget, people }), area === HERE ? 'sort=distance' : '']
+            const qs = [
+              budgetSearchQuery({ q, district, budget, people }),
+              area === HERE ? 'sort=distance' : '',
+            ]
               .filter(Boolean)
               .join('&');
             navigate(`/search${qs ? `?${qs}` : ''}`);
@@ -129,10 +136,14 @@ export function Hero({
             <span className="hidden h-7 w-px shrink-0 bg-white/20 sm:block" aria-hidden />
             <HeroSelect
               icon={<MapPin size={18} weight="fill" className="shrink-0 text-gold" />}
-              label={area}
-              ariaLabel={`ย่าน: ${area}`}
+              label={areaLabel}
+              ariaLabel={`พื้นที่: ${areaLabel}`}
               selected={area}
-              items={[HERE, ...DISTRICTS].map((d) => ({ key: d, label: d }))}
+              items={[
+                { key: HERE, label: HERE },
+                // ตัวเลือกเด่น (มีร้าน · ย่านที่ทีมคัด · 77 จังหวัด) — อำเภอ/ย่านอื่นทั้งประเทศค้นได้ในตัวกรองของ /search
+                ...AREA_OPTIONS.filter((o) => o.featured).map((o) => ({ key: o.value, label: o.label })),
+              ]}
               onSelect={setArea}
               className="sm:max-w-40"
             />
@@ -165,7 +176,9 @@ export function Hero({
         </form>
         {/* งบรวมของกลุ่ม (ค่าประเมิน — จองล่วงหน้าเฉพาะโต๊ะ) · เว้นที่ไว้ หน้าไม่กระโดดตอนข้อความขึ้น */}
         <p aria-live="polite" className="mt-3 min-h-5 text-sm text-white/75">
-          {budget && people ? `${people} คน · ไม่เกินคนละ ${baht(budget)} · รวมประมาณ ${baht(budget * people)}` : ''}
+          {budget && people
+            ? `${people} คน งบไม่เกินคนละ ${baht(budget)} รวมประมาณ ${baht(budget * people)}`
+            : ''}
         </p>
       </div>
     </section>
@@ -218,7 +231,11 @@ function HeroSelect({
 /** แทนหัวข้อ + คำโปรยระหว่างรอ API — สูงใกล้ของจริง หน้าไม่กระโดดตอนข้อมูลมา */
 function HeroTitleSkeleton() {
   return (
-    <div role="status" aria-label="กำลังโหลด" className="flex w-full flex-col items-center motion-safe:animate-pulse">
+    <div
+      role="status"
+      aria-label="กำลังโหลด"
+      className="flex w-full flex-col items-center motion-safe:animate-pulse"
+    >
       <div className="flex items-end gap-x-2 md:gap-x-5">
         <span className="mb-[0.6em] h-6 w-16 rounded-md bg-white/10 sm:h-8 sm:w-24 md:h-12 md:w-40" />
         <span className="h-[3.6rem] w-36 rounded-xl bg-gold/15 sm:h-[5rem] sm:w-52 md:h-[8.5rem] md:w-96" />

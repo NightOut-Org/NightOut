@@ -1,3 +1,4 @@
+import { ArrowsClockwise, CheckSquare, Scales } from '@phosphor-icons/react';
 import { CATEGORY_LABELS, listBars, type RankingPeriod } from '@/services/data';
 import type { RankPeriod } from '@nightout/contracts';
 import type { BarCategory } from '@nightout/types';
@@ -90,7 +91,7 @@ export function RankingPage() {
           <SplitHeading key={period} lead={PERIOD_LABEL[period]} text="ผู้ชนะได้แก่" />
           {noVotes && (
             <p className="mx-auto mt-3 max-w-md text-balance text-center text-sm text-muted">
-              ยังไม่มีโหวตในรอบนี้ — เรียงตามคะแนนรวม (รีวิว · เช็กอิน · Safety)
+              ยังไม่มีโหวตในรอบนี้ — เรียงตามคะแนนรวม (จากรีวิว เช็กอิน และ Safety)
             </p>
           )}
         </div>
@@ -120,10 +121,21 @@ export function RankingPage() {
         )}
 
         <ScrollReveal>
-        <p className="mx-auto mt-10 max-w-2xl text-center text-xs text-muted">
-          อันดับรีเซ็ตทุกวันจันทร์ (รายสัปดาห์) และวันที่ 1 (รายเดือน) · อัปเดตทุกคืน · 1 การจองที่เช็กอินแล้ว = 1 โหวต ·
-          โหวตเท่ากันเรียงตามคะแนนรวม · ร้านที่มีรีวิวน้อยกว่า 5 รีวิวยังไม่ติดอันดับ · โฆษณาไม่มีผล
-        </p>
+        <ul className="mx-auto mt-10 grid max-w-3xl list-none gap-3 p-0 text-[13px] text-muted sm:grid-cols-3">
+          {[
+            { icon: <CheckSquare weight="fill" />, title: 'นับโหวตยังไง', text: '1 การจองที่เช็กอินแล้ว = 1 โหวต อัปเดตทุกคืน' },
+            { icon: <ArrowsClockwise weight="bold" />, title: 'เริ่มรอบใหม่เมื่อไร', text: 'รายสัปดาห์ทุกวันจันทร์ ส่วนรายเดือนทุกวันที่ 1' },
+            { icon: <Scales weight="fill" />, title: 'ถ้าโหวตเท่ากัน', text: 'เรียงตามคะแนนรวม ร้านที่รีวิวไม่ถึง 5 ยังไม่ติดอันดับ และโฆษณาไม่มีผล' },
+          ].map((r) => (
+            <li key={r.title} className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+              <span className="flex items-center gap-2 font-semibold text-text [&>svg]:size-4 [&>svg]:text-gold-text">
+                {r.icon}
+                {r.title}
+              </span>
+              <p className="m-0 mt-1.5 leading-relaxed">{r.text}</p>
+            </li>
+          ))}
+        </ul>
         </ScrollReveal>
       </section>
     </div>

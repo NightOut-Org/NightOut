@@ -1,9 +1,8 @@
-import { ArrowRight } from '@phosphor-icons/react';
 import type { ReactNode } from 'react';
 import { Link } from 'react-router';
 
 /**
- * หัวข้อ section (Figma: Main) — ชื่อตัวหนาซ้าย + ลิงก์ม่วง "ดูทั้งหมด →" ขวา
+ * หัวข้อ section (Figma: Main) — ชื่อตัวหนาซ้าย + ปุ่มขอบ "ดูทั้งหมด" ขวา (ไม่ใช้ลิงก์ข้อความ + ลูกศร)
  * `eyebrow` = บรรทัดเล็กสีม่วงเหนือชื่อ (ไม่ใส่ก็ได้)
  * ใส่ `id` แล้วให้ <section aria-labelledby={id}> อ้างถึง
  */
@@ -37,9 +36,9 @@ export function SectionHeader({
         (to && (
           <Link
             to={to}
-            className="inline-flex shrink-0 items-center gap-1.5 pb-1 text-sm font-medium !text-purple hover:!text-purple/80"
+            className="inline-flex h-9 shrink-0 items-center rounded-full border border-border px-4 text-sm font-medium !text-text transition-colors hover:border-purple hover:!text-purple"
           >
-            {linkLabel} <ArrowRight size={16} weight="bold" />
+            {linkLabel}
           </Link>
         ))}
     </div>

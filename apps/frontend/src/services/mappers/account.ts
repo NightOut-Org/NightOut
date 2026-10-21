@@ -1,9 +1,10 @@
-import type { AppNotification, PromotionOrder } from '@nightout/mock';
+import type { AppNotification, PromotionOrder } from '@/services/models';
 
 /** account — แถวแจ้งเตือน / ประวัติโปรโมท ใน GET /me/overview → รูปแบบที่หน้าเว็บใช้ */
 export interface NotificationRow {
   id: string;
   user_id: string;
+  bar_id: string | null;
   title: string;
   body: string;
   payload: { link?: string } | null;
@@ -23,6 +24,7 @@ export interface ListingRow {
 export const toNotification = (n: NotificationRow): AppNotification => ({
   id: n.id,
   userId: n.user_id,
+  barId: n.bar_id ?? undefined,
   title: n.title,
   body: n.body,
   link: n.payload?.link,

@@ -1,5 +1,9 @@
 # CHANGELOG — backend · community
 
+## 2026-10-21 — เลิกใช้ " · " คั่นข้อความที่ผู้ใช้เห็น (ส่วนที่เหลือ)
+- ข้อความแจ้งเตือนชุมชน: `app_community_add_comment` (ทีมร้าน <ชื่อร้าน>) `admin_community_moderate`
+- migration `20261021000200_notify_text_no_dots` ประกาศฟังก์ชันตัวล่าสุดซ้ำทั้งตัว เปลี่ยนเฉพาะสตริงที่มีตัวคั่นเป็นวรรค (ตรวจแล้ว 29 ฟังก์ชันต่างกันแค่ข้อความ/คอมเมนต์ · แจ้งเตือนที่ส่งไปแล้วไม่แก้ย้อนหลัง)
+
 ## 2026-10-13 — ชุมชน: สิทธิ์ทีมร้าน (ป้ายทีมร้าน · ข่าวจากร้าน · ไม่นับไลก์/ร้านมาแรง)
 - migration `20261013000900_community_shop_team.sql`: "ทีมร้าน" = `bar_staff` ที่รับเชิญแล้ว/ยังไม่ถูกถอด ของร้าน APPROVED หรือ SUSPENDED (ทุกบทบาท) · หมวดใหม่ `shop-news` "ข่าวจากร้าน" (`community_categories.team_only`) · ป้ายทีมร้านเก็บ snapshot ตอนโพสต์ `community_threads.team_bar_id` / `community_comments.team_bar_id` (backfill จากทีมปัจจุบัน) · ถูกใจ `counted` (ทีมร้านถูกใจในกระทู้ที่แท็กร้านตัวเอง = ไม่นับใน `like_count`)
 - กติกาใน `community_team_rules`: ทีมร้านตั้งกระทู้ได้เฉพาะข่าวจากร้าน แท็กร้านตัวเองที่แสดงอยู่ ≤ 3 กระทู้/ร้าน/7 วันล่าสุด (นับทุกสถานะ) · ข่าวจากร้านเปลี่ยนหมวด/ร้านไม่ได้ · แท็กร้านตัวเองนอกหมวดข่าวไม่ได้ (`COMMUNITY_TEAM_OWN_TAG`) · `community_trending_bars` ไม่นับกระทู้ที่ทีมร้านแท็กร้านตัวเอง · view `admin_community_threads` / `admin_community_comments` + `team_bar` / `excluded_like_count`

@@ -9,6 +9,7 @@ import { useEffect, useState } from 'react';
 import { useThemeMode } from '@nightout/ui';
 import { MapBaseLayer } from './mapBaseLayer';
 import { barImage } from '@/ui/utils/barImage';
+import { barPlace } from '@/ui/utils/area';
 
 const escapeAttribute = (value: string) =>
   value.replace(/[&<>"']/g, (character) => `&#${character.charCodeAt(0)};`);
@@ -73,7 +74,7 @@ export function BarMap({
           <Popup>
             <div className="min-w-40">
               <p className="font-semibold">{b.name}</p>
-              <p className="text-xs text-muted">{b.district}</p>
+              <p className="text-xs text-muted">{barPlace(b)}</p>
               <div className="mt-1.5 flex gap-3 text-xs">
                 {!single && <Link to={`/bars/${b.slug}`}>ดูร้าน</Link>}
                 <a href={directionsUrl(b.lat, b.lng)} target="_blank" rel="noreferrer noopener">

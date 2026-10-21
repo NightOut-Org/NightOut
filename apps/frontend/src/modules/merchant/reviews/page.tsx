@@ -1,4 +1,4 @@
-import { Flag, Play, Star } from '@phosphor-icons/react';
+import { Armchair, Flag, Play, SealCheck, Star } from '@phosphor-icons/react';
 import { App, Empty, Popconfirm } from 'antd';
 import { useState } from 'react';
 import { barBookings, barReviews } from '@/services/data';
@@ -6,6 +6,8 @@ import { useMerchantBar } from '@/hooks/useMerchantBar';
 import { Chip, Tile } from '@/ui/components/merchantUi';
 import { timeAgo } from '@/ui/utils/format';
 import { reportReview } from './api';
+import { MetaList } from '@/ui/components/metaList';
+import { StatusChip } from '@/ui/components/statusChip';
 
 type Review = ReturnType<typeof barReviews>[number];
 type Filter = 'ALL' | 'MEDIA' | 'REPORTED';
@@ -119,7 +121,7 @@ export function MerchantReviewsPage() {
               <span className="lg:hidden">
                 <Stars value={avg} />
               </span>
-              {reviews.length} รีวิว · จากลูกค้าที่เช็กอินจริง
+              {reviews.length} รีวิว จากลูกค้าที่เช็กอินจริง
             </span>
             <div className="hidden flex-col gap-2 lg:flex">
               {dist.map((d) => (
@@ -136,7 +138,7 @@ export function MerchantReviewsPage() {
           <Tile className="hidden flex-col gap-2.5 text-[13px] text-muted lg:flex">
             <b className="text-sm font-semibold text-text">รายงานรีวิว</b>
             <span className="leading-relaxed">
-              รีวิวที่ผิดนโยบาย (ข้อความหยาบ ข้อมูลเท็จ ไม่เกี่ยวกับร้าน) กด “รายงาน” ให้ทีม NightOut ตรวจ · ร้านลบหรือแก้รีวิวเองไม่ได้
+              รีวิวที่ผิดนโยบาย (ข้อความหยาบ ข้อมูลเท็จ ไม่เกี่ยวกับร้าน) กด “รายงาน” ให้ทีม NightOut ตรวจ เพราะร้านลบหรือแก้รีวิวเองไม่ได้
             </span>
           </Tile>
         </div>
@@ -161,7 +163,13 @@ export function MerchantReviewsPage() {
                     <b className="text-sm font-medium">{r.userName}</b>
                     <Stars value={r.rating} />
                     <span className="hidden text-xs text-muted lg:inline">
-                      {timeAgo(r.createdAt)} · เช็กอินแล้ว{zone ? ` · ${zone}` : ''}
+                      <MetaList
+                        items={[
+                          timeAgo(r.createdAt),
+                          <StatusChip key="v" tone="success" icon={<SealCheck weight="fill" />}>เช็กอินแล้ว</StatusChip>,
+                          zone && { icon: <Armchair weight="fill" />, label: 'โซน', value: zone },
+                        ]}
+                      />
                     </span>
                     {r.status === 'HIDDEN' && <span className="rounded-full border border-border px-2 text-[11px] text-muted">ซ่อนโดยทีม NightOut</span>}
                     <span className="ml-auto">{reportAction(r)}</span>

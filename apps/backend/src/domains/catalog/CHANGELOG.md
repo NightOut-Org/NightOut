@@ -1,5 +1,19 @@
 # CHANGELOG — apps/backend/src/domains/catalog
 
+## 2026-10-21 — ค้นหาตำบล/แขวง
+- ใหม่ `GET /public/tambons?q=` / `?code=` → rpc `search_tambons` (migration `20261021000100_catalog_search_tambons` · index trigram) · สูงสุด 20 รายการ
+- ไฟล์: `catalog.public.controller.ts` · `catalog.dto.ts`
+
+## 2026-10-21 — catalog ส่งรายชื่ออำเภอ/จังหวัดทั้งประเทศ
+- `GET /public/catalog` เพิ่ม `amphoes` (code, name_th, province_code · 928) และ `provinces` (code, name_th · 77) · `districts` มี `sort_order` (ทีมคัดเอง < 1000) — ให้หน้าเว็บค้นพื้นที่ได้ครบแม้ยังไม่มีร้านในพื้นที่นั้น · ทุกตารางต่ำกว่า max rows 1,000 ของ PostgREST
+- ไฟล์: `catalog.public.controller.ts`
+
+## 2026-10-20 — พื้นที่ร้านครบทั้งประเทศ (หาจากหมุด)
+- ใหม่ `GET /public/area?lat&lng` → rpc `area_at_point` (ตำบล/อำเภอ/จังหวัด + ย่านของพิกัด)
+- `GET /public/catalog` ส่ง `areas` (view `bar_areas`) เพิ่ม · `districts` มี `province_th` เรียงตาม `sort_order` แล้วชื่อ
+- migration `20261020000300_catalog_admin_areas` · `20261020000400_catalog_admin_areas_data` · `20261020000500_catalog_bar_areas` (ADR 0011) · สคริปต์สร้างข้อมูล `apps/backend/scripts/areas` · `seed.sql` ไม่มี districts แล้ว (อยู่ใน migration)
+- ไฟล์: `catalog.public.controller.ts` · `catalog.dto.ts`
+
 ## 2026-10-17 — catalog ส่งไอคอนสไตล์
 - `GET /public/catalog`: `styles` เพิ่ม `icon` (ชื่อไอคอน Phosphor ที่แอดมินตั้งที่ /styles) ให้หน้าโปรไฟล์แสดงไอคอนคู่ชื่อสไตล์ (`catalog.public.controller.ts`)
 

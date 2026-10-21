@@ -1,5 +1,5 @@
 import type * as C from '@nightout/contracts';
-import type { MenuItem } from '@nightout/mock';
+import type { MenuItem } from '@/services/models';
 import { Rest } from '@nightout/utils/rest';
 import { dataUrlToBlob, uploadBarMedia } from '@/services/api/storage';
 import { compressImage } from '@/ui/utils/media';

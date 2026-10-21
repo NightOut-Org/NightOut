@@ -9,26 +9,26 @@ const MIN = 60_000;
 /** ข้อความในการ์ดโต๊ะตามสถานะ (ไม่มียอดเงิน/เบอร์โทร) */
 function tableBody(t: C.TableBoardTable, current: C.TableBoardBooking | undefined, now: number) {
   if (t.status === 'IN_USE' && t.status_source === 'MANUAL' && t.occupancy) {
-    const pax = t.occupancy.pax ? ` · ${t.occupancy.pax} คน` : '';
-    return { text: `ไม่มีการจอง${pax} · ตั้งแต่ ${hhmm(t.occupancy.started_at)}`, late: false };
+    const pax = t.occupancy.pax ? ` (${t.occupancy.pax} คน)` : '';
+    return { text: `ไม่มีการจอง${pax} ตั้งแต่ ${hhmm(t.occupancy.started_at)}`, late: false };
   }
   if (!current) return { text: 'ว่าง', late: false };
-  const who = `${current.customer_name ?? 'ลูกค้า'} · ${current.pax} คน`;
+  const who = `${current.customer_name ?? 'ลูกค้า'} (${current.pax} คน)`;
   if (t.status === 'IN_USE') {
     return {
-      text: `${who}${current.checked_in_at ? ` · เช็กอิน ${hhmm(current.checked_in_at)}` : ''}`,
+      text: `${who}${current.checked_in_at ? ` เช็กอิน ${hhmm(current.checked_in_at)}` : ''}`,
       late: false,
     };
   }
   const diff = Math.round((Date.parse(current.booking_datetime) - now) / MIN);
-  const extended = current.extended_at ? ' · ต่อเวลาแล้ว' : '';
+  const extended = current.extended_at ? ' (ต่อเวลาแล้ว)' : '';
   if (diff >= 0)
     return {
-      text: `${hhmm(current.booking_datetime)} · ${who} · อีก ${diff} นาที${extended}`,
+      text: `${hhmm(current.booking_datetime)} ${who} อีก ${diff} นาที${extended}`,
       late: false,
     };
   return {
-    text: `${hhmm(current.booking_datetime)} · ${who} · สาย ${-diff} นาที · ปลดโต๊ะ ${hhmm(current.auto_cancel_at)}${extended}`,
+    text: `${hhmm(current.booking_datetime)} ${who} สาย ${-diff} นาที ปลดโต๊ะ ${hhmm(current.auto_cancel_at)}${extended}`,
     late: true,
   };
 }
@@ -58,7 +58,7 @@ function TableCard({
     <button
       type="button"
       onClick={onOpen}
-      aria-label={`โต๊ะ ${table.name} · ${meta.label} · ${table.seats} ที่นั่ง`}
+      aria-label={`โต๊ะ ${table.name} ${meta.label} ${table.seats} ที่นั่ง`}
       className="flex min-h-[104px] cursor-pointer flex-col gap-1.5 rounded-[14px] border border-black/10 p-3 text-left transition-colors hover:border-(--gold) focus-visible:outline-2 focus-visible:outline-(--gold) dark:border-white/10"
       style={{
         background: `color-mix(in srgb, ${meta.color} 12%, transparent)`,
@@ -105,7 +105,7 @@ export function BookingRow({ b }: { b: C.TableBoardBooking }) {
       <span className="font-mono text-xs opacity-70">{b.code}</span>
       <span className="tabular-nums">{hhmm(b.booking_datetime)}</span>
       <span>
-        {b.customer_name ?? 'ลูกค้า'} · {b.pax} คน
+        {b.customer_name ?? 'ลูกค้า'} ({b.pax} คน)
       </span>
       <StatusTag map={BOOKING_STATUS} value={b.status} />
     </li>
@@ -138,10 +138,10 @@ export function BoardGrid({
           <section key={zone.id} aria-labelledby={`zone-${zone.id}`}>
             <header className="mb-2.5 flex flex-wrap items-baseline gap-x-3 gap-y-1">
               <h3 id={`zone-${zone.id}`} className="m-0 text-base font-semibold">
-                {zone.name} · {tables.length} โต๊ะ
+                {zone.name} ({tables.length} โต๊ะ)
               </h3>
               <span className="text-xs opacity-70">
-                ว่าง {c.FREE} · จองแล้ว {c.RESERVED} · กำลังใช้ {c.IN_USE}
+                ว่าง {c.FREE} จองแล้ว {c.RESERVED} กำลังใช้ {c.IN_USE}
               </span>
               {zone.allow_zone_only_booking && <Tag>จองแบบโซนได้</Tag>}
             </header>

@@ -4,6 +4,7 @@ import { Link } from 'react-router';
 import { barImage } from '@/ui/utils/barImage';
 import { EASE_OUT, MOTION_OK, gsap, useGSAP } from '../utils/gsap';
 import { RatingBadge } from './ratingBadge';
+import { barPlace } from '@/ui/utils/area';
 
 /**
  * อันดับ 4–10 — แต่ละแถวค่อยๆ โผล่ขึ้นมาตามการเลื่อน (scrub ต่อแถว) ยิ่งเลื่อนลงยิ่งชัด
@@ -55,7 +56,7 @@ export function RankList({ rows }: { rows: RankedBar[] }) {
             />
             <span className="min-w-0 flex-1">
               <span className="block truncate font-semibold">{b.name}</span>
-              <span className="block text-xs text-muted">{b.district}</span>
+              <span className="block text-xs text-muted">{barPlace(b)}</span>
             </span>
             <span className="shrink-0 text-right text-xs text-muted">
               <span className="block text-sm font-semibold tabular-nums text-text">

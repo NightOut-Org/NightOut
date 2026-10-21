@@ -130,7 +130,7 @@ export function UsersPage() {
           {changed.map(({ user, role }) => (
             <li key={user.id} className="flex flex-col gap-0.5">
               <span>
-                <b>{user.display_name}</b> · {roleText(user.role)} → {roleText(role)}
+                <b>{user.display_name}</b> จาก{roleText(user.role)} เป็น{roleText(role)}
               </span>
               {roleNotes(user, role, auth.session?.user.id).map((n) => (
                 <Typography.Text key={n} type="secondary" className="text-xs">
@@ -228,7 +228,7 @@ export function UsersPage() {
           <Space size={[4, 4]} wrap>
             {u.bars.map((b) => (
               <Tag key={b.id}>
-                {b.name} · {STAFF_ROLE[b.role]}
+                {b.name} ({STAFF_ROLE[b.role]})
               </Tag>
             ))}
           </Space>

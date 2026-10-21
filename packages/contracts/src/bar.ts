@@ -137,7 +137,6 @@ export const MerchantJoinBody = z
   .object({
     name: z.string().trim().min(1).max(80),
     category: BarCategory,
-    district_id: uuid.nullish(),
     license: text(100).nullish(),
     ...barLocationShape,
   })
@@ -155,13 +154,13 @@ export const BarLinkType = z.enum(['INSTAGRAM', 'TIKTOK', 'FACEBOOK', 'LINE_OA',
 /**
  * PATCH /merchant/bars/:barId/info · ส่วน `info` ของ PUT /merchant/bars/:barId/store — ส่งเฉพาะ field ที่แก้
  * ไม่มี `address` แล้ว — ที่อยู่ + หมุดแก้ผ่าน PUT /merchant/bars/:barId/location เท่านั้น (zod ตัด key ที่ไม่รู้จักทิ้ง)
+ * ไม่มี `district_id` แล้ว — ย่าน/ตำบล/อำเภอ/จังหวัด DB หาเองจากหมุด (trigger bars_set_area · …20261020000500)
  */
 export const BarInfoBody = z
   .object({
     name: z.string().trim().min(1).max(80),
     description: z.string().trim().max(400).nullable(),
     phone: z.string().trim().max(30).nullable(),
-    district_id: uuid.nullable(),
     style_keys: z.array(z.string().max(40)).max(20),
     hours: z
       .array(
@@ -247,7 +246,6 @@ export const AdminBarInfoBody = BarInfoBody.pick({
   name: true,
   description: true,
   phone: true,
-  district_id: true,
   style_keys: true,
   hours: true,
   links: true,
@@ -583,12 +581,12 @@ export const BAR_ERRORS = {
   INVALID_SAFETY_ITEMS: 'ข้อมูลความปลอดภัยไม่ถูกต้อง — รีเฟรชหน้าแล้วลองใหม่',
   INVALID_MENU_ITEM: 'กรอกชื่อรายการและราคา (ไม่ติดลบ) ให้ครบ',
   INVALID_MENU_IMAGE: 'รูปเมนูไม่ถูกต้องหรืออัปโหลดไม่สำเร็จ — ลองอัปโหลดใหม่',
-  INVALID_BAR_MEDIA: `รูปร้านไม่ถูกต้อง (สูงสุด ${BAR_GALLERY_MAX} รูป · รูปปกต้องอยู่ในแกลเลอรี) — ลองอัปโหลดใหม่`,
+  INVALID_BAR_MEDIA: `รูปร้านไม่ถูกต้อง (สูงสุด ${BAR_GALLERY_MAX} รูป รูปปกต้องอยู่ในแกลเลอรี) — ลองอัปโหลดใหม่`,
   MENU_ITEM_NOT_FOUND: 'ไม่พบรายการเมนูนี้ (อาจถูกลบไปแล้ว)',
   INVALID_BAR_STORE: 'ไม่มีอะไรให้บันทึก',
   INVALID_BAR_STATUS_CHANGES: 'ข้อมูลการแสดง/ระงับร้านไม่ถูกต้อง (ระงับต้องใส่เหตุผล) — รีเฟรชหน้าแล้วลองใหม่',
   BAR_NOT_TOGGLEABLE: 'มีร้านที่ยังไม่ผ่านการอนุมัติ — จัดการที่หน้าร้านสมัครใหม่',
-  INVALID_BAR_LOCATION: 'ข้อมูลตำแหน่งไม่ครบ — ปักหมุด กรอกที่อยู่ 3–300 ตัวอักษร · รถไฟฟ้าต้องมีทั้งสายและชื่อสถานี',
+  INVALID_BAR_LOCATION: 'ข้อมูลตำแหน่งไม่ครบ — ปักหมุด กรอกที่อยู่ 3–300 ตัวอักษร รถไฟฟ้าต้องมีทั้งสายและชื่อสถานี',
   LOCATION_OUTSIDE_THAILAND: 'หมุดต้องอยู่ในประเทศไทย',
   LOCATION_UNCHANGED: 'ตำแหน่งเหมือนเดิม — ไม่มีอะไรให้ส่งตรวจ',
   LOCATION_REQUEST_NOT_FOUND: 'ไม่พบคำขอแก้ตำแหน่งที่รอตรวจ (อาจถูกตรวจหรือยกเลิกไปแล้ว)',
@@ -604,7 +602,7 @@ export const BAR_ERRORS = {
   BAR_BLACKLISTED: 'ร้านนี้ติด Blacklist — ปลดที่หน้า "Blacklist ร้าน" ก่อนเปลี่ยนสถานะ',
   NO_TABLE_NOTE_REQUIRED: 'ระบุรายละเอียดข้อร้องเรียนอย่างน้อย 3 ตัวอักษร',
   NO_TABLE_ADMIN_NOT_ALLOWED: 'บันทึก "ร้านไม่มีโต๊ะ" ได้เฉพาะการจองที่ร้านรับแล้ว (ยืนยันแล้ว / เช็กอินแล้ว / จบแล้ว / ปลดโต๊ะ / ร้านยกเลิกแล้ว)',
-  INVALID_INSPECTION: 'ผลตรวจไม่ถูกต้อง — ต้องมีอย่างน้อย 1 ข้อที่ "ผ่าน" หรือ "ไม่พบ" · ข้อไม่ซ้ำ · หมายเหตุไม่ยาวเกิน',
+  INVALID_INSPECTION: 'ผลตรวจไม่ถูกต้อง ต้องมีอย่างน้อย 1 ข้อที่ "ผ่าน" หรือ "ไม่พบ" ข้อต้องไม่ซ้ำ และหมายเหตุต้องไม่ยาวเกิน',
   INVALID_INSPECTION_PHOTO: `รูปจากการตรวจไม่ถูกต้องหรืออัปโหลดไม่สำเร็จ (สูงสุด ${SAFETY_INSPECTION_MAX_PHOTOS} รูปต่อข้อ) — ลองอัปโหลดใหม่`,
   INVALID_INSPECTION_TIME: `วันเวลาที่ลงพื้นที่ไม่ถูกต้อง — ห้ามเป็นอนาคต ย้อนได้ไม่เกิน ${SAFETY_INSPECTION_MAX_AGE_DAYS} วัน และต้องไม่ก่อนการตรวจครั้งล่าสุดของร้านนี้`,
   INSPECTOR_IS_BAR_MEMBER: 'คุณอยู่ในทีมของร้านนี้ จึงตรวจหรือยืนยัน Safety ของร้านนี้เองไม่ได้ — ให้แอดมินคนอื่นตรวจ',

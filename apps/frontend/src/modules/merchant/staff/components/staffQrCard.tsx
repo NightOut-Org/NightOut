@@ -59,7 +59,7 @@ export function StaffQrCard({ barName, barSlug }: { barName: string; barSlug: st
       </span>
       <span className="select-all break-all text-center text-xs text-text">{url}</span>
       <p className="text-center text-xs text-muted">
-        พิมพ์ติดจุดต้อนรับได้ · คนนอกทีมสแกนแล้วเข้าไม่ได้
+        พิมพ์ติดจุดต้อนรับได้ ส่วนคนนอกทีมสแกนแล้วเข้าไม่ได้
       </p>
       <div className="grid grid-cols-2 gap-2">
         <button

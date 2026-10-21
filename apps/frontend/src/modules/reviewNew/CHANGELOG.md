@@ -1,5 +1,8 @@
 # CHANGELOG — frontend/modules/reviewNew
 
+## 2026-10-20 — เลิกพึ่ง @nightout/mock
+- import type จาก `@/services/models` แทน `@nightout/mock` (แพ็กเกจ mock ถูกลบ · cache/selectors ย้ายมา `apps/frontend/src/services/`) — พฤติกรรมเหมือนเดิม
+
 ## 2026-10-13 — เรียก Table Fee แทนมัดจำ
 - "รีวิวได้หลังจองและชำระ Table Fee แล้วเท่านั้น" · ไฟล์: `page.tsx`
 

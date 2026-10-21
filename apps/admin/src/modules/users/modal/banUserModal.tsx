@@ -3,6 +3,7 @@ import { Alert, Checkbox, Form, Input, Modal } from 'antd';
 import { useState } from 'react';
 import { useAdminAction } from '@/services/adminData';
 import { banUserAction } from '../api';
+import { RuleList } from '@/ui/components/RuleList';
 
 interface Values {
   reason: string;
@@ -20,7 +21,13 @@ const REASON_RULES = [
  * ถูกแบน = จองโต๊ะไม่ได้ + ชุมชนอ่านได้อย่างเดียว · ไม่แตะการจองเดิม / ร้าน / ทีมร้าน
  * บันทึกไม่สำเร็จ = useAdminAction แจ้งเหตุผลแล้ว · modal ยังเปิดอยู่ให้แก้แล้วลองใหม่
  */
-export function BanUserModal({ user: target, onClose }: { user: Db.AdminUser | null; onClose: () => void }) {
+export function BanUserModal({
+  user: target,
+  onClose,
+}: {
+  user: Db.AdminUser | null;
+  onClose: () => void;
+}) {
   // จำบัญชีล่าสุดไว้ — ระหว่าง modal ค่อย ๆ ปิด หัวข้อ/ข้อความไม่หายวูบ
   const [user, setUser] = useState(target);
   if (target && target !== user) setUser(target);
@@ -70,7 +77,17 @@ export function BanUserModal({ user: target, onClose }: { user: Db.AdminUser | n
         <Alert
           type="info"
           showIcon
-          title="ถูกแบนแล้วจองโต๊ะไม่ได้ และชุมชนอ่านได้อย่างเดียว · การจองเดิมยังอยู่ · เจ้าของบัญชีได้รับแจ้งเตือนพร้อมเหตุผล · บันทึกใน Audit Log"
+          title="ผลของการแบน"
+          description={
+            <RuleList
+              rules={[
+                { tone: 'warn', text: 'จองโต๊ะไม่ได้ และชุมชนอ่านได้อย่างเดียว' },
+                'การจองเดิมยังอยู่',
+                'เจ้าของบัญชีได้รับแจ้งเตือนพร้อมเหตุผล',
+                'บันทึกใน Audit Log',
+              ]}
+            />
+          }
         />
         {!!user?.bars.length && (
           <Alert
@@ -87,10 +104,17 @@ export function BanUserModal({ user: target, onClose }: { user: Db.AdminUser | n
           clearOnDestroy
         >
           <Form.Item name="reason" label="เหตุผล (เจ้าของบัญชีเห็นข้อความนี้)" rules={REASON_RULES}>
-            <Input.TextArea rows={3} maxLength={300} showCount placeholder="เช่น โพสต์ข้อความหลอกลวงในชุมชนซ้ำหลายครั้ง" />
+            <Input.TextArea
+              rows={3}
+              maxLength={300}
+              showCount
+              placeholder="เช่น โพสต์ข้อความหลอกลวงในชุมชนซ้ำหลายครั้ง"
+            />
           </Form.Item>
           <Form.Item name="ban_phones" valuePropName="checked" className="!mb-0">
-            <Checkbox>แบนทุกเบอร์ที่บัญชีนี้เคยใช้ด้วย (สมัครบัญชีใหม่ด้วยเบอร์เดิมก็จองไม่ได้)</Checkbox>
+            <Checkbox>
+              แบนทุกเบอร์ที่บัญชีนี้เคยใช้ด้วย (สมัครบัญชีใหม่ด้วยเบอร์เดิมก็จองไม่ได้)
+            </Checkbox>
           </Form.Item>
         </Form>
       </div>
