@@ -4,6 +4,7 @@ import { App, Upload } from 'antd';
 import { useMemo, useState, type ReactNode } from 'react';
 import { SAFETY_LABELS, type SafetyValue } from '@/services/data';
 import { StatusChip } from '@/ui/components/statusChip';
+import { InfoButton } from '@/ui/components/infoButton';
 import { RuleList } from '@/ui/components/ruleList';
 
 type SafetyKey = keyof typeof SAFETY_LABELS;
@@ -139,14 +140,17 @@ export function MerchantSafetyPage() {
       <div className="flex items-center justify-between gap-3">
         <div>
           <h1 className="text-[17px] font-bold lg:font-display lg:text-[30px]">ความปลอดภัย</h1>
-          <RuleList
-            className="mt-2 hidden text-sm text-muted lg:block"
-            rules={[
-              'ลูกค้าเห็นทุกข้อในชื่อ "ข้อมูลอ้างอิงจากร้านค้า (Merchant Declared)" และมีผลต่อดาวของร้าน',
-              'ทีมงาน NightOut ตรวจหลักฐานที่แนบหรือลงพื้นที่ตรวจ แล้วผลตรวจจะแสดงที่นี่',
-              { tone: 'check', text: 'แก้ได้หลายข้อแล้วกดบันทึกครั้งเดียว' },
-            ]}
-          />
+          <div className="mt-2">
+            <InfoButton label="ข้อมูลนี้มาจากไหน">
+              <RuleList
+                rules={[
+                  'ลูกค้าเห็นทุกข้อในชื่อ "ข้อมูลอ้างอิงจากร้านค้า (Merchant Declared)" และมีผลต่อดาวของร้าน',
+                  'ทีมงาน NightOut ตรวจหลักฐานที่แนบหรือลงพื้นที่ตรวจ แล้วผลตรวจจะแสดงที่นี่',
+                  { tone: 'check', text: 'แก้ได้หลายข้อแล้วกดบันทึกครั้งเดียว' },
+                ]}
+              />
+            </InfoButton>
+          </div>
         </div>
         <div className="flex items-center gap-1 lg:gap-3">
           {draft.count > 0 && !saving && (

@@ -9,7 +9,7 @@ import type {
 } from '@/services/models';
 import type { BarAreaRow } from '@nightout/contracts';
 import type { UserRole } from '@nightout/types';
-import { amphoeLabel, provinceLabel } from '@nightout/utils';
+import { amphoeLabel, districtLabel, provinceLabel } from '@nightout/utils';
 import { Rest } from '@nightout/utils/rest';
 import { STYLE_LABELS, toBar, type BarDetailRow } from '@/services/barsRepo';
 import { log, since } from '@/services/log';
@@ -87,6 +87,18 @@ export const AREA_OPTIONS: AreaOpt[] = [];
 export const DISTRICTS: string[] = [];
 /** ชื่อสไตล์ (เหมือน STYLES เดิม) */
 export const STYLES: string[] = [];
+
+/** ตัวเลือก "พื้นที่ที่ชอบ" ทุกระดับ (ไม่รวมตำบล/แขวง — ค้นจาก backend ตอนพิมพ์) · value = id ย่าน (uuid) หรือรหัส pcode ของอำเภอ/จังหวัด */
+export interface AreaPick {
+  value: string;
+  label: string;
+  /** บรรทัดรอง (จังหวัดของย่าน/อำเภอ) */
+  hint: string;
+  kind: 'district' | 'amphoe' | 'province';
+}
+export const AREA_PICKS: AreaPick[] = [];
+/** รหัส pcode → ชื่อที่แสดง ("เขตวัฒนา" · "เชียงใหม่") ของอำเภอ/จังหวัด */
+export const AREA_CODE_LABEL = new Map<string, string>();
 
 // ---------------------------------------------------------------------
 // cache ภายใน (แยกสาธารณะ / ผู้ใช้ แล้วรวมใส่ store)
@@ -173,6 +185,7 @@ function applyPublic(raw: PublicRaw, urls: Map<string, string>) {
     days: p.duration_days,
     price: Number(p.price),
   }));
+  buildAreaPicks(raw);
   const areas = new Map((raw.areas ?? []).map((a) => [a.bar_id, a]));
   publicBars = raw.bars.map((row) => {
     const bar = toBar(row);
@@ -196,6 +209,32 @@ function applyPublic(raw: PublicRaw, urls: Map<string, string>) {
   DISTRICTS.splice(0, DISTRICTS.length, ...opts.filter((o) => o.featured && o.value.length >= 3).map((o) => o.value));
   publicReviews = raw.reviews.map((r) => toPublicReview(r, urls));
   commit();
+}
+
+/** ตัวเลือกพื้นที่ที่ชอบ: ย่าน (ชื่อ+จังหวัดซ้ำ = ตัวเดียว) · อำเภอ/เขต · จังหวัด */
+function buildAreaPicks(raw: PublicRaw) {
+  const picks: AreaPick[] = [];
+  const seen = new Set<string>();
+  for (const d of raw.districts) {
+    const key = `${d.name_th}|${d.province_th ?? ''}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    picks.push({ value: d.id, label: districtLabel(d.name_th), hint: provinceLabel({ province: d.province_th }), kind: 'district' });
+  }
+  const provinceName = new Map((raw.provinces ?? []).map((p) => [p.code, p.name_th]));
+  AREA_CODE_LABEL.clear();
+  for (const a of raw.amphoes ?? []) {
+    const province = provinceName.get(a.province_code) ?? '';
+    const label = amphoeLabel({ amphoe: a.name_th, provinceCode: a.province_code });
+    AREA_CODE_LABEL.set(a.code, label);
+    picks.push({ value: a.code, label, hint: provinceLabel({ province, provinceCode: a.province_code }), kind: 'amphoe' });
+  }
+  for (const p of raw.provinces ?? []) {
+    const label = provinceLabel({ province: p.name_th, provinceCode: p.code });
+    AREA_CODE_LABEL.set(p.code, label);
+    picks.push({ value: p.code, label, hint: '', kind: 'province' });
+  }
+  AREA_PICKS.splice(0, AREA_PICKS.length, ...picks);
 }
 
 /** ย่าน < 1000 = ทีมคัดเอง (SEED) · OSM = 1000 (migration …20261020000400) */
@@ -309,6 +348,8 @@ interface MeOverview {
   preferences: {
     preferred_style_ids: string[];
     preferred_district_ids: string[];
+    /** รหัส pcode ของจังหวัด/อำเภอ/ตำบลที่ชอบ (migration …20261021000500) · แถวเก่าไม่มี */
+    preferred_area_codes?: string[];
     budget_per_person: number | null;
     usual_pax: number | null;
   } | null;
@@ -336,10 +377,12 @@ export interface SessionProfile {
 export interface UserPrefs {
   styleIds: string[];
   districtIds: string[];
+  /** รหัส pcode ของจังหวัด (TH10) · อำเภอ/เขต (TH1039) · ตำบล/แขวง (TH103902) */
+  areaCodes: string[];
   budget?: number;
   pax?: number;
 }
-export let myPrefs: UserPrefs = { styleIds: [], districtIds: [] };
+export let myPrefs: UserPrefs = { styleIds: [], districtIds: [], areaCodes: [] };
 
 /** คืน id ร้านหลักของผู้ใช้ (ร้านแรกที่เป็นเจ้าของ/อยู่ในทีม) */
 export async function loadUser(p: SessionProfile): Promise<{ barId?: string }> {
@@ -368,6 +411,7 @@ export async function loadUser(p: SessionProfile): Promise<{ barId?: string }> {
   myPrefs = {
     styleIds: (pr?.preferred_style_ids ?? []).filter((id) => visibleStyleIds.has(id)),
     districtIds: pr?.preferred_district_ids ?? [],
+    areaCodes: pr?.preferred_area_codes ?? [],
     budget: pr?.budget_per_person ? Number(pr.budget_per_person) : undefined,
     pax: pr?.usual_pax ?? undefined,
   };
@@ -431,7 +475,7 @@ export function clearUser() {
   lastUserSignature = '';
   clearInterval(polling);
   userData = null;
-  myPrefs = { styleIds: [], districtIds: [] };
+  myPrefs = { styleIds: [], districtIds: [], areaCodes: [] };
   setSessionUserId(null);
   commit();
 }

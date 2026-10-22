@@ -27,13 +27,13 @@ export function LeaveDraftModal({
         ร่างจะเก็บไว้ในบัญชีของคุณ 7 วัน กลับมาเขียนต่อได้จากทุกเครื่อง
       </p>
       <div className="flex flex-col gap-2">
-        <Button type="primary" size="large" block loading={busy} onClick={onKeep}>
+        <Button type="primary" block loading={busy} onClick={onKeep}>
           เก็บร่างไว้
         </Button>
-        <Button size="large" block danger disabled={busy} onClick={onDiscard}>
+        <Button block danger disabled={busy} onClick={onDiscard}>
           ทิ้งร่าง
         </Button>
-        <Button size="large" block type="text" disabled={busy} onClick={onCancel}>
+        <Button block type="text" disabled={busy} onClick={onCancel}>
           เขียนต่อ
         </Button>
       </div>

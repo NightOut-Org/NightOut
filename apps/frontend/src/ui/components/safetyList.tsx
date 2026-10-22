@@ -3,6 +3,7 @@ import { safetyVerifyLabel } from '@nightout/utils';
 import type { SafetyVerifyMethod } from '@nightout/types';
 import { SAFETY_LABELS, safetyScore, type Bar } from '@/services/data';
 import { Progress, Tooltip } from 'antd';
+import { InfoButton } from './infoButton';
 
 /**
  * ข้อความตามข้อกฎหมาย (requirement "ป้าย Safety"): ข้อมูลเป็นของร้านแจ้งเอง + วันที่ตรวจล่าสุด + ปฏิเสธความรับผิด
@@ -79,7 +80,13 @@ export function SafetyList({ bar }: { bar: Bar }) {
           </li>
         ))}
       </ul>
-      <p className="mt-4 text-xs leading-relaxed text-muted">{SAFETY_DISCLAIMER}</p>
+      <InfoButton
+        label="ที่มาของข้อมูล"
+        title={SAFETY_SOURCE_LABEL}
+        className="mt-4"
+      >
+        <p className="leading-relaxed">{SAFETY_DISCLAIMER}</p>
+      </InfoButton>
     </div>
   );
 }

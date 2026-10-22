@@ -14,6 +14,7 @@ import { savePromotionsPage, toPromotionItems } from './api';
 import { usePromotionsDraft } from './utils/usePromotionsDraft';
 import { MetaList } from '@/ui/components/metaList';
 import { DraftChip } from '@/ui/components/statusChip';
+import { InfoButton } from '@/ui/components/infoButton';
 import { RuleList } from '@/ui/components/ruleList';
 
 const DAYS = ['อา.', 'จ.', 'อ.', 'พ.', 'พฤ.', 'ศ.', 'ส.'];
@@ -215,14 +216,17 @@ export function MerchantPromotionsPage() {
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0">
           <h1 className="text-[17px] font-bold lg:font-display lg:text-[30px]">โปรโมชัน</h1>
-          <RuleList
-            className="mt-2 hidden text-sm text-muted lg:block"
-            rules={[
-              'ลูกค้าเลือกได้ 1 โปรตอนจองโต๊ะ และระบบเช็กเวลา/วันให้อัตโนมัติ',
-              { tone: 'warn', text: 'ใช้กับอาหาร ค่าเข้า หรือบริการเท่านั้น' },
-              'โปรที่ใช้ได้วันนี้ขึ้นป้าย "ดีลวันนี้" บนการ์ดร้านและหน้าร้าน',
-            ]}
-          />
+          <div className="mt-2">
+            <InfoButton label="กติกาโปรโมชัน">
+              <RuleList
+                rules={[
+                  'ลูกค้าเลือกได้ 1 โปรตอนจองโต๊ะ และระบบเช็กเวลา/วันให้อัตโนมัติ',
+                  { tone: 'warn', text: 'ใช้กับอาหาร ค่าเข้า หรือบริการเท่านั้น' },
+                  'โปรที่ใช้ได้วันนี้ขึ้นป้าย "ดีลวันนี้" บนการ์ดร้านและหน้าร้าน',
+                ]}
+              />
+            </InfoButton>
+          </div>
         </div>
         <div className="flex items-center gap-1 lg:gap-3">
           {count > 0 && !saving && (

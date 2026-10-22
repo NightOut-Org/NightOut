@@ -120,7 +120,7 @@ export function MerchantFloorPage() {
           )}
         </div>
         <Segmented<View>
-          size={screens.lg ? 'middle' : 'large'}
+          size="middle"
           value={view}
           onChange={(v) => {
             setView(v);
@@ -154,7 +154,7 @@ export function MerchantFloorPage() {
         title="โหลดผังโต๊ะไม่สำเร็จ"
         subTitle={(board.error as Error | null)?.message}
         extra={
-          <Button type="primary" size="large" onClick={() => void board.refetch()}>
+          <Button type="primary" onClick={() => void board.refetch()}>
             ลองใหม่
           </Button>
         }
@@ -165,7 +165,7 @@ export function MerchantFloorPage() {
       <Empty description="ร้านยังไม่ได้ตั้งโซน / โต๊ะ">
         {canSetup ? (
           <Link to="/merchant/tables">
-            <Button type="primary" size="large">
+            <Button type="primary">
               ตั้งค่าโซน / โต๊ะ
             </Button>
           </Link>

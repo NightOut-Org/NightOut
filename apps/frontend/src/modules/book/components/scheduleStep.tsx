@@ -10,7 +10,7 @@ import { PAX_OPTIONS, TIMES } from '../utils/times';
 export function ScheduleStep({ f }: { f: BookingForm }) {
   return (
     <Card>
-      <Form layout="vertical" size="large">
+      <Form layout="vertical">
         <div className="grid gap-4 sm:grid-cols-3">
           <Form.Item label="วันที่">
             <DatePicker

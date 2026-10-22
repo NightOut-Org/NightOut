@@ -378,7 +378,6 @@ function FeatureCard({
         {/* ยังไม่เลือก = '' (ไม่ตรงตัวเลือกไหน → ไม่ไฮไลต์ · ไม่ส่ง undefined เพราะ Segmented จะเลือกตัวแรกให้เอง) */}
         <Segmented<SafetyCheckResult | ''>
           block
-          size="large"
           aria-label={`ผลตรวจ ${row.name_th}`}
           disabled={disabled}
           value={it.result ?? ''}
@@ -489,7 +488,6 @@ function InspectedAtPicker({
         allowClear
         inputReadOnly
         disabled={disabled}
-        size="large"
         className="min-w-0 flex-1"
         value={value}
         onChange={(d) => onChange(d ? base.year(d.year()).month(d.month()).date(d.date()) : null)}
@@ -501,7 +499,6 @@ function InspectedAtPicker({
         allowClear={false}
         inputReadOnly
         disabled={disabled}
-        size="large"
         className="w-28 shrink-0"
         value={value}
         onChange={(t) =>

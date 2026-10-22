@@ -92,7 +92,6 @@ export function ConfirmStep({ bar, f }: { bar: BarWithTier; f: BookingForm }) {
       <Input
         id="contact-phone"
         className="!mt-1.5"
-        size="large"
         type="tel"
         inputMode="tel"
         autoComplete="tel"

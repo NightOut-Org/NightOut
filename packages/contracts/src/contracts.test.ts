@@ -702,5 +702,8 @@ describe('tambon search', () => {
     expect(TambonSearchQuery.safeParse({}).success).toBe(false);
     expect(TambonSearchQuery.safeParse({ q: 'คลอง', code: 'TH103902' }).success).toBe(false);
     expect(TambonSearchQuery.safeParse({ code: 'TH1039' }).success).toBe(false);
+    expect(TambonSearchQuery.parse({ codes: 'TH103902,TH300101' })).toEqual({ codes: 'TH103902,TH300101' });
+    expect(TambonSearchQuery.safeParse({ codes: 'TH103902,' }).success).toBe(false);
+    expect(TambonSearchQuery.safeParse({ q: 'คลอง', codes: 'TH103902' }).success).toBe(false);
   });
 });

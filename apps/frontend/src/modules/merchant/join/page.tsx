@@ -20,6 +20,7 @@ import { BarLocationFields } from '@/ui/components/barLocationFields';
 import { LocationPicker } from '@/ui/components/locationPicker';
 import { MetaList } from '@/ui/components/metaList';
 import { PinAreaCard, pinAreaParts } from '@/ui/components/pinAreaCard';
+import { InfoButton } from '@/ui/components/infoButton';
 import { RuleList } from '@/ui/components/ruleList';
 import { fillEmptyAddress, toLocationBody, type LocationFormValues } from '@/ui/utils/barLocation';
 import { merchantJoin, reversePlace, searchPlace, usePinArea } from './api';
@@ -184,14 +185,14 @@ function StepRail({ step, onGo }: { step: number; onGo: (i: number) => void }) {
           );
         })}
       </ol>
-      <RuleList
-        boxed
-        className="!text-xs"
-        rules={[
-          'ทีม NightOut ตรวจภายใน 1–2 วันทำการ',
-          { tone: 'check', text: 'ระหว่างรอตรวจ เตรียมเมนู โต๊ะ และตั้งค่าการจองได้เลย' },
-        ]}
-      />
+      <InfoButton label="ขั้นตอนหลังส่งตรวจ">
+        <RuleList
+          rules={[
+            'ทีม NightOut ตรวจภายใน 1–2 วันทำการ',
+            { tone: 'check', text: 'ระหว่างรอตรวจ เตรียมเมนู โต๊ะ และตั้งค่าการจองได้เลย' },
+          ]}
+        />
+      </InfoButton>
     </nav>
   );
 }
@@ -267,7 +268,6 @@ export function MerchantJoinPage() {
     <Form<JoinValues>
       form={form}
       layout="vertical"
-      size="large"
       requiredMark={false}
       preserve
       className="merchant-join-form"
@@ -443,14 +443,16 @@ export function MerchantJoinPage() {
           </header>
           <div className="lg:px-6 lg:pt-5">{fields}</div>
           {step === 3 && (
-            <RuleList
-              boxed
-              className="mt-4 lg:mx-6"
-              rules={[
-                'ทีม NightOut ตรวจภายใน 1–2 วันทำการ และแจ้งผลทางการแจ้งเตือน',
-                { tone: 'check', text: 'ระหว่างรอตรวจ เตรียมเมนู โต๊ะ และตั้งค่าการจองได้เลย' },
-              ]}
-            />
+            <div className="mt-4 lg:mx-6">
+              <InfoButton label="ขั้นตอนหลังส่งตรวจ">
+                <RuleList
+                  rules={[
+                    'ทีม NightOut ตรวจภายใน 1–2 วันทำการ และแจ้งผลทางการแจ้งเตือน',
+                    { tone: 'check', text: 'ระหว่างรอตรวจ เตรียมเมนู โต๊ะ และตั้งค่าการจองได้เลย' },
+                  ]}
+                />
+              </InfoButton>
+            </div>
           )}
           <footer className="hidden items-center justify-between gap-3 lg:mt-2 lg:flex lg:border-t lg:border-border lg:px-6 lg:py-4">
             {backButton || <span />}

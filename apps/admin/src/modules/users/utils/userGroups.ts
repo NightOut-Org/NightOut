@@ -5,7 +5,7 @@ export type UserGroup = 'customers' | 'shop' | 'team' | 'inactive';
 export const USER_GROUPS: readonly UserGroup[] = ['customers', 'shop', 'team', 'inactive'];
 
 export const USER_GROUP_LABEL: Record<UserGroup, string> = {
-  customers: 'ลูกค้า',
+  customers: 'สมาชิก',
   shop: 'ทีมร้าน',
   team: 'ทีม NightOut',
   inactive: 'ถูกแบน / ลบแล้ว',

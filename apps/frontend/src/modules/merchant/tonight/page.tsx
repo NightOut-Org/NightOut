@@ -329,10 +329,12 @@ export function TonightPage() {
                 </button>
               </span>
             </div>
-            {scanInput(desktopInputRef)}
-            {lastCheckIn ?? (
-              <p className="text-xs text-muted">ใช้เครื่องอ่าน QR ที่ต่อเป็นคีย์บอร์ด พิมพ์รหัสจองแล้วกด Enter หรือเปิดกล้อง</p>
-            )}
+            <div className="flex flex-1 flex-col justify-center gap-3">
+              {scanInput(desktopInputRef)}
+              {lastCheckIn ?? (
+                <p className="text-xs text-muted">ใช้เครื่องอ่าน QR ที่ต่อเป็นคีย์บอร์ด พิมพ์รหัสจองแล้วกด Enter หรือเปิดกล้อง</p>
+              )}
+            </div>
           </Tile>
           <Tile className="flex flex-col gap-2.5">
             <span className="text-sm text-muted">สถานะร้านตอนนี้</span>

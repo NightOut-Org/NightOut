@@ -8,7 +8,6 @@ export function PaymentEvents({ row }: { row: Db.AdminPaymentIntent }) {
   return (
     <div className="space-y-4 py-2">
       <Descriptions
-        size="small"
         column={{ xs: 1, md: 2, xl: 3 }}
         items={[
           {
@@ -36,7 +35,6 @@ export function PaymentEvents({ row }: { row: Db.AdminPaymentIntent }) {
         </Typography.Text>
         <Table<Db.PaymentEventRow>
           rowKey="id"
-          size="small"
           pagination={false}
           dataSource={row.events}
           locale={{ emptyText: 'ยังไม่ได้รับ webhook' }}

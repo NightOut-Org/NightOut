@@ -74,7 +74,6 @@ export function AuthLoginForm({
           rules={[{ required: true, type: 'email', message: 'กรอกอีเมลให้ถูกต้อง' }]}
         >
           <Input
-            size="large"
             prefix={<EnvelopeSimple size={18} />}
             placeholder="you@email.com"
             autoComplete="email"
@@ -88,7 +87,6 @@ export function AuthLoginForm({
           rules={[{ required: true, message: 'กรอกรหัสผ่าน' }]}
         >
           <Input.Password
-            size="large"
             prefix={<Lock size={18} />}
             placeholder="กรอกรหัสผ่านของคุณ"
             autoComplete="current-password"
@@ -101,7 +99,7 @@ export function AuthLoginForm({
             }
           />
         </Form.Item>
-        <Button type="primary" htmlType="submit" size="large" block loading={loading} className="btn-gold">
+        <Button type="primary" htmlType="submit" block loading={loading} className="btn-gold">
           เข้าสู่ระบบ
         </Button>
       </Form>

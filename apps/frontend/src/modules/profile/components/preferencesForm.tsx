@@ -5,12 +5,14 @@ import { useUnsavedGuard } from '@/hooks/useUnsavedGuard';
 import { useAuth, type AppUser } from '@/services/auth';
 import { MASTER, myPrefs } from '@/services/data';
 import { updateProfile } from '../api';
-import { districtSelectOptions } from '@/ui/utils/area';
+import { AreaMultiSelect } from '@/ui/components/areaMultiSelect';
+import { joinAreaPicks, splitAreaPicks } from '@/ui/utils/area';
 
 interface PrefsValues {
   displayName: string;
   styles?: string[];
-  districts?: string[];
+  /** ย่าน (id) ปนรหัสจังหวัด/อำเภอ/ตำบล — แยกตอนบันทึก */
+  areas?: string[];
   budget?: number | null;
   pax?: number | null;
 }
@@ -19,7 +21,7 @@ interface PrefsValues {
 const pick = (v: PrefsValues) => ({
   display_name: v.displayName,
   style_ids: v.styles ?? [],
-  district_ids: v.districts ?? [],
+  ...splitAreaPicks(v.areas),
   budget_per_person: v.budget ?? null,
   usual_pax: v.pax ?? null,
 });
@@ -33,7 +35,7 @@ export function PreferencesForm({ user, onDone }: { user: AppUser; onDone: () =>
   const [initial] = useState<PrefsValues>(() => ({
     displayName: user.displayName,
     styles: myPrefs.styleIds,
-    districts: myPrefs.districtIds,
+    areas: joinAreaPicks(myPrefs.districtIds, myPrefs.areaCodes),
     budget: myPrefs.budget,
     pax: myPrefs.pax,
   }));
@@ -59,11 +61,18 @@ export function PreferencesForm({ user, onDone }: { user: AppUser; onDone: () =>
         }
       }}
     >
-      <Form.Item name="displayName" label="ชื่อที่แสดง" rules={[{ required: true, whitespace: true, message: 'ใส่ชื่อที่แสดง' }]}>
+      <Form.Item
+        name="displayName"
+        label="ชื่อที่แสดง"
+        rules={[{ required: true, whitespace: true, message: 'ใส่ชื่อที่แสดง' }]}
+      >
         <Input maxLength={60} />
       </Form.Item>
       <Form.Item name="styles" label="สไตล์ร้านที่ชอบ">
-        <Select mode="multiple" options={MASTER.styles.map((st) => ({ label: st.label, value: st.id }))} />
+        <Select
+          mode="multiple"
+          options={MASTER.styles.map((st) => ({ label: st.label, value: st.id }))}
+        />
       </Form.Item>
       <div className="grid gap-x-4 sm:grid-cols-2">
         <Form.Item name="budget" label="งบต่อหัว (บาท)">
@@ -73,8 +82,12 @@ export function PreferencesForm({ user, onDone }: { user: AppUser; onDone: () =>
           <InputNumber className="!w-full" min={1} max={30} />
         </Form.Item>
       </div>
-      <Form.Item name="districts" label="ย่านที่ชอบ">
-        <Select mode="multiple" showSearch={{ optionFilterProp: 'label' }} placeholder="พิมพ์ชื่อย่าน" options={districtSelectOptions()} />
+      <Form.Item
+        name="areas"
+        label="พื้นที่ที่ชอบ"
+        extra="ย่าน ตำบล/แขวง อำเภอ/เขต หรือจังหวัด เลือกได้ไม่เกิน 20"
+      >
+        <AreaMultiSelect />
       </Form.Item>
       <Button type="primary" htmlType="submit" loading={saving} className="w-full sm:w-auto">
         บันทึก

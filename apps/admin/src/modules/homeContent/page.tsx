@@ -104,7 +104,6 @@ export function HomeContentPage() {
                 <Space size={2}>
                   <Button
                     type="text"
-                    size="small"
                     icon={<ArrowUp size={14} />}
                     disabled={saving || i === 0}
                     aria-label={`เลื่อน ${r.label} ขึ้น`}
@@ -112,7 +111,6 @@ export function HomeContentPage() {
                   />
                   <Button
                     type="text"
-                    size="small"
                     icon={<ArrowDown size={14} />}
                     disabled={saving || i === last}
                     aria-label={`เลื่อน ${r.label} ลง`}

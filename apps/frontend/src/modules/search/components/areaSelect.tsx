@@ -54,7 +54,6 @@ export function AreaSelect({ f, set }: { f: BarFilter; set: (p: Partial<BarFilte
   return (
     <Select
       className="mb-2.5 w-full"
-      size="large"
       allowClear
       showSearch={{ filterOption: false, searchValue: term, onSearch: setTerm }}
       placeholder="ค้นหาย่าน ตำบล/แขวง อำเภอ/เขต หรือจังหวัด"

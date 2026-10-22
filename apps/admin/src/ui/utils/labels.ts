@@ -22,7 +22,7 @@ export const CATEGORY: Record<Db.Enums<'bar_category'>, string> = {
 };
 
 export const USER_ROLE: Record<Db.Enums<'user_role'>, TagLabel> = {
-  CUSTOMER: { text: 'ลูกค้า', color: 'default' },
+  CUSTOMER: { text: 'สมาชิก', color: 'default' },
   MERCHANT: { text: 'ร้านค้า', color: 'gold' },
   STAFF: { text: 'พนักงานร้าน', color: 'blue' },
   ADMIN: { text: 'แอดมิน', color: 'red' },

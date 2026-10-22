@@ -5,6 +5,7 @@ import { Alert, App, Button, Card, Spin } from 'antd';
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import type { Bar, Booking } from '@/services/data';
+import { InfoButton } from '@/ui/components/infoButton';
 import { PageHeader } from '@/ui/components/pageHeader';
 import { baht, timeHHmm } from '@/ui/utils/format';
 import { startCheckout } from '../api';
@@ -137,20 +138,15 @@ export function ProviderCheckout({
           <span className="block">NightOut ถือเงินไว้ให้ และส่งต่อให้ร้านหลังคุณเช็กอิน</span>
           <span className="block">ถ้ายกเลิกตามเงื่อนไข คุณได้เงินคืนจากเราโดยตรง</span>
         </p>
-        <Alert
-          className="mt-4"
-          type="info"
-          showIcon
-          title="นโยบาย Table Fee ของร้าน"
-          description={bar.deposit.policy}
-        />
+        <InfoButton label="นโยบาย Table Fee ของร้าน" className="mt-4">
+          {bar.deposit.policy}
+        </InfoButton>
         {latest?.status === 'PENDING' && latest.expires_at && (
           <p className="mt-4 text-sm text-muted">ชำระภายใน {timeHHmm(latest.expires_at)} น.</p>
         )}
         <Button
           type="primary"
           block
-          size="large"
           className="mt-6"
           icon={<CreditCard />}
           loading={starting}

@@ -16,7 +16,6 @@ export function MenuEditor({ draft, disabled }: { draft: BarDetailsDraft; disabl
       </Typography.Text>
       <Table<MenuRow>
         rowKey="key"
-        size="small"
         dataSource={draft.rows}
         pagination={false}
         scroll={{ x: 680 }}
@@ -80,7 +79,6 @@ export function MenuEditor({ draft, disabled }: { draft: BarDetailsDraft; disabl
             align: 'center',
             render: (_, r) => (
               <Switch
-                size="small"
                 checked={r.available}
                 disabled={disabled}
                 aria-label={`แสดง ${r.name}`}

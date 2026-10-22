@@ -92,7 +92,7 @@ export function BarDetailPage() {
         placement="right"
         size="large"
         footer={
-          <Button block type="primary" size="large" onClick={book}>
+          <Button block type="primary" onClick={book}>
             จองโต๊ะ
           </Button>
         }

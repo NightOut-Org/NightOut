@@ -6112,6 +6112,7 @@ export type Database = {
         Row: {
           active: boolean
           amphoe_code: string | null
+          area: unknown
           center: unknown
           created_at: string
           id: string
@@ -6128,6 +6129,7 @@ export type Database = {
         Insert: {
           active?: boolean
           amphoe_code?: string | null
+          area?: unknown
           center?: unknown
           created_at?: string
           id?: string
@@ -6144,6 +6146,7 @@ export type Database = {
         Update: {
           active?: boolean
           amphoe_code?: string | null
+          area?: unknown
           center?: unknown
           created_at?: string
           id?: string
@@ -10144,6 +10147,7 @@ export type Database = {
         Row: {
           budget_per_person: number | null
           created_at: string
+          preferred_area_codes: string[]
           preferred_district_ids: string[]
           preferred_style_ids: string[]
           reduced_motion: boolean | null
@@ -10155,6 +10159,7 @@ export type Database = {
         Insert: {
           budget_per_person?: number | null
           created_at?: string
+          preferred_area_codes?: string[]
           preferred_district_ids?: string[]
           preferred_style_ids?: string[]
           reduced_motion?: boolean | null
@@ -10166,6 +10171,7 @@ export type Database = {
         Update: {
           budget_per_person?: number | null
           created_at?: string
+          preferred_area_codes?: string[]
           preferred_district_ids?: string[]
           preferred_style_ids?: string[]
           reduced_motion?: boolean | null
@@ -13490,6 +13496,17 @@ export type Database = {
           isOneToOne: false
           isSetofReturn: true
         }
+      }
+      search_tambons: {
+        Args: { p_codes?: string[]; p_limit?: number; p_q?: string }
+        Returns: {
+          amphoe_code: string
+          amphoe_th: string
+          code: string
+          name_th: string
+          province_code: string
+          province_th: string
+        }[]
       }
       super_admin_assert: { Args: { p_actor: string }; Returns: undefined }
       tambon_at: { Args: { p_lat: number; p_lng: number }; Returns: string }

@@ -70,7 +70,7 @@ export class CatalogPublicController {
   @ApiDoc({
     summary: 'ค้นหาตำบล/แขวง',
     description:
-      'ค้นตำบล/แขวงทั้งประเทศ 7,425 แห่งจากชื่อ (q ≥ 2 ตัวอักษร · ชื่อตรงทั้งคำก่อน แล้วขึ้นต้นด้วยคำค้น) หรือขอชื่อจากรหัส (code) — ' +
+      'ค้นตำบล/แขวงทั้งประเทศ 7,425 แห่งจากชื่อ (q ≥ 2 ตัวอักษร · ชื่อตรงทั้งคำก่อน แล้วขึ้นต้นด้วยคำค้น) หรือขอชื่อจากรหัส (code = 1 รหัส · codes = หลายรหัสคั่นด้วย ,) — ' +
       'ตัวกรองพื้นที่ของหน้าค้นหา (ชื่อตำบลซ้ำกันข้ามจังหวัดได้ จึงกรองร้านด้วยรหัส) · rpc search_tambons',
     returns:
       'สูงสุด 20 รายการ `code` · `name_th` · `amphoe_code` · `amphoe_th` · `province_code` · `province_th`',
@@ -79,7 +79,7 @@ export class CatalogPublicController {
   tambons(@Req() req: Request, @Query() q: TambonSearchQueryDto) {
     return this.db.rpcAs<C.TambonOption[]>(bearerOf(req), 'search_tambons', {
       p_q: q.q ?? null,
-      p_code: q.code ?? null,
+      p_codes: q.codes ? q.codes.split(',') : q.code ? [q.code] : null,
       p_limit: 20,
     });
   }

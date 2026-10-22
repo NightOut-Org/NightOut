@@ -1,5 +1,9 @@
 # CHANGELOG — @nightout/contracts
 
+## 2026-10-21 — สัญญา API พื้นที่ที่ชอบ + ค้นตำบลหลายรหัส
+- `account.ts`: `UpdateProfileBody.area_codes` + `ACCOUNT_ERRORS.INVALID_AREA_CODES`
+- `catalog.ts`: `TambonSearchQuery` รับ `codes` (คั่นด้วย , ไม่เกิน 20) ต้องส่งอย่างใดอย่างหนึ่งจาก q / code / codes · เทสต์ใน `contracts.test.ts`
+
 ## 2026-10-21 — เลิกใช้ " · " คั่นข้อความที่ผู้ใช้เห็น (ส่วนที่เหลือ)
 - `bar.ts`: `INVALID_INSPECTION` เขียนเป็นประโยค (ไม่มีขีดยาว/จุดกลาง)
 

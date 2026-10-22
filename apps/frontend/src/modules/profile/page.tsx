@@ -109,7 +109,7 @@ export function ProfilePage() {
         </div>
 
         {/* มือถือ: ออกจากระบบ (คอมพิวเตอร์อยู่ในเมนูบัญชีบน navbar) */}
-        <Button block size="large" icon={<SignOut />} loading={signingOut} onClick={logout} className="mt-2 md:!hidden">
+        <Button block icon={<SignOut />} loading={signingOut} onClick={logout} className="mt-2 md:!hidden">
           ออกจากระบบ
         </Button>
       </div>

@@ -44,7 +44,6 @@ function differs(a: Db.BarLocationFields, b: Db.BarLocationFields, key: RowKey):
 export function LocationCompare({ columns }: { columns: CompareColumn[] }) {
   return (
     <Table<{ key: RowKey; label: string }>
-      size="small"
       bordered
       pagination={false}
       rowKey="key"

@@ -86,7 +86,6 @@ export function PayMockPage() {
         <Button
           type="primary"
           block
-          size="large"
           icon={<CheckCircle />}
           loading={sending === 'PAID'}
           disabled={!!sending}
@@ -97,7 +96,6 @@ export function PayMockPage() {
         <Button
           danger
           block
-          size="large"
           icon={<XCircle />}
           loading={sending === 'FAILED'}
           disabled={!!sending}
@@ -108,7 +106,6 @@ export function PayMockPage() {
         <Button
           type="link"
           block
-          size="large"
           disabled={!!sending}
           onClick={() => navigate(`/bookings/${it.booking_id}`)}
         >

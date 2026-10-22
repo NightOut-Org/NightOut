@@ -67,8 +67,16 @@ export const TambonSearchQuery = z
       .regex(/^TH[0-9]{6}$/)
       .optional()
       .describe('รหัส pcode ของตำบล เช่น TH103902 — ส่งแทน q เพื่อขอชื่อ'),
+    codes: z
+      .string()
+      .regex(/^TH[0-9]{6}(,TH[0-9]{6}){0,19}$/)
+      .optional()
+      .describe('หลายรหัสคั่นด้วย , (≤ 20) — โปรไฟล์ขอชื่อตำบลที่ชอบ'),
   })
-  .refine((v) => !!v.q !== !!v.code, { message: 'ส่ง q หรือ code อย่างใดอย่างหนึ่ง', path: ['q'] });
+  .refine((v) => [v.q, v.code, v.codes].filter(Boolean).length === 1, {
+    message: 'ส่ง q, code หรือ codes อย่างใดอย่างหนึ่ง',
+    path: ['q'],
+  });
 export type TambonSearchQuery = z.input<typeof TambonSearchQuery>;
 
 /** ตำบล/แขวง 1 แห่ง (ชื่อไม่มีคำนำหน้า) · ชื่อซ้ำกันข้ามจังหวัดได้ → กรองร้านด้วย `code` */

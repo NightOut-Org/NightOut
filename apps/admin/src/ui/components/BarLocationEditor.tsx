@@ -165,7 +165,6 @@ export function BarLocationEditor({
             ที่อยู่
             <Button
               type="link"
-              size="small"
               className="!px-0"
               icon={<MapTrifold size={14} aria-hidden />}
               disabled={!pin || disabled}

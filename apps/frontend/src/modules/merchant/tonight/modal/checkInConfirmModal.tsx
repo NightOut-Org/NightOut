@@ -54,14 +54,13 @@ export function CheckInConfirmModal({
       mask={{ closable: !busy }}
       onCancel={() => !busy && onClose()}
       footer={[
-        <Button key="cancel" size="large" disabled={busy} onClick={onClose}>
+        <Button key="cancel" disabled={busy} onClick={onClose}>
           ยกเลิก
         </Button>,
         // key เปลี่ยนเมื่อข้อมูลมา → ปุ่ม mount ใหม่พร้อม autoFocus (เครื่องสแกนแบบคีย์บอร์ดกด Enter ยืนยันต่อได้เลย)
         <Button
           key={p ? `ok-${p.id}` : 'ok'}
           type="primary"
-          size="large"
           autoFocus
           loading={busy}
           disabled={!p?.can_check_in}

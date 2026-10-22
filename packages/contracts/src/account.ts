@@ -45,6 +45,10 @@ export const UpdateProfileBody = z
     display_name: z.string().trim().min(1).max(60),
     style_ids: z.array(uuid).max(20),
     district_ids: z.array(uuid).max(20),
+    area_codes: z
+      .array(z.string().regex(/^TH([0-9]{2}|[0-9]{4}|[0-9]{6})$/))
+      .max(20)
+      .describe('พื้นที่ที่ชอบระดับจังหวัด TH10 · อำเภอ/เขต TH1039 · ตำบล/แขวง TH103902 (pcode OCHA · ย่านอยู่ใน district_ids)'),
     budget_per_person: z.number().min(0).max(1_000_000).nullable(),
     usual_pax: z.number().int().min(1).max(50).nullable(),
     theme: ThemeMode,
@@ -255,6 +259,7 @@ export interface SaveRoleColorsResult {
 
 export const ACCOUNT_ERRORS = {
   INVALID_ROLE_COLORS: 'สีของชั้นบัญชีไม่ถูกต้อง — ใช้รูปแบบ #RRGGBB แล้วลองใหม่',
+  INVALID_AREA_CODES: 'พื้นที่ที่เลือกไม่ถูกต้อง (เลือกซ้ำ เกิน 20 รายการ หรือไม่มีรหัสนี้) — รีเฟรชหน้าแล้วลองใหม่',
   INVALID_DISPLAY_NAME: 'ชื่อที่แสดงต้องยาว 1–60 ตัวอักษร',
   HAS_ACTIVE_BOOKINGS: 'ยังมีการจองที่ยังไม่จบ — ยกเลิกหรือรอให้จบก่อนลบบัญชี',
   EMAIL_EXISTS: 'อีเมลนี้มีบัญชีอยู่แล้ว — ถ้าชั้นบัญชีผิด ให้ซูเปอร์แอดมินแก้จากรายชื่อผู้ใช้',

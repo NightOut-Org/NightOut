@@ -80,7 +80,6 @@ export function GroupCheckIn({ card, token }: { card: ShareCard; token: string }
             className="mt-3"
             block
             type="primary"
-            size="large"
             icon={<UserPlus />}
             loading={join.isPending}
             onClick={askJoin}
