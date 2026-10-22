@@ -12,6 +12,7 @@ import { setZones } from './api';
 import { isNewId, useZonesDraft, type Zone } from './utils/useZonesDraft';
 import { MetaList } from '@/ui/components/metaList';
 import { DraftChip } from '@/ui/components/statusChip';
+import { InfoButton } from '@/ui/components/infoButton';
 import { RuleList } from '@/ui/components/ruleList';
 
 interface NewZone {
@@ -272,16 +273,17 @@ export function MerchantTablesPage() {
         </>
       )}
 
-      <div className="flex items-center gap-3 rounded-2xl border border-border bg-surface px-[18px] py-3.5 text-sm text-muted">
-        <RuleList
-          className="flex-1"
-          rules={[
-            'ลูกค้าเลือกได้ทั้งโซนหรือโต๊ะ',
-            { tone: 'warn', text: `ไม่มาเช็กอินเกิน grace period (${bar.gracePeriodMinutes} นาที) ระบบปลดโต๊ะ (Forfeited) อัตโนมัติ` },
-            { tone: 'check', text: `ลูกค้าขอต่อเวลาได้อีก ${BOOKING_EXTENSION_MINUTES} นาที 1 ครั้ง` },
-          ]}
-        />
-        <Link to="/merchant/settings" className="hidden shrink-0 lg:inline">
+      <div className="flex items-center justify-between gap-3">
+        <InfoButton label="กติกาการจองโต๊ะ">
+          <RuleList
+            rules={[
+              'ลูกค้าเลือกได้ทั้งโซนหรือโต๊ะ',
+              { tone: 'warn', text: `ไม่มาเช็กอินเกิน grace period (${bar.gracePeriodMinutes} นาที) ระบบปลดโต๊ะ (Forfeited) อัตโนมัติ` },
+              { tone: 'check', text: `ลูกค้าขอต่อเวลาได้อีก ${BOOKING_EXTENSION_MINUTES} นาที 1 ครั้ง` },
+            ]}
+          />
+        </InfoButton>
+        <Link to="/merchant/settings" className="hidden shrink-0 text-sm text-muted lg:inline">
           ตั้งค่าการจอง →
         </Link>
       </div>

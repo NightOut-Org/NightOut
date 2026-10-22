@@ -182,10 +182,10 @@ export function LoginPage() {
         disabled={busy}
       />
       <div className="staff-pass__actions">
-        <Button size="large" disabled={busy} onClick={() => void switchAccount()}>
+        <Button disabled={busy} onClick={() => void switchAccount()}>
           <span className="text-muted">ใช้บัญชีอื่น</span>
         </Button>
-        <Button type="primary" htmlType="submit" size="large" loading={busy} disabled={code.length !== 6}>
+        <Button type="primary" htmlType="submit" loading={busy} disabled={code.length !== 6}>
           {step === 'enroll' ? 'ยืนยันและเข้าสู่ระบบ' : 'ยืนยันรหัส'}
         </Button>
       </div>
@@ -256,7 +256,7 @@ export function LoginPage() {
                 <Input.Password autoComplete="current-password" />
               </Form.Item>
             </div>
-            <Button type="primary" htmlType="submit" block size="large" loading={busy}>
+            <Button type="primary" htmlType="submit" block loading={busy}>
               เข้าสู่ระบบ
             </Button>
             <p className="staff-pass__hint m-0 text-[13px] text-muted">

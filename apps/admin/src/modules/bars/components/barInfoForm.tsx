@@ -159,7 +159,7 @@ export function BarInfoForm({
                     getValueProps={(closed: boolean) => ({ checked: !closed })}
                     normalize={(open: boolean) => !open}
                   >
-                    <Switch size="small" aria-label={`เปิดร้านวัน${DAYS[i]}`} />
+                    <Switch aria-label={`เปิดร้านวัน${DAYS[i]}`} />
                   </Form.Item>
                 </div>
               ))}

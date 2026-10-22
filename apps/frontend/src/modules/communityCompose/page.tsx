@@ -37,6 +37,7 @@ import {
 } from './api';
 import { LeaveDraftModal } from './components/leaveDraftModal';
 import { EmbersBackdrop } from '@/ui/components/embersBackdrop';
+import { InfoButton } from '@/ui/components/infoButton';
 import { RuleList } from '@/ui/components/ruleList';
 import { barPlace } from '@/ui/utils/area';
 
@@ -563,10 +564,8 @@ function ComposeForm({
             </Field>
           )}
 
-          <div className="flex gap-2.5 rounded-xl bg-gold/[0.14] px-3.5 py-3 text-[13px] leading-relaxed">
-            <Info size={18} className="mt-px shrink-0 text-gold-text" />
+          <InfoButton label="ก่อนโพสต์" className="self-start">
             <div>
-              <div className="font-semibold">ก่อนโพสต์</div>
               {shopNews ? (
                 <RuleList
                   className="mt-1.5"
@@ -611,19 +610,16 @@ function ComposeForm({
                   ]}
                 />
               )}
-              <div className="mt-1 text-muted">
-                ร่างเก็บไว้ในบัญชี {COMMUNITY_DRAFT_TTL_DAYS} วัน
-              </div>
+              <div className="mt-3 text-xs">ร่างเก็บไว้ในบัญชี {COMMUNITY_DRAFT_TTL_DAYS} วัน</div>
             </div>
-          </div>
+          </InfoButton>
 
           <div className="hidden justify-end gap-2 md:flex">
-            <Button size="large" onClick={requestClose}>
+            <Button onClick={requestClose}>
               ยกเลิก
             </Button>
             <Button
               type="primary"
-              size="large"
               disabled={!canPost}
               loading={posting}
               onClick={() => void post()}

@@ -38,7 +38,6 @@ export function TableDrawer({
           </p>
           {table.occupancy && (
             <Descriptions
-              size="small"
               column={1}
               bordered
               items={[

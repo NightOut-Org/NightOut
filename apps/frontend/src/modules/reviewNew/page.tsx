@@ -30,7 +30,6 @@ export function ReviewNewPage() {
       <Card>
         <Form
           layout="vertical"
-          size="large"
           initialValues={{ rating: 5 }}
           onFinish={async (v: { rating: number; comment: string }) => {
             setSending(true);

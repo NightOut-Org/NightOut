@@ -27,7 +27,7 @@ export function BootError({ kind, onRetry, detail }: BootErrorProps) {
           extra={
             <>
               {onRetry && (
-                <Button type="primary" size="large" onClick={onRetry}>
+                <Button type="primary" onClick={onRetry}>
                   ลองใหม่
                 </Button>
               )}

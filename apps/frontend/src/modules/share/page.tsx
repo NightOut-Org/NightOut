@@ -67,12 +67,12 @@ export function SharePage() {
             target="_blank"
             rel="noreferrer"
           >
-            <Button block type={canJoinShare(card) ? 'default' : 'primary'} size="large">
+            <Button block type={canJoinShare(card) ? 'default' : 'primary'}>
               เปิดแผนที่
             </Button>
           </a>
           <Link to={`/bars/${card.bar_slug}`}>
-            <Button block size="large">
+            <Button block>
               ดูหน้าร้าน
             </Button>
           </Link>

@@ -373,7 +373,6 @@ export function LocationPicker({
             content={
               <div className="flex w-72 max-w-[calc(100vw-48px)] flex-col gap-2">
                 <Input
-                  size="large"
                   autoFocus
                   value={pasteText}
                   onChange={(e) => {

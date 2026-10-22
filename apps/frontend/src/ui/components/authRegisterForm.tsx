@@ -78,7 +78,7 @@ export function AuthRegisterForm({
 
   return (
     <>
-      <Form<RegisterValues> form={form} layout="vertical" size="large" requiredMark={false} onFinish={onFinish}>
+      <Form<RegisterValues> form={form} layout="vertical" requiredMark={false} onFinish={onFinish}>
         <Form.Item
           name="displayName"
           label="ชื่อที่แสดง"

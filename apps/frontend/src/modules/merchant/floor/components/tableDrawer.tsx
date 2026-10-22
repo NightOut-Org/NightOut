@@ -90,12 +90,12 @@ export function TableDrawer({
   const manual = table?.status === 'IN_USE' && table.status_source === 'MANUAL';
 
   const detailLink = (b: C.TableBoardBooking) => (
-    <Button size="large" block onClick={() => navigate(`/merchant/bookings/${b.id}`)}>
+    <Button block onClick={() => navigate(`/merchant/bookings/${b.id}`)}>
       ดูรายละเอียดการจอง
     </Button>
   );
   const moveButton = (b: C.TableBoardBooking) => (
-    <Button size="large" block icon={<ArrowsLeftRight size={18} />} onClick={() => onMove(b)}>
+    <Button block icon={<ArrowsLeftRight size={18} />} onClick={() => onMove(b)}>
       ย้ายโต๊ะ
     </Button>
   );
@@ -138,7 +138,6 @@ export function TableDrawer({
                     <>
                       <Button
                         type="primary"
-                        size="large"
                         block
                         disabled={tooEarly || tooLate}
                         loading={busy === 'checkin'}
@@ -170,7 +169,7 @@ export function TableDrawer({
                       run('complete', () => setBookingStatus(current.id, 'COMPLETED'), `ปิดโต๊ะ ${table.name} แล้ว`)
                     }
                   >
-                    <Button type="primary" size="large" block loading={busy === 'complete'}>
+                    <Button type="primary" block loading={busy === 'complete'}>
                       ลูกค้ากลับแล้ว ปิดโต๊ะ
                     </Button>
                   </Popconfirm>
@@ -199,7 +198,7 @@ export function TableDrawer({
                       run('release', () => setTableOccupancy(table.id, { in_use: false }), `โต๊ะ ${table.name} ว่างแล้ว`)
                     }
                   >
-                    <Button type="primary" size="large" block loading={busy === 'release'}>
+                    <Button type="primary" block loading={busy === 'release'}>
                       ตั้งเป็นว่าง
                     </Button>
                   </Popconfirm>
@@ -208,7 +207,7 @@ export function TableDrawer({
               {table.status === 'FREE' && (
                 <>
                   <p className="m-0 text-sm text-muted">โต๊ะว่าง — ถ้ามีลูกค้านั่งโดยไม่มีการจองในระบบ ตั้งเป็นกำลังใช้ได้</p>
-                  <Button type="primary" size="large" block onClick={() => onOccupy(table)}>
+                  <Button type="primary" block onClick={() => onOccupy(table)}>
                     ตั้งเป็นกำลังใช้
                   </Button>
                 </>

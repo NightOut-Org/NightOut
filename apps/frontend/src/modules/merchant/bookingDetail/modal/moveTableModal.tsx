@@ -105,7 +105,6 @@ export function MoveTableModal({
             <Select
               id="move-target"
               className="w-full"
-              size="large"
               placeholder="เลือกโต๊ะที่ว่าง"
               loading={options.isLoading}
               value={target}

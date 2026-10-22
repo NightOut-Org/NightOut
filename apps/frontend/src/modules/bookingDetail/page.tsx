@@ -224,7 +224,7 @@ export function BookingDetailPage() {
               <p className="mt-3 text-sm text-(--crowd-full)">เลยเวลาเก็บโต๊ะแล้ว</p>
             )}
             {canExtend ? (
-              <Button className="mt-4" block type="primary" size="large" icon={<ClockClockwise />} onClick={askExtend}>
+              <Button className="mt-4" block type="primary" icon={<ClockClockwise />} onClick={askExtend}>
                 ขอต่อเวลา {BOOKING_EXTENSION_MINUTES} นาที
               </Button>
             ) : b.extendedAt ? (

@@ -64,7 +64,7 @@ export function ModerateModal({
       destroyOnHidden
     >
       {row && (
-        <Card size="small" className="!mb-4">
+        <Card className="!mb-4">
           <Typography.Text strong ellipsis className="block">
             {'title' in row ? row.title : row.body}
           </Typography.Text>

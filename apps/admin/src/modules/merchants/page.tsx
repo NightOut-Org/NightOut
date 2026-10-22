@@ -92,7 +92,6 @@ export function MerchantsPage() {
                     ยังไม่ปักหมุด
                   </Tag>
                   <Button
-                    size="small"
                     icon={<MapPin size={14} aria-hidden />}
                     onClick={() => setPinFor(b.id)}
                   >
@@ -104,7 +103,7 @@ export function MerchantsPage() {
                   <span className="max-w-[220px] truncate" title={loc.address}>
                     {loc.address}
                   </span>
-                  <Button size="small" className="shrink-0" onClick={() => setPinFor(b.id)}>
+                  <Button className="shrink-0" onClick={() => setPinFor(b.id)}>
                     ดูหมุด
                   </Button>
                 </span>

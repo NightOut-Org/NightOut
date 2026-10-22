@@ -9,6 +9,7 @@ import { useMerchantBar } from '@/hooks/useMerchantBar';
 import { useUnsavedGuard } from '@/hooks/useUnsavedGuard';
 import { Tile } from '@/ui/components/merchantUi';
 import { saveSettings } from './api';
+import { InfoButton } from '@/ui/components/infoButton';
 import { RuleList } from '@/ui/components/ruleList';
 
 const BANKS = ['กสิกรไทย', 'ไทยพาณิชย์', 'กรุงเทพ', 'กรุงไทย', 'กรุงศรี', 'ทหารไทยธนชาต', 'ออมสิน', 'อื่นๆ'];
@@ -266,13 +267,16 @@ export function MerchantSettingsPage() {
                 <Input />
               </Form.Item>
             </div>
-            <RuleList
-              className="text-[13px] text-muted"
-              rules={[
-                'ลูกค้าชำระ Table Fee ให้ NightOut ก่อน',
-                { tone: 'check', text: 'เมื่อลูกค้าเช็กอินหรือถูกปลดโต๊ะ (Forfeited) NightOut โอนเข้าบัญชีนี้ หรือเก็บเป็นเครดิตร้าน' },
-              ]}
-            />
+            <div>
+              <InfoButton label="เงื่อนไขการโอน Table Fee">
+                <RuleList
+                  rules={[
+                    'ลูกค้าชำระ Table Fee ให้ NightOut ก่อน',
+                    { tone: 'check', text: 'เมื่อลูกค้าเช็กอินหรือถูกปลดโต๊ะ (Forfeited) NightOut โอนเข้าบัญชีนี้ หรือเก็บเป็นเครดิตร้าน' },
+                  ]}
+                />
+              </InfoButton>
+            </div>
           </Section>
 
           <Section icon={<ClockCountdown />} title="เช็กอินและปลดโต๊ะอัตโนมัติ">
@@ -281,14 +285,17 @@ export function MerchantSettingsPage() {
               label="Grace period หลังเวลานัด"
               className="!mb-0"
               extra={
-                <RuleList
-                  className="mt-2"
-                  rules={[
-                    { tone: 'warn', text: 'เลยเวลานี้ไม่มาเช็กอิน ระบบปลดโต๊ะ (Forfeited) อัตโนมัติ และ Table Fee ตกเป็นของร้าน' },
-                    `ลูกค้าขอต่อเวลาได้อีก ${BOOKING_EXTENSION_MINUTES} นาที 1 ครั้ง`,
-                    `เช็กอินได้ตั้งแต่ ${CHECK_IN_EARLY_HOURS} ชม. ก่อนเวลานัด`,
-                  ]}
-                />
+                <div className="mt-2">
+                  <InfoButton label="กติกาปลดโต๊ะและต่อเวลา">
+                    <RuleList
+                      rules={[
+                        { tone: 'warn', text: 'เลยเวลานี้ไม่มาเช็กอิน ระบบปลดโต๊ะ (Forfeited) อัตโนมัติ และ Table Fee ตกเป็นของร้าน' },
+                        `ลูกค้าขอต่อเวลาได้อีก ${BOOKING_EXTENSION_MINUTES} นาที 1 ครั้ง`,
+                        `เช็กอินได้ตั้งแต่ ${CHECK_IN_EARLY_HOURS} ชม. ก่อนเวลานัด`,
+                      ]}
+                    />
+                  </InfoButton>
+                </div>
               }
             >
               <Segmented block options={GRACE.map((m) => ({ label: `${m} นาที`, value: m }))} />

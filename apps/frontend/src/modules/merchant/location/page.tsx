@@ -233,7 +233,7 @@ export function MerchantLocationPage() {
                 disabled={busy}
                 onConfirm={() => cancelRequest()}
               >
-                <Button size="small" disabled={busy}>
+                <Button disabled={busy}>
                   ยกเลิกคำขอ
                 </Button>
               </Popconfirm>

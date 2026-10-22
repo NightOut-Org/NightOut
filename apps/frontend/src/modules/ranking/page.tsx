@@ -1,4 +1,3 @@
-import { ArrowsClockwise, CheckSquare, Scales } from '@phosphor-icons/react';
 import { CATEGORY_LABELS, listBars, type RankingPeriod } from '@/services/data';
 import type { RankPeriod } from '@nightout/contracts';
 import type { BarCategory } from '@nightout/types';
@@ -6,6 +5,8 @@ import { Button, Empty, Result, Segmented, Spin } from 'antd';
 import { useMemo } from 'react';
 import { useSearchParams } from 'react-router';
 import { useDemo } from '@/hooks/useDemo';
+import { InfoButton } from '@/ui/components/infoButton';
+import { RuleList } from '@/ui/components/ruleList';
 import { toRankedBars } from '@/ui/utils/ranking';
 import { useRanking } from './api';
 import { Podium } from './components/podium';
@@ -64,7 +65,6 @@ export function RankingPage() {
       <section className="mx-auto max-w-7xl px-4 pt-16 sm:pt-24">
         <ScrollReveal className="flex flex-col items-center gap-3">
           <Segmented
-            size="large"
             value={period}
             onChange={(v) => set('period', String(v), 'WEEK')}
             options={[
@@ -120,22 +120,22 @@ export function RankingPage() {
           </>
         )}
 
-        <ScrollReveal>
-        <ul className="mx-auto mt-10 grid max-w-3xl list-none gap-3 p-0 text-[13px] text-muted sm:grid-cols-3">
-          {[
-            { icon: <CheckSquare weight="fill" />, title: 'นับโหวตยังไง', text: '1 การจองที่เช็กอินแล้ว = 1 โหวต อัปเดตทุกคืน' },
-            { icon: <ArrowsClockwise weight="bold" />, title: 'เริ่มรอบใหม่เมื่อไร', text: 'รายสัปดาห์ทุกวันจันทร์ ส่วนรายเดือนทุกวันที่ 1' },
-            { icon: <Scales weight="fill" />, title: 'ถ้าโหวตเท่ากัน', text: 'เรียงตามคะแนนรวม ร้านที่รีวิวไม่ถึง 5 ยังไม่ติดอันดับ และโฆษณาไม่มีผล' },
-          ].map((r) => (
-            <li key={r.title} className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-              <span className="flex items-center gap-2 font-semibold text-text [&>svg]:size-4 [&>svg]:text-gold-text">
-                {r.icon}
-                {r.title}
-              </span>
-              <p className="m-0 mt-1.5 leading-relaxed">{r.text}</p>
-            </li>
-          ))}
-        </ul>
+        <ScrollReveal className="mt-10 flex justify-center">
+          <InfoButton label="วิธีนับอันดับ">
+            <RuleList
+              rules={[
+                <>
+                  <b className="text-text">นับโหวตยังไง</b> 1 การจองที่เช็กอินแล้ว = 1 โหวต อัปเดตทุกคืน
+                </>,
+                <>
+                  <b className="text-text">เริ่มรอบใหม่เมื่อไร</b> รายสัปดาห์ทุกวันจันทร์ ส่วนรายเดือนทุกวันที่ 1
+                </>,
+                <>
+                  <b className="text-text">ถ้าโหวตเท่ากัน</b> เรียงตามคะแนนรวม ร้านที่รีวิวไม่ถึง 5 ยังไม่ติดอันดับ และโฆษณาไม่มีผล
+                </>,
+              ]}
+            />
+          </InfoButton>
         </ScrollReveal>
       </section>
     </div>

@@ -26,7 +26,6 @@ export function OnboardingPage() {
       <Card>
         <Form
           layout="vertical"
-          size="large"
           initialValues={{
             styles: myPrefs.styleIds,
             areas: joinAreaPicks(myPrefs.districtIds, myPrefs.areaCodes),

@@ -31,6 +31,7 @@ import { useDemo } from '@/hooks/useDemo';
 import { barImage } from '@/ui/utils/barImage';
 import { CrowdBadge } from '@/ui/components/crowdBadge';
 import { EmbersBackdrop } from '@/ui/components/embersBackdrop';
+import { InfoButton } from '@/ui/components/infoButton';
 import './merchant.css';
 
 interface NavItem {
@@ -265,17 +266,25 @@ export function MerchantLayout() {
       </nav>
 
       <section className={`merchant-content min-w-0 px-4 pt-4 lg:px-0 lg:pt-0 ${showTabs ? 'pb-28' : 'pb-32'} lg:pb-0`}>
-        {bar.status !== 'APPROVED' && (
+        {(bar.status === 'PENDING_REVIEW' || bar.status === 'DRAFT') && (
+          <div className="mb-4">
+            <InfoButton label="ร้านกำลังรอตรวจ" title="ร้านกำลังรอทีม NightOut ตรวจ">
+              <p>
+                ลูกค้ายังไม่เห็นร้านของคุณ ระหว่างนี้เตรียมข้อมูลร้าน เมนู โต๊ะ และตั้งค่าการจองไว้ได้
+              </p>
+              {bar.statusReason && <p className="mt-2">{bar.statusReason}</p>}
+            </InfoButton>
+          </div>
+        )}
+        {bar.status !== 'APPROVED' && bar.status !== 'PENDING_REVIEW' && bar.status !== 'DRAFT' && (
           <Alert
             className="!mb-4"
             showIcon
-            type={bar.status === 'PENDING_REVIEW' || bar.status === 'DRAFT' ? 'info' : 'warning'}
+            type="warning"
             title={
-              bar.status === 'PENDING_REVIEW' || bar.status === 'DRAFT'
-                ? 'ร้านกำลังรอทีม NightOut ตรวจ — ลูกค้ายังไม่เห็นร้าน ระหว่างนี้เตรียมข้อมูลร้าน เมนู โต๊ะ และตั้งค่าการจองได้'
-                : bar.status === 'REJECTED'
-                  ? 'ร้านยังไม่ผ่านการตรวจ — ลูกค้ายังไม่เห็นร้าน'
-                  : 'ร้านถูกระงับชั่วคราว — ลูกค้าไม่เห็นร้านและจองไม่ได้'
+              bar.status === 'REJECTED'
+                ? 'ร้านยังไม่ผ่านการตรวจ — ลูกค้ายังไม่เห็นร้าน'
+                : 'ร้านถูกระงับชั่วคราว — ลูกค้าไม่เห็นร้านและจองไม่ได้'
             }
             description={bar.statusReason}
           />

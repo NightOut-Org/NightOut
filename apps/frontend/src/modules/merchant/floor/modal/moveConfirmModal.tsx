@@ -4,6 +4,7 @@ import { Alert, App, Input, Modal, Typography } from 'antd';
 import { useState } from 'react';
 import { moveBooking } from '../api';
 import { bookingWho, hhmm, type BoardTableRef } from '../utils/board';
+import { InfoButton } from '@/ui/components/infoButton';
 import { MetaList } from '@/ui/components/metaList';
 
 /**
@@ -88,7 +89,9 @@ export function MoveConfirmModal({
             />
           )}
           {target.zone.id !== booking.zone_id && (
-            <Alert type="info" showIcon title="ย้ายข้ามโซน — ระบบตรวจที่ว่างในโซนปลายทางให้" />
+            <div>
+              <InfoButton label="ย้ายข้ามโซน">ระบบตรวจที่ว่างในโซนปลายทางให้</InfoButton>
+            </div>
           )}
           <div>
             <label htmlFor="floor-move-reason" className="mb-1.5 block text-sm font-medium">

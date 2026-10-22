@@ -5,6 +5,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { MASTER, promptPayPayload, type Bar, type Booking } from '@/services/data';
+import { InfoButton } from '@/ui/components/infoButton';
 import { PageHeader } from '@/ui/components/pageHeader';
 import { baht } from '@/ui/utils/format';
 import { submitDeposit } from '../api';
@@ -64,13 +65,9 @@ export function SlipTransfer({ booking: b, bar }: { booking: Booking; bar: Bar }
               โอนเข้า NightOut — เราถือเงินไว้ให้ และส่งต่อให้ร้านหลังคุณเช็กอิน
               ยกเลิกตามเงื่อนไขได้เงินคืนจากเราโดยตรง
             </p>
-            <Alert
-              className="mt-4"
-              type="info"
-              showIcon
-              title="นโยบาย Table Fee ของร้าน"
-              description={bar.deposit.policy}
-            />
+            <InfoButton label="นโยบาย Table Fee ของร้าน" className="mt-4">
+              {bar.deposit.policy}
+            </InfoButton>
           </div>
         </div>
         <Upload.Dragger
@@ -100,7 +97,6 @@ export function SlipTransfer({ booking: b, bar }: { booking: Booking; bar: Bar }
         <Button
           type="primary"
           block
-          size="large"
           className="mt-6"
           disabled={!slip}
           loading={sending}

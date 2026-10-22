@@ -61,7 +61,6 @@ export function RoleColorsCard() {
       </Typography.Paragraph>
       <Table
         rowKey="code"
-        size="small"
         pagination={false}
         loading={roles.isLoading}
         dataSource={roles.data}

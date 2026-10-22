@@ -115,7 +115,6 @@ export function StylesPage() {
               <Space size={2}>
                 <Button
                   type="text"
-                  size="small"
                   icon={<ArrowUp size={14} />}
                   disabled={saving || i === 0}
                   aria-label={`เลื่อน ${r.name_th || 'สไตล์ใหม่'} ขึ้น`}
@@ -123,7 +122,6 @@ export function StylesPage() {
                 />
                 <Button
                   type="text"
-                  size="small"
                   icon={<ArrowDown size={14} />}
                   disabled={saving || i === last}
                   aria-label={`เลื่อน ${r.name_th || 'สไตล์ใหม่'} ลง`}
@@ -212,7 +210,6 @@ export function StylesPage() {
                   </Tag>
                   <Button
                     type="text"
-                    size="small"
                     icon={<X size={14} />}
                     disabled={saving}
                     aria-label="เอาสไตล์ใหม่ออก"

@@ -25,7 +25,7 @@ export function hasVisibleRows(board: C.TableBoard, index: BoardIndex, filter: S
 export function FilterEmpty({ onReset }: { onReset: () => void }) {
   return (
     <Empty description="ไม่มีโต๊ะสถานะนี้">
-      <Button size="large" onClick={onReset}>
+      <Button onClick={onReset}>
         ดูทั้งหมด
       </Button>
     </Empty>

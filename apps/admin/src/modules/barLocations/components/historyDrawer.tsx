@@ -53,7 +53,6 @@ export function HistoryDrawer({ request: r, onClose }: { request: Db.AdminBarLoc
     >
       <div className="space-y-5">
         <Descriptions
-          size="small"
           column={{ xs: 1, sm: 2 }}
           items={[
             { key: 'source', label: 'ที่มา', children: LOCATION_SOURCE[r.source] },

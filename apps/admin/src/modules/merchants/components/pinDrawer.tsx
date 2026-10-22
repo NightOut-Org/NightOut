@@ -116,7 +116,6 @@ export function PinDrawer({ bar, onClose }: { bar: Db.AdminBarLocation; onClose:
               <Alert type="warning" showIcon title="ร้านยังไม่ได้ปักหมุดจริง — กด ปักหมุด ก่อนอนุมัติร้าน" />
             )}
             <Descriptions
-              size="small"
               bordered
               column={1}
               items={[

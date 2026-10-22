@@ -97,7 +97,6 @@ export function OAuthSignupPage() {
         <Button
           type="primary"
           block
-          size="large"
           className="btn-gold"
           onClick={() => {
             navigate('/', { replace: true });
@@ -136,7 +135,6 @@ export function OAuthSignupPage() {
       </label>
       <Input
         id="oauth-display-name"
-        size="large"
         maxLength={60}
         prefix={<UserCircle size={18} />}
         value={displayName}
@@ -161,7 +159,6 @@ export function OAuthSignupPage() {
       <Button
         type="primary"
         block
-        size="large"
         className="btn-gold"
         disabled={!accepted || !displayName.trim()}
         loading={saving}

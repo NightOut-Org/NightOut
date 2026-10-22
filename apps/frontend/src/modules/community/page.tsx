@@ -13,8 +13,10 @@ import { useAuth } from '@/services/auth';
 import { useAuthModal } from '@/ui/components/authModal';
 import { CommunityThreadRow } from '@/ui/components/communityThreadRow';
 import { EmbersBackdrop } from '@/ui/components/embersBackdrop';
+import { InfoButton } from '@/ui/components/infoButton';
+import { RuleList } from '@/ui/components/ruleList';
 import { setPin, useCommunityCategories, useCommunityFeed, useHasNewDraft } from './api';
-import { CategoryAside, FeedSideRail } from './components/feedAside';
+import { CategoryAside, COMMUNITY_RULES } from './components/feedAside';
 
 const TABS: { key: CommunitySort; label: string }[] = [
   { key: 'latest', label: 'ล่าสุด' },
@@ -103,11 +105,15 @@ export function CommunityPage() {
               กระทู้ของฉัน
             </Button>
           </div>
-          <p className="m-0 mt-0.5 text-sm text-muted">
-            {current?.team_only
-              ? `ข่าวและกิจกรรมจากทีมร้านโดยตรง ร้านละไม่เกิน ${COMMUNITY_SHOP_NEWS_WEEKLY_MAX} กระทู้ใน ${COMMUNITY_SHOP_NEWS_WINDOW_DAYS} วัน`
-              : 'คุยเรื่องคืนนี้กับคนที่ไปมาแล้วจริง'}
-          </p>
+          {current?.team_only && (
+            <p className="m-0 mt-0.5 text-sm text-muted">
+              ข่าวและกิจกรรมจากทีมร้านโดยตรง ร้านละไม่เกิน {COMMUNITY_SHOP_NEWS_WEEKLY_MAX} กระทู้ใน{' '}
+              {COMMUNITY_SHOP_NEWS_WINDOW_DAYS} วัน
+            </p>
+          )}
+          <InfoButton label="กติกาชุมชน" placement="rightTop" className="mt-2">
+            <RuleList rules={[...COMMUNITY_RULES]} />
+          </InfoButton>
         </div>
         <Input
           allowClear
@@ -117,10 +123,9 @@ export function CommunityPage() {
           placeholder="ค้นหากระทู้ ร้าน หรือย่าน"
           aria-label="ค้นหากระทู้"
           enterKeyHint="search"
-          className="!h-[46px] w-full !rounded-[14px] !text-base md:!w-80"
+          className="!h-[46px] w-full !rounded-[14px] !text-base md:!w-80 lg:!hidden"
         />
         <Button
-          size="large"
           onClick={openMine}
           icon={<Notebook size={18} weight="bold" />}
           className="!hidden !h-[46px] !rounded-full !px-5 !font-semibold md:!inline-flex"
@@ -129,7 +134,6 @@ export function CommunityPage() {
         </Button>
         <Button
           type="primary"
-          size="large"
           onClick={compose}
           icon={<Plus size={18} weight="bold" />}
           className="!hidden !h-[46px] !rounded-full !px-5 !font-bold md:!inline-flex"
@@ -142,7 +146,12 @@ export function CommunityPage() {
       </header>
 
       <div className="flex gap-6">
-        <CategoryAside categories={categories} active={category} />
+        <CategoryAside
+          categories={categories}
+          active={category}
+          search={search}
+          onSearch={setSearch}
+        />
 
         <main className="min-w-0 flex-1 md:overflow-hidden md:rounded-2xl md:border md:border-border md:bg-surface">
           {/* หมวด (จอเล็ก) */}
@@ -239,8 +248,6 @@ export function CommunityPage() {
             </>
           )}
         </main>
-
-        <FeedSideRail />
       </div>
 
       {/* ปุ่มลอย (มือถือ) — อยู่เหนือเมนูล่าง */}

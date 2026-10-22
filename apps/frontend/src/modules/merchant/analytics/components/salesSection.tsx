@@ -55,7 +55,7 @@ export function SalesSection({ barId, days }: { barId: string; days: number }) {
           showIcon
           title={(error as Error).message}
           action={
-            <Button size="small" onClick={() => void refetch()}>
+            <Button onClick={() => void refetch()}>
               ลองใหม่
             </Button>
           }

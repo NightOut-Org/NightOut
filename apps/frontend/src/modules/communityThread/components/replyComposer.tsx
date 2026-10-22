@@ -246,7 +246,6 @@ function ReplyBox({
         <Button
           type="primary"
           shape="circle"
-          size="large"
           aria-label="ส่งความคิดเห็น"
           disabled={!canSend}
           loading={sending}
