@@ -21,7 +21,7 @@ export interface RoleMeta {
   label: string;
   icon: Icon;
   description: string;
-  /** ปุ่มลัดในเมนูบัญชี (ลูกค้า = สมัครเปิดร้าน · เมนู "การจอง" อยู่บน navbar แล้ว) */
+  /** ปุ่มลัดในเมนูบัญชี (สมาชิก = สมัครเปิดร้าน · เมนู "การจอง" อยู่บน navbar แล้ว) */
   cta?: { label: string; icon: Icon; to: string; external?: boolean };
 }
 
@@ -32,9 +32,9 @@ export interface RoleMeta {
  */
 export const ROLE_META: Record<UserRole, RoleMeta> = {
   CUSTOMER: {
-    label: 'ลูกค้า',
+    label: 'สมาชิก',
     icon: User,
-    description: 'ค้นหา จองโต๊ะ และรีวิวร้านที่เช็กอินแล้ว',
+    description: 'ค้นหาร้าน จองโต๊ะ และแชร์ประสบการณ์กลางคืน',
     cta: { label: 'เปิดร้านกับ NightOut', icon: Storefront, to: '/merchant/join' },
   },
   STAFF: {
@@ -90,7 +90,7 @@ export interface RoleTone {
 
 const HEX = /^#[0-9a-f]{6}$/i;
 
-/** ชุดสีที่หน้าเว็บใช้ จากสีหลัก #RRGGBB ของชั้น (สีผิดรูปแบบ = ม่วงของลูกค้า) */
+/** ชุดสีที่หน้าเว็บใช้ จากสีหลัก #RRGGBB ของชั้น (สีผิดรูปแบบ = ม่วงของสมาชิก) */
 export function roleTone(color: string): RoleTone {
   const hex = HEX.test(color) ? color : ROLE_DEFAULT_COLORS.CUSTOMER;
   const channel = (i: number) => parseInt(hex.slice(i, i + 2), 16);

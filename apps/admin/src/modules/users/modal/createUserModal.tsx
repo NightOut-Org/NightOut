@@ -7,7 +7,7 @@ import { useBars, useAccountRoles, createUserAction } from '../api';
 
 /** ประเภทบัญชี (ตรงกับ backend ACCOUNT_TYPES) → ชั้นบัญชี · แบบที่มี bar ต้องเลือกร้าน */
 const ACCOUNT_TYPES = [
-  { value: 'CUSTOMER', role: 'CUSTOMER', label: 'ลูกค้า', hint: 'จองโต๊ะ รีวิว ร้านโปรด' },
+  { value: 'CUSTOMER', role: 'CUSTOMER', label: 'สมาชิก', hint: 'จองโต๊ะ รีวิว ร้านโปรด' },
   { value: 'OWNER', role: 'MERCHANT', label: 'เจ้าของร้าน', hint: 'จัดการร้านได้ทั้งหมด รวมบัญชีรับเงิน', bar: true },
   { value: 'MANAGER', role: 'MERCHANT', label: 'ผู้จัดการร้าน', hint: 'จัดการร้านได้ รวมบัญชีรับเงิน (เชิญ/นำออกเจ้าของไม่ได้)', bar: true },
   { value: 'STAFF', role: 'STAFF', label: 'พนักงานร้าน', hint: 'ดูการจอง เช็กอิน อัปเดตความแน่น', bar: true },

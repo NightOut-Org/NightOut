@@ -1,5 +1,9 @@
 # account — ประวัติการแก้ไข
 
+## 2026-10-22 — ชื่อชั้นบัญชี CUSTOMER เป็น "สมาชิก"
+- `roles.label_th` ของ `CUSTOMER` จาก "ลูกค้า" เป็น "สมาชิก" เพราะ "ลูกค้า" เป็นมุมมองของร้าน ผู้ใช้เห็นป้ายของตัวเองแล้วรู้สึกเหมือนถูกบังคับให้ต้องจ่ายเงิน · รหัสชั้นไม่เปลี่ยน
+- migration `20261022000100_account_member_role_label`
+
 ## 2026-10-21 — พื้นที่ที่ชอบเลือกได้ทุกระดับ
 - `user_preferences.preferred_area_codes text[]` เก็บรหัสจังหวัด/อำเภอ/ตำบล (ย่านยังอยู่ `preferred_district_ids`) · `app_update_profile` รับ `area_codes` (ตรวจรูปแบบ → `INVALID_AREA_CODES`) · `run_retention_jobs` ล้างค่านี้ด้วย
 - migration `20261021000500_account_preferred_areas`
