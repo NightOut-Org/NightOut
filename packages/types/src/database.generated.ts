@@ -9778,6 +9778,7 @@ export type Database = {
           district_id: string | null
           id: string
           is_new: boolean
+          last_checkin_at: string | null
           period_start: string
           period_type: Database["public"]["Enums"]["rank_period"]
           prev_stars: number | null
@@ -9802,6 +9803,7 @@ export type Database = {
           district_id?: string | null
           id?: string
           is_new: boolean
+          last_checkin_at?: string | null
           period_start: string
           period_type: Database["public"]["Enums"]["rank_period"]
           prev_stars?: number | null
@@ -9826,6 +9828,7 @@ export type Database = {
           district_id?: string | null
           id?: string
           is_new?: boolean
+          last_checkin_at?: string | null
           period_start?: string
           period_type?: Database["public"]["Enums"]["rank_period"]
           prev_stars?: number | null
@@ -13428,11 +13431,12 @@ export type Database = {
         Returns: {
           bar_id: string
           computed_at: string
+          is_new: boolean
+          last_checkin_at: string
           period_start: string
           rank: number
           stars: number
           tier: Database["public"]["Enums"]["tier_letter"]
-          total_score: number
           votes: number
         }[]
       }
