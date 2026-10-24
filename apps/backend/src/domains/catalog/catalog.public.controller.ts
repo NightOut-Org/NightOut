@@ -88,11 +88,11 @@ export class CatalogPublicController {
   @ApiDoc({
     summary: 'อันดับร้าน (รายสัปดาห์ / รายเดือน)',
     description:
-      'รอบล่าสุดจาก tier_scores ที่ job คำนวณทุกคืน · เรียงตามโหวต (การจองที่เช็กอินในรอบ) แล้วตามคะแนนรวม ' +
-      '(รีวิว 50 · เช็กอิน 30 · Safety 20 — ร้านที่ยังไม่มีเช็กอินใน 90 วันคิดรีวิว + Safety เต็ม 100 · โฆษณาไม่มีผล) · ' +
-      'ไม่รวมร้านรีวิวน้อยกว่า 5 และร้านที่ไม่ได้แสดง · ยังไม่เคยคำนวณ = [] (rpc public_ranking)',
+      'รอบล่าสุดจาก tier_scores ที่ job คำนวณทุกคืน · นับเฉพาะการเช็กอินผ่าน NightOut: เรียงตามโหวต (การจองที่เช็กอินในรอบ) ' +
+      'เท่ากัน = ร้านที่ถึงยอดก่อน (เช็กอินล่าสุดเก่ากว่า) อยู่บน · ไม่มีเช็กอินในรอบ = ต่อท้ายตามชื่อร้าน · ' +
+      'ไม่ใช้คะแนนรวม · โฆษณาไม่มีผล · เฉพาะร้านที่แสดงอยู่ · ยังไม่เคยคำนวณ = [] (rpc public_ranking)',
     returns:
-      'รายการ `bar_id` · `rank` · `votes` เช็กอินในรอบ · `total_score` 0–100 · `stars` 1–5 · `tier` S/A/B/C · `period_start` (YYYY-MM-DD) · `computed_at`',
+      'รายการ `bar_id` · `rank` · `votes` เช็กอินในรอบ · `last_checkin_at` · `stars` 1–5 / null · `tier` S/A/B/C / null · `is_new` · `period_start` (YYYY-MM-DD) · `computed_at`',
     auth: false,
   })
   ranking(@Req() req: Request, @Query() q: RankingQueryDto) {

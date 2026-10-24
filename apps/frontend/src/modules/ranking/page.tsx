@@ -35,10 +35,10 @@ export function RankingPage() {
   const rawCategory = params.get('category') as BarCategory | null;
   // ค่าแปลกใน URL = ทุกประเภท (ไม่ส่งไปให้ API ตอบ 400)
   const category: BarCategory | 'ALL' = rawCategory && CATEGORIES.includes(rawCategory) ? rawCategory : 'ALL';
-  // อันดับจริงรอบล่าสุด (GET /public/ranking · job คำนวณทุกคืน) เรียงตามโหวตในรอบ แล้วตามคะแนนรวม
+  // อันดับจริงรอบล่าสุด (GET /public/ranking · job คำนวณทุกคืน) นับเฉพาะเช็กอินผ่าน NightOut ในรอบ
   const { data, isPending, isError, refetch } = useRanking(PERIOD_API[period], category === 'ALL' ? undefined : category);
   const ranked = useMemo(() => toRankedBars(data ?? []), [data]);
-  // ยังไม่มีใครเช็กอินในรอบนี้ (เช่นต้นสัปดาห์) — อันดับมาจากคะแนนรวมล้วน ๆ บอกผู้ใช้ให้ชัด
+  // ยังไม่มีใครเช็กอินในรอบนี้ (เช่นต้นสัปดาห์) — รายชื่อเรียงตามชื่อร้าน ยังไม่ใช่อันดับ บอกผู้ใช้ให้ชัด
   const noVotes = ranked.length > 0 && ranked.every((b) => b.votes === 0);
   const heroBars = listBars({ sort: 'rating' });
 
@@ -58,7 +58,7 @@ export function RankingPage() {
           จัดอันดับร้าน
         </h1>
         <p className="mx-auto mt-2 max-w-48 text-balance text-xs text-muted sm:max-w-md sm:text-base">
-          นับจากโหวตของคนที่เช็กอินจริง โฆษณาซื้ออันดับไม่ได้
+          นับจากการเช็กอินจริงผ่าน NightOut เท่านั้น โฆษณาซื้ออันดับไม่ได้
         </p>
       </RadialCarousel>
 
@@ -91,7 +91,7 @@ export function RankingPage() {
           <SplitHeading key={period} lead={PERIOD_LABEL[period]} text="ผู้ชนะได้แก่" />
           {noVotes && (
             <p className="mx-auto mt-3 max-w-md text-balance text-center text-sm text-muted">
-              ยังไม่มีโหวตในรอบนี้ — เรียงตามคะแนนรวม (จากรีวิว เช็กอิน และ Safety)
+              ยังไม่มีใครเช็กอินในรอบนี้ รายชื่อด้านล่างเรียงตามชื่อร้านไปก่อน
             </p>
           )}
         </div>
@@ -125,13 +125,13 @@ export function RankingPage() {
             <RuleList
               rules={[
                 <>
-                  <b className="text-text">นับโหวตยังไง</b> 1 การจองที่เช็กอินแล้ว = 1 โหวต อัปเดตทุกคืน
+                  <b className="text-text">นับโหวตยังไง</b> 1 การจองที่เช็กอินผ่าน NightOut = 1 โหวต อัปเดตทุกคืน
                 </>,
                 <>
                   <b className="text-text">เริ่มรอบใหม่เมื่อไร</b> รายสัปดาห์ทุกวันจันทร์ ส่วนรายเดือนทุกวันที่ 1
                 </>,
                 <>
-                  <b className="text-text">ถ้าโหวตเท่ากัน</b> เรียงตามคะแนนรวม ร้านที่รีวิวไม่ถึง 5 ยังไม่ติดอันดับ และโฆษณาไม่มีผล
+                  <b className="text-text">ถ้าโหวตเท่ากัน</b> ร้านที่ถึงยอดนั้นก่อนได้อันดับดีกว่า ส่วนร้านที่ยังไม่มีเช็กอินอยู่ท้ายตามชื่อร้าน
                 </>,
               ]}
             />

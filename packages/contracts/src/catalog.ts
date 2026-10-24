@@ -5,7 +5,8 @@ import { uuid } from './common';
 /**
  * โดเมน catalog — ข้อมูลสาธารณะของเว็บ · อันดับร้าน (tier_scores)
  * แอดมินจัดการสไตล์ร้าน (/styles) / สั่งคำนวณอันดับใหม่ (/ranking "คำนวณใหม่")
- * สูตรคะแนน: rankingScore() ใน @nightout/utils (ต้องตรงกับ run_tier_scores() ใน migration 20261013001030)
+ * สูตรคะแนน (ดาว / Tier): rankingScore() ใน @nightout/utils (ต้องตรงกับ run_tier_scores() ใน migration 20261024000100)
+ * อันดับหน้า /ranking = เช็กอินผ่าน NightOut ในรอบเท่านั้น (public_ranking · ไม่ใช้คะแนนรวม)
  */
 
 // ----------------------------- อันดับร้าน (สาธารณะ) -----------------------------
@@ -24,14 +25,16 @@ export type RankingQuery = z.input<typeof RankingQuery>;
 
 export interface RankingRow {
   bar_id: string;
-  /** 1.. เรียงตามโหวต (เช็กอินในรอบ) แล้วตามคะแนนรวม */
+  /** 1.. เรียงตามโหวต (เช็กอินผ่าน NightOut ในรอบ) · เท่ากัน = ร้านที่ถึงยอดก่อนอยู่บน · 0 โหวต = ต่อท้ายตามชื่อร้าน */
   rank: number;
   /** 1 การจองที่เช็กอินในรอบนี้ = 1 โหวต */
   votes: number;
-  /** 0–100 */
-  total_score: number;
-  stars: 1 | 2 | 3 | 4 | 5;
-  tier: Tier;
+  /** เช็กอินล่าสุดในรอบ (ตัดสินเมื่อโหวตเท่ากัน) · null = ยังไม่มีเช็กอินในรอบ */
+  last_checkin_at: string | null;
+  /** ดาว / Tier ของร้านในรอบนั้น (สูตรคะแนนรวม · ไม่มีผลต่ออันดับ) · null = ร้านใหม่ (รีวิว < 5) */
+  stars: 1 | 2 | 3 | 4 | 5 | null;
+  tier: Tier | null;
+  is_new: boolean;
   /** YYYY-MM-DD */
   period_start: string;
   computed_at: string;

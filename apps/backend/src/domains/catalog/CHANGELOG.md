@@ -1,5 +1,10 @@
 # CHANGELOG — apps/backend/src/domains/catalog
 
+## 2026-10-24 — อันดับนับเฉพาะเช็กอินผ่าน NightOut
+- `GET /public/ranking` ไม่ใช้คะแนนรวม (รีวิว/เช็กอิน/Safety) ตัดสินแล้ว: เรียงตามโหวตในรอบ · เท่ากัน = ร้านที่ถึงยอดก่อนอยู่บน · ไม่มีเช็กอินต่อท้ายตามชื่อร้าน · ร้านรีวิว < 5 ติดอันดับได้ (เจ้าของตัดสิน)
+- migration `20261024000100_catalog_ranking_checkins_only`: คอลัมน์ `tier_scores.last_checkin_at` · `run_tier_scores()` เก็บค่านั้น (สูตรดาวเหมือนเดิม) · `public_ranking` คืน `last_checkin_at` + `is_new` แทน `total_score`
+- ไฟล์: `catalog.public.controller.ts` (`@ApiDoc`)
+
 ## 2026-10-21 — ย่านเพิ่ม 36 ย่าน (รังสิต พหลโยธิน ฯลฯ) + ย่านหลายจุด
 - migration `20261021000600_catalog_more_districts`: คอลัมน์ `districts.area` (พื้นที่รวมวงกลมหลายจุด สำหรับย่านที่ยาวเป็นแนวถนน เช่น พหลโยธิน) · `district_near` ใช้ `st_covers(area)` ถ้ามี ไม่มีใช้จุดกลาง + รัศมีเหมือนเดิม · เพิ่ม 36 ย่านที่ทีมคัด (รังสิต พหลโยธิน นวมินทร์ รามอินทรา แจ้งวัฒนะ ศาลายา ป่าตอง พัทยา หัวหิน ฯลฯ) · วอล์คกิ้งสตรีทพัทยาแคบลงเหลือ 400 ม. · คำนวณย่านของร้านเดิมใหม่
 - `GET /public/tambons` รับ `codes=` (คั่นด้วย , ไม่เกิน 20) · rpc `search_tambons(p_q, p_codes, p_limit)` (migration `20261021000500`)

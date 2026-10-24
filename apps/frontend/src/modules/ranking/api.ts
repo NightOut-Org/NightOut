@@ -9,8 +9,8 @@ import { useQuery } from '@tanstack/react-query';
 const RANKING_LIMIT = 10;
 
 /**
- * GET /public/ranking — อันดับรอบล่าสุด (job คำนวณทุกคืน) เรียงตามโหวตในรอบ แล้วตามคะแนนรวม
- * ไม่ส่ง category = ทุกประเภท · ไม่รวมร้านรีวิวน้อยกว่า 5
+ * GET /public/ranking — อันดับรอบล่าสุด (job คำนวณทุกคืน) นับเฉพาะเช็กอินผ่าน NightOut ในรอบ
+ * โหวตเท่ากัน = ร้านที่ถึงยอดก่อนอยู่บน · ไม่มีเช็กอิน = ต่อท้ายตามชื่อร้าน · ไม่ส่ง category = ทุกประเภท
  */
 export function useRanking(period: C.RankPeriod, category?: BarCategory) {
   return useQuery({

@@ -1,5 +1,9 @@
 # CHANGELOG — @nightout/contracts
 
+## 2026-10-24 — RankingRow นับเฉพาะเช็กอิน
+- `RankingRow`: เพิ่ม `last_checkin_at` + `is_new` · `stars` / `tier` เป็น null ได้ (ร้านใหม่) · เอา `total_score` ออก (อันดับไม่ใช้คะแนนรวมแล้ว)
+- ไฟล์: `src/catalog.ts`
+
 ## 2026-10-21 — สัญญา API พื้นที่ที่ชอบ + ค้นตำบลหลายรหัส
 - `account.ts`: `UpdateProfileBody.area_codes` + `ACCOUNT_ERRORS.INVALID_AREA_CODES`
 - `catalog.ts`: `TambonSearchQuery` รับ `codes` (คั่นด้วย , ไม่เกิน 20) ต้องส่งอย่างใดอย่างหนึ่งจาก q / code / codes · เทสต์ใน `contracts.test.ts`
