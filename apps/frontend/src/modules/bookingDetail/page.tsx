@@ -1,6 +1,7 @@
-import { ChatCircleDots, Clock, ClockClockwise, MapPin, ShareNetwork } from '@phosphor-icons/react';
+import { ChatCircleDots, Clock, ClockClockwise, MapPin, ShareNetwork, Wallet } from '@phosphor-icons/react';
 import { autoCancelAt, getBar, getBooking } from '@/services/data';
 import { cancelBooking, extendBooking } from './api';
+import { lineShareUrl, splitPayText } from './utils/shareText';
 import { App, Button, Card, Timeline } from 'antd';
 import { QRCodeSVG } from 'qrcode.react';
 import { Link, useParams } from 'react-router';
@@ -29,6 +30,9 @@ function countdownText(ms: number) {
   const s = Math.floor((ms % 60_000) / 1000);
   return `${h > 0 ? `${h} ชม. ` : ''}${m} นาที ${s} วินาที`;
 }
+
+/** การจองที่จบไปแล้วโดยไม่ได้ไป — ไม่มีอะไรให้หาร */
+const SPLIT_CLOSED_STATUSES: string[] = ['REJECTED', 'CANCELLED_BY_MERCHANT', 'CANCELLED_BY_CUSTOMER', 'EXPIRED'];
 
 const hhmm = (d: Date | string) =>
   new Date(d).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', hour12: false });
@@ -62,6 +66,9 @@ export function BookingDetailPage() {
   const canExtend = canExtendBooking(timing, new Date(now));
   const extendOpensAt = new Date(b.datetime).getTime() - BOOKING_EXTENSION_MINUTES * 60_000;
   const checkInOpensAt = checkInWindow(timing).opensAt;
+  const fee = Number(b.depositRequired ?? b.deposit?.amount) || 0;
+  // หารจ่าย: มี Table Fee + ไปกัน 2 คนขึ้นไป + การจองยังไม่ถูกยกเลิก/ปฏิเสธ
+  const canSplit = fee > 0 && b.pax > 1 && !SPLIT_CLOSED_STATUSES.includes(b.status);
 
   const askExtend = () => {
     const until = new Date(releaseAt.getTime() + BOOKING_EXTENSION_MINUTES * 60_000);
@@ -128,13 +135,28 @@ export function BookingDetailPage() {
             </div>
           </dl>
           <div className="mt-6 flex flex-wrap gap-3">
-            <a
-              href={`https://line.me/R/share?text=${encodeURIComponent(`ไป ${bar.name} กัน! ${dateTime(b.datetime)}\n${shareUrl}`)}`}
-              target="_blank"
-              rel="noreferrer"
-            >
+            <a href={lineShareUrl(`ไป ${bar.name} กัน! ${dateTime(b.datetime)}\n${shareUrl}`)} target="_blank" rel="noreferrer">
               <Button icon={<ChatCircleDots />}>แชร์เข้า LINE</Button>
             </a>
+            {canSplit && (
+              <a
+                href={lineShareUrl(
+                  splitPayText({
+                    barName: bar.name,
+                    when: dateTime(b.datetime),
+                    pax: b.pax,
+                    fee,
+                    paid: b.deposit?.status === 'VERIFIED',
+                    avgPerPerson: bar.avgPerPerson,
+                    shareUrl,
+                  }),
+                )}
+                target="_blank"
+                rel="noreferrer"
+              >
+                <Button icon={<Wallet />}>หารจ่ายผ่าน LINE</Button>
+              </a>
+            )}
             <Button icon={<ShareNetwork />} onClick={share}>
               แชร์ลิงก์
             </Button>
