@@ -9,7 +9,7 @@ import { Id } from '../../common/params';
 import { SupabaseService } from '../../supabase/supabase.service';
 import { AccountAvatarService } from './account-avatar.service';
 import { AccountOAuthService } from './account-oauth.service';
-import { MarkReadDto, OAuthSignupCompleteDto, OAuthSignupVerifyDto, SetAvatarDto, UpdateProfileDto } from './account.dto';
+import { MarkReadDto, OAuthSignupCompleteDto, OAuthSignupVerifyDto, SetAvatarDto, UpdateMyPhoneDto, UpdateProfileDto } from './account.dto';
 
 const inList = (ids: string[]) => `in.(${ids.map(encodeURIComponent).join(',')})`;
 
@@ -74,6 +74,17 @@ export class AccountMeController {
   })
   updateProfile(@CurrentUser() me: AuthUser, @Body() b: UpdateProfileDto) {
     return this.db.rpc('app_update_profile', { p_actor: me.id, p: b });
+  }
+
+  @Patch('phone')
+  @ApiDoc({
+    summary: 'แก้เบอร์โทรของตัวเอง',
+    description:
+      'เบอร์ที่ใช้ติดต่อตอนจองและหน้า Checkout เติมให้ (users.phone_e164) · ลบเป็นค่าว่างไม่ได้ ไม่มี OTP · การจองที่ยังไม่ถึงเวลา (PENDING / AWAITING_DEPOSIT / DEPOSIT_SUBMITTED / CONFIRMED) เปลี่ยน contact_phone เป็นเบอร์ใหม่ด้วย · เบอร์ที่ถูกแบน = PHONE_BANNED · บัญชีอื่นใช้อยู่ = PHONE_IN_USE (rpc app_update_my_phone)',
+    returns: '`phone_e164` เบอร์ใหม่ (E.164) · `bookings_updated` จำนวนการจองที่เปลี่ยนเบอร์',
+  })
+  updatePhone(@CurrentUser() me: AuthUser, @Body() b: UpdateMyPhoneDto) {
+    return this.db.rpc('app_update_my_phone', { p_actor: me.id, p_phone: b.phone });
   }
 
   @Put('avatar')

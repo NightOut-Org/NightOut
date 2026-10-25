@@ -1,5 +1,10 @@
 # account — ประวัติการแก้ไข
 
+## 2026-10-25 — ลูกค้าแก้เบอร์โทรของตัวเอง (นอก MVP — อนุมัติ 2026-10-25)
+- endpoint ใหม่ `PATCH /me/phone` `{phone}` → rpc `app_update_my_phone`: แก้ `users.phone_e164` + เปลี่ยน `contact_phone` ของการจองที่ยังไม่ถึงเวลา (PENDING / AWAITING_DEPOSIT / DEPOSIT_SUBMITTED / CONFIRMED) · เบอร์ที่ถูกแบน = `PHONE_BANNED` · บัญชีอื่นใช้อยู่ = `PHONE_IN_USE` · ล้าง `phone_verified_at` · audit `user.phone_update`
+- migration `20261025000100_account_edit_own_phone` · ไฟล์: `account.me.controller.ts` · `account.dto.ts`
+
+
 ## 2026-10-22 — ชื่อชั้นบัญชี CUSTOMER เป็น "สมาชิก"
 - `roles.label_th` ของ `CUSTOMER` จาก "ลูกค้า" เป็น "สมาชิก" เพราะ "ลูกค้า" เป็นมุมมองของร้าน ผู้ใช้เห็นป้ายของตัวเองแล้วรู้สึกเหมือนถูกบังคับให้ต้องจ่ายเงิน · รหัสชั้นไม่เปลี่ยน
 - migration `20261022000100_account_member_role_label`

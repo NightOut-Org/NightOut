@@ -6,6 +6,7 @@ import { useRoles } from '@/hooks/useRoles';
 import { useDemo } from '@/hooks/useDemo';
 import { useAuth } from '@/services/auth';
 import { MoltenBackground } from '@/ui/components/MoltenBackground';
+import { PhoneCard } from './components/phoneCard';
 import { PreferencesCard } from './components/preferencesCard';
 import { ProfileHeader } from './components/profileHeader';
 import { RoleList } from './components/roleList';
@@ -88,7 +89,12 @@ export function ProfilePage() {
 
         <div role="tabpanel" id={`profile-panel-${tab}`} aria-labelledby={`profile-tab-${tab}`}>
           {tab === 'prefs' && <PreferencesCard user={user} />}
-          {tab === 'account' && <RoleList role={user.role} roleLabel={user.roleLabel} />}
+          {tab === 'account' && (
+            <div className="flex flex-col gap-5">
+              <PhoneCard phoneE164={user.phoneE164} />
+              <RoleList role={user.role} roleLabel={user.roleLabel} />
+            </div>
+          )}
           {tab === 'notify' && (
             <section className="rounded-xl border border-border bg-card p-6">
               <p className="mb-3 text-sm text-muted">

@@ -2,6 +2,7 @@ import * as C from '@nightout/contracts';
 import { createZodDto } from 'nestjs-zod';
 
 export class UpdateProfileDto extends createZodDto(C.UpdateProfileBody) {}
+export class UpdateMyPhoneDto extends createZodDto(C.UpdateMyPhoneBody) {}
 export class MarkReadDto extends createZodDto(C.MarkReadBody) {}
 export class CreateUserDto extends createZodDto(C.CreateUserBody) {}
 export class UpdateUserAccountDto extends createZodDto(C.UpdateUserAccountBody) {}

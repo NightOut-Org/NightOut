@@ -13067,6 +13067,10 @@ export type Database = {
         Args: { p: Json; p_actor: string; p_bar: string }
         Returns: Json
       }
+      app_update_my_phone: {
+        Args: { p_actor: string; p_phone: string }
+        Returns: Json
+      }
       app_update_profile: { Args: { p: Json; p_actor: string }; Returns: Json }
       apply_fake_slip_flag: {
         Args: { p_actor: string; p_deposit: string }

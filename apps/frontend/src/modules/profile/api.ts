@@ -1,7 +1,7 @@
 import type * as C from '@nightout/contracts';
 import { Rest } from '@nightout/utils/rest';
 import { uploadAvatar } from '@/services/api/storage';
-import { currentProfile, setProfileName } from '@/services/sync';
+import { currentProfile, setProfileName, setProfilePhone } from '@/services/sync';
 
 /** API ของหน้าโปรไฟล์ · backend: domains/account */
 
@@ -25,3 +25,10 @@ export async function setAvatar(userId: string, file: Blob) {
 
 /** DELETE /me/avatar — กลับไปใช้ตัวย่อชื่อ */
 export const removeAvatar = () => Rest.delete<C.AvatarResult>('/me/avatar');
+
+/** PATCH /me/phone — เบอร์ที่ใช้ติดต่อตอนจอง · การจองที่ยังไม่ถึงเวลาเปลี่ยนเป็นเบอร์ใหม่ด้วย */
+export async function updateMyPhone(body: C.UpdateMyPhoneBody) {
+  const r = await Rest.patch<C.UpdateMyPhoneResult>('/me/phone', body);
+  setProfilePhone(r.phone_e164);
+  return r;
+}

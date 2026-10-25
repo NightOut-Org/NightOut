@@ -1,4 +1,5 @@
 import { ThemeMode, UserRole } from '@nightout/types';
+import { toThaiE164 } from '@nightout/utils';
 import { z } from 'zod';
 import { objectPath, uuid } from './common';
 
@@ -37,6 +38,25 @@ export type SetAvatarBody = z.infer<typeof SetAvatarBody>;
 /** PUT / DELETE /me/avatar */
 export interface AvatarResult {
   avatar_url: string | null;
+}
+
+/** PATCH /me/phone — แก้เบอร์โทรของตัวเอง (ลบเป็นค่าว่างไม่ได้ · ไม่มี OTP) */
+export const UpdateMyPhoneBody = z.object({
+  phone: z
+    .string()
+    .max(20)
+    .transform((v, ctx) => {
+      const e164 = toThaiE164(v);
+      if (!e164) ctx.addIssue({ code: 'custom', message: 'INVALID_PHONE' });
+      return e164 ?? v;
+    })
+    .describe('เบอร์ไทย เช่น 081-234-5678 — เก็บเป็น E.164 · การจองที่ยังไม่ถึงเวลาเปลี่ยนเป็นเบอร์นี้ด้วย'),
+});
+export type UpdateMyPhoneBody = z.input<typeof UpdateMyPhoneBody>;
+export interface UpdateMyPhoneResult {
+  phone_e164: string;
+  /** จำนวนการจองที่ยังไม่ถึงเวลาที่เปลี่ยนเป็นเบอร์ใหม่ */
+  bookings_updated: number;
 }
 
 /** PATCH /me/profile — ส่งเฉพาะ field ที่แก้ */
@@ -275,6 +295,7 @@ export const ACCOUNT_ERRORS = {
   CANNOT_BAN_SELF: 'แบนบัญชีของตัวเองไม่ได้',
   CANNOT_BAN_ADMIN: 'แบนบัญชีทีมงาน NightOut (แอดมิน / ซูเปอร์แอดมิน) ไม่ได้ — ให้ซูเปอร์แอดมินลดชั้นบัญชีก่อน',
   USER_ALREADY_BANNED: 'บัญชีนี้ถูกแบนอยู่แล้ว',
+  PHONE_IN_USE: 'เบอร์นี้ผูกกับบัญชีอื่นอยู่แล้ว — ใช้เบอร์อื่น หรือติดต่อ NightOut',
   AVATAR_INVALID: 'อัปโหลดรูปไม่สำเร็จ — เลือกรูปใหม่แล้วลองอีกครั้ง',
   AVATAR_NOT_FOUND: 'บัญชีนี้ไม่มีรูปโปรไฟล์แล้ว',
   AVATAR_REMOVE_REASON_REQUIRED: 'ใส่เหตุผล 3–300 ตัวอักษร',

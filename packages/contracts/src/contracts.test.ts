@@ -8,7 +8,7 @@ import { PUBLIC_BUCKETS, UploadBucket } from './storage';
 import { CommunityCommentBody, CommunityFeedQuery, CommunityReportBody, CommunityThreadBody, communityTeamBadge, ModerateCommunityBody, MyCommunityFeedQuery, SaveCommunityDraftBody, UpdateCommunityCommentBody } from './community';
 import { ADMIN_VIEWS, AdminReportNoTableBody, BAR_ERRORS, BarBlacklistBody, BOOKING_ERRORS, CheckInPreviewQuery, ReportNoTableBody } from './index';
 import { SafetyInspectionBody } from './index';
-import { ADMIN_MASTER_TABLES, AdminBarDetailsBody, AdminBarInfoBody, BanUserBody, RankingQuery, RemoveUserAvatarBody, SaveStylesBody, SetAvatarBody, STYLE_ICONS, UnbanUserBody } from './index';
+import { ADMIN_MASTER_TABLES, AdminBarDetailsBody, AdminBarInfoBody, BanUserBody, RankingQuery, RemoveUserAvatarBody, SaveStylesBody, SetAvatarBody, STYLE_ICONS, UnbanUserBody, UpdateMyPhoneBody } from './index';
 import { MarkPaymentRefundedBody, MockCompleteBody, PAYMENT_ERRORS, SUPER_ADMIN_VIEWS } from './index';
 import { TableBoardQuery, TableOccupancyBody } from './index';
 import { MINI_ADS_ERRORS, MiniAdBody, MiniAdsQuery, TrackMiniAdBody, UpdateMiniAdBody } from './index';
@@ -453,6 +453,14 @@ describe('G6: แก้ข้อมูลร้านแทน · สไตล�
     expect(RemoveUserAvatarBody.safeParse({ reason: 'รูปไม่เหมาะสม' }).success).toBe(true);
     expect(PUBLIC_BUCKETS).toContain('avatars');
     for (const k of ['AVATAR_INVALID', 'AVATAR_NOT_FOUND', 'AVATAR_REMOVE_REASON_REQUIRED']) expect(ERROR_MESSAGES[k]).toBeTruthy();
+  });
+
+  it('UpdateMyPhoneBody: Thai phone → E.164 · empty / invalid rejected', () => {
+    expect(UpdateMyPhoneBody.parse({ phone: '081-234-5678' }).phone).toBe('+66812345678');
+    expect(UpdateMyPhoneBody.safeParse({ phone: '' }).success).toBe(false);
+    expect(UpdateMyPhoneBody.safeParse({ phone: '12' }).success).toBe(false);
+    expect(UpdateMyPhoneBody.safeParse({}).success).toBe(false);
+    for (const k of ['PHONE_IN_USE', 'PHONE_BANNED', 'INVALID_PHONE']) expect(ERROR_MESSAGES[k]).toBeTruthy();
   });
 
   it('BanUserBody: reason 3–300 · ban_phones defaults false · UnbanUserBody requires a reason', () => {

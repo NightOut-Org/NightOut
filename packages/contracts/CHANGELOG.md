@@ -1,5 +1,10 @@
 # CHANGELOG — @nightout/contracts
 
+## 2026-10-25 — UpdateMyPhoneBody
+- `UpdateMyPhoneBody` (`phone` เบอร์ไทย → E.164 · ค่าว่าง/ผิดรูปแบบ = `INVALID_PHONE`) + `UpdateMyPhoneResult` · รหัส error ใหม่ `PHONE_IN_USE` ใน `ACCOUNT_ERRORS` · เทสต์ใน `contracts.test.ts`
+- ไฟล์: `src/account.ts`
+
+
 ## 2026-10-24 — RankingRow นับเฉพาะเช็กอิน
 - `RankingRow`: เพิ่ม `last_checkin_at` + `is_new` · `stars` / `tier` เป็น null ได้ (ร้านใหม่) · เอา `total_score` ออก (อันดับไม่ใช้คะแนนรวมแล้ว)
 - ไฟล์: `src/catalog.ts`
