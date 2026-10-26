@@ -9,7 +9,8 @@ import { useAuthModal } from '@/ui/components/authModal';
 /**
  * Layout route: ต้องล็อกอินก่อน
  * - กดลิงก์มาจากหน้าอื่นในแอป → ย้อนกลับไปหน้าเดิมแล้วเปิด modal เข้าสู่ระบบ (ไม่หลุดไปหน้าแรก) · ล็อกอินแล้วไปหน้าที่ขอ
- * - เปิด URL ตรง (ไม่มีหน้าก่อนหน้าในแอป) → /login?next=... (หน้าแรก + modal)
+ * - เปิดลิงก์หน้าจองตรง (/bars/:slug/book) → หน้าร้านนั้น + modal (ไม่เสีย context ร้าน) · ล็อกอินแล้วกลับมาหน้าจอง
+ * - เปิด URL ตรงหน้าอื่น (ไม่มีหน้าก่อนหน้าในแอป) → /login?next=... (หน้าแรก + modal)
  */
 export function RequireAuth() {
   const { user, loading } = useAuth();
@@ -19,7 +20,8 @@ export function RequireAuth() {
   const next = location.pathname + location.search;
   // react-router เก็บลำดับใน history.state.idx · > 0 = มีหน้าก่อนหน้าในแอปนี้
   const canGoBack = ((window.history.state as { idx?: number } | null)?.idx ?? 0) > 0;
-  const bounceBack = !loading && !user && canGoBack;
+  const barSlug = /^\/bars\/([^/]+)\/book\/?$/.exec(location.pathname)?.[1];
+  const bounceBack = !loading && !user && (canGoBack || !!barSlug);
   // ย้อนกลับครั้งเดียวต่อการเข้า route นี้ (StrictMode เรียก effect ซ้ำ → navigate(-1) สองครั้ง = ย้อนเลยหน้าเดิม)
   const bounced = useRef(false);
 
@@ -27,8 +29,9 @@ export function RequireAuth() {
     if (!bounceBack || bounced.current) return;
     bounced.current = true;
     openLogin(next);
-    navigate(-1);
-  }, [bounceBack, next, openLogin, navigate]);
+    if (canGoBack) navigate(-1);
+    else navigate(`/bars/${barSlug}`, { replace: true });
+  }, [bounceBack, canGoBack, barSlug, next, openLogin, navigate]);
 
   if (loading) return <Spin fullscreen />;
   if (!user)
