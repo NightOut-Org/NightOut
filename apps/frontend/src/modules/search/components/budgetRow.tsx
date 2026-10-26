@@ -1,4 +1,4 @@
-import { MapPin, NavigationArrow, ShieldCheck, Users } from '@phosphor-icons/react';
+import { MapPin, NavigationArrow, ShieldCheck, Users, WarningCircle } from '@phosphor-icons/react';
 import { CATEGORY_LABELS, safetyScore, type BarWithTier } from '@/services/data';
 import type { MouseEvent, ReactNode } from 'react';
 import { Link } from 'react-router';
@@ -12,6 +12,7 @@ import { PRBadge } from '@/ui/components/prBadge';
 import { barImage } from '@/ui/utils/barImage';
 import { baht } from '@/ui/utils/format';
 import { barPlace } from '@/ui/utils/area';
+import { StatusChip } from '@/ui/components/statusChip';
 
 /** ความจุโซนที่ใหญ่ที่สุด = กลุ่มใหญ่สุดที่ร้านรับได้ในโต๊ะเดียว */
 const maxGroup = (bar: BarWithTier) => Math.max(0, ...bar.zones.map((z) => z.capacityPax));
@@ -44,6 +45,7 @@ export function BudgetRow({
   people,
   maxBudget,
   distanceKm,
+  misses,
   onActivate,
   onClick,
 }: {
@@ -53,6 +55,8 @@ export function BudgetRow({
   maxBudget?: number;
   /** ระยะจากตำแหน่งผู้ใช้ (รู้เมื่อกด "ตำแหน่งของฉัน" บนแผนที่) */
   distanceKm?: number;
+  /** ร้านใกล้เคียง: ข้อความว่าแต่ละเงื่อนไขไม่ตรงตรงไหน */
+  misses?: string[];
   onActivate: () => void;
   onClick?: (e: MouseEvent<HTMLAnchorElement>) => void;
 }) {
@@ -82,7 +86,12 @@ export function BudgetRow({
           barId={bar.id}
           className="!absolute right-1.5 top-1.5 !size-[30px] !min-w-0 !border-0 !bg-black/55 !text-white backdrop-blur"
         />
-        {bar.promoted && <AdBadge variant="overlay" className="absolute bottom-1.5 left-1.5 !text-[10px] !leading-4" />}
+        {bar.promoted && (
+          <AdBadge
+            variant="overlay"
+            className="absolute bottom-1.5 left-1.5 !text-[10px] !leading-4"
+          />
+        )}
       </div>
 
       <div className="flex min-w-0 flex-col gap-2 py-0.5 pr-1">
@@ -107,6 +116,16 @@ export function BudgetRow({
             <p className="mt-0.5 text-[11px] text-muted">ต่อคน</p>
           </div>
         </div>
+
+        {misses && misses.length > 0 && (
+          <div className="flex flex-wrap gap-1.5">
+            {misses.map((text) => (
+              <StatusChip key={text} tone="warn" icon={<WarningCircle weight="fill" />}>
+                {text}
+              </StatusChip>
+            ))}
+          </div>
+        )}
 
         <div className="flex flex-wrap gap-1.5 text-xs">
           <Chip>

@@ -73,24 +73,55 @@ export interface BarFilter {
   sort?: 'relevance' | 'rating' | 'price' | 'safety' | 'distance';
 }
 
-export function listBars(filter: BarFilter = {}): BarWithTier[] {
-  const q = filter.q?.trim().toLowerCase();
-  let bars = getState()
-    .bars.filter((b) => b.status === 'APPROVED')
-    .filter((b) => !filter.category || filter.category === 'ALL' || b.category === filter.category)
-    .filter(
-      (b) => !filter.district || areaMatches({ district: b.district, ...b.area }, filter.district),
-    )
-    .filter((b) => !filter.tambon || b.area?.tambonCode === filter.tambon)
-    .filter((b) => !filter.styles?.length || filter.styles.every((s) => b.styles.includes(s)))
-    .filter((b) => !filter.maxBudget || (b.avgPerPerson > 0 && b.avgPerPerson <= filter.maxBudget))
-    .filter((b) => fitsGroup(b.zones, filter.people))
-    .filter((b) => !filter.crowd?.length || filter.crowd.includes(b.crowd))
-    .filter((b) => !filter.minSafety || safetyScore(b) >= filter.minSafety)
-    .filter((b) => !filter.hasPR || b.pr.male + b.pr.female + (b.pr.lgbtq ?? 0) > 0)
-    .filter(
-      (b) =>
-        !q ||
+/** เงื่อนไขค้นหาแต่ละข้อ — isSet = ผู้ใช้ตั้งค่าไว้ไหม · matches = ร้านผ่านเงื่อนไขนี้ไหม */
+export type BarFilterKey =
+  'category' | 'area' | 'styles' | 'budget' | 'people' | 'crowd' | 'safety' | 'pr' | 'q';
+
+interface Condition {
+  isSet: (f: BarFilter) => boolean;
+  matches: (b: Bar, f: BarFilter) => boolean;
+}
+
+const CONDITIONS: Record<BarFilterKey, Condition> = {
+  category: {
+    isSet: (f) => !!f.category && f.category !== 'ALL',
+    matches: (b, f) => b.category === f.category,
+  },
+  area: {
+    isSet: (f) => !!(f.district || f.tambon),
+    matches: (b, f) =>
+      (!f.district || areaMatches({ district: b.district, ...b.area }, f.district)) &&
+      (!f.tambon || b.area?.tambonCode === f.tambon),
+  },
+  styles: {
+    isSet: (f) => !!f.styles?.length,
+    matches: (b, f) => !!f.styles?.every((s) => b.styles.includes(s)),
+  },
+  budget: {
+    isSet: (f) => !!f.maxBudget,
+    matches: (b, f) => b.avgPerPerson > 0 && b.avgPerPerson <= (f.maxBudget ?? 0),
+  },
+  people: {
+    isSet: (f) => !!f.people,
+    matches: (b, f) => fitsGroup(b.zones, f.people),
+  },
+  crowd: {
+    isSet: (f) => !!f.crowd?.length,
+    matches: (b, f) => !!f.crowd?.includes(b.crowd),
+  },
+  safety: {
+    isSet: (f) => !!f.minSafety,
+    matches: (b, f) => safetyScore(b) >= (f.minSafety ?? 0),
+  },
+  pr: {
+    isSet: (f) => !!f.hasPR,
+    matches: (b) => b.pr.male + b.pr.female + (b.pr.lgbtq ?? 0) > 0,
+  },
+  q: {
+    isSet: (f) => !!f.q?.trim(),
+    matches: (b, f) => {
+      const q = f.q!.trim().toLowerCase();
+      return (
         b.name.toLowerCase().includes(q) ||
         b.district.includes(q) ||
         !!b.area?.amphoe.includes(q) ||
@@ -98,16 +129,85 @@ export function listBars(filter: BarFilter = {}): BarWithTier[] {
         !!b.area?.tambon.includes(q) ||
         // ชื่อถนน/ซอย (เช่น พหลโยธิน) ไม่ใช่พื้นที่ — หาจากที่อยู่ร้าน
         b.address.includes(q) ||
-        b.styles.some((s) => s.toLowerCase().includes(q)),
-    )
+        b.styles.some((s) => s.toLowerCase().includes(q))
+      );
+    },
+  },
+};
+
+/** ลำดับเงื่อนไขที่แสดงให้ผู้ใช้ */
+const FILTER_KEYS: BarFilterKey[] = [
+  'category',
+  'area',
+  'styles',
+  'budget',
+  'people',
+  'crowd',
+  'safety',
+  'pr',
+  'q',
+];
+
+/** ค่า "ไม่ตั้ง" ของแต่ละเงื่อนไข (ใช้ตอนเอาเงื่อนไขนั้นออก) */
+const CLEARED: Record<BarFilterKey, Partial<BarFilter>> = {
+  category: { category: 'ALL' },
+  area: { district: undefined, tambon: undefined, tambonLabel: undefined },
+  styles: { styles: [] },
+  budget: { maxBudget: undefined },
+  people: { people: undefined },
+  crowd: { crowd: [] },
+  safety: { minSafety: undefined },
+  pr: { hasPR: false },
+  q: { q: '' },
+};
+
+/** เงื่อนไขที่ผู้ใช้ตั้งไว้ (เรียงตาม FILTER_KEYS) */
+export function activeFilterKeys(filter: BarFilter): BarFilterKey[] {
+  return FILTER_KEYS.filter((k) => CONDITIONS[k].isSet(filter));
+}
+
+/** เงื่อนไขที่ตั้งไว้แต่ร้านนี้ไม่ผ่าน */
+export function barMisses(bar: Bar, filter: BarFilter): BarFilterKey[] {
+  return activeFilterKeys(filter).filter((k) => !CONDITIONS[k].matches(bar, filter));
+}
+
+/** ร้านที่ผ่านบางเงื่อนไข (ไม่ผ่านอย่างน้อย 1 ข้อ) เรียงจากขาดน้อยไปมาก — ใช้เมื่อไม่มีร้านตรงทุกข้อ */
+export function nearBars(
+  filter: BarFilter,
+  limit = 6,
+): { bar: BarWithTier; misses: BarFilterKey[] }[] {
+  const total = activeFilterKeys(filter).length;
+  if (total === 0) return [];
+  return getState()
+    .bars.filter((b) => b.status === 'APPROVED')
+    .map((b) => ({ bar: b, misses: barMisses(b, filter) }))
+    .filter((m) => m.misses.length > 0 && m.misses.length < total)
+    .sort((x, y) => x.misses.length - y.misses.length || byRelevance(x.bar, y.bar))
+    .slice(0, limit)
+    .map((m) => ({ bar: withTier(m.bar), misses: m.misses }));
+}
+
+/** เอาเงื่อนไขหนึ่งข้อออกจากตัวกรอง (เงื่อนไขอื่นคงเดิม) */
+export function withoutKey(filter: BarFilter, key: BarFilterKey): BarFilter {
+  return { ...filter, ...CLEARED[key] };
+}
+
+/** relevance: ร้านโปรโมทขึ้นก่อน (ติดป้ายโฆษณา) แล้วเรียงตามคะแนน */
+const byRelevance = (a: Bar, b: Bar) =>
+  Number(b.promoted) - Number(a.promoted) || b.score - a.score;
+
+export function listBars(filter: BarFilter = {}): BarWithTier[] {
+  const keys = activeFilterKeys(filter);
+  let bars = getState()
+    .bars.filter((b) => b.status === 'APPROVED')
+    .filter((b) => keys.every((k) => CONDITIONS[k].matches(b, filter)))
     .map(withTier);
   const sort = filter.sort ?? 'relevance';
   bars = [...bars].sort((a, b) => {
     if (sort === 'price') return a.avgPerPerson - b.avgPerPerson;
     if (sort === 'safety') return safetyScore(b) - safetyScore(a);
     if (sort === 'rating') return b.rating - a.rating;
-    // relevance: ร้านโปรโมทขึ้นก่อน (ติดป้ายโฆษณา) แล้วเรียงตามคะแนน
-    return Number(b.promoted) - Number(a.promoted) || b.score - a.score;
+    return byRelevance(a, b);
   });
   return bars;
 }

@@ -1,5 +1,13 @@
 import { ListBullets, MapTrifold, MoonStars } from '@phosphor-icons/react';
-import { DISTRICTS, listBars, STYLES, type BarFilter } from '@/services/data';
+import {
+  activeFilterKeys,
+  DISTRICTS,
+  listBars,
+  nearBars,
+  STYLES,
+  withoutKey,
+  type BarFilter,
+} from '@/services/data';
 import type { CrowdStatus } from '@nightout/types';
 import { distanceMeters } from '@nightout/utils';
 import { App, Segmented, Select } from 'antd';
@@ -14,6 +22,7 @@ import { CommandBar } from './components/commandBar';
 import { SearchMap, type LatLng } from './components/searchMap';
 import { filterFromParams, filterToQuery } from './utils/searchUrl';
 import { parseSmartQuery } from './utils/smartQuery';
+import { missLabel, relaxLabel } from './utils/missLabel';
 import { useTambonByCode } from './api';
 import { tambonOptionText } from '@/ui/utils/area';
 
@@ -150,6 +159,15 @@ export function SearchPage() {
   // ใกล้ที่สุด: listBars ไม่รู้ตำแหน่ง → เรียงระยะที่นี่ (ระหว่างรอตำแหน่ง = ลำดับแนะนำ)
   const bars =
     f.sort === 'distance' && me ? found.toSorted((a, b) => distanceKm(a)! - distanceKm(b)!) : found;
+  // ไม่มีร้านตรงทุกข้อ: ร้านใกล้เคียง + ปุ่มผ่อนเงื่อนไขทีละข้อ (พร้อมจำนวนร้านที่จะได้)
+  const near = bars.length === 0 ? nearBars(f) : [];
+  const relax =
+    bars.length === 0
+      ? activeFilterKeys(f)
+          .map((key) => ({ key, n: listBars(withoutKey(f, key)).length }))
+          .filter((r) => r.n > 0)
+      : [];
+  const mapBars = bars.length ? bars : near.map((m) => m.bar);
 
   const adAfter = Math.min(MINI_AD_SEARCH_AFTER, bars.length) - 1;
   const groupBudget =
@@ -249,21 +267,56 @@ export function SearchPage() {
           </div>
 
           {bars.length === 0 ? (
-            <div className="rounded-[20px] border border-dashed border-border px-4 py-14 text-center text-muted">
-              <MoonStars size={40} className="mx-auto text-gold" aria-hidden />
-              <p className="mb-3.5 mt-2.5">
-                {f.people
-                  ? `ไม่พบร้านที่รับกลุ่ม ${f.people} คนตามตัวกรอง ลองลดจำนวนคนหรือเพิ่มงบ`
-                  : 'ไม่พบร้านตามตัวกรอง ลองลดเงื่อนไขดู'}
-              </p>
-              <button
-                type="button"
-                onClick={resetAll}
-                className="rounded-full border border-gold px-4 py-1.5 text-gold-text transition-colors hover:bg-gold hover:text-on-gold"
-              >
-                ล้างตัวกรอง
-              </button>
-            </div>
+            <>
+              <div className="rounded-[20px] border border-dashed border-border px-4 py-6 text-center text-muted">
+                <MoonStars size={28} className="mx-auto text-gold" aria-hidden />
+                <p className="mb-3 mt-2 font-medium text-text">ไม่มีร้านที่ตรงทุกเงื่อนไข</p>
+                <div className="flex flex-wrap items-center justify-center gap-2">
+                  {relax.map((r) => (
+                    <button
+                      key={r.key}
+                      type="button"
+                      onClick={() => {
+                        if (r.key === 'q') setSmart('');
+                        setF(withoutKey(f, r.key));
+                      }}
+                      className="rounded-full border border-gold px-4 py-1.5 text-gold-text transition-colors hover:bg-gold hover:text-on-gold"
+                    >
+                      {relaxLabel(r.key, f)} ({r.n} ร้าน)
+                    </button>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={resetAll}
+                    className="text-muted underline transition-colors hover:text-text"
+                  >
+                    ล้างตัวกรอง
+                  </button>
+                </div>
+              </div>
+              {near.length > 0 && (
+                <>
+                  <h2 className="mt-4 mb-2 px-0.5 text-sm font-medium text-muted">
+                    ร้านที่ใกล้เคียง
+                  </h2>
+                  <div className="flex flex-col gap-2">
+                    {near.map((m) => (
+                      <BudgetRow
+                        key={m.bar.id}
+                        bar={m.bar}
+                        active={isMap && m.bar.id === activeId}
+                        people={f.people}
+                        maxBudget={f.maxBudget}
+                        distanceKm={distanceKm(m.bar)}
+                        misses={m.misses.map((k) => missLabel(k, m.bar, shown))}
+                        onActivate={() => setActiveId(m.bar.id)}
+                        onClick={rowClick(m.bar.id)}
+                      />
+                    ))}
+                  </div>
+                </>
+              )}
+            </>
           ) : (
             <div className="flex flex-col gap-2">
               {bars.map((b, i) => (
@@ -285,9 +338,9 @@ export function SearchPage() {
           )}
         </section>
 
-        {isMap && bars.length > 0 && (
+        {isMap && mapBars.length > 0 && (
           <SearchMap
-            bars={bars}
+            bars={mapBars}
             activeId={activeId}
             cardOpen={cardOpen}
             me={me}
