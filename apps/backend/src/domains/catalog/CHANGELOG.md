@@ -1,5 +1,10 @@
 # CHANGELOG — apps/backend/src/domains/catalog
 
+## 2026-10-28 — ร้าน Safety 0/100 ไม่ติดอันดับ
+- `GET /public/ranking` ตัดร้านที่ `bar_stats.safety_score` = 0 (หรือยังไม่มี) ออกก่อนนับอันดับ — อันดับที่เหลือต่อเนื่อง · ร้านได้ Safety เพิ่มแล้วขึ้นอันดับทันทีโดยไม่รอ job
+- migration `20261028000100_catalog_ranking_require_safety` (`public_ranking` signature เดิม) · ดาว/คะแนนรวมเหมือนเดิม
+- ไฟล์: `catalog.public.controller.ts` (`@ApiDoc`)
+
 ## 2026-10-24 — อันดับนับเฉพาะเช็กอินผ่าน NightOut
 - `GET /public/ranking` ไม่ใช้คะแนนรวม (รีวิว/เช็กอิน/Safety) ตัดสินแล้ว: เรียงตามโหวตในรอบ · เท่ากัน = ร้านที่ถึงยอดก่อนอยู่บน · ไม่มีเช็กอินต่อท้ายตามชื่อร้าน · ร้านรีวิว < 5 ติดอันดับได้ (เจ้าของตัดสิน)
 - migration `20261024000100_catalog_ranking_checkins_only`: คอลัมน์ `tier_scores.last_checkin_at` · `run_tier_scores()` เก็บค่านั้น (สูตรดาวเหมือนเดิม) · `public_ranking` คืน `last_checkin_at` + `is_new` แทน `total_score`

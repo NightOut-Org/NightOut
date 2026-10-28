@@ -112,6 +112,7 @@
 | `…20261020000200_account_role_requires_bar` | เปลี่ยนชั้นบัญชีเป็นร้าน/พนักงานต้องมีร้าน | `admin_set_user_role`: ตั้ง MERCHANT ต้องเป็น OWNER/MANAGER ที่รับเชิญแล้วและยังไม่ถูกถอด · STAFF ต้องอยู่ในทีมร้าน · ไม่ผ่าน = `ROLE_NEEDS_BAR` (กันบัญชีชั้นร้านที่ไม่มีร้าน) |
 | `…20261024000100_catalog_ranking_checkins_only` | หน้าจัดอันดับนับเฉพาะเช็กอินผ่าน NightOut (เจ้าของตัดสิน 2026-10-24) | คอลัมน์ `tier_scores.last_checkin_at` (เช็กอินล่าสุดในรอบ) + index `tier_scores_votes` · **`run_tier_scores()`** สูตรดาวเหมือนเดิม + เก็บ `last_checkin_at` · **`public_ranking`** (drop + สร้างใหม่ · คืน `bar_id, rank, votes, last_checkin_at, stars, tier, is_new, period_start, computed_at` · ไม่มี `total_score`) เรียงโหวต → เช็กอินล่าสุดเก่ากว่าอยู่บน → ไม่มีเช็กอินต่อท้ายตามชื่อร้าน · รวมร้านใหม่ (รีวิว < 5) · หลัง db:push กด "คำนวณใหม่" ที่ Backoffice `/ranking` |
 | `…20261025000100_account_edit_own_phone` | ลูกค้าแก้เบอร์โทรของตัวเอง (นอก MVP — อนุมัติ 2026-10-25) | **`app_update_my_phone(p_actor, p_phone)`** แก้ `users.phone_e164` (ค่าว่าง = `CONTACT_PHONE_REQUIRED` · รูปแบบผิด = `INVALID_PHONE` · ไม่มี OTP → ล้าง `phone_verified_at`) · เบอร์ใน `banned_phones` = `PHONE_BANNED` · บัญชีอื่นใช้อยู่ (unique) = `PHONE_IN_USE` · การจอง `PENDING` / `AWAITING_DEPOSIT` / `DEPOSIT_SUBMITTED` / `CONFIRMED` ที่ `booking_datetime > now()` เปลี่ยน `contact_phone` ด้วย · audit `user.phone_update` · คืน `{phone_e164, bookings_updated}` |
+| `…20261028000100_catalog_ranking_require_safety` | ร้านที่ Safety 0/100 ไม่ติดอันดับ (ตกลง 2026-10-28) | **`public_ranking`** (signature เดิม) กรอง `bar_stats.safety_score > 0` (ค่าสด · null = 0) แล้วนับอันดับใหม่ · `run_tier_scores` / ดาว เหมือนเดิม |
 
 view ในเฟส 1 เรียกฟังก์ชัน stub (`bar_is_promoted`, `booking_deposit_summary`) ที่เฟส 2 แทนที่ → เฟส 1 ใช้งานได้เองโดยไม่พึ่งตารางเฟส 2
 
@@ -192,7 +193,8 @@ stateDiagram-v2
 
 | โดเมน | ฟังก์ชัน | migration ล่าสุด |
 |---|---|---|
-| `catalog` | `public_ranking` · `run_tier_scores` (job `/jobs/tier` ทุกคืน — แทนบรรทัด `/jobs/tier?period=WEEKLY` ในหัวไฟล์ `…20261002001400`) | `20261024000100_catalog_ranking_checkins_only` |
+| `catalog` | `public_ranking` | `20261028000100_catalog_ranking_require_safety` |
+| `catalog` | `run_tier_scores` (job `/jobs/tier` ทุกคืน — แทนบรรทัด `/jobs/tier?period=WEEKLY` ในหัวไฟล์ `…20261002001400`) | `20261024000100_catalog_ranking_checkins_only` |
 | `catalog` | `admin_recompute_ranking` · view `admin_ranking` | `20261013001030_catalog_ranking_scores` |
 |  | `admin_save_styles` · view `admin_styles` | `20261013001020_catalog_styles_manage` |
 |  | `tambon_at` · `district_near` · `area_at_point` | `20261020000300_catalog_admin_areas` |
@@ -289,7 +291,7 @@ stateDiagram-v2
 | `public_site_nav` | เมนู navbar ของเว็บลูกค้า (`GET /public/site-nav` · ทุกเมนูรวมที่ซ่อน · ลำดับ/ซ่อนแยก desktop กับ mobile) · ไม่ตอบ = หน้าเว็บใช้ชุดล่าสุดใน localStorage `nightout-site-nav` หรือค่าตั้งต้นในโค้ด | anon + authenticated | `C.SiteNavItem[]` |
 | `rpc('search_bars', {p_keyword, p_district_id, p_category, p_style_ids, p_pr_gender, p_limit, p_offset})` | ค้นหา · แบ่งหน้า (limit ≤ 100) · เรียง โปรโมท → คะแนน | anon + authenticated | `Db.BarCard[]` |
 | `rpc('nearby_bars', {p_lat, p_lng, p_radius_m})` | ใกล้ฉัน · เรียงตามระยะ | anon + authenticated | `Db.NearbyBar[]` |
-| `rpc('public_ranking', {p_period, p_category, p_limit})` (`…20261024000100`) | หน้า `/ranking` + หน้าแรก "อันดับประจำสัปดาห์" (`GET /public/ranking?period=WEEKLY\|MONTHLY&category=&limit=`) — รอบล่าสุดของ `tier_scores` · นับเฉพาะเช็กอินผ่าน NightOut: เรียงโหวต (เช็กอินในรอบ) → ถึงยอดก่อนอยู่บน (`last_checkin_at`) → ไม่มีเช็กอินต่อท้ายตามชื่อร้าน · ไม่ใช้คะแนนรวม · ไม่รวมร้านที่ไม่แสดง (`bar_is_public`) · ยังไม่เคยคำนวณ = `[]` | anon + authenticated | `C.RankingRow[]` |
+| `rpc('public_ranking', {p_period, p_category, p_limit})` (`…20261028000100`) | หน้า `/ranking` + หน้าแรก "อันดับประจำสัปดาห์" (`GET /public/ranking?period=WEEKLY\|MONTHLY&category=&limit=`) — รอบล่าสุดของ `tier_scores` · นับเฉพาะเช็กอินผ่าน NightOut: เรียงโหวต (เช็กอินในรอบ) → ถึงยอดก่อนอยู่บน (`last_checkin_at`) → ไม่มีเช็กอินต่อท้ายตามชื่อร้าน · ไม่ใช้คะแนนรวม · ไม่รวมร้านที่ไม่แสดง (`bar_is_public`) และร้าน Safety 0/100 (`bar_stats.safety_score`) · ยังไม่เคยคำนวณ = `[]` | anon + authenticated | `C.RankingRow[]` |
 | `rpc('mini_ads_live', {p_placement})` (`…20261013001300`) | แบนเนอร์โฆษณาเล็ก 1 ชิ้น หน้าแรก (HOME) / หน้าค้นหา (SEARCH) — `GET /public/mini-ads?placement=` สุ่มลำดับใน NestJS · เฉพาะที่เปิดใช้และอยู่ในช่วงวันที่ · ไม่มี `note` / ผู้ยืนยัน · ไม่มีผลต่ออันดับ/ผลค้นหา | anon + authenticated | `C.PublicMiniAd[]` |
 
 **กฎ "ไม่มีข้อมูล" (เทสต์แล้วกับร้านว่างที่สุด):** array = `[]` · object = `null` · ตัวนับ = `0` · ค่าเฉลี่ย/ข้อความ/วันที่/enum = `null` · `pr_counts` = `{male:0,female:0,lgbtq:0}` · ทุก key อยู่เสมอ · array มี `ORDER BY` เสมอ · เวลา `"HH:MM"` · `styles` เป็น key ตัวใหญ่ (`"ROOFTOP"`) · `safety` แสดงทุกข้อ (ไม่มีข้อมูล = `UNKNOWN`)

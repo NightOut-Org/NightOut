@@ -90,7 +90,7 @@ export class CatalogPublicController {
     description:
       'รอบล่าสุดจาก tier_scores ที่ job คำนวณทุกคืน · นับเฉพาะการเช็กอินผ่าน NightOut: เรียงตามโหวต (การจองที่เช็กอินในรอบ) ' +
       'เท่ากัน = ร้านที่ถึงยอดก่อน (เช็กอินล่าสุดเก่ากว่า) อยู่บน · ไม่มีเช็กอินในรอบ = ต่อท้ายตามชื่อร้าน · ' +
-      'ไม่ใช้คะแนนรวม · โฆษณาไม่มีผล · เฉพาะร้านที่แสดงอยู่ · ยังไม่เคยคำนวณ = [] (rpc public_ranking)',
+      'ไม่ใช้คะแนนรวม · โฆษณาไม่มีผล · เฉพาะร้านที่แสดงอยู่และ Safety > 0 · ยังไม่เคยคำนวณ = [] (rpc public_ranking)',
     returns:
       'รายการ `bar_id` · `rank` · `votes` เช็กอินในรอบ · `last_checkin_at` · `stars` 1–5 / null · `tier` S/A/B/C / null · `is_new` · `period_start` (YYYY-MM-DD) · `computed_at`',
     auth: false,
