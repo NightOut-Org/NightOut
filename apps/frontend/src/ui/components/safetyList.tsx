@@ -2,7 +2,7 @@ import { CheckCircle, ClipboardText, FileMagnifyingGlass, Question, XCircle } fr
 import { safetyVerifyLabel } from '@nightout/utils';
 import type { SafetyVerifyMethod } from '@nightout/types';
 import { SAFETY_LABELS, safetyScore, type Bar } from '@/services/data';
-import { Progress, Tooltip } from 'antd';
+import { Tooltip } from 'antd';
 import { InfoButton } from './infoButton';
 
 /**
@@ -30,27 +30,36 @@ function lastVerifiedAt(bar: Bar, method: SafetyVerifyMethod): string | null {
 
 /** checklist ความปลอดภัย: แสดงสถานะเดียวต่อรายการ ✅ / ❌ / ⚪ + ข้อที่ทีมงานตรวจแล้วบอกวิธี (ตรวจหลักฐาน / ลงพื้นที่) + วันที่ */
 export function SafetyList({ bar }: { bar: Bar }) {
-  const score = safetyScore(bar);
+  const total = bar.safety.length;
+  const declaredYes = bar.safety.filter((s) => s.value === 'YES').length;
+  const verified = bar.safety.filter((s) => s.source === 'ADMIN_VERIFIED').length;
   const onSiteAt = lastVerifiedAt(bar, 'ON_SITE');
   const evidenceAt = lastVerifiedAt(bar, 'EVIDENCE');
   return (
     <div>
-      <div className="mb-4 flex items-center gap-4">
-        <Progress
-          type="circle"
-          percent={score}
-          size={64}
-          strokeColor="var(--gold)"
-          format={(p) => `${p}`}
-        />
-        <div>
-          <p className="font-semibold">Safety Score</p>
-          <p className="text-sm text-muted">{SAFETY_SOURCE_LABEL}</p>
-          <p className="text-xs text-muted">
-            {onSiteAt ? `ทีมงานลงพื้นที่ตรวจล่าสุด ${thaiDate(onSiteAt)}` : 'ยังไม่มีการลงพื้นที่ตรวจ'}
+      {/* แยก 2 ฝั่งให้ชัด: คะแนนมาจากที่ร้านแจ้งเอง ≠ ทีมงานตรวจแล้ว (ผู้ใช้อ่าน "100" แล้วเข้าใจว่าตรวจครบ) */}
+      <div className="mb-4 grid divide-y divide-border rounded-lg border border-border sm:grid-cols-2 sm:divide-x sm:divide-y-0">
+        <div className="px-4 py-3">
+          <p className="text-sm text-muted">คะแนนจากที่ร้านแจ้ง</p>
+          <p className="mt-0.5 text-2xl font-semibold tabular-nums">
+            {safetyScore(bar)}
+            <span className="text-sm font-normal text-muted">/100</span>
           </p>
+          <p className="text-xs text-muted">{`ร้านแจ้งว่ามี ${declaredYes} จาก ${total} ข้อ`}</p>
+          <p className="text-xs text-muted">{SAFETY_SOURCE_LABEL}</p>
+        </div>
+        <div className="px-4 py-3">
+          <p className="text-sm text-muted">ทีมงาน NightOut ตรวจแล้ว</p>
+          <p className={`mt-0.5 text-2xl font-semibold tabular-nums ${verified ? 'text-gold-text' : ''}`}>
+            {verified}
+            <span className="text-sm font-normal text-muted">{` จาก ${total} ข้อ`}</span>
+          </p>
+          {verified === 0 && <p className="text-xs text-muted">ยังไม่มีการตรวจ</p>}
+          {onSiteAt && (
+            <p className="text-xs text-muted">{`ลงพื้นที่ตรวจล่าสุด ${thaiDate(onSiteAt)}`}</p>
+          )}
           {evidenceAt && (
-            <p className="text-xs text-muted">{`ตรวจหลักฐานแล้วล่าสุด ${thaiDate(evidenceAt)}`}</p>
+            <p className="text-xs text-muted">{`ตรวจหลักฐานล่าสุด ${thaiDate(evidenceAt)}`}</p>
           )}
         </div>
       </div>
